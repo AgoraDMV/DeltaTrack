@@ -1,8 +1,13 @@
-"""Parser for test_data/pdf/118hr8752-changes.md.
+"""Parser for `test_data/pdf/<bill>-changes.md` test-case fixtures.
 
-Each case in the markdown becomes one PdfTestCase. Used by
-test_pdf_test_cases.py and (eventually) by Phase 1+ extractor tests.
-See ~/.claude/plans/let-s-put-together-a-snug-twilight.md.
+The markdown source of truth is human-edited and contains, for each
+change between two PDF bill versions: a heading-style hierarchy path,
+a change type, V1/V2 page+line locations, the verbatim text in each
+version, an expected diff description, and extractor notes. This module
+turns each `## Case N — …` block into a `PdfTestCase` for parametrized
+tests to consume.
+
+Default fixture: `test_data/pdf/118hr8752-changes.md` (HR 8752 v1→v2).
 """
 
 from __future__ import annotations
@@ -53,6 +58,12 @@ class PdfTestCase:
 
 
 def load_cases(path: Path = DEFAULT_FIXTURE) -> list[PdfTestCase]:
+    """Parse a PDF-diff fixture markdown file into PdfTestCase objects.
+
+    Cases are returned in source order. Raises ValueError if any required
+    field is missing or malformed; a fixture should never silently lose
+    data.
+    """
     text = path.read_text()
     headings = list(_CASE_HEADING.finditer(text))
     cases = []
