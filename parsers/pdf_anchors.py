@@ -105,3 +105,30 @@ def extract_anchors(pages: list[Page]) -> list[Anchor]:
     for page in pages:
         all_anchors.extend(_anchors_from_page(page))
     return all_anchors
+
+
+def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor]) -> tuple[str, ...]:
+    """Walk back through `all_anchors` from `anchor` to assemble a parent chain.
+
+    For a TITLE anchor: returns just `("TITLE I",)`.
+    For a SECTION anchor: returns `("TITLE IV", "SEC. 406")` if a preceding
+    TITLE exists, else just `("SEC. 406",)`.
+    For an ACCOUNT anchor: returns `("TITLE I", "OPERATIONS AND SUPPORT")` if
+    a preceding TITLE exists, else just `("OPERATIONS AND SUPPORT",)`.
+
+    The agency-level heading (e.g. "OFFICE OF THE SECRETARY") is not currently
+    captured by anchor extraction; once that lands the chain becomes three
+    levels deep without changing this function's contract.
+    """
+    if anchor.kind == "title":
+        return (anchor.text,)
+    # Find anchor's index by identity
+    try:
+        idx = list(all_anchors).index(anchor)
+    except ValueError:
+        return (anchor.text,)
+    # Walk back for the most recent preceding TITLE
+    for j in range(idx - 1, -1, -1):
+        if all_anchors[j].kind == "title":
+            return (all_anchors[j].text, anchor.text)
+    return (anchor.text,)

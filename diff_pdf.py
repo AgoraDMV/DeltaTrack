@@ -1,14 +1,19 @@
-"""Line-level diff for PDF bill versions, parallel to diff_bill.py for XML.
+"""Block-level diff for PDF bill versions, parallel to diff_bill.py for XML.
 
-Produces a `PdfDiff` of `PdfHunk` records. Each hunk carries a v1/v2 page+line
-range, the nearest preceding anchor on each side (TITLE / SEC. / account), the
-two text variants, and amount pairs when dollar amounts changed.
+A bill is grouped into anchor-delimited blocks (TITLE / SEC. / account heading)
+on each side, then aligned section-by-section. Lines before the first anchor
+form a preamble block. The block is the natural unit of comparison — it mirrors
+how `diff_bill.match_nodes` operates on BillTree nodes for XML and avoids the
+SequenceMatcher line-level fragmentation that produced over-counted hunks and
+missed added/moved sections.
 
-The classifier distinguishes:
-- `added` — present only in v2
-- `removed` — present only in v1
-- `moved` — body similar but anchor differs (renumbered SEC. or moved account)
-- `modified` — everything else changed
+Within matched blocks, the renderer applies word-level diff against the joined
+block text. The classifier produces:
+
+- `added` — block present only in v2
+- `removed` — block present only in v1
+- `moved` — block bodies similar but anchors differ (renumbered SEC.)
+- `modified` — paired blocks with different bodies
 
 Reuses amount extraction (`extract_amounts`, `match_amounts`) and text
 similarity (`_text_similarity`) from diff_bill.py.
@@ -16,8 +21,8 @@ similarity (`_text_similarity`) from diff_bill.py.
 
 from __future__ import annotations
 
-import bisect
 import difflib
+import re
 from collections import Counter
 from dataclasses import dataclass
 from typing import Literal
@@ -29,9 +34,10 @@ from parsers.pdf_text import Page
 ChangeType = Literal["added", "removed", "modified", "moved"]
 PageLineRange = tuple[int, int, int, int]  # (start_page, start_line, end_page, end_line)
 
-# A hunk's anchor is "moved" only if the bodies are highly similar AND the
-# anchors differ; otherwise the anchor change is incidental and the hunk is a
-# normal modification. 0.6 matches diff_bill's _MOVE_THRESHOLD.
+_AMENDMENT_RE_DETAIL = re.compile(r"\((increased|reduced|decreased) by\s+\$([\d,]+)\)")
+
+# Body similarity needed to call a block-pair "moved" rather than "modified",
+# and to reconcile a removed+added pair as moved. Matches diff_bill's threshold.
 _MOVE_SIMILARITY_THRESHOLD = 0.6
 
 
@@ -45,11 +51,14 @@ class PdfHunk:
     v1_text: str
     v2_text: str
     amount_pairs: tuple[tuple[int | None, int | None], ...] = ()
+    has_amendment_annotations: bool = False  # mirrors FinancialChange field for XML parity
 
 
 @dataclass(frozen=True)
 class PdfDiff:
     hunks: tuple[PdfHunk, ...]
+    v1_anchors: tuple[Anchor, ...] = ()
+    v2_anchors: tuple[Anchor, ...] = ()
 
     @property
     def summary(self) -> dict[str, int]:
@@ -66,6 +75,35 @@ class _IndexedLine:
     line_number: int | None  # None when source PDF didn't number this line
 
 
+@dataclass(frozen=True)
+class _Block:
+    """An anchor-delimited group of lines.
+
+    `anchor` is None only for the preamble (lines before the first anchor on
+    either side, e.g. cover page, enacting clause). The `indexed_lines` start
+    with the anchor's own line and run until the next anchor.
+    """
+
+    anchor: Anchor | None
+    indexed_lines: tuple[_IndexedLine, ...]
+
+    @property
+    def text(self) -> str:
+        return "\n".join(ln.text for ln in self.indexed_lines)
+
+    @property
+    def page_range(self) -> PageLineRange | None:
+        if not self.indexed_lines:
+            return None
+        first, last = self.indexed_lines[0], self.indexed_lines[-1]
+        return (
+            first.page_number,
+            first.line_number if first.line_number is not None else -1,
+            last.page_number,
+            last.line_number if last.line_number is not None else -1,
+        )
+
+
 def _flatten(pages: list[Page]) -> list[_IndexedLine]:
     """Flatten pages into a single ordered list of (text, page, line) records."""
     flat: list[_IndexedLine] = []
@@ -75,41 +113,53 @@ def _flatten(pages: list[Page]) -> list[_IndexedLine]:
     return flat
 
 
-def _range_from_lines(lines: list[_IndexedLine]) -> PageLineRange | None:
-    """Compute (start_page, start_line, end_page, end_line) from indexed lines.
+def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor]) -> list[_Block]:
+    """Group lines into anchor-delimited blocks.
 
-    Falls back to a sentinel `-1` when source line numbers are unknown so the
-    range remains a 4-tuple of ints; the renderer can spot `-1` as "unnumbered".
+    Lines preceding the first anchor become a preamble block (anchor=None).
+    Each subsequent anchor starts a new block that runs until the next anchor.
     """
-    if not lines:
-        return None
-    first, last = lines[0], lines[-1]
-    return (
-        first.page_number,
-        first.line_number if first.line_number is not None else -1,
-        last.page_number,
-        last.line_number if last.line_number is not None else -1,
-    )
+    if not indexed_lines:
+        return []
+
+    # Anchor positions in indexed_lines, by (page, line) match.
+    line_keys = [(ln.page_number, ln.line_number) for ln in indexed_lines]
+    anchor_positions: list[int] = []
+    for a in anchors:
+        try:
+            anchor_positions.append(line_keys.index((a.page_number, a.line_number)))
+        except ValueError:
+            # Anchor's line was rejoined into a previous line during cleanup;
+            # skip — its text is already part of an earlier line and will end
+            # up in the previous block.
+            continue
+
+    blocks: list[_Block] = []
+    if not anchor_positions:
+        # No anchors at all — entire document is preamble.
+        return [_Block(None, tuple(indexed_lines))]
+
+    if anchor_positions[0] > 0:
+        blocks.append(_Block(None, tuple(indexed_lines[: anchor_positions[0]])))
+
+    for j, pos in enumerate(anchor_positions):
+        end = anchor_positions[j + 1] if j + 1 < len(anchor_positions) else len(indexed_lines)
+        blocks.append(_Block(anchors[j], tuple(indexed_lines[pos:end])))
+
+    return blocks
 
 
-def _nearest_preceding_anchor(anchors: list[Anchor], page: int, line: int, max_page_distance: int = 2) -> Anchor | None:
-    """Binary-search for the largest anchor at or before (page, line).
+def _block_key(block: _Block) -> str:
+    """Alignment key for SequenceMatcher.
 
-    `max_page_distance` caps how far back to look. The nearest anchor on the
-    same page is always preferred; otherwise we accept up to N pages back. If
-    the only candidate is further than that, return None — the renderer treats
-    this as the degraded "anchor unresolved" case.
+    Combines anchor text (e.g. "SEC. 101", "OPERATIONS AND SUPPORT") with the
+    first ~80 chars of the block's body to disambiguate non-unique account
+    headings while staying stable to amendment annotations appearing later
+    in the body.
     """
-    if not anchors or line < 0:
-        return None
-    keys = [(a.page_number, a.line_number) for a in anchors]
-    idx = bisect.bisect_right(keys, (page, line)) - 1
-    if idx < 0:
-        return None
-    candidate = anchors[idx]
-    if page - candidate.page_number > max_page_distance:
-        return None
-    return candidate
+    anchor_text = block.anchor.text if block.anchor else "(preamble)"
+    body_preview = block.text[:80].strip()
+    return f"{anchor_text}::{body_preview}"
 
 
 def _amount_pairs_when_changed(v1_text: str, v2_text: str) -> tuple[tuple[int | None, int | None], ...]:
@@ -119,29 +169,81 @@ def _amount_pairs_when_changed(v1_text: str, v2_text: str) -> tuple[tuple[int | 
     return nontrivial
 
 
-def _classify_replace(
-    v1_text: str,
-    v2_text: str,
-    v1_anchor: Anchor | None,
-    v2_anchor: Anchor | None,
-) -> ChangeType:
-    """A SequenceMatcher 'replace' opcode is moved iff body is similar and anchors differ."""
-    if v1_anchor and v2_anchor and v1_anchor.text != v2_anchor.text:
-        if _text_similarity(v1_text, v2_text) >= _MOVE_SIMILARITY_THRESHOLD:
-            return "moved"
-    return "modified"
+def _has_amendment_annotations(v1_text: str, v2_text: str) -> bool:
+    """True if either side carries a floor amendment annotation.
+
+    Mirrors `FinancialChange.has_amendment_annotations` in diff_bill.py.
+    """
+    return bool(_AMENDMENT_RE_DETAIL.search(v1_text) or _AMENDMENT_RE_DETAIL.search(v2_text))
+
+
+def _hunk_for_paired_blocks(v1_block: _Block, v2_block: _Block) -> PdfHunk:
+    """Emit a hunk for two blocks paired by alignment.
+
+    Classifies as `moved` when anchors differ but bodies are highly similar
+    (renumbered SEC.), else `modified`. Caller has already confirmed v1 and v2
+    block texts differ — this routine doesn't filter equal blocks.
+    """
+    v1_text = v1_block.text
+    v2_text = v2_block.text
+    v1_anchor = v1_block.anchor
+    v2_anchor = v2_block.anchor
+    if (
+        v1_anchor
+        and v2_anchor
+        and v1_anchor.text != v2_anchor.text
+        and _text_similarity(v1_text, v2_text) >= _MOVE_SIMILARITY_THRESHOLD
+    ):
+        change_type: ChangeType = "moved"
+    else:
+        change_type = "modified"
+    return PdfHunk(
+        change_type=change_type,
+        v1_anchor=v1_anchor,
+        v2_anchor=v2_anchor,
+        v1_range=v1_block.page_range,
+        v2_range=v2_block.page_range,
+        v1_text=v1_text,
+        v2_text=v2_text,
+        amount_pairs=_amount_pairs_when_changed(v1_text, v2_text),
+        has_amendment_annotations=_has_amendment_annotations(v1_text, v2_text),
+    )
+
+
+def _hunk_for_added(v2_block: _Block) -> PdfHunk:
+    return PdfHunk(
+        change_type="added",
+        v1_anchor=None,
+        v2_anchor=v2_block.anchor,
+        v1_range=None,
+        v2_range=v2_block.page_range,
+        v1_text="",
+        v2_text=v2_block.text,
+        amount_pairs=(),
+        has_amendment_annotations=_has_amendment_annotations("", v2_block.text),
+    )
+
+
+def _hunk_for_removed(v1_block: _Block) -> PdfHunk:
+    return PdfHunk(
+        change_type="removed",
+        v1_anchor=v1_block.anchor,
+        v2_anchor=None,
+        v1_range=v1_block.page_range,
+        v2_range=None,
+        v1_text=v1_block.text,
+        v2_text="",
+        amount_pairs=(),
+        has_amendment_annotations=_has_amendment_annotations(v1_block.text, ""),
+    )
 
 
 def _reconcile_moves(hunks: list[PdfHunk], threshold: float = _MOVE_SIMILARITY_THRESHOLD) -> list[PdfHunk]:
     """Pair `removed`+`added` hunks whose bodies are highly similar into `moved` hunks.
 
-    SequenceMatcher's line-level alignment routinely splits a renumbered section
-    (e.g. SEC. 414 in v1 → SEC. 413 in v2 at a different absolute position) into
-    a delete on one side and an insert on the other. This pass walks all
-    remove/add pairs, computes text similarity, and greedily merges pairs above
-    `threshold` into a single moved hunk.
-
-    Mirrors `diff_bill.reconcile_moves` for the XML pipeline.
+    Catches renumbered sections (e.g. SEC. 414 in v1 → SEC. 413 in v2) when block
+    keys diverge enough that SequenceMatcher emitted them as separate insert
+    and delete rather than aligning them. Mirrors `diff_bill.reconcile_moves`.
     """
     removed_idx = [i for i, h in enumerate(hunks) if h.change_type == "removed"]
     added_idx = [i for i, h in enumerate(hunks) if h.change_type == "added"]
@@ -169,8 +271,8 @@ def _reconcile_moves(hunks: list[PdfHunk], threshold: float = _MOVE_SIMILARITY_T
         moved_pairs.append((ri, ai))
 
     consumed = claimed_r | claimed_a
-    result: list[PdfHunk] = []
     moved_lookup = {ri: ai for ri, ai in moved_pairs}
+    result: list[PdfHunk] = []
     for i, h in enumerate(hunks):
         if i in moved_lookup:
             removed = h
@@ -185,10 +287,11 @@ def _reconcile_moves(hunks: list[PdfHunk], threshold: float = _MOVE_SIMILARITY_T
                     v1_text=removed.v1_text,
                     v2_text=added.v2_text,
                     amount_pairs=_amount_pairs_when_changed(removed.v1_text, added.v2_text),
+                    has_amendment_annotations=_has_amendment_annotations(removed.v1_text, added.v2_text),
                 )
             )
         elif i in consumed:
-            continue  # 'added' side already emitted as part of its 'removed' pair
+            continue
         else:
             result.append(h)
     return result
@@ -198,52 +301,54 @@ def _reconcile_moves(hunks: list[PdfHunk], threshold: float = _MOVE_SIMILARITY_T
 
 
 def diff_pdfs(v1_pages: list[Page], v2_pages: list[Page]) -> PdfDiff:
-    """Diff two extracted PDF page sequences and return a PdfDiff."""
+    """Block-level diff of two extracted PDF page sequences."""
     v1_indexed = _flatten(v1_pages)
     v2_indexed = _flatten(v2_pages)
     v1_anchors = extract_anchors(v1_pages)
     v2_anchors = extract_anchors(v2_pages)
 
+    v1_blocks = _group_into_blocks(v1_indexed, v1_anchors)
+    v2_blocks = _group_into_blocks(v2_indexed, v2_anchors)
+
     matcher = difflib.SequenceMatcher(
-        a=[line.text for line in v1_indexed],
-        b=[line.text for line in v2_indexed],
+        a=[_block_key(b) for b in v1_blocks],
+        b=[_block_key(b) for b in v2_blocks],
         autojunk=False,
     )
 
     hunks: list[PdfHunk] = []
     for op, i1, i2, j1, j2 in matcher.get_opcodes():
         if op == "equal":
-            continue
-        v1_lines = v1_indexed[i1:i2]
-        v2_lines = v2_indexed[j1:j2]
-        v1_range = _range_from_lines(v1_lines)
-        v2_range = _range_from_lines(v2_lines)
-        v1_text = "\n".join(ln.text for ln in v1_lines)
-        v2_text = "\n".join(ln.text for ln in v2_lines)
-
-        v1_anchor = _nearest_preceding_anchor(v1_anchors, v1_range[0], v1_range[1]) if v1_range else None
-        v2_anchor = _nearest_preceding_anchor(v2_anchors, v2_range[0], v2_range[1]) if v2_range else None
-
-        if op == "insert":
-            change_type: ChangeType = "added"
+            # Block keys match. Bodies might still differ (e.g. amendment
+            # annotations appearing past the 80-char preview); emit modified
+            # for those, skip truly identical blocks.
+            for v1_b, v2_b in zip(v1_blocks[i1:i2], v2_blocks[j1:j2]):
+                if v1_b.text != v2_b.text:
+                    hunks.append(_hunk_for_paired_blocks(v1_b, v2_b))
         elif op == "delete":
-            change_type = "removed"
+            for v1_b in v1_blocks[i1:i2]:
+                hunks.append(_hunk_for_removed(v1_b))
+        elif op == "insert":
+            for v2_b in v2_blocks[j1:j2]:
+                hunks.append(_hunk_for_added(v2_b))
         else:  # replace
-            change_type = _classify_replace(v1_text, v2_text, v1_anchor, v2_anchor)
+            v1_slice = v1_blocks[i1:i2]
+            v2_slice = v2_blocks[j1:j2]
+            # Pair positionally; surplus on either side becomes added/removed.
+            for k in range(max(len(v1_slice), len(v2_slice))):
+                v1_b = v1_slice[k] if k < len(v1_slice) else None
+                v2_b = v2_slice[k] if k < len(v2_slice) else None
+                if v1_b is not None and v2_b is not None:
+                    if v1_b.text != v2_b.text:
+                        hunks.append(_hunk_for_paired_blocks(v1_b, v2_b))
+                elif v1_b is not None:
+                    hunks.append(_hunk_for_removed(v1_b))
+                else:
+                    assert v2_b is not None
+                    hunks.append(_hunk_for_added(v2_b))
 
-        amount_pairs = _amount_pairs_when_changed(v1_text, v2_text) if op == "replace" else ()
-
-        hunks.append(
-            PdfHunk(
-                change_type=change_type,
-                v1_anchor=v1_anchor,
-                v2_anchor=v2_anchor,
-                v1_range=v1_range,
-                v2_range=v2_range,
-                v1_text=v1_text,
-                v2_text=v2_text,
-                amount_pairs=amount_pairs,
-            )
-        )
-
-    return PdfDiff(hunks=tuple(_reconcile_moves(hunks)))
+    return PdfDiff(
+        hunks=tuple(_reconcile_moves(hunks)),
+        v1_anchors=tuple(v1_anchors),
+        v2_anchors=tuple(v2_anchors),
+    )
