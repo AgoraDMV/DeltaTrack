@@ -20,9 +20,9 @@ def _real_changes(
 ) -> tuple[tuple[int | None, int | None], ...]:
     """Keep only pairs where both sides are present and differ.
 
-    This is the canonical filter. Pure annotation insertions (one-sided None)
-    belong in the per-card callout via the has_amendment_annotations flag,
-    not as financial-summary rows.
+    Pairs where one side is None (pure annotation insertions) and pairs
+    where old == new (no change) drop out, so the financial callout and
+    summary table render only meaningful base-amount changes.
     """
     return tuple((old, new) for old, new in pairs if old is not None and new is not None and old != new)
 
@@ -107,12 +107,16 @@ def _change_view_from_xml(change: dict) -> ChangeView:
         old_text=change.get("old_text") or "",
         new_text=change.get("new_text") or "",
         amount_pairs=_real_changes(pairs),
-        has_amendment_annotations=bool(financial and financial.get("has_amendment_annotations")),
     )
 
 
 def xml_dict_to_view(diff_dict: dict) -> DiffView:
-    """Convert a bill-diff dict (from bill_diff_to_dict) into a DiffView."""
+    """Convert a bill-diff dict (from bill_diff_to_dict) into a DiffView.
+
+    Drops `unchanged` entries up front: bill_diff_to_dict emits a card per
+    matched node regardless of whether it changed, but the renderer should
+    only show items with diffs.
+    """
     changes = diff_dict.get("changes", []) or []
     return DiffView(
         bill_type=diff_dict.get("bill_type", "") or "",
@@ -123,7 +127,7 @@ def xml_dict_to_view(diff_dict: dict) -> DiffView:
         v1_version_number=diff_dict.get("old_version_number"),
         v2_version_number=diff_dict.get("new_version_number"),
         summary=dict(diff_dict.get("summary") or {}),
-        changes=tuple(_change_view_from_xml(c) for c in changes),
+        changes=tuple(_change_view_from_xml(c) for c in changes if c.get("change_type") != "unchanged"),
     )
 
 
@@ -239,7 +243,6 @@ def _change_view_from_pdf(
         old_text=hunk.v1_text or "",
         new_text=hunk.v2_text or "",
         amount_pairs=_real_changes(hunk.amount_pairs),
-        has_amendment_annotations=hunk.has_amendment_annotations,
     )
 
 

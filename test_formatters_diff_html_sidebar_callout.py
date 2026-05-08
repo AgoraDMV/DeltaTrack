@@ -1,8 +1,7 @@
 """Tests for the unified renderer's sidebar nav items and financial callout.
 
 Sidebar: per-change <li> with optional unanchored class and section-number
-prefix. Callout: canonical flex-row layout (per choice #12), with the floor-
-amendment-annotation note when applicable.
+prefix. Callout: flex-row layout, one row per real amount change.
 """
 
 from __future__ import annotations
@@ -23,7 +22,6 @@ def _change(**overrides) -> ChangeView:
         old_text="",
         new_text="",
         amount_pairs=(),
-        has_amendment_annotations=False,
     )
     base.update(overrides)
     return ChangeView(**base)
@@ -91,7 +89,7 @@ def test_sidebar_filter_input_present():
 # ---------- Callout ---------------------------------------------------------
 
 
-def test_callout_empty_when_no_amounts_and_no_annotations():
+def test_callout_empty_when_no_amount_pairs():
     assert _build_callout(_change()) == ""
 
 
@@ -103,7 +101,7 @@ def test_callout_real_change_uses_flex_row_with_delta_class():
     assert '<div class="row">' in callout
     assert '<span class="label">Amount:</span>' in callout
     assert "$1,000 &rarr; $1,500" in callout
-    # Delta has a semantic class for color (canonical: increase/decrease/unchanged).
+    # Delta has a semantic class for color.
     assert '<span class="delta increase">' in callout
     assert "(+$500)" in callout
 
@@ -121,20 +119,6 @@ def test_callout_multiple_pairs_emit_multiple_rows():
     assert "$2,000 &rarr; $3,000" in callout
 
 
-def test_callout_amendment_annotation_note():
-    callout = _build_callout(_change(has_amendment_annotations=True))
-    assert '<div class="amendment-note">' in callout
-    assert "floor amendment annotations" in callout
-
-
-def test_callout_amounts_and_annotation_together():
-    callout = _build_callout(_change(amount_pairs=((1000, 1500),), has_amendment_annotations=True))
-    assert '<div class="row">' in callout
-    assert '<div class="amendment-note">' in callout
-    # Note appears after the rows.
-    assert callout.index('class="row"') < callout.index('class="amendment-note"')
-
-
 def test_card_includes_callout_when_amounts_present():
     """The card builder integrates the callout below the body."""
     from formatters.diff_html import _build_card
@@ -149,7 +133,7 @@ def test_card_includes_callout_when_amounts_present():
     assert body_pos < callout_pos
 
 
-def test_card_omits_callout_when_no_amounts_or_annotations():
+def test_card_omits_callout_when_no_amount_pairs():
     from formatters.diff_html import _build_card
 
     html = _build_card(_change(old_text="x", new_text="y"), 0)

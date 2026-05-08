@@ -65,9 +65,9 @@ def _build_card(change: ChangeView, index: int) -> str:
 def _card_body_html(change: ChangeView) -> str:
     """Render the body region of a card. Excludes header, citation, callout.
 
-    Returns "" for "unchanged" (and any unrecognized) change types so the
-    card surfaces only as a header + section reference. The four known types
-    each get their own body shape.
+    Returns "" for any unrecognized change_type so a card surfaces only as a
+    header + section reference. The four known types each get their own body
+    shape.
     """
     if change.change_type == "added":
         return f'<div class="change-body added-text">{escape(change.new_text)}</div>'
@@ -116,39 +116,32 @@ def _moved_body_html(change: ChangeView) -> str:
 def _build_callout(change: ChangeView) -> str:
     """Render the financial callout for a card.
 
-    Layout: flex rows with semantic delta classes (.increase / .decrease /
-    .unchanged) for color. Returns "" when there are no real amount changes
-    and no amendment annotations.
+    Layout: flex rows with semantic .increase / .decrease delta classes for
+    color. Returns "" when there are no real amount changes.
 
     `change.amount_pairs` is already filtered to real changes by the adapters
     (both sides present and differing), so this function does not re-filter —
-    every pair becomes a row. The `unchanged` delta branch is therefore
-    unreachable from current adapters; it stays as a defensive default.
+    every pair becomes a row, and zero deltas can't reach this code.
     """
-    if not change.amount_pairs and not change.has_amendment_annotations:
+    if not change.amount_pairs:
         return ""
     parts = ['<div class="financial-callout">']
     for old, new in change.amount_pairs:
-        # Adapters guarantee both sides are present; assert defensively.
+        # Adapters guarantee both sides are present and differ; assert defensively.
         assert old is not None and new is not None
         diff = new - old
         if diff > 0:
             delta_str = f"+{fmt_dollar(diff)}"
             delta_class = "increase"
-        elif diff < 0:
+        else:
             # Sign goes outside the dollar formatter so the result is "-$500", not "$-500".
             delta_str = f"-{fmt_dollar(abs(diff))}"
             delta_class = "decrease"
-        else:
-            delta_str = fmt_dollar(0)
-            delta_class = "unchanged"
         parts.append(
             f'<div class="row"><span class="label">Amount:</span>'
             f"<span>{fmt_dollar(old)} &rarr; {fmt_dollar(new)}</span>"
             f'<span class="delta {delta_class}">({delta_str})</span></div>'
         )
-    if change.has_amendment_annotations:
-        parts.append('<div class="amendment-note">Includes floor amendment annotations (increased/reduced by)</div>')
     parts.append("</div>")
     return "".join(parts)
 
@@ -268,12 +261,10 @@ def _build_financial_summary(view: DiffView) -> str:
             if diff > 0:
                 change_dollar = f"+{fmt_dollar(diff)}"
                 row_class = "increase"
-            elif diff < 0:
+            else:
+                # _real_changes drops zero-deltas, so diff < 0 here.
                 change_dollar = f"-{fmt_dollar(abs(diff))}"
                 row_class = "decrease"
-            else:
-                change_dollar = fmt_dollar(0)
-                row_class = "unchanged"
             if old != 0:
                 pct_value = diff / old * 100
                 pct_sign = "+" if pct_value >= 0 else ""
@@ -389,7 +380,6 @@ body { font-family: Georgia, 'Times New Roman', serif; color: #222; line-height:
 .financial-table a:hover { text-decoration: underline; }
 tr.increase .change-amount { color: #155724; }
 tr.decrease .change-amount { color: #721c24; }
-tr.unchanged .change-amount { color: #666; }
 
 /* Change cards */
 .change-card { border: 1px solid #ddd; border-radius: 6px; margin-bottom: 16px;
@@ -425,8 +415,6 @@ tr.unchanged .change-amount { color: #666; }
 .move-info { font-size: 13px; color: #004085; margin-bottom: 8px;
   padding: 6px 10px; background: #e7f1ff; border-radius: 3px; }
 .move-info code { font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; }
-.amendment-note { font-size: 12px; color: #856404; background: #fff3cd; padding: 4px 8px;
-  border-radius: 3px; margin-top: 4px; }
 
 /* Inline diff */
 del { background: #fecdd3; text-decoration: line-through; color: #9a3412; padding: 0 1px; }
@@ -440,7 +428,6 @@ ins { background: #bbf7d0; text-decoration: none; color: #166534; padding: 0 1px
 .financial-callout .label { color: #555; min-width: 110px; }
 .financial-callout .delta.decrease { color: #721c24; font-weight: 600; }
 .financial-callout .delta.increase { color: #155724; font-weight: 600; }
-.financial-callout .delta.unchanged { color: #555; }
 
 /* Navigation buttons */
 .nav-buttons { position: fixed; bottom: 20px; right: 20px; display: flex; gap: 8px; z-index: 10; }

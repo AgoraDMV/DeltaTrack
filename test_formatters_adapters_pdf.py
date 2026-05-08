@@ -228,25 +228,6 @@ def test_amount_pairs_filtered_to_real_changes():
     assert cv.amount_pairs == ((1000, 1500),)
 
 
-def test_amendment_annotations_flag_propagates():
-    hunk = PdfHunk(
-        change_type="modified",
-        v1_anchor=SEC_101,
-        v2_anchor=SEC_101,
-        v1_range=(1, 1, 1, 5),
-        v2_range=(1, 1, 1, 5),
-        v1_text="x",
-        v2_text="y",
-        amount_pairs=((None, 100),),
-        has_amendment_annotations=True,
-    )
-    diff = _diff(hunks=[hunk], v1_anchors=[SEC_101], v2_anchors=[SEC_101])
-    view = pdf_diff_to_view(diff, **_meta())
-    cv = view.changes[0]
-    assert cv.amount_pairs == ()
-    assert cv.has_amendment_annotations is True
-
-
 def test_summary_taken_from_pdf_diff():
     h1 = PdfHunk("modified", SEC_101, SEC_101, (1, 1, 1, 1), (1, 1, 1, 1), "a", "b")
     h2 = PdfHunk("added", None, SEC_201, None, (5, 1, 5, 1), "", "c")

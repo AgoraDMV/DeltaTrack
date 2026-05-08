@@ -21,7 +21,6 @@ def _minimal_change(**overrides) -> ChangeView:
         old_text="old prose",
         new_text="new prose",
         amount_pairs=(),
-        has_amendment_annotations=False,
     )
     base.update(overrides)
     return ChangeView(**base)

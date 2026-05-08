@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-ChangeType = Literal["added", "removed", "modified", "moved", "unchanged"]
+ChangeType = Literal["added", "removed", "modified", "moved"]
 
 
 @dataclass(frozen=True)
@@ -55,9 +55,6 @@ class ChangeView:
     amount_pairs: tuple[tuple[int | None, int | None], ...]
     """Already filtered to "real" amount changes (both sides present and
     differing). The renderer iterates without re-filtering."""
-
-    has_amendment_annotations: bool
-    """When True, financial callouts include the floor-amendment-annotation note."""
 
 
 @dataclass(frozen=True)

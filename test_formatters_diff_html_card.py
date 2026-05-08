@@ -24,7 +24,6 @@ def _change(**overrides) -> ChangeView:
         old_text="",
         new_text="",
         amount_pairs=(),
-        has_amendment_annotations=False,
     )
     base.update(overrides)
     return ChangeView(**base)

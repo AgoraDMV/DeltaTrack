@@ -69,7 +69,6 @@ def test_modified_change_basic_fields():
     assert cv.degraded is False
     assert cv.move_info_html == ""
     assert cv.amount_pairs == ()
-    assert cv.has_amendment_annotations is False
 
 
 def test_path_segments_are_html_escaped_per_segment():
@@ -158,9 +157,9 @@ def test_moved_change_renders_move_info_html():
 
 
 def test_amount_pairs_filtered_to_real_changes():
-    """The canonical filter (PDF-style) drops one-sided None pairs — those
-    are pure annotation insertions on an unchanged base, surfaced via the
-    has_amendment_annotations flag rather than as summary-table rows."""
+    """Drops one-sided None pairs and zero-delta pairs. Pure annotation
+    insertions on an unchanged base are dropped entirely — the renderer
+    no longer surfaces them as a separate callout note."""
     change = {
         "change_type": "modified",
         "display_path_old": ["X"],
@@ -182,28 +181,38 @@ def test_amount_pairs_filtered_to_real_changes():
     assert cv.amount_pairs == ((1000, 1500),)
 
 
-def test_amendment_annotations_flag_propagates():
-    change = {
-        "change_type": "modified",
-        "display_path_old": ["X"],
-        "display_path_new": ["X"],
-        "old_text": "a",
-        "new_text": "b",
-        "section_number": "",
-        "financial": {
-            "old_amounts": [],
-            "new_amounts": [1000],
-            "amounts_changed": True,
-            "paired_amounts": [(None, 1000)],
-            "has_amendment_annotations": True,
+def test_unchanged_changes_are_filtered_out():
+    """bill_diff_to_dict emits a card per matched node including unchanged
+    ones. The XML adapter drops them so the renderer only sees diffs."""
+    changes = [
+        {
+            "change_type": "unchanged",
+            "display_path_old": ["A"],
+            "display_path_new": ["A"],
+            "old_text": "same",
+            "new_text": "same",
+            "section_number": "",
         },
-    }
-    view = xml_dict_to_view(_diff_dict(changes=[change]))
-    cv = view.changes[0]
-    # Real-change filter drops the (None, 1000) pair...
-    assert cv.amount_pairs == ()
-    # ...but the annotation flag still surfaces, so the callout shows the note.
-    assert cv.has_amendment_annotations is True
+        {
+            "change_type": "modified",
+            "display_path_old": ["B"],
+            "display_path_new": ["B"],
+            "old_text": "old",
+            "new_text": "new",
+            "section_number": "",
+        },
+        {
+            "change_type": "unchanged",
+            "display_path_old": ["C"],
+            "display_path_new": ["C"],
+            "old_text": "same",
+            "new_text": "same",
+            "section_number": "",
+        },
+    ]
+    view = xml_dict_to_view(_diff_dict(changes=changes))
+    assert len(view.changes) == 1
+    assert view.changes[0].change_type == "modified"
 
 
 def test_section_number_appears_separately_not_in_heading():
