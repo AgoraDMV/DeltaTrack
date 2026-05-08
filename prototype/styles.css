@@ -300,11 +300,10 @@ del.diff-del {
 .amount-row__delta { color: var(--text-dim); font-size: 11px; margin-left: 6px; }
 
 /* ---------- Full-bill tracked-changes view ---------- */
-.full-bill-loading { color: var(--text-dim); padding: 20px 0; }
 .full-bill-meta {
   font-size: 11px;
   color: var(--text-dim);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 .full-bill {
@@ -317,20 +316,58 @@ del.diff-del {
   font-family: ui-monospace, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace;
   max-width: 920px;
   box-shadow: var(--shadow);
-  /* Bills typeset with line numbers in a left margin; preserving the
-     leading whitespace in the JSON keeps that alignment when rendered
-     in monospace. */
-  tab-size: 4;
-}
-.bill-line {
   white-space: pre-wrap;
   word-wrap: break-word;
-  min-height: 1.2em;
+  tab-size: 4;
 }
-.bill-line:empty::before { content: "\00a0"; }
-.bill-line--ins { background: rgba(28, 110, 58, 0.06); }
-.bill-line--del { background: rgba(163, 38, 28, 0.06); }
-.bill-line--mod { background: rgba(138, 91, 0, 0.06); }
+
+.moved-mark {
+  background: var(--moved-bg);
+  color: var(--moved);
+  border-radius: 2px;
+  padding: 1px 2px;
+  border-bottom: 1px dashed var(--moved);
+}
+
+.removed-appendix {
+  margin-top: 24px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--removed);
+  border-radius: 4px;
+  max-width: 920px;
+  box-shadow: var(--shadow);
+}
+.removed-appendix__title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: var(--removed);
+}
+.removed-appendix__note {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.removed-block {
+  margin-top: 10px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.removed-block__head {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.removed-block del.diff-del {
+  white-space: pre-wrap;
+  display: block;
+  padding: 8px 10px;
+}
 
 /* ---------- Modal ---------- */
 .modal {

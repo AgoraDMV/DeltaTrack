@@ -1,9 +1,12 @@
 /* ----------------------------------------------------------------------
    Bill Diff — Staffer Tool Prototype (vanilla JS, no framework)
 
-   Loads canonical diff JSON (schema v1.1) and renders two views:
+   Loads canonical diff JSON (schema v1.2) and renders two views:
      - changes: per-change tracked-changes blocks (default)
-     - full:    full bill text with Word-style tracked changes inline
+     - full:    full bill text with the canonical change set projected
+                inline using each change's full_text_span. Counts match
+                the Changes view by construction; the renderer doesn't
+                recompute a separate diff at render time.
 
    No network beyond fetching the local sample JSONs. No analytics.
    ---------------------------------------------------------------------- */
@@ -115,18 +118,8 @@ function renderContent() {
       content.innerHTML = html;
       return;
     }
-    html += '<div class="full-bill-loading">Computing full-bill diff…</div>';
+    html += renderFullBillView(d);
     content.innerHTML = html;
-    // Defer to next frame so the loading text actually paints before we block
-    // the main thread on a large diff.
-    requestAnimationFrame(() => {
-      const start = performance.now();
-      const body = renderFullBill(d.full_text.v1, d.full_text.v2);
-      const ms = (performance.now() - start).toFixed(0);
-      content.innerHTML = renderSummaryBar(d.summary) +
-        `<div class="full-bill-meta">Computed in ${ms} ms · ${d.full_text.v1.length.toLocaleString()} → ${d.full_text.v2.length.toLocaleString()} chars</div>` +
-        `<div class="full-bill">${body}</div>`;
-    });
     return;
   }
 
@@ -237,58 +230,119 @@ function formatDollars(n) {
 }
 
 // --- Full-bill tracked-changes view ----------------------------------------
+//
+// Projects the canonical change set onto full_text.v2 using each change's
+// full_text_span. The Changes tab is the source of truth; this view places
+// those changes into document context. By construction, the count of marked
+// regions equals the count in the Changes tab (modulo changes whose spans
+// could not be located -- those are reported, not silently dropped).
 
-// Strategy: line-level LCS to find aligned regions, then word-level LCS
-// inside each replace block (with a token-count cap so worst-case real
-// bills don't blow the dp table).
-const WORD_DIFF_CAP = 4000; // tokens per side; above this we fall back to whole-block marks.
+function renderFullBillView(canonical) {
+  const v2Text = canonical.full_text.v2;
+  const v1Text = canonical.full_text.v1;
 
-function renderFullBill(v1Text, v2Text) {
-  const aLines = v1Text.split('\n');
-  const bLines = v2Text.split('\n');
-  const ops = lcsLines(aLines, bLines);
-  const out = [];
-  let pending = { delLines: [], insLines: [] };
-
-  const flush = () => {
-    if (pending.delLines.length === 0 && pending.insLines.length === 0) return;
-    out.push(renderReplace(pending.delLines, pending.insLines));
-    pending = { delLines: [], insLines: [] };
-  };
-
-  for (const op of ops) {
-    if (op.type === 'eq') {
-      flush();
-      out.push(`<div class="bill-line">${escapeHtml(op.line)}</div>`);
-    } else if (op.type === 'del') {
-      pending.delLines.push(op.line);
-    } else if (op.type === 'add') {
-      pending.insLines.push(op.line);
+  // Bucket changes: those positioned in v2 (added/modified/moved with v2 span),
+  // those that exist only as removals (v1-only span), and those we can't place.
+  const v2Changes = [];
+  const removed = [];
+  let unplaced = 0;
+  for (const c of canonical.changes) {
+    const span = c.full_text_span;
+    if (span && span.v2) {
+      v2Changes.push(c);
+    } else if (c.change_type === 'removed' && span && span.v1) {
+      removed.push(c);
+    } else {
+      unplaced++;
     }
   }
-  flush();
-  return out.join('');
+  v2Changes.sort((a, b) => a.full_text_span.v2.start - b.full_text_span.v2.start);
+
+  // Walk v2Text in document order, emitting unchanged slices verbatim and
+  // wrapping each change span with the appropriate marks. Overlapping spans
+  // are skipped (first one wins).
+  const parts = [];
+  let cursor = 0;
+  let placed = 0;
+  for (const c of v2Changes) {
+    const { start, end } = c.full_text_span.v2;
+    if (start < cursor) continue;  // overlap; skip
+    if (start > cursor) parts.push(escapeHtml(v2Text.slice(cursor, start)));
+    parts.push(renderV2Mark(c, v2Text.slice(start, end)));
+    cursor = end;
+    placed++;
+  }
+  if (cursor < v2Text.length) parts.push(escapeHtml(v2Text.slice(cursor)));
+
+  const meta = renderFullBillMeta({
+    total: canonical.changes.length,
+    placed,
+    removed: removed.length,
+    unplaced,
+  });
+  const removedAppendix = removed.length ? renderRemovedAppendix(removed, v1Text) : '';
+
+  return `${meta}<div class="full-bill">${parts.join('')}</div>${removedAppendix}`;
 }
 
-function renderReplace(delLines, insLines) {
-  if (delLines.length === 0) {
-    return `<div class="bill-line bill-line--ins"><ins class="diff-add">${escapeHtml(insLines.join('\n'))}</ins></div>`;
+function renderV2Mark(change, v2Slice) {
+  const id = `attr-${change.id}`;
+  switch (change.change_type) {
+    case 'added':
+      return `<ins class="diff-add" id="${id}" data-change="${change.id}">${escapeHtml(v2Slice)}</ins>`;
+    case 'modified': {
+      const oldText = change.text.old || '';
+      return (
+        `<del class="diff-del" data-change="${change.id}">${escapeHtml(oldText)}</del>` +
+        `<ins class="diff-add" id="${id}" data-change="${change.id}">${escapeHtml(v2Slice)}</ins>`
+      );
+    }
+    case 'moved': {
+      const note = change.move && change.move.kind === 'renumbered'
+        ? `moved here (renumbered ${escapeHtml(change.move.old_label)} → ${escapeHtml(change.move.new_label)})`
+        : 'moved here';
+      return `<span class="moved-mark" id="${id}" data-change="${change.id}" title="${note}">${escapeHtml(v2Slice)}</span>`;
+    }
+    default:
+      // Including "removed" -- shouldn't reach here since we filter out v2-less
+      // changes, but if the producer ever emits a removed change with a v2
+      // span we render it as a deletion in place.
+      return `<del class="diff-del" data-change="${change.id}">${escapeHtml(v2Slice)}</del>`;
   }
-  if (insLines.length === 0) {
-    return `<div class="bill-line bill-line--del"><del class="diff-del">${escapeHtml(delLines.join('\n'))}</del></div>`;
-  }
-  // Both sides present: try word-level diff over the joined text if it fits
-  // under the perf cap, otherwise show whole-block strike + insert.
-  const oldText = delLines.join('\n');
-  const newText = insLines.join('\n');
+}
+
+function renderFullBillMeta({ total, placed, removed, unplaced }) {
+  const bits = [`${placed} of ${total} changes shown inline`];
+  if (removed > 0) bits.push(`${removed} removed below`);
+  if (unplaced > 0) bits.push(`${unplaced} unplaced (see Changes tab)`);
+  return `<div class="full-bill-meta">${bits.join(' · ')}</div>`;
+}
+
+function renderRemovedAppendix(removed, v1Text) {
+  const blocks = removed
+    .map((c) => {
+      const { start, end } = c.full_text_span.v1;
+      const text = v1Text.slice(start, end);
+      const path = (c.path.v1 || []).map(escapeHtml).join(' &gt; ');
+      const heading = path || '<em>(unknown location)</em>';
+      return `<article class="removed-block" id="attr-${c.id}">
+        <div class="removed-block__head">${heading}</div>
+        <del class="diff-del">${escapeHtml(text)}</del>
+      </article>`;
+    })
+    .join('');
+  return `<section class="removed-appendix">
+    <h3 class="removed-appendix__title">Removed in v2</h3>
+    <p class="removed-appendix__note">These sections existed in v1 and have no corresponding location in v2.</p>
+    ${blocks}
+  </section>`;
+}
+
+// Word-level LCS used by the per-change view to mark inline edits.
+function renderWordDiff(oldText, newText) {
   const a = tokenize(oldText);
   const b = tokenize(newText);
-  if (a.length > WORD_DIFF_CAP || b.length > WORD_DIFF_CAP) {
-    return `<div class="bill-line bill-line--mod">
-      <del class="diff-del">${escapeHtml(oldText)}</del><ins class="diff-add">${escapeHtml(newText)}</ins>
-    </div>`;
-  }
-  return `<div class="bill-line bill-line--mod">${renderTokenDiff(a, b)}</div>`;
+  return renderTokenDiff(a, b);
 }
 
 function renderTokenDiff(a, b) {
@@ -308,36 +362,6 @@ function renderTokenDiff(a, b) {
   }
   flush();
   return out;
-}
-
-// Line-level LCS. Hashes lines first so equality compares are O(1) ints.
-function lcsLines(a, b) {
-  const m = a.length, n = b.length;
-  // Build dp table over int hashes.
-  const dp = new Array(m + 1);
-  for (let i = 0; i <= m; i++) dp[i] = new Int32Array(n + 1);
-  for (let i = m - 1; i >= 0; i--) {
-    for (let j = n - 1; j >= 0; j--) {
-      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
-    }
-  }
-  const ops = [];
-  let i = 0, j = 0;
-  while (i < m && j < n) {
-    if (a[i] === b[j]) { ops.push({ type: 'eq', line: a[i] }); i++; j++; }
-    else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ type: 'del', line: a[i] }); i++; }
-    else { ops.push({ type: 'add', line: b[j] }); j++; }
-  }
-  while (i < m) ops.push({ type: 'del', line: a[i++] });
-  while (j < n) ops.push({ type: 'add', line: b[j++] });
-  return ops;
-}
-
-// Word-level LCS for the per-change view and small full-bill replace blocks.
-function renderWordDiff(oldText, newText) {
-  const a = tokenize(oldText);
-  const b = tokenize(newText);
-  return renderTokenDiff(a, b);
 }
 
 function tokenize(text) {
