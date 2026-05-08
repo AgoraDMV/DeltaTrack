@@ -25,7 +25,7 @@ from diff_pdf import PdfDiff, PdfHunk
 from formatters.view_model import ChangeView, DiffView
 from parsers.pdf_anchors import Anchor, breadcrumb_for
 
-SCHEMA_VERSION = "1.1"
+SCHEMA_VERSION = "1.2"
 GENERATOR_NAME = "appropriations_bills"
 
 
@@ -51,10 +51,17 @@ def _make_id(index: int) -> str:
 # ---------- XML producer -----------------------------------------------------
 
 
-def _xml_change_to_canonical(change: dict, index: int) -> dict:
+def _xml_change_to_canonical(
+    change: dict,
+    index: int,
+    full_text: dict | None,
+    search_state: dict,
+) -> dict:
     change_type = change.get("change_type", "modified")
     path_old = change.get("display_path_old")
     path_new = change.get("display_path_new")
+    text_old = change.get("old_text")
+    text_new = change.get("new_text")
     return {
         "id": _make_id(index),
         "change_type": change_type,
@@ -65,13 +72,39 @@ def _xml_change_to_canonical(change: dict, index: int) -> dict:
         },
         "location": None,  # XML carries no source coordinates
         "anchor_resolution": "resolved",  # XML pipeline always resolves structurally
-        "text": {
-            "old": change.get("old_text"),
-            "new": change.get("new_text"),
-        },
+        "text": {"old": text_old, "new": text_new},
         "amounts": _real_amount_pairs((change.get("financial") or {}).get("paired_amounts", ())),
         "move": _xml_move(change) if change_type == "moved" else None,
+        "full_text_span": _search_span(full_text, text_old, text_new, search_state),
     }
+
+
+def _search_span(full_text: dict | None, text_old: str | None, text_new: str | None, state: dict) -> dict | None:
+    """Locate a change's text inside full_text by substring search.
+
+    state holds per-side hint offsets so successive searches don't backtrack
+    -- diff results are emitted in document order, so each next change should
+    appear at-or-after the last one. This avoids the same common phrase
+    matching the wrong occurrence.
+    """
+    if full_text is None:
+        return None
+
+    def _find(side: str, target: str | None) -> dict | None:
+        if not target:
+            return None
+        text = full_text[side]
+        start = text.find(target, state.get(side, 0))
+        if start < 0:
+            # Fallback: search from the beginning. If still not found, span is null.
+            start = text.find(target)
+            if start < 0:
+                return None
+        end = start + len(target)
+        state[side] = end
+        return {"start": start, "end": end}
+
+    return {"v1": _find("v1", text_old), "v2": _find("v2", text_new)}
 
 
 def _xml_move(change: dict) -> dict:
@@ -94,6 +127,8 @@ def xml_diff_to_canonical(diff_dict: dict, *, full_text: dict | None = None) -> 
     surfaces it at the top level for full-document rendering.
     """
     diffed = [c for c in (diff_dict.get("changes") or []) if c.get("change_type") != "unchanged"]
+    normalized_full_text = _normalize_full_text(full_text)
+    search_state: dict = {}
     return {
         "schema_version": SCHEMA_VERSION,
         "generator": {"name": GENERATOR_NAME, "version": "0"},
@@ -115,8 +150,8 @@ def xml_diff_to_canonical(diff_dict: dict, *, full_text: dict | None = None) -> 
             },
         },
         "summary": dict(diff_dict.get("summary") or {}),
-        "full_text": _normalize_full_text(full_text),
-        "changes": [_xml_change_to_canonical(c, i) for i, c in enumerate(diffed)],
+        "full_text": normalized_full_text,
+        "changes": [_xml_change_to_canonical(c, i, normalized_full_text, search_state) for i, c in enumerate(diffed)],
     }
 
 
@@ -182,6 +217,8 @@ def _pdf_hunk_to_canonical(
     index: int,
     v1_anchors: tuple[Anchor, ...],
     v2_anchors: tuple[Anchor, ...],
+    line_offsets_v1: dict | None,
+    line_offsets_v2: dict | None,
 ) -> dict:
     path_v1 = _path_for_anchor(hunk.v1_anchor, v1_anchors)
     path_v2 = _path_for_anchor(hunk.v2_anchor, v2_anchors)
@@ -208,7 +245,31 @@ def _pdf_hunk_to_canonical(
         },
         "amounts": _real_amount_pairs(hunk.amount_pairs),
         "move": _pdf_move(hunk) if hunk.change_type == "moved" else None,
+        "full_text_span": _pdf_span(hunk, line_offsets_v1, line_offsets_v2),
     }
+
+
+def _pdf_span(hunk: PdfHunk, line_offsets_v1: dict | None, line_offsets_v2: dict | None) -> dict | None:
+    """Compute char-offset spans into full_text from PdfHunk's page-line ranges
+    using the per-line offset table the PDF builder produced. Spans are
+    inclusive of the matched lines' start and end, so wrapping the spans in
+    <ins>/<del> covers each line's text without straddling the line break."""
+    if line_offsets_v1 is None and line_offsets_v2 is None:
+        return None
+
+    def _span(rng: tuple[int, int, int, int] | None, offsets: dict | None) -> dict | None:
+        if rng is None or offsets is None:
+            return None
+        sp, sl, ep, el = rng
+        if sl < 0 or el < 0:
+            return None  # unnumbered source lines aren't reachable via the table
+        start_entry = offsets.get((sp, sl))
+        end_entry = offsets.get((ep, el))
+        if start_entry is None or end_entry is None:
+            return None
+        return {"start": start_entry[0], "end": end_entry[1]}
+
+    return {"v1": _span(hunk.v1_range, line_offsets_v1), "v2": _span(hunk.v2_range, line_offsets_v2)}
 
 
 def pdf_diff_to_canonical(
@@ -220,7 +281,17 @@ def pdf_diff_to_canonical(
     v1_label: str = "v1",
     v2_label: str = "v2",
     full_text: dict | None = None,
+    line_offsets: dict | None = None,
 ) -> dict:
+    """Produce canonical JSON from a PdfDiff.
+
+    `line_offsets`, when provided, is a dict with keys "v1" and "v2" each
+    mapping (page_number, line_number) -> (start_char, end_char) into the
+    corresponding full_text string. Required if you want full_text_span
+    populated on changes; without it, full_text_span is null on each.
+    """
+    line_offsets_v1 = (line_offsets or {}).get("v1")
+    line_offsets_v2 = (line_offsets or {}).get("v2")
     return {
         "schema_version": SCHEMA_VERSION,
         "generator": {"name": GENERATOR_NAME, "version": "0"},
@@ -231,7 +302,10 @@ def pdf_diff_to_canonical(
         },
         "summary": dict(diff.summary),
         "full_text": _normalize_full_text(full_text),
-        "changes": [_pdf_hunk_to_canonical(h, i, diff.v1_anchors, diff.v2_anchors) for i, h in enumerate(diff.hunks)],
+        "changes": [
+            _pdf_hunk_to_canonical(h, i, diff.v1_anchors, diff.v2_anchors, line_offsets_v1, line_offsets_v2)
+            for i, h in enumerate(diff.hunks)
+        ],
     }
 
 

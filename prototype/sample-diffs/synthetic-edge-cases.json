@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "generator": {
     "name": "appropriations_bills",
     "version": "0-synthetic"
@@ -73,7 +73,17 @@
           "new": 5500000
         }
       ],
-      "move": null
+      "move": null,
+      "full_text_span": {
+        "v1": {
+          "start": 44,
+          "end": 154
+        },
+        "v2": {
+          "start": 44,
+          "end": 154
+        }
+      }
     },
     {
       "id": "c-0002",
@@ -101,7 +111,14 @@
         "new": "There is established within the Department an Office of Innovation, headed by a Director appointed by the Secretary."
       },
       "amounts": [],
-      "move": null
+      "move": null,
+      "full_text_span": {
+        "v1": null,
+        "v2": {
+          "start": 296,
+          "end": 412
+        }
+      }
     },
     {
       "id": "c-0003",
@@ -130,7 +147,14 @@
         "new": null
       },
       "amounts": [],
-      "move": null
+      "move": null,
+      "full_text_span": {
+        "v1": {
+          "start": 447,
+          "end": 557
+        },
+        "v2": null
+      }
     },
     {
       "id": "c-0004",
@@ -171,6 +195,16 @@
         "old_label": "Sec. 401",
         "new_label": "Sec. 501",
         "body_unchanged": true
+      },
+      "full_text_span": {
+        "v1": {
+          "start": 591,
+          "end": 674
+        },
+        "v2": {
+          "start": 610,
+          "end": 693
+        }
       }
     },
     {
@@ -212,6 +246,16 @@
       "move": {
         "kind": "relocated",
         "body_unchanged": true
+      },
+      "full_text_span": {
+        "v1": {
+          "start": 761,
+          "end": 831
+        },
+        "v2": {
+          "start": 780,
+          "end": 850
+        }
       }
     },
     {
@@ -242,7 +286,17 @@
         "new": "Provided further, That amounts under this heading shall be available for fiscal year 2028."
       },
       "amounts": [],
-      "move": null
+      "move": null,
+      "full_text_span": {
+        "v1": {
+          "start": 870,
+          "end": 960
+        },
+        "v2": {
+          "start": 889,
+          "end": 979
+        }
+      }
     }
   ]
 }

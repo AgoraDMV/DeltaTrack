@@ -36,19 +36,35 @@ from formatters.text_serializer import serialize_tree  # noqa: E402
 from parsers.pdf_text import extract_clean_pages  # noqa: E402
 
 
-def _pdf_full_text(pages) -> str:
+def _pdf_full_text(pages) -> tuple[str, dict]:
     """Render the cleaned PDF pages with their original line numbers, so the
     full-bill view matches how the printed bill looks. Each line gets a
     5-char right-aligned line-number prefix (blank padding when the source
-    line was unnumbered). Pages are separated by a blank line."""
-    out: list[str] = []
+    line was unnumbered). Pages are separated by a blank line.
+
+    Returns (text, line_offsets) where line_offsets maps (page_number,
+    line_number) -> (start_char, end_char) in `text`. Only lines with a
+    non-None line_number are indexed; unnumbered lines aren't reachable
+    via change.location anyway.
+    """
+    chunks: list[str] = []
+    line_offsets: dict[tuple[int, int], tuple[int, int]] = {}
+    pos = 0
     for i, page in enumerate(pages):
         if i > 0:
-            out.append("")  # blank line between pages
+            chunks.append("")  # blank line between pages
+            pos += 1  # for the trailing newline
         for line in page.lines:
             prefix = f"{line.line_number:>5}" if line.line_number is not None else " " * 5
-            out.append(f"{prefix}  {line.text}")
-    return "\n".join(out)
+            rendered = f"{prefix}  {line.text}"
+            line_start = pos
+            line_end = pos + len(rendered)
+            if line.line_number is not None:
+                line_offsets[(page.page_number, line.line_number)] = (line_start, line_end)
+            chunks.append(rendered)
+            pos = line_end + 1  # +1 for the joining newline
+    text = "\n".join(chunks)
+    return text, line_offsets
 
 
 OUT_DIR = ROOT / "prototype" / "sample-diffs"
@@ -107,6 +123,9 @@ def generate_hr4366_pdf() -> None:
     new_pages = extract_clean_pages(bill_dir / "2_engrossed-in-house.pdf")
     pdf_diff = diff_pdfs(old_pages, new_pages)
 
+    v1_text, v1_offsets = _pdf_full_text(old_pages)
+    v2_text, v2_offsets = _pdf_full_text(new_pages)
+
     canonical = pdf_diff_to_canonical(
         pdf_diff,
         bill_type="hr",
@@ -114,7 +133,8 @@ def generate_hr4366_pdf() -> None:
         congress=118,
         v1_label="Reported in House",
         v2_label="Engrossed in House",
-        full_text={"v1": _pdf_full_text(old_pages), "v2": _pdf_full_text(new_pages)},
+        full_text={"v1": v1_text, "v2": v2_text},
+        line_offsets={"v1": v1_offsets, "v2": v2_offsets},
     )
     _validate(canonical, "hr4366-pdf")
     _write(canonical, "hr4366-reported-vs-engrossed-pdf.json")
@@ -138,7 +158,8 @@ class _SynChange:
     anchor_resolution: str = "resolved"
 
 
-def _to_dict(c: _SynChange, idx: int) -> dict:
+def _to_dict(c: _SynChange, idx: int, full_text: dict, search_state: dict) -> dict:
+    span = _synthetic_span(full_text, c.text_old, c.text_new, search_state)
     return {
         "id": f"c-{idx + 1:04d}",
         "change_type": c.change_type,
@@ -151,7 +172,24 @@ def _to_dict(c: _SynChange, idx: int) -> dict:
         "text": {"old": c.text_old, "new": c.text_new},
         "amounts": c.amounts,
         "move": c.move,
+        "full_text_span": span,
     }
+
+
+def _synthetic_span(full_text: dict, text_old: str | None, text_new: str | None, state: dict) -> dict:
+    def find(side: str, target: str | None):
+        if not target:
+            return None
+        s = full_text[side].find(target, state.get(side, 0))
+        if s < 0:
+            s = full_text[side].find(target)
+            if s < 0:
+                return None
+        e = s + len(target)
+        state[side] = e
+        return {"start": s, "end": e}
+
+    return {"v1": find("v1", text_old), "v2": find("v2", text_new)}
 
 
 def generate_synthetic() -> None:
@@ -245,6 +283,7 @@ def generate_synthetic() -> None:
     ]
 
     full_text = _synthetic_full_text()
+    state: dict = {}
     canonical = {
         "schema_version": SCHEMA_VERSION,
         "generator": {"name": "appropriations_bills", "version": "0-synthetic"},
@@ -255,7 +294,7 @@ def generate_synthetic() -> None:
         },
         "summary": {"added": 1, "removed": 1, "modified": 2, "moved": 2},
         "full_text": full_text,
-        "changes": [_to_dict(c, i) for i, c in enumerate(changes)],
+        "changes": [_to_dict(c, i, full_text, state) for i, c in enumerate(changes)],
     }
     _validate(canonical, "synthetic")
     _write(canonical, "synthetic-edge-cases.json")

@@ -29,7 +29,7 @@ from formatters.canonical import (
 )
 from parsers.pdf_anchors import Anchor
 
-SCHEMA_VERSION = "1.1"
+SCHEMA_VERSION = "1.2"
 
 
 # ---------- XML producer ------------------------------------------------------
@@ -472,6 +472,123 @@ def test_pdf_full_text_passes_through():
     diff = PdfDiff(hunks=(), v1_anchors=(), v2_anchors=())
     canonical = pdf_diff_to_canonical(diff, **_pdf_meta(), full_text={"v1": "x", "v2": "y"})
     assert canonical["full_text"] == {"v1": "x", "v2": "y"}
+
+
+def test_xml_full_text_span_default_null_when_no_full_text():
+    change = {
+        "change_type": "modified",
+        "display_path_old": ["A"],
+        "display_path_new": ["A"],
+        "old_text": "old prose",
+        "new_text": "new prose",
+        "section_number": "",
+    }
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[change]))
+    assert canonical["changes"][0]["full_text_span"] is None
+
+
+def test_xml_full_text_span_found_via_search():
+    change = {
+        "change_type": "modified",
+        "display_path_old": ["A"],
+        "display_path_new": ["A"],
+        "old_text": "old prose here",
+        "new_text": "new prose here",
+        "section_number": "",
+    }
+    full_text = {
+        "v1": "Some prelude. old prose here, that's it.",
+        "v2": "Some prelude. new prose here, that's it.",
+    }
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[change]), full_text=full_text)
+    span = canonical["changes"][0]["full_text_span"]
+    assert span["v1"] == {"start": 14, "end": 28}
+    assert span["v2"] == {"start": 14, "end": 28}
+    assert full_text["v1"][span["v1"]["start"] : span["v1"]["end"]] == "old prose here"
+    assert full_text["v2"][span["v2"]["start"] : span["v2"]["end"]] == "new prose here"
+
+
+def test_xml_full_text_span_added_has_v1_null():
+    change = {
+        "change_type": "added",
+        "display_path_old": None,
+        "display_path_new": ["B"],
+        "old_text": None,
+        "new_text": "brand new",
+        "section_number": "",
+    }
+    full_text = {"v1": "alpha beta", "v2": "alpha brand new gamma"}
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[change]), full_text=full_text)
+    span = canonical["changes"][0]["full_text_span"]
+    assert span["v1"] is None
+    assert full_text["v2"][span["v2"]["start"] : span["v2"]["end"]] == "brand new"
+
+
+def test_xml_search_state_advances_so_repeated_phrases_dont_collide():
+    """Two changes with the same `text.new` substring should land at distinct
+    spans -- the second one finds the second occurrence in document order."""
+    changes = [
+        {
+            "change_type": "modified",
+            "display_path_old": ["A"],
+            "display_path_new": ["A"],
+            "old_text": "shared",
+            "new_text": "shared",
+            "section_number": "",
+        },
+        {
+            "change_type": "modified",
+            "display_path_old": ["B"],
+            "display_path_new": ["B"],
+            "old_text": "shared",
+            "new_text": "shared",
+            "section_number": "",
+        },
+    ]
+    full_text = {"v1": "shared one shared two", "v2": "shared one shared two"}
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=changes), full_text=full_text)
+    s1, s2 = canonical["changes"][0]["full_text_span"], canonical["changes"][1]["full_text_span"]
+    assert s1["v2"]["start"] == 0
+    assert s2["v2"]["start"] == 11  # the second "shared"
+
+
+def test_pdf_full_text_span_uses_line_offsets():
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=SEC_101,
+        v2_anchor=SEC_101,
+        v1_range=(1, 10, 1, 12),
+        v2_range=(2, 5, 2, 7),
+        v1_text="x",
+        v2_text="y",
+    )
+    diff = PdfDiff(hunks=(hunk,), v1_anchors=(SEC_101,), v2_anchors=(SEC_101,))
+    line_offsets = {
+        "v1": {(1, 10): (100, 130), (1, 11): (131, 160), (1, 12): (161, 200)},
+        "v2": {(2, 5): (50, 80), (2, 6): (81, 110), (2, 7): (111, 140)},
+    }
+    canonical = pdf_diff_to_canonical(diff, **_pdf_meta(), line_offsets=line_offsets)
+    span = canonical["changes"][0]["full_text_span"]
+    assert span["v1"] == {"start": 100, "end": 200}
+    assert span["v2"] == {"start": 50, "end": 140}
+
+
+def test_pdf_full_text_span_null_when_unnumbered():
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=SEC_101,
+        v2_anchor=SEC_101,
+        v1_range=(1, -1, 1, -1),
+        v2_range=(2, 5, 2, 5),
+        v1_text="x",
+        v2_text="y",
+    )
+    diff = PdfDiff(hunks=(hunk,), v1_anchors=(SEC_101,), v2_anchors=(SEC_101,))
+    line_offsets = {"v1": {}, "v2": {(2, 5): (50, 80)}}
+    canonical = pdf_diff_to_canonical(diff, **_pdf_meta(), line_offsets=line_offsets)
+    span = canonical["changes"][0]["full_text_span"]
+    assert span["v1"] is None  # unnumbered, can't be located
+    assert span["v2"] == {"start": 50, "end": 80}
 
 
 def test_full_text_invalid_shape_rejected():

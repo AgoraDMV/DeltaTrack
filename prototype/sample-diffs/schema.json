@@ -89,6 +89,20 @@
       ],
       "additionalProperties": false,
       "properties": {
+        "full_text_span": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["v1", "v2"],
+              "additionalProperties": false,
+              "properties": {
+                "v1": { "$ref": "#/$defs/Offset" },
+                "v2": { "$ref": "#/$defs/Offset" }
+              }
+            }
+          ]
+        },
         "id": { "type": "string" },
         "change_type": { "enum": ["added", "removed", "modified", "moved"] },
         "section_number": { "type": ["string", "null"] },
@@ -145,6 +159,20 @@
           ]
         }
       }
+    },
+    "Offset": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["start", "end"],
+          "additionalProperties": false,
+          "properties": {
+            "start": { "type": "integer", "minimum": 0 },
+            "end": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ]
     },
     "PathArray": {
       "anyOf": [

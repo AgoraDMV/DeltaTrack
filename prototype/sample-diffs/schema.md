@@ -1,4 +1,4 @@
-# Canonical Diff JSON — v1.1
+# Canonical Diff JSON — v1.2
 
 This document specifies the canonical JSON shape produced when comparing two
 versions of a bill. It is the public contract between the diff engine and any
@@ -8,10 +8,16 @@ XML inputs and a diff produced from PDF inputs share this shape.
 
 ## Versioning
 
-Top-level field: `schema_version: "1.1"`.
+Top-level field: `schema_version: "1.2"`.
 
 ## Changelog
 
+- **1.2** — Added optional `full_text_span: { v1, v2 } | null` field on
+  each change object, locating the change's content inside `full_text.v1`
+  and `full_text.v2` as character offsets. Renderers use it to project
+  the canonical change set onto the full-document view (Word-style track
+  changes), instead of recomputing a separate line-level diff at render
+  time. Additive, backward compatible.
 - **1.1** — Added optional top-level `full_text: { v1, v2 } | null` field
   carrying complete bill text per side. Renderers MAY use it for a
   Word-style tracked-changes view over the whole document. Backward
@@ -114,7 +120,11 @@ that need a different order MUST resort.
   "anchor_resolution": "resolved",
   "text":    { "old": "...", "new": "..." },
   "amounts": [ { "old": 5000000, "new": 5500000 } ],
-  "move":    null
+  "move":    null,
+  "full_text_span": {                            // optional, v1.2+
+    "v1": { "start": 4823, "end": 4961 },
+    "v2": { "start": 4823, "end": 4972 }
+  }
 }
 ```
 
@@ -211,6 +221,31 @@ unfiltered set must wait for a future field; v1.0 does not expose it.
 ```jsonc
 "amounts": [ { "old": 5000000, "new": 5500000 }, ... ]
 ```
+
+### `full_text_span` (optional, v1.2+)
+
+Character offsets into `full_text.v1` and `full_text.v2` locating where this
+change's content sits inside the full-document text. Renderers use it to
+project the canonical change set onto a full-bill tracked-changes view.
+
+```jsonc
+"full_text_span": {
+  "v1": { "start": int, "end": int } | null,
+  "v2": { "start": int, "end": int } | null
+} | null
+```
+
+- `null` (or absent) — full-text positioning isn't available for this change.
+  Renderers MUST gracefully omit such changes from the full-bill view.
+- `v1.start..v1.end` — half-open span where the change's `text.old` (or its
+  v1 anchor location for moves) sits in `full_text.v1`. `null` for pure
+  additions.
+- `v2.start..v2.end` — half-open span where the change's `text.new` sits in
+  `full_text.v2`. `null` for pure removals.
+
+Spans are point-of-truth from the producer; they are not derivable from
+`text.old` / `text.new` via substring search alone (PDF full text contains
+line-number prefixes that differ from the cleaned diff fragments).
 
 ### `move`
 
