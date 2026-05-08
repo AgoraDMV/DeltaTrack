@@ -498,28 +498,6 @@ class TestFilterDiff:
         assert filtered.summary["unchanged"] == 0
 
 
-@pytest.fixture
-def fast_normalize(monkeypatch, hr4366_v1, hr4366_v6, hr4366_v1_v6_diff):
-    """Monkeypatch diff_bill.normalize_bill and diff_bills to reuse session-cached results
-    for the v1->v6 path used by the CLI tests. Saves ~7s/test by skipping parse + diff."""
-    import diff_bill as diff_bill_module
-
-    normalize_orig = diff_bill_module.normalize_bill
-    diff_orig = diff_bill_module.diff_bills
-    tree_cache = {HR4366_V1_PATH: hr4366_v1, HR4366_V6_PATH: hr4366_v6}
-
-    def _cached_normalize(path):
-        return tree_cache.get(path) or normalize_orig(path)
-
-    def _cached_diff(old, new):
-        if old is hr4366_v1 and new is hr4366_v6:
-            return hr4366_v1_v6_diff
-        return diff_orig(old, new)
-
-    monkeypatch.setattr(diff_bill_module, "normalize_bill", _cached_normalize)
-    monkeypatch.setattr(diff_bill_module, "diff_bills", _cached_diff)
-
-
 @pytest.mark.slow
 @pytest.mark.skipif(
     not HR4366_V1_PATH.exists() or not HR4366_V6_PATH.exists(),
@@ -528,7 +506,7 @@ def fast_normalize(monkeypatch, hr4366_v1, hr4366_v6, hr4366_v1_v6_diff):
 class TestCli:
     """In-process CLI tests via main(). Subprocess coverage is in test_subprocess_entrypoint."""
 
-    def test_compare_to_stdout(self, monkeypatch, capsys, fast_normalize):
+    def test_compare_to_stdout(self, monkeypatch, capsys, fast_normalize_diff):
         monkeypatch.setattr(
             sys,
             "argv",
@@ -540,7 +518,7 @@ class TestCli:
         assert "changes" in data
         assert data["summary"]["added"] > 0
 
-    def test_compare_to_file(self, tmp_path, monkeypatch, fast_normalize):
+    def test_compare_to_file(self, tmp_path, monkeypatch, fast_normalize_diff):
         out = tmp_path / "diff.json"
         monkeypatch.setattr(
             sys,
@@ -561,7 +539,7 @@ class TestCli:
         assert data["old_version"] == "reported-in-house"
         assert data["new_version"] == "enrolled-bill"
 
-    def test_filter_flag(self, monkeypatch, capsys, fast_normalize):
+    def test_filter_flag(self, monkeypatch, capsys, fast_normalize_diff):
         monkeypatch.setattr(
             sys,
             "argv",

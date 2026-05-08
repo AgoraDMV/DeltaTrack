@@ -227,76 +227,55 @@ class TestCliIntegration:
         assert args.format == "html"
 
     @pytest.mark.slow
-    def test_format_html_output(self, tmp_path):
+    def test_format_html_output(self, tmp_path, monkeypatch, fast_normalize_diff):
         """HTML format produces a valid HTML file via the CLI."""
-        import subprocess
+        import sys
 
-        old = "bills/118-hr-4366/1_reported-in-house.xml"
-        new = "bills/118-hr-4366/2_engrossed-in-house.xml"
-        import os
-
-        if not os.path.exists(old) or not os.path.exists(new):
-            import pytest
-
-            pytest.skip("Real bill XMLs not available")
+        from conftest import HR4366_V1_PATH, HR4366_V2_PATH
+        from diff_bill import main
 
         out = tmp_path / "report.html"
-        result = subprocess.run(
-            ["uv", "run", "python", "diff_bill.py", "compare", old, new, "--format", "html", "-o", str(out)],
-            capture_output=True,
-            text=True,
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["diff_bill.py", "compare", str(HR4366_V1_PATH), str(HR4366_V2_PATH), "--format", "html", "-o", str(out)],
         )
-        assert result.returncode == 0, result.stderr
-        content = out.read_text()
-        assert content.startswith("<!DOCTYPE html>")
+        main()
+        assert out.read_text().startswith("<!DOCTYPE html>")
 
     @pytest.mark.slow
-    def test_format_html_v1_v2_no_phantom_financial(self, tmp_path):
+    def test_format_html_v1_v2_no_phantom_financial(self, tmp_path, monkeypatch, fast_normalize_diff):
         """v1 vs v2 has no real financial changes after amendment stripping."""
-        import subprocess
+        import sys
 
-        old = "bills/118-hr-4366/1_reported-in-house.xml"
-        new = "bills/118-hr-4366/2_engrossed-in-house.xml"
-        import os
-
-        if not os.path.exists(old) or not os.path.exists(new):
-            import pytest
-
-            pytest.skip("Real bill XMLs not available")
+        from conftest import HR4366_V1_PATH, HR4366_V2_PATH
+        from diff_bill import main
 
         out = tmp_path / "report.html"
-        result = subprocess.run(
-            ["uv", "run", "python", "diff_bill.py", "compare", old, new, "--format", "html", "-o", str(out)],
-            capture_output=True,
-            text=True,
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["diff_bill.py", "compare", str(HR4366_V1_PATH), str(HR4366_V2_PATH), "--format", "html", "-o", str(out)],
         )
-        assert result.returncode == 0, result.stderr
-        content = out.read_text()
+        main()
         # Floor amendment annotations reference the budget request baseline,
         # not the previous bill version, so base amounts are unchanged v1->v2
         # and no Financial Summary should appear.
-        assert "Financial Summary" not in content
+        assert "Financial Summary" not in out.read_text()
 
     @pytest.mark.slow
-    def test_format_html_v1_v6_has_financial_summary(self, tmp_path):
+    def test_format_html_v1_v6_has_financial_summary(self, tmp_path, monkeypatch, fast_normalize_diff):
         """v1 vs v6 (enrolled) has genuine financial changes."""
-        import subprocess
+        import sys
 
-        old = "bills/118-hr-4366/1_reported-in-house.xml"
-        new = "bills/118-hr-4366/6_enrolled-bill.xml"
-        import os
-
-        if not os.path.exists(old) or not os.path.exists(new):
-            import pytest
-
-            pytest.skip("Real bill XMLs not available")
+        from conftest import HR4366_V1_PATH, HR4366_V6_PATH
+        from diff_bill import main
 
         out = tmp_path / "report.html"
-        result = subprocess.run(
-            ["uv", "run", "python", "diff_bill.py", "compare", old, new, "--format", "html", "-o", str(out)],
-            capture_output=True,
-            text=True,
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["diff_bill.py", "compare", str(HR4366_V1_PATH), str(HR4366_V6_PATH), "--format", "html", "-o", str(out)],
         )
-        assert result.returncode == 0, result.stderr
-        content = out.read_text()
-        assert "Financial Summary" in content
+        main()
+        assert "Financial Summary" in out.read_text()

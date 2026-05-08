@@ -106,6 +106,33 @@ def hr5895_v4_v5_diff(hr5895_v4, hr5895_v5):
     return diff_bills(hr5895_v4, hr5895_v5)
 
 
+@pytest.fixture
+def fast_normalize_diff(monkeypatch, hr4366_v1, hr4366_v2, hr4366_v6, hr4366_v1_v2_diff, hr4366_v1_v6_diff):
+    """Monkeypatch diff_bill.normalize_bill and diff_bills to reuse session-cached results
+    for the 118-hr-4366 v1/v2/v6 paths used by the CLI tests. Saves ~7s/test."""
+    import diff_bill as diff_bill_module
+
+    normalize_orig = diff_bill_module.normalize_bill
+    diff_orig = diff_bill_module.diff_bills
+    tree_cache = {HR4366_V1_PATH: hr4366_v1, HR4366_V2_PATH: hr4366_v2, HR4366_V6_PATH: hr4366_v6}
+    diff_cache = {
+        (id(hr4366_v1), id(hr4366_v2)): hr4366_v1_v2_diff,
+        (id(hr4366_v1), id(hr4366_v6)): hr4366_v1_v6_diff,
+    }
+
+    def _cached_normalize(path):
+        return tree_cache.get(path) or normalize_orig(path)
+
+    def _cached_diff(old, new):
+        cached = diff_cache.get((id(old), id(new)))
+        if cached is not None:
+            return cached
+        return diff_orig(old, new)
+
+    monkeypatch.setattr(diff_bill_module, "normalize_bill", _cached_normalize)
+    monkeypatch.setattr(diff_bill_module, "diff_bills", _cached_diff)
+
+
 def has_bill_xml() -> bool:
     """Check if real bill XML files are available."""
     return any(BILLS_DIR.glob("**/*.xml"))
