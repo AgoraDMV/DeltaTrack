@@ -130,17 +130,23 @@ def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor])
     if not indexed_lines:
         return []
 
-    # Anchor positions in indexed_lines, by (page, line) match.
-    line_keys = [(ln.page_number, ln.line_number) for ln in indexed_lines]
+    # Build a (page, line) → first-occurrence-index map so anchor lookup is O(1).
+    # `line.index(...)` would be O(n) per anchor, making this loop O(anchors × lines).
+    line_index: dict[tuple[int, int | None], int] = {}
+    for i, ln in enumerate(indexed_lines):
+        key = (ln.page_number, ln.line_number)
+        if key not in line_index:
+            line_index[key] = i
+
     anchor_positions: list[int] = []
     for a in anchors:
-        try:
-            anchor_positions.append(line_keys.index((a.page_number, a.line_number)))
-        except ValueError:
+        pos = line_index.get((a.page_number, a.line_number))
+        if pos is None:
             # Anchor's line was rejoined into a previous line during cleanup;
             # skip — its text is already part of an earlier line and will end
             # up in the previous block.
             continue
+        anchor_positions.append(pos)
 
     blocks: list[_Block] = []
     if not anchor_positions:
