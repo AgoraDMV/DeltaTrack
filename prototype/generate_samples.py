@@ -32,7 +32,15 @@ from formatters.canonical import (  # noqa: E402
     pdf_diff_to_canonical,
     xml_diff_to_canonical,
 )
+from formatters.text_serializer import serialize_tree  # noqa: E402
 from parsers.pdf_text import extract_clean_pages  # noqa: E402
+
+
+def _pdf_full_text(pages) -> str:
+    """Join the cleaned PDF pages into one plaintext string with blank-line
+    page separators. Suitable for full-document tracked-changes rendering."""
+    return "\n\n".join(p.text for p in pages)
+
 
 OUT_DIR = ROOT / "prototype" / "sample-diffs"
 
@@ -74,7 +82,8 @@ def generate_hr4366_xml() -> None:
     diff_dict["old_version_number"] = 1
     diff_dict["new_version_number"] = 2
 
-    canonical = xml_diff_to_canonical(diff_dict)
+    full_text = {"v1": serialize_tree(old_tree), "v2": serialize_tree(new_tree)}
+    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text)
     _validate(canonical, "hr4366-xml")
     _write(canonical, "hr4366-reported-vs-engrossed-xml.json")
 
@@ -96,6 +105,7 @@ def generate_hr4366_pdf() -> None:
         congress=118,
         v1_label="Reported in House",
         v2_label="Engrossed in House",
+        full_text={"v1": _pdf_full_text(old_pages), "v2": _pdf_full_text(new_pages)},
     )
     _validate(canonical, "hr4366-pdf")
     _write(canonical, "hr4366-reported-vs-engrossed-pdf.json")
@@ -225,6 +235,7 @@ def generate_synthetic() -> None:
         ),
     ]
 
+    full_text = _synthetic_full_text()
     canonical = {
         "schema_version": SCHEMA_VERSION,
         "generator": {"name": "appropriations_bills", "version": "0-synthetic"},
@@ -234,10 +245,87 @@ def generate_synthetic() -> None:
             "v2": {"label": "Floor Manager's Mark", "version_number": 2, "source": "pdf"},
         },
         "summary": {"added": 1, "removed": 1, "modified": 2, "moved": 2},
+        "full_text": full_text,
         "changes": [_to_dict(c, i) for i, c in enumerate(changes)],
     }
     _validate(canonical, "synthetic")
     _write(canonical, "synthetic-edge-cases.json")
+
+
+def _synthetic_full_text() -> dict:
+    """Hand-built v1/v2 plaintext that aligns with the synthetic change set:
+    one financial change in Sec. 101, one new Office of Innovation in TITLE II,
+    a removed Sec. 307, a renumbered Sec. 401 -> Sec. 501, a relocated Sec. 502,
+    and an unanchored fiscal-year tweak."""
+    v1 = """\
+TITLE I — DEPARTMENT OF CUSTOMS
+
+Sec. 101.
+
+For necessary expenses of the Department of Customs, $5,000,000, to remain available until September 30, 2027.
+
+TITLE II — DEPARTMENT OF INNOVATION
+
+Sec. 201.
+
+For necessary expenses of departmental administration, $12,000,000.
+
+TITLE III — GENERAL PROVISIONS
+
+Sec. 301. None of the funds made available by this Act may be used in contravention of section 552 of title 5, United States Code.
+
+Sec. 307. None of the funds made available by this Act may be used to finalize the rule proposed in 89 Fed. Reg. 12,345.
+
+TITLE IV — REPORTING
+
+Sec. 401. Reporting requirement on quarterly obligations to the Committees on Appropriations.
+
+TITLE V — DEFENSE WORKING CAPITAL FUND
+
+Subtitle A — Transfer authorities
+
+Sec. 502. Limitation on transfer authority for the Defense Working Capital Fund.
+
+GENERAL PROVISIONS — DEPARTMENTWIDE
+
+Provided further, That amounts under this heading shall be available for fiscal year 2027.
+"""
+    v2 = """\
+TITLE I — DEPARTMENT OF CUSTOMS
+
+Sec. 101.
+
+For necessary expenses of the Department of Customs, $5,500,000, to remain available until September 30, 2028.
+
+TITLE II — DEPARTMENT OF INNOVATION
+
+Sec. 201.
+
+For necessary expenses of departmental administration, $12,000,000.
+
+Office of Innovation.
+
+There is established within the Department an Office of Innovation, headed by a Director appointed by the Secretary.
+
+TITLE III — GENERAL PROVISIONS
+
+Sec. 301. None of the funds made available by this Act may be used in contravention of section 552 of title 5, United States Code.
+
+TITLE IV — REPORTING
+
+Sec. 501. Reporting requirement on quarterly obligations to the Committees on Appropriations.
+
+TITLE V — DEFENSE WORKING CAPITAL FUND
+
+Subtitle B — Transfer authorities
+
+Sec. 502. Limitation on transfer authority for the Defense Working Capital Fund.
+
+GENERAL PROVISIONS — DEPARTMENTWIDE
+
+Provided further, That amounts under this heading shall be available for fiscal year 2028.
+"""
+    return {"v1": v1, "v2": v2}
 
 
 def main() -> None:
