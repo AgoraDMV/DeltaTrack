@@ -5,7 +5,6 @@ PdfTestCase objects. See ~/.claude/plans/let-s-put-together-a-snug-twilight.md.
 """
 
 import pytest
-
 from pdf_test_cases import load_cases
 
 CASES = load_cases()

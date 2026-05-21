@@ -16,7 +16,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-DEFAULT_FIXTURE = Path(__file__).parent / "test_data" / "pdf" / "118hr8752-changes.md"
+DEFAULT_FIXTURE = Path(__file__).parent.parent / "test_data" / "pdf" / "118hr8752-changes.md"
 
 Location = tuple[int, int, int, int]
 

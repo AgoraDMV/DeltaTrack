@@ -1,8 +1,8 @@
 """Tests for section renumbering reconciliation."""
 
 import pytest
-
 from conftest import make_node_diff as _node
+
 from diff_bill import reconcile_moves
 
 

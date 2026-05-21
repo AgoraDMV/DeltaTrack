@@ -14,9 +14,9 @@ with one-line rationale before declaring done.
 from __future__ import annotations
 
 import pytest
+from pdf_test_cases import PdfTestCase, load_cases
 
 from diff_pdf import PdfDiff, PdfHunk
-from pdf_test_cases import PdfTestCase, load_cases
 
 # Sentinel for "open-ended" line on an unnumbered (-1) line at end of a hunk
 # range. Larger than any realistic per-page line count; small enough that

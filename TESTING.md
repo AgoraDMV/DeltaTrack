@@ -109,14 +109,14 @@ uv run pytest                 # Everything, including checks against real bills
 Run a single area:
 
 ```bash
-uv run pytest test_bill_tree.py            # Reading and structuring the bill text
-uv run pytest test_diff_bill.py            # Comparing two versions
-uv run pytest test_financial_diff.py       # Pulling out and comparing dollar amounts
-uv run pytest test_reconcile.py            # Recognizing moved sections
-uv run pytest test_format_html.py          # The HTML report
-uv run pytest test_corpus_properties.py    # Sanity checks across every bill (slow)
-uv run pytest test_validate_extraction.py  # Checking numbers against the spreadsheet (slow)
-uv run pytest test_pdf_diff_recall.py      # Draft-bill (PDF) comparison (slow)
+uv run pytest tests/test_bill_tree.py            # Reading and structuring the bill text
+uv run pytest tests/test_diff_bill.py            # Comparing two versions
+uv run pytest tests/test_financial_diff.py       # Pulling out and comparing dollar amounts
+uv run pytest tests/test_reconcile.py            # Recognizing moved sections
+uv run pytest tests/test_format_html.py          # The HTML report
+uv run pytest tests/test_corpus_properties.py    # Sanity checks across every bill (slow)
+uv run pytest tests/test_validate_extraction.py  # Checking numbers against the spreadsheet (slow)
+uv run pytest tests/test_pdf_diff_recall.py      # Draft-bill (PDF) comparison (slow)
 ```
 
 To run the slow group locally, download the bill files first (see the Testing

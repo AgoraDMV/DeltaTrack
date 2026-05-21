@@ -237,6 +237,7 @@ class TestCliIntegration:
         import sys
 
         from conftest import HR4366_V1_PATH, HR4366_V2_PATH
+
         from diff_bill import main
 
         out = tmp_path / "report.html"
@@ -254,6 +255,7 @@ class TestCliIntegration:
         import sys
 
         from conftest import HR4366_V1_PATH, HR4366_V2_PATH
+
         from diff_bill import main
 
         out = tmp_path / "report.html"
@@ -274,6 +276,7 @@ class TestCliIntegration:
         import sys
 
         from conftest import HR4366_V1_PATH, HR4366_V6_PATH
+
         from diff_bill import main
 
         out = tmp_path / "report.html"

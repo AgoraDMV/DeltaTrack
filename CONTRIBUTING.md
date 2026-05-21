@@ -70,11 +70,11 @@ Tests are split into two groups:
 - **Fast tests** (`pytest -m "not slow"`) -- unit tests using inline XML and mocked data. These run in under a second and don't need any bill files. CI runs these on every PR.
 - **Slow tests** (`pytest`) -- integration tests against real bill XML files. These need downloaded bills in `bills/` and take a couple of minutes.
 
-When adding new code, write tests for it. If your tests need real XML files, mark them with `@pytest.mark.slow`. Shared test helpers are in `conftest.py`.
+When adding new code, write tests for it. Test files live in `tests/`. If your tests need real XML files, mark them with `@pytest.mark.slow`. Shared test helpers are in `tests/conftest.py`.
 
 ```bash
 uv run pytest -m "not slow"              # Fast tests only
-uv run pytest test_diff_bill.py -v       # One test file
+uv run pytest tests/test_diff_bill.py -v  # One test file
 uv run pytest -k "test_my_function"      # Tests matching a name
 ```
 

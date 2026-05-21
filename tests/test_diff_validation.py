@@ -25,7 +25,7 @@ from diff_bill import (
     extract_amounts,
 )
 
-BILLS_DIR = Path(__file__).parent / "bills"
+BILLS_DIR = Path(__file__).parent.parent / "bills"
 
 
 @lru_cache(maxsize=None)

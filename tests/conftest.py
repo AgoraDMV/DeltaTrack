@@ -7,7 +7,7 @@ import pytest
 from bill_tree import BillNode, BillTree, normalize_bill
 from diff_bill import NodeDiff, diff_bills
 
-BILLS_DIR = Path(__file__).parent / "bills"
+BILLS_DIR = Path(__file__).parent.parent / "bills"
 
 # Paths to commonly used bill versions (118-hr-4366).
 HR4366_V1_PATH = BILLS_DIR / "118-hr-4366" / "1_reported-in-house.xml"
