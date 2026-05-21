@@ -27,7 +27,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Literal
 
-from diff_bill import _text_similarity, match_amounts
+from diff_bill import _move_candidates, _text_similarity_at_least, match_amounts
 from parsers.pdf_anchors import Anchor, extract_anchors
 from parsers.pdf_text import Page
 
@@ -266,12 +266,15 @@ def _reconcile_moves(hunks: list[PdfHunk], threshold: float = _MOVE_SIMILARITY_T
     if not removed_idx or not added_idx:
         return hunks
 
-    candidates: list[tuple[float, int, int]] = []
-    for ri in removed_idx:
-        for ai in added_idx:
-            sim = _text_similarity(hunks[ri].v1_text, hunks[ai].v2_text)
-            if sim >= threshold:
-                candidates.append((sim, ri, ai))
+    # Gated + matcher-reused pairwise similarity; _move_candidates returns local
+    # indices, so map them back to absolute hunk indices. Identical result to the
+    # naive removed×added loop (same tuples; the sort below is what orders them).
+    local = _move_candidates(
+        [hunks[ri].v1_text for ri in removed_idx],
+        [hunks[ai].v2_text for ai in added_idx],
+        threshold,
+    )
+    candidates = [(sim, removed_idx[r], added_idx[a]) for sim, r, a in local]
     if not candidates:
         return hunks
 
@@ -325,7 +328,9 @@ def _emit_pair(v1_b: _Block, v2_b: _Block, sink: list[PdfHunk]) -> None:
     """
     if v1_b.text == v2_b.text:
         return
-    sim = _text_similarity(v1_b.text, v2_b.text)
+    # Gate at the lower (split) threshold: when sim >= 0.4 the exact ratio is
+    # needed downstream for the 0.6 moved/modified split in _hunk_for_paired_blocks.
+    sim = _text_similarity_at_least(v1_b.text, v2_b.text, _PAIR_BODY_THRESHOLD)
     if sim < _PAIR_BODY_THRESHOLD:
         sink.append(_hunk_for_removed(v1_b))
         sink.append(_hunk_for_added(v2_b))

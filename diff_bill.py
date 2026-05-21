@@ -381,6 +381,61 @@ def _text_similarity(a: str, b: str) -> float:
     return difflib.SequenceMatcher(None, a.split(), b.split()).ratio()
 
 
+def _text_similarity_at_least(a: str, b: str, threshold: float) -> float:
+    """Word-level similarity, but skip the full computation when it provably
+    can't reach `threshold`.
+
+    `difflib.SequenceMatcher.real_quick_ratio()` (length-based) and
+    `quick_ratio()` (multiset-based) are documented upper bounds on `ratio()`,
+    so if either falls below `threshold` the true ratio does too. Returns the
+    exact ratio when it is >= `threshold`, else `0.0`. Result-preserving for any
+    caller that compares the result against `threshold` (and uses the exact
+    value only when it clears it). Matches `_text_similarity` (default autojunk)
+    when the full ratio is computed.
+    """
+    sm = difflib.SequenceMatcher(None, a.split(), b.split())
+    if sm.real_quick_ratio() < threshold or sm.quick_ratio() < threshold:
+        return 0.0
+    ratio = sm.ratio()
+    return ratio if ratio >= threshold else 0.0
+
+
+def _move_candidates(
+    removed_texts: list[str],
+    added_texts: list[str],
+    threshold: float,
+) -> list[tuple[float, int, int]]:
+    """All `(sim, removed_idx, added_idx)` whose word-level ratio >= `threshold`.
+
+    Two behavior-preserving speedups over the naive removed×added double loop:
+
+    1. One `SequenceMatcher` is reused with `set_seq2` called once per added text
+       (difflib's documented "compare one sequence against many" pattern), so the
+       expensive seq2 index (`__chain_b`) is built once per added text instead of
+       once per pair.
+    2. `real_quick_ratio()`/`quick_ratio()` (upper bounds on `ratio()`) gate the
+       full `ratio()` so impossible pairs are skipped.
+
+    The returned tuples are identical to computing `_text_similarity` for every
+    pair: same seq1/seq2 and autojunk, and the indices are local positions in
+    `removed_texts`/`added_texts`. Callers sort by the full tuple, so iteration
+    order does not affect the result.
+    """
+    removed_words = [t.split() for t in removed_texts]
+    candidates: list[tuple[float, int, int]] = []
+    sm = difflib.SequenceMatcher()  # autojunk=True, matching _text_similarity
+    for ai, added in enumerate(added_texts):
+        sm.set_seq2(added.split())
+        for ri, words in enumerate(removed_words):
+            sm.set_seq1(words)
+            if sm.real_quick_ratio() < threshold or sm.quick_ratio() < threshold:
+                continue
+            sim = sm.ratio()
+            if sim >= threshold:
+                candidates.append((sim, ri, ai))
+    return candidates
+
+
 _MOVE_THRESHOLD = 0.6
 
 
@@ -400,15 +455,13 @@ def reconcile_moves(
     if not removed or not added:
         return changes
 
-    # Compute all pairwise similarities
-    candidates: list[tuple[float, int, int]] = []
-    for ri, (_, rc) in enumerate(removed):
-        old_norm = _normalize_text(rc.old_text or "")
-        for ai, (_, ac) in enumerate(added):
-            new_norm = _normalize_text(ac.new_text or "")
-            sim = _text_similarity(old_norm, new_norm)
-            if sim >= threshold:
-                candidates.append((sim, ri, ai))
+    # Pairwise similarities (gated + matcher-reused; identical result to the
+    # naive removed×added double loop, since callers sort by the full tuple).
+    candidates = _move_candidates(
+        [_normalize_text(rc.old_text or "") for _, rc in removed],
+        [_normalize_text(ac.new_text or "") for _, ac in added],
+        threshold,
+    )
 
     if not candidates:
         return changes
