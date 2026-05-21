@@ -13,6 +13,7 @@ dependencies = [
 dev = [
     "pre-commit>=4.0",
     "pytest>=8.0",
+    "pytest-cov>=6.0",
     "respx>=0.22",
     "ruff>=0.11",
 ]
@@ -27,4 +28,15 @@ select = ["E", "F", "W", "I"]
 testpaths = ["."]
 markers = [
     "slow: tests that require real bill XML files (deselect with '-m not slow')",
+]
+
+[tool.coverage.run]
+# Coverage measures the diff engine, not the tests or fetch tooling.
+omit = [
+    "test_*.py",
+    "conftest.py",
+    "*_test_cases.py",
+    "smoke_test_matching.py",
+    "fetch_bills.py",
+    "render_examples.py",
 ]
