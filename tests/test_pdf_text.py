@@ -6,6 +6,7 @@ from parsers.pdf_text import (
     Line,
     Page,
     normalize_glyphs,
+    normalize_raw,
     page_range_text,
     rejoin_soft_hyphens,
     strip_page_chrome,
@@ -44,26 +45,60 @@ class TestRejoinSoftHyphens:
         assert rejoin_soft_hyphens(raw) == "reduced on a dollar-for-dollar basis"
 
 
+class TestNormalizeRaw:
+    def test_converts_crlf_to_lf(self):
+        assert normalize_raw("a\r\nb\r\n") == "a\nb\n"
+
+    def test_reconstructs_soft_hyphen_break_with_margin_number(self):
+        # `equip￾4 ment` is line 3 ending in a soft-hyphenated word whose
+        # continuation is GPO line 4; reconstructed to the `-\n4 ` line boundary.
+        raw = "3 and equip￾4 ment of works\r\n"
+        assert normalize_raw(raw) == "3 and equip-\n4 ment of works\n"
+
+    def test_reconstructs_two_digit_margin_number(self):
+        raw = "17 study, plan￾18 ning, and design\r\n"
+        assert normalize_raw(raw) == "17 study, plan-\n18 ning, and design\n"
+
+    def test_strips_trailing_spaces_per_line(self):
+        assert normalize_raw("departments, by law, \r\n") == "departments, by law,\n"
+
+    def test_page_break_hyphen_strips_glued_watermark(self):
+        # A word hyphenating onto the next page glues the footer watermark on via
+        # the soft-hyphen glyph; only the hyphenated word survives.
+        raw = "purposes and no￾mstockstill on DSK4VPTVN1PROD with BILLS\r\n"
+        assert normalize_raw(raw) == "purposes and no-\n"
+
+    def test_page_break_hyphen_strips_glued_verdate(self):
+        raw = "training and ad￾VerDate Sep 11 2014 Jkt E:\\BILLS\\H4366.PCS\r\n"
+        assert normalize_raw(raw) == "training and ad-\n"
+
+    def test_soft_hyphen_mid_line_joins_word(self):
+        # On pages with no margin numbers (title pages, enrolled bills) a wrapped
+        # word's soft hyphen has no `-\n` boundary, so it is joined into one word
+        # rather than left as `equip-ment` (which would also miss a recall match).
+        assert normalize_raw("equip￾ment of works\r\n") == "equipment of works\n"
+
+
 class TestStripPageChrome:
-    def test_strips_top_of_page_number(self):
-        raw = "63\nSEC. 414. None of the funds"
-        assert strip_page_chrome(raw) == "SEC. 414. None of the funds"
+    def test_strips_leading_page_number_with_trailing_space(self):
+        assert strip_page_chrome("5 \n1 BODY") == "1 BODY"
 
-    def test_strips_bullet_hr_footer_and_everything_after(self):
-        raw = "expenses.\n•HR 8752 RH\nVerDate Sep 11 2014 23:10 Jun 14, 2024"
-        assert strip_page_chrome(raw) == "expenses."
+    def test_strips_running_hr_header_line(self):
+        # PDFium floats the running header to the top, after the page number.
+        assert strip_page_chrome("•HR 4366 RH\n1 BODY") == "1 BODY"
 
-    def test_strips_watermark_below_footer(self):
-        raw = "expenses.\n•HR 8752 EH\nVerDate Sep 11 2014\nBOJ_$$\nhtiw\nDORP3WBZCZ7KSD\nno\nnosnhojk"
-        assert strip_page_chrome(raw) == "expenses."
+    def test_strips_verdate_footer_and_watermark_below(self):
+        raw = "23 reasons therefor.\nVerDate Sep 11 2014 00:17 Jkt\nSSpencer on DSK PROD with BILLS"
+        assert strip_page_chrome(raw) == "23 reasons therefor."
 
-    def test_keeps_body_content_unchanged(self):
-        raw = "SEC. 101. For necessary expenses of the Office."
-        assert strip_page_chrome(raw) == "SEC. 101. For necessary expenses of the Office."
+    def test_strips_standalone_watermark_line(self):
+        # When a page-boundary soft hyphen consumes the VerDate line, the print
+        # watermark is left on its own line and must still be removed.
+        raw = "24 training and ad-\npbinns on DSKJLVW7X2PROD with $$_JOB"
+        assert strip_page_chrome(raw) == "24 training and ad-"
 
-    def test_does_not_strip_multi_digit_inline_numbers(self):
-        raw = "SEC. 101.\n2026\ncontinues"
-        assert strip_page_chrome(raw) == "SEC. 101.\n2026\ncontinues"
+    def test_keeps_body_without_chrome_unchanged(self):
+        assert strip_page_chrome("1 BODY\n2 MORE") == "1 BODY\n2 MORE"
 
 
 class TestPageRangeText:

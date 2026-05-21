@@ -1,11 +1,19 @@
 """PDF text extraction with the smallest set of primitives that fixture cases require.
 
-`Page` is line-aware: every cleaned `Line` carries the source PDF's printed line
-number (1-based, the small digit GPO renders in the left margin). Phase 2 uses
-those numbers to produce hunk citations like `p.61 L5` and to attach anchor
-breadcrumbs by binary-searching the anchor list. The page-level `text` property
-is a derived join, so existing consumers (recall test, `page_range_text`) keep
-working without change.
+Text is extracted with pypdfium2 (PDFium, Chrome's PDF engine). `Page` is
+line-aware: every cleaned `Line` carries the source PDF's printed line number
+(1-based, the small digit GPO renders in the left margin). Phase 2 uses those
+numbers to produce hunk citations like `p.61 L5` and to attach anchor breadcrumbs
+by binary-searching the anchor list. The page-level `text` property is a derived
+join, so existing consumers (recall test, `page_range_text`) keep working without
+change.
+
+PDFium's raw page text needs three normalizations before the line-numbered cleaner
+can read it (`normalize_raw`): CRLF endings, soft-hyphenated breaks rendered as a
+U+FFFE glyph with the next margin number glued inline, and footer chrome glued onto
+a line whose word hyphenates onto the next page. The running `•HR` header also
+floats to the top of the reading order, so chrome stripping (`strip_page_chrome`)
+removes it in place rather than from the bottom.
 """
 
 from __future__ import annotations
@@ -14,12 +22,10 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-import pdfplumber
+import pypdfium2 as pdfium
 
 _NUMBERED_LINE = re.compile(r"^(\d{1,2}) (.*)$")
 _SOFT_HYPHEN_BREAK = re.compile(r"(\w)-\n([a-z])")
-_PAGE_HEADER_NUMBER = re.compile(r"\A\d+\n")
-_PAGE_FOOTER_AND_BELOW = re.compile(r"\n?•HR\b.*\Z", re.DOTALL)
 _SMART_GLYPHS = str.maketrans(
     {
         "‘": "'",
@@ -28,6 +34,26 @@ _SMART_GLYPHS = str.maketrans(
         "”": '"',
     }
 )
+
+# PDFium soft-hyphen glyph (U+FFFE), emitted at a syllable break and immediately
+# followed by the *next* GPO margin line number glued inline (e.g. `equip￾4 ment`).
+_HYPHEN_BREAK = re.compile(r"￾(\d{1,2}) ")
+# A soft hyphen NOT followed by a margin number is a page-boundary break: PDFium has
+# no same-page continuation to emit after the U+FFFE, so it pulls whatever footer
+# chrome it reads next (VerDate or the `name on DSK…PROD` watermark) onto that line.
+# Drop only that recognized chrome, keeping the hyphen for the cross-page rejoin.
+# The match is chrome-specific on purpose: enrolled bills carry no GPO margin
+# numbers, so their soft hyphens are followed by ordinary word text (`equip￾ment`)
+# that must NOT be stripped.
+_GLUED_CHROME = re.compile(r"￾(?:VerDate\b|\S* on DSK)[^\n]*")
+# Page chrome. The page-number header is `5 \n` (digit + optional trailing space).
+# The running `•HR … RH` header floats to the top of PDFium's reading order. The
+# `VerDate …` print line and the `name on DSK…PROD with …` watermark sit at the
+# bottom; either may be the anchor depending on the page, so both are stripped.
+_PAGE_HEADER_NUMBER = re.compile(r"\A\d+ *\n")
+_RUNNING_HEADER = re.compile(r"^•HR\b.*\n", re.MULTILINE)
+_VERDATE_AND_BELOW = re.compile(r"\n?VerDate\b.*\Z", re.DOTALL)
+_WATERMARK_AND_BELOW = re.compile(r"\n?\S+ on DSK\S*PROD with .*\Z", re.DOTALL)
 
 
 @dataclass(frozen=True)
@@ -46,14 +72,39 @@ class Page:
         return "\n".join(line.text for line in self.lines)
 
 
-def strip_page_chrome(text: str) -> str:
-    """Remove top-of-page number and bottom-of-page chrome (•HR, VerDate, watermark).
+def normalize_raw(text: str) -> str:
+    """Rewrite PDFium's raw page text into the layout the line-numbered cleaner expects.
 
-    The `•HR` footer marker is always followed by VerDate and any reversed-glyph
-    watermark, so dropping everything from `•HR` to end-of-text covers all three.
+    Converts CRLF to LF; reconstructs soft-hyphenated breaks (`WORD￾N word` →
+    `WORD-\\nN word`) so the continuation line keeps its margin number; drops footer
+    chrome glued onto a page's last body line by a page-boundary hyphen, keeping the
+    hyphen for the cross-page rejoin; and strips trailing spaces (which PDFium keeps
+    on nearly every line) so line text is stable. A soft hyphen mid-line followed by a
+    lowercase letter (a word that wrapped on a page with no margin numbers, e.g. a
+    title page or enrolled bill) is joined into one word, since there is no `-\n`
+    boundary for the later rejoin pass to act on.
+    """
+    text = text.replace("\r\n", "\n")
+    text = _HYPHEN_BREAK.sub(r"-\n\1 ", text)
+    text = _GLUED_CHROME.sub("-", text)
+    text = re.sub(r"￾([a-z])", r"\1", text)
+    text = text.replace("￾", "-")
+    text = "\n".join(line.rstrip() for line in text.split("\n"))
+    return text
+
+
+def strip_page_chrome(text: str) -> str:
+    """Remove page furniture: the page-number header, the running `•HR` header, the
+    VerDate print line, and the reversed-glyph watermark below it.
+
+    PDFium floats the `•HR … RH` running header to the top of the page (after the
+    page number), so it is removed in place rather than from the bottom. VerDate and
+    the watermark are each dropped from their first occurrence to end-of-text.
     """
     text = _PAGE_HEADER_NUMBER.sub("", text)
-    text = _PAGE_FOOTER_AND_BELOW.sub("", text)
+    text = _RUNNING_HEADER.sub("", text)
+    text = _VERDATE_AND_BELOW.sub("", text)
+    text = _WATERMARK_AND_BELOW.sub("", text)
     return text
 
 
@@ -136,10 +187,13 @@ def page_range_text(pages: list[Page], start_page: int, end_page: int) -> str:
 
 
 def extract_clean_pages(pdf_path: Path) -> list[Page]:
-    with pdfplumber.open(pdf_path) as pdf:
+    pdf = pdfium.PdfDocument(str(pdf_path))
+    try:
         pages: list[Page] = []
-        for i, page in enumerate(pdf.pages):
-            raw = page.extract_text() or ""
-            chrome_stripped = strip_page_chrome(raw)
+        for i in range(len(pdf)):
+            raw = pdf[i].get_textpage().get_text_range()
+            chrome_stripped = strip_page_chrome(normalize_raw(raw))
             pages.append(Page(i + 1, parse_lines(chrome_stripped)))
         return pages
+    finally:
+        pdf.close()

@@ -1,4 +1,4 @@
-"""End-to-end recall: does naïve pdfplumber extraction contain each fixture's expected text?
+"""End-to-end recall: does PDF extraction contain each fixture's expected text?
 
 Per `plans/pdf-text-diff-fixture-first.md`, this is the spec. Step 1 records the
 N/M pass count as the baseline; Step 3 drives that count up by adding the smallest

@@ -3,8 +3,8 @@
 Both the amount-recall cross-check (test_pdf_xml_amount_recall.py) and the diff
 smoke suite (test_pdf_corpus_smoke.py) iterate over the bill PDFs. `cached_pages`
 extracts each PDF at most once per session (in-memory) and persists the result
-to disk so later `pytest` runs skip pdfplumber entirely — extraction of a large
-omnibus is ~130s, so the disk cache is the main developer-loop speedup.
+to disk so later `pytest` runs skip extraction entirely — extracting a large
+omnibus still costs real time, so the disk cache is the main developer-loop speedup.
 
 Set TEST_BILL to a bill name (or substring, e.g. "4366") to restrict both
 suites to that bill for a fast TDD loop.
