@@ -78,6 +78,29 @@ is. The tool's PDF comparison is then checked against that list.
 **Limit:** this is the newest and thinnest area, and the hand-built list so far
 covers a single draft bill.
 
+### 5. Cross-checking the PDF reading against the official text
+
+Most published bills exist in two forms: an official machine-readable version
+and a PDF. For every bill we have in both forms, we confirm that every dollar
+amount found in the official version also turns up when the tool reads the PDF.
+Because the official version is the one checked against the outside spreadsheet
+(check 1), this tells us the PDF reader is not quietly dropping or garbling
+figures, even though a PDF is flat text with none of the structure the official
+version carries. A second pass runs the PDF comparison across every consecutive
+pair of versions and confirms it stays sound: it does not crash, it does not
+report overlapping or out-of-bounds locations, and every change it reports has a
+sensible type.
+
+**Limit:** this confirms our PDF reader and our official-text reader *agree* on
+the numbers, which catches reading mistakes. Agreement between our own two
+readers is not the same as an outside source confirming the numbers are correct
+— that is check 1, and only for the Legislative Branch. (This cross-check also
+surfaced one quirk in the official-text reader, where it can merge a dollar
+figure with an adjacent percentage in non-spending statutory tables; that is
+logged and set aside until fixed.) The soundness pass skips one record-setting
+~5,600-page omnibus where the PDF comparison does not yet finish in reasonable
+time.
+
 ## Known soft spots
 
 We keep these in the open rather than papering over them:
@@ -117,6 +140,8 @@ uv run pytest tests/test_format_html.py          # The HTML report
 uv run pytest tests/test_corpus_properties.py    # Sanity checks across every bill (slow)
 uv run pytest tests/test_validate_extraction.py  # Checking numbers against the spreadsheet (slow)
 uv run pytest tests/test_pdf_diff_recall.py      # Draft-bill (PDF) comparison (slow)
+uv run pytest tests/test_pdf_xml_amount_recall.py  # PDF reading vs official text, by the numbers (slow)
+uv run pytest tests/test_pdf_corpus_smoke.py     # PDF comparison soundness across every bill (slow)
 ```
 
 To run the slow group locally, download the bill files first (see the Testing
