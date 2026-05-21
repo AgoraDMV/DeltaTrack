@@ -15,10 +15,9 @@ from __future__ import annotations
 import hashlib
 import os
 import pickle
+import tempfile
 from functools import lru_cache
 from pathlib import Path
-
-import pdfplumber
 
 from parsers.pdf_text import Page, extract_clean_pages
 
@@ -53,19 +52,20 @@ def cached_pages(pdf_path: Path) -> list[Page]:
 
     pages = extract_clean_pages(pdf_path)
 
+    # Write to a per-writer temp file, then atomically rename onto the shared
+    # path. The unique temp name avoids a collision when two xdist workers
+    # extract the same PDF concurrently (both produce identical content, so
+    # last-rename-wins is fine).
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    tmp = cache_file.with_suffix(".pkl.tmp")
-    with tmp.open("wb") as f:
-        pickle.dump(pages, f)
-    tmp.replace(cache_file)  # atomic; safe under xdist and interrupted runs
+    fd, tmp_name = tempfile.mkstemp(dir=CACHE_DIR, prefix=cache_file.stem, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            pickle.dump(pages, f)
+        os.replace(tmp_name, cache_file)
+    except BaseException:
+        Path(tmp_name).unlink(missing_ok=True)
+        raise
     return pages
-
-
-@lru_cache(maxsize=None)
-def page_count(pdf_path: Path) -> int:
-    """Page count without text extraction (parses the page tree only)."""
-    with pdfplumber.open(pdf_path) as pdf:
-        return len(pdf.pages)
 
 
 def full_text(pages: list[Page]) -> str:

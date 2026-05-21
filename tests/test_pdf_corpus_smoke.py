@@ -13,7 +13,7 @@ Runs against every adjacent PDF version pair in the corpus. Marked @slow.
 from __future__ import annotations
 
 import pytest
-from pdf_corpus import adjacent_pdf_pairs, cached_pages, page_count
+from pdf_corpus import adjacent_pdf_pairs, cached_pages
 
 from diff_pdf import PageLineRange, PdfDiff, diff_pdfs
 
@@ -21,13 +21,6 @@ pytestmark = pytest.mark.slow
 
 _VALID_CHANGE_TYPES = {"added", "removed", "modified", "moved"}
 _OPEN_END_LINE = 10_000  # unnumbered (-1) end line sorts after any real line
-
-# diff_pdfs scales super-linearly and does not terminate in reasonable time on
-# the largest omnibus (116-hr-133, ~5,600 pages). Tracked in #35. Skip any pair
-# touching a document above this size so the smoke suite stays bounded; the
-# normal full-year omnibuses (~1,000 pages) still exercise these invariants.
-# Raise/remove this threshold once #35 is fixed.
-_MAX_DIFF_PAGES = 2500
 
 _PAIRS = adjacent_pdf_pairs()
 
@@ -38,8 +31,6 @@ def diff_for(request):
     cache: dict[tuple, PdfDiff] = {}
 
     def _get(old_pdf, new_pdf) -> PdfDiff:
-        if page_count(old_pdf) > _MAX_DIFF_PAGES or page_count(new_pdf) > _MAX_DIFF_PAGES:
-            pytest.skip(f"pair exceeds {_MAX_DIFF_PAGES} pages; diff_pdfs scaling tracked in #35")
         key = (old_pdf, new_pdf)
         if key not in cache:
             cache[key] = diff_pdfs(cached_pages(old_pdf), cached_pages(new_pdf))

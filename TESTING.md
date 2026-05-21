@@ -97,9 +97,8 @@ readers is not the same as an outside source confirming the numbers are correct
 — that is check 1, and only for the Legislative Branch. (This cross-check also
 surfaced one quirk in the official-text reader, where it can merge a dollar
 figure with an adjacent percentage in non-spending statutory tables; that is
-logged and set aside until fixed.) The soundness pass skips one record-setting
-~5,600-page omnibus where the PDF comparison does not yet finish in reasonable
-time.
+logged and set aside until fixed.) The soundness pass covers every bill,
+including the record-setting ~5,600-page omnibus.
 
 ## Known soft spots
 
