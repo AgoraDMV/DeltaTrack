@@ -25,10 +25,50 @@ from pathlib import Path
 # gets this via pyproject's pythonpath; a plain `python scripts/...` invocation does not.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import re  # noqa: E402
+
+from bill_tree import normalize_bill  # noqa: E402
 from parsers.committee_report import extract_pre_text, parse_summary_blocks  # noqa: E402
 from validation_sources import BY_SLUG, JURISDICTIONS, Jurisdiction  # noqa: E402
 
 _GOVINFO = "https://www.govinfo.gov/content/pkg"
+
+
+def _norm(s: str | None) -> str:
+    return re.sub(r"[^a-z0-9 ]", "", (s or "").lower()).strip()
+
+
+def _toks(s: str | None) -> set[str]:
+    return set(_norm(s).split())
+
+
+def map_account_path(nodes, title, bureau, heading) -> list[str] | None:
+    """Return the match_path of the unique bill node matching (title, bureau, heading).
+
+    Mapping is by NAME only, independent of the amount, so the test's amount check stays an
+    honest external comparison. Returns None when there is no confident single match (name
+    divergence or an unresolvable same-name tie) — the test then falls back to agency-scoped
+    recall for that account. Match tiers: exact account-name, then substring; ties among
+    same-named accounts are broken by bureau/agency token overlap and must be unambiguous.
+    """
+    nh = _norm(heading)
+    cands = [n for n in nodes if _norm(n.match_path[-1]) == nh]
+    if not cands:
+        cands = [n for n in nodes if nh and (nh in _norm(n.match_path[-1]) or _norm(n.match_path[-1]) in nh)]
+    if not cands:
+        return None
+    if len(cands) == 1:
+        return list(cands[0].match_path)
+    bt, tt = _toks(bureau), _toks(title)
+
+    def score(n):
+        path_tokens = _toks(" ".join(n.match_path))
+        return (len(bt & path_tokens), len(tt & _toks(n.match_path[0])))
+
+    cands.sort(key=score, reverse=True)
+    if score(cands[0]) == score(cands[1]):
+        return None  # ambiguous same-name accounts — defer to agency-scoped fallback
+    return list(cands[0].match_path)
 
 
 def _fetch(url: str, dest: Path) -> None:
@@ -48,6 +88,7 @@ def fetch_sources(j: Jurisdiction) -> None:
 
 def build_fixture(j: Jurisdiction) -> dict:
     accounts = parse_summary_blocks(extract_pre_text(j.report_html_path.read_text(encoding="utf-8", errors="replace")))
+    nodes = [n for n in normalize_bill(j.bill_xml_path).nodes if n.match_path] if j.bill_xml_path.exists() else []
     rows = [
         {
             "bill": j.bill_id,
@@ -55,7 +96,9 @@ def build_fixture(j: Jurisdiction) -> dict:
             "fy": j.fy,
             "chamber": j.chamber,
             "title": acc.title,  # enclosing agency, e.g. "DEPARTMENT OF JUSTICE"
+            "bureau": acc.bureau,  # enclosing bureau, e.g. "Federal Bureau of Investigation"
             "excel_name": acc.heading,
+            "match_path": map_account_path(nodes, acc.title, acc.bureau, acc.heading),
             "expected_amount": acc.committee_recommendation,
         }
         for acc in accounts
@@ -65,9 +108,10 @@ def build_fixture(j: Jurisdiction) -> dict:
         "note": (
             f"{j.display} {j.fy} (Reported in Senate) account amounts, extracted from the "
             "committee report's 3-line summary blocks and validated against the bill XML. "
-            "Committee-recommendation amounts are in actual dollars; `title` is the enclosing "
-            "appropriations title/agency, used for agency-scoped recall. External ground truth "
-            "for GitHub #8. Regenerate with scripts/build_validation.py."
+            "Committee-recommendation amounts are in actual dollars. `match_path` is the mapped "
+            "bill node when the account name resolves uniquely (strict node-level check); null "
+            "otherwise, where the test falls back to agency-scoped recall via `title`. External "
+            "ground truth for GitHub #8. Regenerate with scripts/build_validation.py."
         ),
         "accounts": rows,
     }

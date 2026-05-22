@@ -108,6 +108,85 @@ def test_parse_summary_blocks_bureau_is_none_without_one():
     assert parse_summary_blocks(BASIC_BLOCK)[0].bureau is None
 
 
+# An embedded table's column-header row is indented and mixed-case, so it looks like a
+# bureau header. It must NOT be captured as the bureau (it would mis-steer node mapping).
+TABLE_HEADER_BEFORE_BLOCK = """\
+                                TITLE II
+
+                         DEPARTMENT OF JUSTICE
+
+                    Federal Bureau of Investigation
+
+         Program                     Budget estimate     Committee recommendation
+    Some Program....................     100,000              90,000
+
+                         SALARIES AND EXPENSES
+
+Appropriations, 2024.................................... $10,643,713,000
+Budget estimate, 2025...................................  11,272,944,000
+Committee recommendation................................  10,761,762,000
+"""
+
+
+def test_parse_summary_blocks_ignores_table_header_as_bureau():
+    block = parse_summary_blocks(TABLE_HEADER_BEFORE_BLOCK)[0]
+    assert block.bureau == "Federal Bureau of Investigation"
+
+
+# A long bureau name is only lightly indented (it fills the line), and narrative prose
+# above it is also indented. Title-case distinguishes the bureau ("Courts of Appeals,
+# District Courts, and Other Judicial Services") from the sentence ("The Committee
+# recommends..."), so the bureau is captured and prose is not.
+LONG_BUREAU_BLOCK = """\
+                                TITLE VIII
+
+                            THE JUDICIARY
+
+    The Committee recommends an appropriation of $21,473,000.
+
+    Courts of Appeals, District Courts, and Other Judicial Services
+
+
+                         SALARIES AND EXPENSES
+
+Appropriations, 2024....................................  $5,995,055,000
+Budget estimate, 2025...................................   6,414,038,000
+Committee recommendation................................   6,100,000,000
+"""
+
+
+def test_parse_summary_blocks_captures_long_lightly_indented_bureau():
+    block = parse_summary_blocks(LONG_BUREAU_BLOCK)[0]
+    assert block.bureau == "Courts of Appeals, District Courts, and Other Judicial Services"
+    assert block.committee_recommendation == 6_100_000_000
+
+
+# GPO run-in directive headings ("Some Topic.--The Committee...") are Title-Cased and
+# indented like a bureau, but the ".--" run-in marker gives them away; they must not be
+# captured as the bureau.
+RUN_IN_DIRECTIVE_BLOCK = """\
+                                TITLE II
+
+                         DEPARTMENT OF JUSTICE
+
+                    Federal Bureau of Investigation
+
+    Missing and Exploited Children Programs.--The Committee directs the
+Department to prioritize these programs.
+
+                         SALARIES AND EXPENSES
+
+Appropriations, 2024.................................... $10,643,713,000
+Budget estimate, 2025...................................  11,272,944,000
+Committee recommendation................................  10,761,762,000
+"""
+
+
+def test_parse_summary_blocks_ignores_run_in_directive_heading():
+    block = parse_summary_blocks(RUN_IN_DIRECTIVE_BLOCK)[0]
+    assert block.bureau == "Federal Bureau of Investigation"
+
+
 # A parenthetical qualifier line sits between the heading and the summary rows; the
 # reader must walk past it to the real ALL-CAPS heading.
 PARENTHETICAL_BLOCK = """\

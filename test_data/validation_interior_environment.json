@@ -1,6 +1,6 @@
 {
   "source": "CRPT-118srpt201, Interior-Environment explanatory statement for BILLS-118s4802rs",
-  "note": "Interior-Environment FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars; `title` is the enclosing appropriations title/agency, used for agency-scoped recall. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "note": "Interior-Environment FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars. `match_path` is the mapped bill node when the account name resolves uniquely (strict node-level check); null otherwise, where the test falls back to agency-scoped recall via `title`. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
   "accounts": [
     {
       "bill": "118-s-4802",
@@ -8,7 +8,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Bureau of Land Management",
       "excel_name": "MANAGEMENT OF LANDS AND RESOURCES",
+      "match_path": [
+        "department of the interior",
+        "bureau of land management",
+        "management of lands and resources"
+      ],
       "expected_amount": 1342510000
     },
     {
@@ -17,7 +23,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Bureau of Land Management",
       "excel_name": "OREGON AND CALIFORNIA GRANT LANDS",
+      "match_path": [
+        "department of the interior",
+        "bureau of land management",
+        "oregon and california grant lands"
+      ],
       "expected_amount": 120261000
     },
     {
@@ -26,7 +38,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Bureau of Land Management",
       "excel_name": "RANGE IMPROVEMENTS",
+      "match_path": [
+        "department of the interior",
+        "bureau of land management",
+        "range improvements"
+      ],
       "expected_amount": 10000000
     },
     {
@@ -35,7 +53,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Bureau of Land Management",
       "excel_name": "SERVICE CHARGES, DEPOSITS, AND FORFEITURES",
+      "match_path": [
+        "department of the interior",
+        "bureau of land management",
+        "service charges, deposits, and forfeitures"
+      ],
       "expected_amount": 30000000
     },
     {
@@ -44,7 +68,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Bureau of Land Management",
       "excel_name": "MISCELLANEOUS TRUST FUNDS",
+      "match_path": [
+        "department of the interior",
+        "bureau of land management",
+        "miscellaneous trust funds"
+      ],
       "expected_amount": 26000000
     },
     {
@@ -53,7 +83,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "U.S. Fish and Wildlife Service",
       "excel_name": "RESOURCE MANAGEMENT",
+      "match_path": [
+        "department of the interior",
+        "united states fish and wildlife service",
+        "resource management"
+      ],
       "expected_amount": 1549935000
     },
     {
@@ -62,7 +98,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Prioritization of Combatting Invasive Plant and Animal",
       "excel_name": "CONSTRUCTION",
+      "match_path": [
+        "department of the interior",
+        "united states fish and wildlife service",
+        "construction"
+      ],
       "expected_amount": 27049000
     },
     {
@@ -71,7 +113,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Prioritization of Combatting Invasive Plant and Animal",
       "excel_name": "COOPERATIVE ENDANGERED SPECIES CONSERVATION FUND",
+      "match_path": [
+        "department of the interior",
+        "united states fish and wildlife service",
+        "cooperative endangered species conservation fund"
+      ],
       "expected_amount": 23000000
     },
     {
@@ -80,7 +128,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Prioritization of Combatting Invasive Plant and Animal",
       "excel_name": "NATIONAL WILDLIFE REFUGE FUND",
+      "match_path": [
+        "department of the interior",
+        "united states fish and wildlife service",
+        "national wildlife refuge fund"
+      ],
       "expected_amount": 13228000
     },
     {
@@ -89,7 +143,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Prioritization of Combatting Invasive Plant and Animal",
       "excel_name": "NORTH AMERICAN WETLANDS CONSERVATION FUND",
+      "match_path": [
+        "department of the interior",
+        "united states fish and wildlife service",
+        "north american wetlands conservation fund"
+      ],
       "expected_amount": 49000000
     },
     {
@@ -98,7 +158,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Prioritization of Combatting Invasive Plant and Animal",
       "excel_name": "NEOTROPICAL MIGRATORY BIRD CONSERVATION FUND",
+      "match_path": [
+        "department of the interior",
+        "united states fish and wildlife service",
+        "neotropical migratory bird conservation"
+      ],
       "expected_amount": 5000000
     },
     {
@@ -107,7 +173,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Prioritization of Combatting Invasive Plant and Animal",
       "excel_name": "MULTINATIONAL SPECIES CONSERVATION FUND",
+      "match_path": [
+        "department of the interior",
+        "united states fish and wildlife service",
+        "multinational species conservation fund"
+      ],
       "expected_amount": 20500000
     },
     {
@@ -116,7 +188,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Prioritization of Combatting Invasive Plant and Animal",
       "excel_name": "STATE AND TRIBAL WILDLIFE GRANTS",
+      "match_path": [
+        "department of the interior",
+        "united states fish and wildlife service",
+        "state and tribal wildlife grants"
+      ],
       "expected_amount": 72384000
     },
     {
@@ -125,7 +203,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "National Park Service",
       "excel_name": "OPERATION OF THE NATIONAL PARK SYSTEM",
+      "match_path": [
+        "department of the interior",
+        "national park service",
+        "operation of the national park system"
+      ],
       "expected_amount": 2994292000
     },
     {
@@ -134,7 +218,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Honouliuli National Historic Site and Pearl Harbor National",
       "excel_name": "NATIONAL RECREATION AND PRESERVATION",
+      "match_path": [
+        "department of the interior",
+        "national park service",
+        "national recreation and preservation"
+      ],
       "expected_amount": 96192000
     },
     {
@@ -143,7 +233,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Native American Graves Protection and Repatriation Act",
       "excel_name": "HISTORIC PRESERVATION FUND",
+      "match_path": [
+        "department of the interior",
+        "national park service",
+        "historic preservation fund"
+      ],
       "expected_amount": 182775000
     },
     {
@@ -152,7 +248,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Native American Graves Protection and Repatriation Act",
       "excel_name": "CONSTRUCTION",
+      "match_path": [
+        "department of the interior",
+        "united states fish and wildlife service",
+        "construction"
+      ],
       "expected_amount": 202283000
     },
     {
@@ -161,7 +263,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Native American Graves Protection and Repatriation Act",
       "excel_name": "CENTENNIAL CHALLENGE",
+      "match_path": [
+        "department of the interior",
+        "national park service",
+        "centennial challenge"
+      ],
       "expected_amount": 15000000
     },
     {
@@ -170,7 +278,9 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "U.S. Geological Survey",
       "excel_name": "SURVEYS, INVESTIGATIONS, AND RESEARCH",
+      "match_path": null,
       "expected_amount": 1481963000
     },
     {
@@ -179,7 +289,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Bureau of Ocean Energy Management",
       "excel_name": "OCEAN ENERGY MANAGEMENT",
+      "match_path": [
+        "department of the interior",
+        "bureau of ocean energy management",
+        "ocean energy management"
+      ],
       "expected_amount": 216043000
     },
     {
@@ -188,7 +304,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "The Bureau of Safety and Environmental Enforcement [Bureau",
       "excel_name": "OFFSHORE SAFETY AND ENVIRONMENTAL ENFORCEMENT",
+      "match_path": [
+        "department of the interior",
+        "bureau of safety and environmental enforcement",
+        "offshore safety and environmental enforcement"
+      ],
       "expected_amount": 210886000
     },
     {
@@ -197,7 +319,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "The Bureau of Safety and Environmental Enforcement [Bureau",
       "excel_name": "OIL SPILL RESEARCH",
+      "match_path": [
+        "department of the interior",
+        "bureau of safety and environmental enforcement",
+        "oil spill research"
+      ],
       "expected_amount": 15099000
     },
     {
@@ -206,7 +334,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "The Office of Surface Mining Reclamation and Enforcement",
       "excel_name": "REGULATION AND TECHNOLOGY",
+      "match_path": [
+        "department of the interior",
+        "office of surface mining reclamation and enforcement",
+        "regulation and technology"
+      ],
       "expected_amount": 118223000
     },
     {
@@ -215,7 +349,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "The Office of Surface Mining Reclamation and Enforcement",
       "excel_name": "ABANDONED MINE RECLAMATION FUND",
+      "match_path": [
+        "department of the interior",
+        "office of surface mining reclamation and enforcement",
+        "abandoned mine reclamation fund"
+      ],
       "expected_amount": 164207000
     },
     {
@@ -224,7 +364,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Operation of Indian Programs",
       "excel_name": "INDIAN LAND CONSOLIDATION",
+      "match_path": [
+        "department of the interior",
+        "bureau of indian affairs",
+        "indian land consolidation"
+      ],
       "expected_amount": 4000000
     },
     {
@@ -233,7 +379,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Operation of Indian Programs",
       "excel_name": "CONTRACT SUPPORT COSTS",
+      "match_path": [
+        "department of the interior",
+        "bureau of indian affairs",
+        "contract support costs"
+      ],
       "expected_amount": 356000000
     },
     {
@@ -242,7 +394,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Operation of Indian Programs",
       "excel_name": "PAYMENTS FOR TRIBAL LEASES",
+      "match_path": [
+        "department of the interior",
+        "bureau of indian affairs",
+        "payments for tribal leases"
+      ],
       "expected_amount": 69000000
     },
     {
@@ -251,7 +409,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Operation of Indian Programs",
       "excel_name": "CONSTRUCTION",
+      "match_path": [
+        "department of the interior",
+        "bureau of indian affairs",
+        "construction"
+      ],
       "expected_amount": 146022000
     },
     {
@@ -260,7 +424,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Operation of Indian Programs",
       "excel_name": "INDIANS",
+      "match_path": [
+        "department of the interior",
+        "bureau of indian affairs",
+        "indian land and water claim settlements and miscellaneous payments to indians"
+      ],
       "expected_amount": 45897000
     },
     {
@@ -269,7 +439,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Operation of Indian Programs",
       "excel_name": "INDIAN GUARANTEED LOAN PROGRAM ACCOUNT",
+      "match_path": [
+        "department of the interior",
+        "bureau of indian affairs",
+        "indian guaranteed loan program account"
+      ],
       "expected_amount": 13616000
     },
     {
@@ -278,7 +454,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "FERS Eligibility for Employees at BIE Tribally Controlled",
       "excel_name": "EDUCATION CONSTRUCTION",
+      "match_path": [
+        "department of the interior",
+        "bureau of indian education",
+        "education construction"
+      ],
       "expected_amount": 264775000
     },
     {
@@ -287,7 +469,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Bureau of Trust Fund Administration",
       "excel_name": "FEDERAL TRUST PROGRAMS",
+      "match_path": [
+        "department of the interior",
+        "bureau of trust funds administration",
+        "federal trust programs"
+      ],
       "expected_amount": 100472000
     },
     {
@@ -296,7 +484,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Office of the Secretary",
       "excel_name": "DEPARTMENTAL OPERATIONS",
+      "match_path": [
+        "department of the interior",
+        "office of the secretary",
+        "departmental operations"
+      ],
       "expected_amount": 154945000
     },
     {
@@ -305,7 +499,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Insular Affairs",
       "excel_name": "ASSISTANCE TO TERRITORIES",
+      "match_path": [
+        "department of the interior",
+        "insular affairs",
+        "assistance to territories"
+      ],
       "expected_amount": 58775000
     },
     {
@@ -314,7 +514,9 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Insular Affairs",
       "excel_name": "COMPACT OF FREE ASSOCIATION",
+      "match_path": null,
       "expected_amount": 813000
     },
     {
@@ -323,7 +525,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Office of the Solicitor",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "department of the interior",
+        "office of the solicitor",
+        "salaries and expenses"
+      ],
       "expected_amount": 101559000
     },
     {
@@ -332,7 +540,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Office of Inspector General",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "department of the interior",
+        "office of inspector general",
+        "salaries and expenses"
+      ],
       "expected_amount": 71540000
     },
     {
@@ -341,7 +555,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Department-Wide Programs",
       "excel_name": "WILDFIRE SUPPRESSION OPERATIONS RESERVE FUND",
+      "match_path": [
+        "department of the interior",
+        "department-wide programs",
+        "wildfire suppression operations reserve fund"
+      ],
       "expected_amount": 360000000
     },
     {
@@ -350,7 +570,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Department-Wide Programs",
       "excel_name": "CENTRAL HAZARDOUS MATERIALS FUND",
+      "match_path": [
+        "department of the interior",
+        "department-wide programs",
+        "central hazardous materials fund"
+      ],
       "expected_amount": 9801000
     },
     {
@@ -359,7 +585,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Department-Wide Programs",
       "excel_name": "ENERGY COMMUNITY REVITALIZATION PROGRAM",
+      "match_path": [
+        "department of the interior",
+        "department-wide programs",
+        "energy community revitalization program"
+      ],
       "expected_amount": 5300000
     },
     {
@@ -368,7 +600,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Department-Wide Programs",
       "excel_name": "NATURAL RESOURCE DAMAGE ASSESSMENT FUND",
+      "match_path": [
+        "department of the interior",
+        "department-wide programs",
+        "natural resource damage assessment fund"
+      ],
       "expected_amount": 7769000
     },
     {
@@ -377,7 +615,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Department-Wide Programs",
       "excel_name": "WORKING CAPITAL FUND",
+      "match_path": [
+        "department of the interior",
+        "department-wide programs",
+        "working capital fund"
+      ],
       "expected_amount": 108311000
     },
     {
@@ -386,7 +630,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Department-Wide Programs",
       "excel_name": "OFFICE OF NATURAL RESOURCES REVENUE",
+      "match_path": [
+        "department of the interior",
+        "department-wide programs",
+        "office of natural resources revenue"
+      ],
       "expected_amount": 169412000
     },
     {
@@ -395,7 +645,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Forest Service",
       "excel_name": "FOREST AND RANGELAND RESEARCH",
+      "match_path": [
+        "related agencies",
+        "department of agriculture",
+        "forest service",
+        "forest and rangeland research"
+      ],
       "expected_amount": 319124000
     },
     {
@@ -404,7 +661,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Forest Service",
       "excel_name": "STATE, PRIVATE, AND TRIBAL FORESTRY",
+      "match_path": [
+        "related agencies",
+        "department of agriculture",
+        "forest service",
+        "state, private, and tribal forestry"
+      ],
       "expected_amount": 314481000
     },
     {
@@ -413,7 +677,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Forest Service",
       "excel_name": "NATIONAL FOREST SYSTEM",
+      "match_path": [
+        "related agencies",
+        "department of agriculture",
+        "forest service",
+        "national forest system"
+      ],
       "expected_amount": 2009697000
     },
     {
@@ -422,7 +693,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Forest Service",
       "excel_name": "CAPITAL IMPROVEMENT AND MAINTENANCE",
+      "match_path": [
+        "related agencies",
+        "department of agriculture",
+        "forest service",
+        "capital improvement and maintenance"
+      ],
       "expected_amount": 179701000
     },
     {
@@ -431,7 +709,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Forest Service",
       "excel_name": "ACQUISITION OF LANDS FOR NATIONAL FORESTS, SPECIAL ACTS",
+      "match_path": [
+        "related agencies",
+        "department of agriculture",
+        "forest service",
+        "acquisition of lands for national forests special acts"
+      ],
       "expected_amount": 664000
     },
     {
@@ -440,7 +725,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Forest Service",
       "excel_name": "ACQUISITION OF LANDS TO COMPLETE LAND EXCHANGES",
+      "match_path": [
+        "related agencies",
+        "department of agriculture",
+        "forest service",
+        "acquisition of lands to complete land exchanges"
+      ],
       "expected_amount": 150000
     },
     {
@@ -449,7 +741,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Forest Service",
       "excel_name": "RANGE BETTERMENT FUND",
+      "match_path": [
+        "related agencies",
+        "department of agriculture",
+        "forest service",
+        "range betterment fund"
+      ],
       "expected_amount": 1719000
     },
     {
@@ -458,7 +757,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Forest Service",
       "excel_name": "GIFTS, DONATIONS AND BEQUESTS FOR FOREST AND RANGELAND RESEARCH",
+      "match_path": [
+        "related agencies",
+        "department of agriculture",
+        "forest service",
+        "gifts, donations and bequests for forest and rangeland research"
+      ],
       "expected_amount": 45000
     },
     {
@@ -467,7 +773,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Forest Service",
       "excel_name": "MANAGEMENT OF NATIONAL FOREST LANDS FOR SUBSISTENCE USES",
+      "match_path": [
+        "related agencies",
+        "department of agriculture",
+        "forest service",
+        "management of national forest lands for subsistence uses"
+      ],
       "expected_amount": 1099000
     },
     {
@@ -476,7 +789,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Forest Service",
       "excel_name": "WILDFIRE SUPPRESSION OPERATIONS RESERVE FUND",
+      "match_path": [
+        "related agencies",
+        "department of agriculture",
+        "forest service",
+        "wildfire suppression operations reserve fund"
+      ],
       "expected_amount": 2390000000
     },
     {
@@ -485,7 +805,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Indian Health Services",
       "excel_name": "CONTRACT SUPPORT COSTS",
+      "match_path": [
+        "related agencies",
+        "department of health and human services",
+        "indian health service",
+        "contract support costs"
+      ],
       "expected_amount": 2036000000
     },
     {
@@ -494,7 +821,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Indian Health Services",
       "excel_name": "PAYMENTS FOR TRIBAL LEASES",
+      "match_path": [
+        "related agencies",
+        "department of health and human services",
+        "indian health service",
+        "payments for tribal leases"
+      ],
       "expected_amount": 400000000
     },
     {
@@ -503,7 +837,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "The Agency for Toxic Substances and Disease Registry",
       "excel_name": "TOXIC SUBSTANCES AND ENVIRONMENTAL PUBLIC HEALTH",
+      "match_path": [
+        "related agencies",
+        "department of health and human services",
+        "agency for toxic substances and disease registry",
+        "toxic substances and environmental public health"
+      ],
       "expected_amount": 83089000
     },
     {
@@ -512,7 +853,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Chemical Safety and Hazard Investigation Board",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "chemical safety and hazard investigation board",
+        "salaries and expenses"
+      ],
       "expected_amount": 14634000
     },
     {
@@ -521,7 +869,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Office of Navajo and Hopi Indian Relocation",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "office of navajo and hopi indian relocation",
+        "salaries and expenses"
+      ],
       "expected_amount": 3500000
     },
     {
@@ -530,7 +885,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "The Institute of American Indian and Alaska Native Culture",
       "excel_name": "PAYMENT TO THE INSTITUTE",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "institute of american indian and alaska native culture and arts development",
+        "payment to the institute"
+      ],
       "expected_amount": 13642000
     },
     {
@@ -539,7 +901,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Smithsonian Institution",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "smithsonian institution",
+        "salaries and expenses"
+      ],
       "expected_amount": 912347000
     },
     {
@@ -548,7 +917,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Smithsonian Institution",
       "excel_name": "FACILITIES CAPITAL",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "smithsonian institution",
+        "facilities capital"
+      ],
       "expected_amount": 197645000
     },
     {
@@ -557,7 +933,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "National Gallery of Art",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "national gallery of art",
+        "salaries and expenses"
+      ],
       "expected_amount": 186471000
     },
     {
@@ -566,7 +949,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "National Gallery of Art",
       "excel_name": "REPAIR, RESTORATION, AND RENOVATION OF BUILDINGS",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "national gallery of art",
+        "repair, restoration and renovation of buildings"
+      ],
       "expected_amount": 27369000
     },
     {
@@ -575,7 +965,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "John F. Kennedy Center For The Performing Arts",
       "excel_name": "OPERATIONS AND MAINTENANCE",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "john f. kennedy center for the performing arts",
+        "operations and maintenance"
+      ],
       "expected_amount": 34315000
     },
     {
@@ -584,7 +981,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "John F. Kennedy Center For The Performing Arts",
       "excel_name": "CAPITAL REPAIR AND RESTORATION",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "john f. kennedy center for the performing arts",
+        "capital repair and restoration"
+      ],
       "expected_amount": 12633000
     },
     {
@@ -593,7 +997,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Woodrow Wilson International Center for Scholars",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "woodrow wilson international center for scholars",
+        "salaries and expenses"
+      ],
       "expected_amount": 15000000
     },
     {
@@ -602,7 +1013,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "National Endowment for the Arts",
       "excel_name": "GRANTS AND ADMINISTRATION",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "national endowment for the arts",
+        "grants and administration"
+      ],
       "expected_amount": 209000000
     },
     {
@@ -611,7 +1029,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "National Endowment for the Humanities",
       "excel_name": "GRANTS AND ADMINISTRATION",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "national endowment for the humanities",
+        "grants and administration"
+      ],
       "expected_amount": 209000000
     },
     {
@@ -620,7 +1045,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "Commission of Fine Arts",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "commission of fine arts",
+        "salaries and expenses"
+      ],
       "expected_amount": 3834000
     },
     {
@@ -629,7 +1061,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "National Capital Planning Commission",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "national capital planning commission",
+        "salaries and expenses"
+      ],
       "expected_amount": 8849000
     },
     {
@@ -638,7 +1077,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "United States Holocaust Memorial Museum",
       "excel_name": "HOLOCAUST MEMORIAL MUSEUM",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "united states holocaust memorial museum",
+        "holocaust memorial museum"
+      ],
       "expected_amount": 66331000
     },
     {
@@ -647,7 +1093,14 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
+      "bureau": "United States Semiquincentennial Commission",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "other related agencies",
+        "united states semiquincentennial commission",
+        "salaries and expenses"
+      ],
       "expected_amount": 15250000
     }
   ]

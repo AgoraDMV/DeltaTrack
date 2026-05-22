@@ -1,6 +1,6 @@
 {
   "source": "CRPT-118srpt193, Agriculture-Rural Development-FDA explanatory statement for BILLS-118s4690rs",
-  "note": "Agriculture-Rural Development-FDA FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars; `title` is the enclosing appropriations title/agency, used for agency-scoped recall. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "note": "Agriculture-Rural Development-FDA FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars. `match_path` is the mapped bill node when the account name resolves uniquely (strict node-level check); null otherwise, where the test falls back to agency-scoped recall via `title`. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
   "accounts": [
     {
       "bill": "118-s-4690",
@@ -8,7 +8,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "AGRICULTURAL PROGRAMS",
+      "bureau": "Agricultural Research Service",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "agricultural programs",
+        "agricultural research service",
+        "salaries and expenses"
+      ],
       "expected_amount": 1826709000
     },
     {
@@ -17,7 +23,9 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "AGRICULTURAL PROGRAMS",
+      "bureau": "Unmanned Aerial Systems [UAS] Precision Agriculture",
       "excel_name": "BUILDINGS AND FACILITIES",
+      "match_path": null,
       "expected_amount": 47663000
     },
     {
@@ -26,7 +34,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "AGRICULTURAL PROGRAMS",
+      "bureau": "National Institute of Food and Agriculture",
       "excel_name": "RESEARCH AND EDUCATION ACTIVITIES",
+      "match_path": [
+        "agricultural programs",
+        "national institute of food and agriculture",
+        "research and education activities"
+      ],
       "expected_amount": 1078950000
     },
     {
@@ -35,7 +49,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "AGRICULTURAL PROGRAMS",
+      "bureau": "Education Grants for Alaska Native and Native Hawaiian-",
       "excel_name": "NATIVE AMERICAN INSTITUTIONS ENDOWMENT FUND",
+      "match_path": [
+        "agricultural programs",
+        "national institute of food and agriculture",
+        "native american institutions endowment fund"
+      ],
       "expected_amount": 11880000
     },
     {
@@ -44,7 +64,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "AGRICULTURAL PROGRAMS",
+      "bureau": "Education Grants for Alaska Native and Native Hawaiian-",
       "excel_name": "EXTENSION ACTIVITIES",
+      "match_path": [
+        "agricultural programs",
+        "national institute of food and agriculture",
+        "extension activities"
+      ],
       "expected_amount": 561700000
     },
     {
@@ -53,7 +79,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "AGRICULTURAL PROGRAMS",
+      "bureau": "Committee",
       "excel_name": "INTEGRATED ACTIVITIES",
+      "match_path": [
+        "agricultural programs",
+        "national institute of food and agriculture",
+        "integrated activities"
+      ],
       "expected_amount": 41100000
     },
     {
@@ -62,7 +94,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "AGRICULTURAL PROGRAMS",
+      "bureau": "Animal and Plant Health Inspection Service",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "agricultural programs",
+        "animal and plant health inspection service",
+        "salaries and expenses"
+      ],
       "expected_amount": 1176596000
     },
     {
@@ -71,7 +109,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "AGRICULTURAL PROGRAMS",
+      "bureau": "Animal and Plant Health Inspection Service",
       "excel_name": "BUILDINGS AND FACILITIES",
+      "match_path": [
+        "agricultural programs",
+        "animal and plant health inspection service",
+        "buildings and facilities"
+      ],
       "expected_amount": 5000000
     },
     {
@@ -80,7 +124,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "AGRICULTURAL PROGRAMS",
+      "bureau": "Agricultural Marketing Service",
       "excel_name": "MARKETING SERVICES",
+      "match_path": [
+        "agricultural programs",
+        "agricultural marketing service",
+        "marketing services"
+      ],
       "expected_amount": 231387000
     },
     {
@@ -89,7 +139,9 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "AGRICULTURAL PROGRAMS",
+      "bureau": "Agricultural Marketing Service",
       "excel_name": "FUNDS FOR STRENGTHENING MARKETS, INCOME, AND SUPPLY (SECTION 32)",
+      "match_path": null,
       "expected_amount": 22701000
     },
     {
@@ -98,7 +150,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "AGRICULTURAL PROGRAMS",
+      "bureau": "Agricultural Marketing Service",
       "excel_name": "PAYMENTS TO STATES AND POSSESSIONS",
+      "match_path": [
+        "agricultural programs",
+        "agricultural marketing service",
+        "payments to states and possessions"
+      ],
       "expected_amount": 1000000
     },
     {
@@ -107,7 +165,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "bureau": "Farm Production and Conservation Business Center",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "farm production and conservation programs",
+        "farm production and conservation business center",
+        "salaries and expenses"
+      ],
       "expected_amount": 244183000
     },
     {
@@ -116,7 +180,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "bureau": "Farm Service Agency",
       "excel_name": "STATE MEDIATION GRANTS",
+      "match_path": [
+        "farm production and conservation programs",
+        "farm service agency",
+        "state mediation grants"
+      ],
       "expected_amount": 6500000
     },
     {
@@ -125,7 +195,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "bureau": "Farm Service Agency",
       "excel_name": "GRASSROOTS SOURCE WATER PROTECTION PROGRAM",
+      "match_path": [
+        "farm production and conservation programs",
+        "farm service agency",
+        "grassroots source water protection program"
+      ],
       "expected_amount": 7500000
     },
     {
@@ -134,7 +210,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "bureau": "Farm Service Agency",
       "excel_name": "DAIRY INDEMNITY PROGRAM",
+      "match_path": [
+        "farm production and conservation programs",
+        "farm service agency",
+        "dairy indemnity program"
+      ],
       "expected_amount": 500000
     },
     {
@@ -143,7 +225,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "bureau": "Farm Service Agency",
       "excel_name": "GEOGRAPHICALLY DISADVANTAGED FARMERS AND RANCHERS",
+      "match_path": [
+        "farm production and conservation programs",
+        "farm service agency",
+        "geographically disadvantaged farmers and ranchers"
+      ],
       "expected_amount": 3500000
     },
     {
@@ -152,7 +240,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "bureau": "Risk Management Agency",
       "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "farm production and conservation programs",
+        "risk management agency",
+        "salaries and expenses"
+      ],
       "expected_amount": 65637000
     },
     {
@@ -161,7 +255,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "bureau": "Natural Resources Conservation Service",
       "excel_name": "CONSERVATION OPERATIONS",
+      "match_path": [
+        "farm production and conservation programs",
+        "natural resources conservation service",
+        "conservation operations"
+      ],
       "expected_amount": 965754000
     },
     {
@@ -170,7 +270,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "bureau": "Natural Resources Conservation Service",
       "excel_name": "WATERSHED AND FLOOD PREVENTION OPERATIONS",
+      "match_path": [
+        "farm production and conservation programs",
+        "natural resources conservation service",
+        "watershed and flood prevention operations"
+      ],
       "expected_amount": 51255000
     },
     {
@@ -179,7 +285,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "bureau": "The Watershed Protection and Flood Prevention Act (Public",
       "excel_name": "WATERSHED REHABILITATION PROGRAM",
+      "match_path": [
+        "farm production and conservation programs",
+        "natural resources conservation service",
+        "watershed rehabilitation program"
+      ],
       "expected_amount": 2000000
     },
     {
@@ -188,7 +300,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "bureau": "Commodity Credit Corporation Fund",
       "excel_name": "REIMBURSEMENT FOR NET REALIZED LOSSES",
+      "match_path": [
+        "corporations",
+        "commodity credit corporation fund",
+        "reimbursement for net realized losses"
+      ],
       "expected_amount": 12650463000
     },
     {
@@ -197,7 +315,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "Rural Housing Service",
       "excel_name": "RENTAL ASSISTANCE PROGRAM",
+      "match_path": [
+        "rural development programs",
+        "rural housing service",
+        "rental assistance program"
+      ],
       "expected_amount": 1691376000
     },
     {
@@ -206,7 +330,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "Rural Housing Service",
       "excel_name": "RURAL HOUSING VOUCHER ACCOUNT",
+      "match_path": [
+        "rural development programs",
+        "rural housing service",
+        "rural housing voucher account"
+      ],
       "expected_amount": 50400000
     },
     {
@@ -215,7 +345,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "Rural Housing Service",
       "excel_name": "MUTUAL AND SELF-HELP HOUSING GRANTS",
+      "match_path": [
+        "rural development programs",
+        "rural housing service",
+        "mutual and self-help housing grants"
+      ],
       "expected_amount": 25000000
     },
     {
@@ -224,7 +360,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "Rural Housing Service",
       "excel_name": "RURAL HOUSING ASSISTANCE GRANTS",
+      "match_path": [
+        "rural development programs",
+        "rural housing service",
+        "rural housing assistance grants"
+      ],
       "expected_amount": 40000000
     },
     {
@@ -233,7 +375,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "Rural Housing Service",
       "excel_name": "RURAL COMMUNITY FACILITIES PROGRAM ACCOUNT",
+      "match_path": [
+        "rural development programs",
+        "rural housing service",
+        "rural community facilities program account"
+      ],
       "expected_amount": 254338000
     },
     {
@@ -242,7 +390,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "Rural Business-Cooperative Service",
       "excel_name": "RURAL BUSINESS PROGRAM ACCOUNT",
+      "match_path": [
+        "rural development programs",
+        "rural business\u2014cooperative service",
+        "rural business program account"
+      ],
       "expected_amount": 31847000
     },
     {
@@ -251,7 +405,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "Higher Blends Infrastructure Incentives Program [HBIIP]",
       "excel_name": "RURAL COOPERATIVE DEVELOPMENT GRANTS",
+      "match_path": [
+        "rural development programs",
+        "rural business\u2014cooperative service",
+        "rural cooperative development grants"
+      ],
       "expected_amount": 25300000
     },
     {
@@ -260,7 +420,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "The Appropriate Technology Transfer for Rural Areas [ATTRA]",
       "excel_name": "RURAL MICROENTREPRENEUR ASSISTANCE PROGRAM",
+      "match_path": [
+        "rural development programs",
+        "rural business\u2014cooperative service",
+        "rural microentrepreneur assistance program"
+      ],
       "expected_amount": 3713000
     },
     {
@@ -269,7 +435,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "The Appropriate Technology Transfer for Rural Areas [ATTRA]",
       "excel_name": "HEALTHY FOOD FINANCING INITIATIVE",
+      "match_path": [
+        "rural development programs",
+        "rural business\u2014cooperative service",
+        "healthy food financing initiative"
+      ],
       "expected_amount": 500000
     },
     {
@@ -278,7 +450,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "Rural Utilities Service",
       "excel_name": "RURAL WATER AND WASTE DISPOSAL PROGRAM ACCOUNT",
+      "match_path": [
+        "rural development programs",
+        "rural utilities service",
+        "rural water and waste disposal program account"
+      ],
       "expected_amount": 496490000
     },
     {
@@ -287,7 +465,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "Rural Utilities Service",
       "excel_name": "RURAL ELECTRIFICATION AND TELECOMMUNICATIONS LOANS PROGRAM ACCOUNT",
+      "match_path": [
+        "rural development programs",
+        "rural utilities service",
+        "rural electrification and telecommunications loans program account"
+      ],
       "expected_amount": 43407000
     },
     {
@@ -296,7 +480,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RURAL DEVELOPMENT PROGRAMS",
+      "bureau": "Rural Utilities Service",
       "excel_name": "DISTANCE LEARNING, TELEMEDICINE, AND BROADBAND PROGRAM",
+      "match_path": [
+        "rural development programs",
+        "rural utilities service",
+        "distance learning, telemedicine, and broadband program"
+      ],
       "expected_amount": 135105000
     },
     {
@@ -305,7 +495,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DOMESTIC FOOD PROGRAMS",
+      "bureau": "Food and Nutrition Service",
       "excel_name": "CHILD NUTRITION PROGRAMS",
+      "match_path": [
+        "domestic food programs",
+        "food and nutrition service",
+        "child nutrition programs"
+      ],
       "expected_amount": 31775179000
     },
     {
@@ -314,7 +510,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DOMESTIC FOOD PROGRAMS",
+      "bureau": "Committee",
       "excel_name": "[WIC]",
+      "match_path": [
+        "domestic food programs",
+        "food and nutrition service",
+        "special supplemental nutrition program for women, infants, and children (wic)"
+      ],
       "expected_amount": 7697000000
     },
     {
@@ -323,7 +525,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DOMESTIC FOOD PROGRAMS",
+      "bureau": "Committee",
       "excel_name": "SUPPLEMENTAL NUTRITION ASSISTANCE PROGRAM",
+      "match_path": [
+        "domestic food programs",
+        "food and nutrition service",
+        "supplemental nutrition assistance program"
+      ],
       "expected_amount": 123227792000
     },
     {
@@ -332,7 +540,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DOMESTIC FOOD PROGRAMS",
+      "bureau": "Committee",
       "excel_name": "COMMODITY ASSISTANCE PROGRAM",
+      "match_path": [
+        "domestic food programs",
+        "food and nutrition service",
+        "commodity assistance program"
+      ],
       "expected_amount": 516070000
     },
     {
@@ -341,7 +555,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "DOMESTIC FOOD PROGRAMS",
+      "bureau": "Committee",
       "excel_name": "NUTRITION PROGRAMS ADMINISTRATION",
+      "match_path": [
+        "domestic food programs",
+        "food and nutrition service",
+        "nutrition programs administration"
+      ],
       "expected_amount": 177348000
     },
     {
@@ -350,7 +570,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FOREIGN ASSISTANCE AND RELATED PROGRAMS",
+      "bureau": "Market Access Program [MAP] and Foreign Market Development",
       "excel_name": "OFFICE OF CODEX ALIMENTARIUS",
+      "match_path": [
+        "foreign assistance and related programs",
+        "office of the under secretary for trade and foreign agricultural affairs",
+        "office of codex alimentarius"
+      ],
       "expected_amount": 4922000
     },
     {
@@ -359,7 +585,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FOREIGN ASSISTANCE AND RELATED PROGRAMS",
+      "bureau": "Foreign Agricultural Service",
       "excel_name": "FOOD FOR PEACE TITLE II GRANTS",
+      "match_path": [
+        "foreign assistance and related programs",
+        "foreign agricultural service",
+        "food for peace title ii grants"
+      ],
       "expected_amount": 1720607000
     },
     {
@@ -368,7 +600,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "FOREIGN ASSISTANCE AND RELATED PROGRAMS",
+      "bureau": "Commodities Supplied in Connection with Dispositions Abroad",
       "excel_name": "PROGRAM GRANTS",
+      "match_path": [
+        "foreign assistance and related programs",
+        "foreign agricultural service",
+        "mcgovern-dole international food for education and child nutrition program grants"
+      ],
       "expected_amount": 250000000
     },
     {
@@ -377,7 +615,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCY AND FOOD AND DRUG ADMINISTRATION",
+      "bureau": "Limited Population Pathway for Antibacterial and Antifungal",
       "excel_name": "BUILDINGS AND FACILITIES",
+      "match_path": [
+        "related agencies and food and drug administration",
+        "department of health and human services",
+        "buildings and facilities"
+      ],
       "expected_amount": 9000000
     },
     {
@@ -386,7 +630,13 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCY AND FOOD AND DRUG ADMINISTRATION",
+      "bureau": "Limited Population Pathway for Antibacterial and Antifungal",
       "excel_name": "FDA INNOVATION ACCOUNT, CURES ACT",
+      "match_path": [
+        "related agencies and food and drug administration",
+        "department of health and human services",
+        "fda innovation account, cures act"
+      ],
       "expected_amount": 55000000
     },
     {
@@ -395,7 +645,9 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCY AND FOOD AND DRUG ADMINISTRATION",
+      "bureau": "Limited Population Pathway for Antibacterial and Antifungal",
       "excel_name": "FARM CREDIT ADMINISTRATION",
+      "match_path": null,
       "expected_amount": 100430000
     }
   ]
