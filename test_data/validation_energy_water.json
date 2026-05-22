@@ -1,0 +1,952 @@
+{
+  "source": "CRPT-118srpt205, Energy-Water explanatory statement for BILLS-118s4927rs",
+  "note": "Energy-Water FY 2025 (Reported in Senate) account amounts, extracted from the committee report's comparative statement (committee-recommendation column, converted from thousands to dollars) and validated against the bill XML. `match_path` is the mapped bill node when the account name resolves uniquely (strict node-level check); null otherwise, where the test falls back to agency-scoped recall via `title`. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "accounts": [
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF DEFENSE--CIVIL",
+      "bureau": "Corps of Engineers--Civil",
+      "excel_name": "Investigations",
+      "match_path": null,
+      "expected_amount": 107800000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF DEFENSE--CIVIL",
+      "bureau": "Corps of Engineers--Civil",
+      "excel_name": "Planning, Engineering, and Design",
+      "match_path": [
+        "corps of engineers\u2014civil",
+        "department of the army",
+        "corps of engineers\u2014civil",
+        "planning, engineering, and design"
+      ],
+      "expected_amount": 200000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF DEFENSE--CIVIL",
+      "bureau": "Corps of Engineers--Civil",
+      "excel_name": "Construction",
+      "match_path": [
+        "department of energy",
+        "power marketing administrations",
+        "construction, rehabilitation, operation and maintenance, western area power administration"
+      ],
+      "expected_amount": 2979041000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF DEFENSE--CIVIL",
+      "bureau": "Corps of Engineers--Civil",
+      "excel_name": "Mississippi River and Tributaries",
+      "match_path": null,
+      "expected_amount": 375464000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF DEFENSE--CIVIL",
+      "bureau": "Corps of Engineers--Civil",
+      "excel_name": "Operation and Maintenance",
+      "match_path": null,
+      "expected_amount": 5849129000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF DEFENSE--CIVIL",
+      "bureau": "Corps of Engineers--Civil",
+      "excel_name": "Regulatory Program",
+      "match_path": [
+        "corps of engineers\u2014civil",
+        "department of the army",
+        "corps of engineers\u2014civil",
+        "regulatory program"
+      ],
+      "expected_amount": 224000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF DEFENSE--CIVIL",
+      "bureau": "Corps of Engineers--Civil",
+      "excel_name": "Formerly Utilized Sites Remedial Action Program (FUSRAP)",
+      "match_path": [
+        "corps of engineers\u2014civil",
+        "department of the army",
+        "corps of engineers\u2014civil",
+        "formerly utilized sites remedial action program"
+      ],
+      "expected_amount": 325000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF DEFENSE--CIVIL",
+      "bureau": "Corps of Engineers--Civil",
+      "excel_name": "Flood Control and Coastal Emergencies",
+      "match_path": [
+        "corps of engineers\u2014civil",
+        "department of the army",
+        "corps of engineers\u2014civil",
+        "flood control and coastal emergencies"
+      ],
+      "expected_amount": 45000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF DEFENSE--CIVIL",
+      "bureau": "Corps of Engineers--Civil",
+      "excel_name": "Expenses",
+      "match_path": [
+        "corps of engineers\u2014civil",
+        "department of the army",
+        "corps of engineers\u2014civil",
+        "expenses"
+      ],
+      "expected_amount": 224000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF DEFENSE--CIVIL",
+      "bureau": "Corps of Engineers--Civil",
+      "excel_name": "Office of Assistant Secretary of the Army (Civil Works)",
+      "match_path": null,
+      "expected_amount": 5500000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF DEFENSE--CIVIL",
+      "bureau": "Corps of Engineers--Civil",
+      "excel_name": "Water Infrastructure Finance and Innovation Program Account",
+      "match_path": [
+        "corps of engineers\u2014civil",
+        "department of the army",
+        "corps of engineers\u2014civil",
+        "water infrastructure finance and innovation program account"
+      ],
+      "expected_amount": 10000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Central Utah Project",
+      "excel_name": "Central Utah Project Completion Account",
+      "match_path": [
+        "department of the interior",
+        "central utah project",
+        "central utah project completion account"
+      ],
+      "expected_amount": 23000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Bureau of Reclamation",
+      "excel_name": "Water and Related Resources",
+      "match_path": [
+        "department of the interior",
+        "bureau of reclamation",
+        "water and related resources"
+      ],
+      "expected_amount": 1864550000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Bureau of Reclamation",
+      "excel_name": "Central Valley Project Restoration Fund",
+      "match_path": [
+        "department of the interior",
+        "bureau of reclamation",
+        "central valley project restoration fund"
+      ],
+      "expected_amount": 55656000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Bureau of Reclamation",
+      "excel_name": "California Bay-Delta Restoration",
+      "match_path": [
+        "department of the interior",
+        "bureau of reclamation",
+        "california bay-delta restoration"
+      ],
+      "expected_amount": 33000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "bureau": "Bureau of Reclamation",
+      "excel_name": "Policy and Administration",
+      "match_path": [
+        "department of the interior",
+        "bureau of reclamation",
+        "policy and administration"
+      ],
+      "expected_amount": 66794000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Energy Efficiency and Renewable Energy",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "energy efficiency and renewable energy"
+      ],
+      "expected_amount": 3440000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Manufacturing and Energy Supply Chains",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "manufacturing and energy supply chains"
+      ],
+      "expected_amount": 20000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Cybersecurity, Energy Security, and Emergency Response",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "cybersecurity, energy security, and emergency response"
+      ],
+      "expected_amount": 200000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Electricity",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "electricity"
+      ],
+      "expected_amount": 280000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Grid Deployment",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "grid deployment"
+      ],
+      "expected_amount": 60000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Nuclear Energy",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "nuclear energy"
+      ],
+      "expected_amount": 1525000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Defense function",
+      "match_path": null,
+      "expected_amount": 150000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Fossil Energy and Carbon Management",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "fossil energy and carbon management"
+      ],
+      "expected_amount": 865000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Energy Projects",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "energy projects"
+      ],
+      "expected_amount": 36037000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Naval Petroleum and Oil Shale Reserves",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "naval petroleum and oil shale reserves"
+      ],
+      "expected_amount": 13010000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Strategic Petroleum Reserve",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "strategic petroleum reserve"
+      ],
+      "expected_amount": 213390000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "SPR Petroleum Account",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "spr petroleum account"
+      ],
+      "expected_amount": 100000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Northeast Home Heating Oil Reserve",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "northeast home heating oil reserve"
+      ],
+      "expected_amount": 7150000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Energy Information Administration",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "energy information administration"
+      ],
+      "expected_amount": 135000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Non-defense Environmental Cleanup",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "non-defense environmental cleanup"
+      ],
+      "expected_amount": 342000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Uranium Enrichment Decontamination and Decommissioning Fund",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "uranium enrichment decontamination and decommissioning fund"
+      ],
+      "expected_amount": 865000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Science",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "science"
+      ],
+      "expected_amount": 8600000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Nuclear Waste Disposal",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "nuclear waste disposal"
+      ],
+      "expected_amount": 12040000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Technology Coordination and Commercialization",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "technology coordination and commercialization"
+      ],
+      "expected_amount": 34500000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Clean Energy Demonstrations",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "clean energy demonstrations"
+      ],
+      "expected_amount": 125000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Advanced Research Projects Agency-Energy",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "advanced research projects agency\u2014energy"
+      ],
+      "expected_amount": 459150000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Administrative costs",
+      "match_path": null,
+      "expected_amount": 55000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Advanced Technology Vehicles Manufacturing Loan Program",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "advanced technology vehicles manufacturing loan program"
+      ],
+      "expected_amount": 20000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Administrative costs",
+      "match_path": null,
+      "expected_amount": 6300000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Indian Energy Policy and Programs",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "indian energy policy and programs"
+      ],
+      "expected_amount": 70000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Departmental Administration",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "departmental administration"
+      ],
+      "expected_amount": 391000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Net appropriation",
+      "match_path": null,
+      "expected_amount": 290422000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Energy Programs",
+      "excel_name": "Office of the Inspector General",
+      "match_path": [
+        "department of energy",
+        "energy programs",
+        "office of the inspector general"
+      ],
+      "expected_amount": 86000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "National Nuclear Security Administration",
+      "excel_name": "Weapons Activities",
+      "match_path": [
+        "department of energy",
+        "national nuclear security administration",
+        "weapons activities"
+      ],
+      "expected_amount": 19930000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "National Nuclear Security Administration",
+      "excel_name": "Defense Nuclear Nonproliferation",
+      "match_path": [
+        "department of energy",
+        "national nuclear security administration",
+        "defense nuclear nonproliferation"
+      ],
+      "expected_amount": 2630000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "National Nuclear Security Administration",
+      "excel_name": "Naval Reactors",
+      "match_path": [
+        "department of energy",
+        "national nuclear security administration",
+        "naval reactors"
+      ],
+      "expected_amount": 2077000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "National Nuclear Security Administration",
+      "excel_name": "Federal Salaries and Expenses",
+      "match_path": [
+        "department of energy",
+        "national nuclear security administration",
+        "federal salaries and expenses"
+      ],
+      "expected_amount": 564000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Environmental and Other Defense Activities",
+      "excel_name": "Defense Environmental Cleanup",
+      "match_path": [
+        "department of energy",
+        "environmental and other defense activities",
+        "defense environmental cleanup"
+      ],
+      "expected_amount": 7550000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Environmental and Other Defense Activities",
+      "excel_name": "Defense UED&D",
+      "match_path": null,
+      "expected_amount": 577000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Environmental and Other Defense Activities",
+      "excel_name": "Other Defense Activities",
+      "match_path": [
+        "department of energy",
+        "environmental and other defense activities",
+        "other defense activities"
+      ],
+      "expected_amount": 1188000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Power Marketing Administrations",
+      "excel_name": "Administration",
+      "match_path": null,
+      "expected_amount": 9127000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Power Marketing Administrations",
+      "excel_name": "Administration",
+      "match_path": null,
+      "expected_amount": 55070000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Power Marketing Administrations",
+      "excel_name": "Falcon and Amistad Operating and Maintenance Fund",
+      "match_path": [
+        "department of energy",
+        "power marketing administrations",
+        "falcon and amistad operating and maintenance fund"
+      ],
+      "expected_amount": 6525000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "Federal Energy Regulatory Commission",
+      "excel_name": "Salaries and expenses",
+      "match_path": [
+        "department of energy",
+        "power marketing administrations",
+        "federal energy regulatory commission",
+        "salaries and expenses"
+      ],
+      "expected_amount": 532000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "bureau": "General Provisions--Department of Energy",
+      "excel_name": "Colorado River Basin Fund (sec 307)",
+      "match_path": [
+        "department of energy",
+        "general provisions\u2014department of energy",
+        "sec. 307"
+      ],
+      "expected_amount": 2000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "bureau": null,
+      "excel_name": "Appalachian Regional Commission",
+      "match_path": [
+        "independent agencies",
+        "appalachian regional commission"
+      ],
+      "expected_amount": 200000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "bureau": null,
+      "excel_name": "Defense Nuclear Facilities Safety Board",
+      "match_path": null,
+      "expected_amount": 47000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "bureau": null,
+      "excel_name": "Delta Regional Authority",
+      "match_path": null,
+      "expected_amount": 32500000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "bureau": null,
+      "excel_name": "Denali Commission",
+      "match_path": [
+        "independent agencies",
+        "denali commission"
+      ],
+      "expected_amount": 18500000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "bureau": null,
+      "excel_name": "Northern Border Regional Commission",
+      "match_path": [
+        "independent agencies",
+        "northern border regional commission"
+      ],
+      "expected_amount": 46000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "bureau": null,
+      "excel_name": "Southeast Crescent Regional Commission",
+      "match_path": [
+        "independent agencies",
+        "southeast crescent regional commission"
+      ],
+      "expected_amount": 21000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "bureau": null,
+      "excel_name": "Southwest Border Regional Commission",
+      "match_path": [
+        "independent agencies",
+        "southwest border regional commission"
+      ],
+      "expected_amount": 14000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "bureau": null,
+      "excel_name": "Great Lakes Authority",
+      "match_path": [
+        "independent agencies",
+        "great lakes authority"
+      ],
+      "expected_amount": 5000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "bureau": null,
+      "excel_name": "Salaries and expenses",
+      "match_path": null,
+      "expected_amount": 942558000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "bureau": null,
+      "excel_name": "Office of Inspector General",
+      "match_path": [
+        "independent agencies",
+        "nuclear regulatory commission",
+        "office of inspector general"
+      ],
+      "expected_amount": 15769000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "bureau": null,
+      "excel_name": "Nuclear Waste Technical Review Board",
+      "match_path": null,
+      "expected_amount": 4100000
+    }
+  ]
+}

@@ -337,6 +337,43 @@ def test_parse_comparative_statement_tracks_inline_title():
     assert rows[0].committee_recommendation_thousands == 1_920_000
 
 
+# Energy-Water nests accounts below the TITLE: the bill's top-level agency is a sub-header
+# ("Corps of Engineers--Civil"), not the title's department ("DEPARTMENT OF DEFENSE--CIVIL").
+# The reader tracks the most-recent section header as `bureau` so agency-scoped recall can
+# match either level. The bureau resets at each new TITLE.
+NESTED_BUREAU_STATEMENT = """\
+  COMPARATIVE STATEMENT OF NEW BUDGET (OBLIGATIONAL) AUTHORITY FOR FISCAL YEAR 2024
+                          [In thousands of dollars]
+            Item                          appropriation  estimate    recommendation   2024  estimate
+
+                  TITLE I--DEPARTMENT OF DEFENSE--CIVIL
+
+                       DEPARTMENT OF THE ARMY
+
+                      Corps of Engineers--Civil
+
+Investigations.......................  142,990  150,000  107,800  -35,190  -42,200
+
+                  TITLE II--DEPARTMENT OF THE INTERIOR
+
+Water and Related Resources..........  1,895,000  1,950,000  1,920,000  +25,000  -30,000
+"""
+
+
+def test_parse_comparative_statement_tracks_nested_bureau():
+    rows = parse_comparative_statement(NESTED_BUREAU_STATEMENT)
+    army = next(r for r in rows if r.item == "Investigations")
+    assert army.title == "DEPARTMENT OF DEFENSE--CIVIL"
+    assert army.bureau == "Corps of Engineers--Civil"
+
+
+def test_parse_comparative_statement_bureau_resets_at_new_title():
+    rows = parse_comparative_statement(NESTED_BUREAU_STATEMENT)
+    interior = next(r for r in rows if r.item == "Water and Related Resources")
+    assert interior.title == "DEPARTMENT OF THE INTERIOR"
+    assert interior.bureau is None  # no section header under TITLE II before the row
+
+
 # --- Full-report cross-check: the report's two account tables should agree -------------
 #
 # The 3-line summary blocks and the comparative statement are independent renderings of

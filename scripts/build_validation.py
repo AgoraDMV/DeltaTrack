@@ -104,7 +104,7 @@ def _ground_truth(j: Jurisdiction, text: str) -> list[tuple[str | None, str | No
         # Comparative amounts are in thousands; keep only leaf accounts (drop rollup totals
         # and the advance-appropriation component lines, which aren't single bill tokens).
         return [
-            (row.title, None, row.item, row.committee_recommendation_thousands * 1000)
+            (row.title, row.bureau, row.item, row.committee_recommendation_thousands * 1000)
             for row in parse_comparative_statement(text)
             # Negative committee recs are rescissions/offsetting collections/reductions, not
             # leaf appropriations; the bill states them as positive rescission amounts or

@@ -162,7 +162,8 @@ _KNOWN_DUPLICATE_COUNTS: dict[str, int] = {
     "118-s-4802/1_reported-in-senate.xml": 3,  # Interior-Environment: Forest Service repeats
     "118-s-4928/1_reported-in-senate.xml": 5,  # Financial Services: Treasury/OPM salaries, DC funds
     "118-s-4942/1_reported-in-senate.xml": 2,  # Labor-HHS: VETS employment-and-training lines
-    "118-s-4927/1_reported-in-senate.xml": 4,  # Energy-Water (recall deferred): Corps repeats
+    "118-s-4927/1_reported-in-senate.xml": 4,  # Energy-Water: Corps of Engineers heading repeats
+    "118-s-2321/1_reported-in-senate.xml": 1,  # CJS FY2024 (out-of-corpus guard): NASA pair
 }
 
 

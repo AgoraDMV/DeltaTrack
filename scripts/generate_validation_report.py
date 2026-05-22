@@ -119,6 +119,22 @@ The full current remainder:
 
 {chr(10).join(residual_sections) if residual_sections else "_(none)_"}
 
+## Guarding against overfitting
+
+The concern behind this work (GitHub #8) is that the parser's heuristics might be tuned to the
+specific bills we happen to have. Three things push against that:
+
+- **A different fiscal year.** The table above includes **Commerce-Justice-Science (FY2024)** —
+  a bill and report not otherwise in our corpus. It recalls at the same rate as FY2025 CJS, with
+  the same two structural misses, so the parser is not keyed to one year's formatting.
+- **Both chambers.** The Legislative Branch source spans House and Senate enrolled bills across
+  FY2014–FY2020. (The committee-report jurisdictions are Senate-only because House appropriations
+  reports render their account tables as embedded images, so there is no text for the reader to
+  extract — a limit of the *report source*, not the bill parser, which parses House bill XML fine.)
+- **Many independent jurisdictions.** Nine subcommittees with very different account structures
+  (flat tabular Defense, deeply-nested Energy-Water, narrative summary blocks) all recall in the
+  same band, which is the opposite of what overfitting to one structure would produce.
+
 ## Honest limits
 
 - This validates **amount extraction**, not the version-to-version **diff/comparison**, which
@@ -127,9 +143,8 @@ The full current remainder:
   legislative process. It is strong for catching the parser misreading unfamiliar structure
   (which is the overfitting risk), but it is not a third-party audit.
 - Coverage is the FY2025 Senate-reported bills for these jurisdictions, plus Legislative Branch
-  across several years and both chambers. Energy-Water (whose comparative statement nests
-  accounts below a department title that differs from the bill's top-level agency, needing
-  bureau-aware mapping) and the remaining subcommittees are not yet covered here.
+  across several years and both chambers. The remaining FY2025 subcommittees (e.g. Homeland
+  Security, MilCon-VA) and other years/chambers are not yet covered here.
 
 ## Reproduce
 

@@ -28,3 +28,14 @@ jobs:
 
       - name: Run tests
         run: uv run pytest -m "not slow" -v
+
+      - name: Run external-validation suite
+        # The committee-report validation is @slow but self-contained: it runs against the
+        # vendored govinfo sources (committee-report HTML + reported-bill XML), so it can gate
+        # CI. The Legislative Branch slow tests need the large enrolled-bill corpus, which is
+        # not vendored, so they stay an on-demand local guard and are not selected here.
+        run: >
+          uv run pytest -v -m slow
+          tests/test_committee_report.py
+          tests/test_validate_extraction.py::test_report_amounts_recalled
+          tests/test_validate_extraction.py::test_fixture_is_senate_reported_bill

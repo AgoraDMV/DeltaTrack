@@ -47,7 +47,9 @@ def _bill_amounts(xml_path_str: str):
             continue
         amounts = set(extract_amounts(node.body_text))
         by_path.setdefault(tuple(node.match_path), set()).update(amounts)
-        by_agency.setdefault(node.match_path[0], set()).update(amounts)
+        # Key by the normalized agency name so lookups (also normalized) match agencies
+        # whose match_path carries punctuation, e.g. "Corps of Engineers--Civil".
+        by_agency.setdefault(_normalize(node.match_path[0]), set()).update(amounts)
     return by_path, by_agency
 
 
@@ -69,7 +71,11 @@ def validate_jurisdiction(jur: Jurisdiction) -> list[AccountResult]:
     for acc in accounts:
         amount = acc["expected_amount"]
         method = "unvalidated"
-        if amount in by_agency.get(_normalize(acc["title"]), set()):
+        # The bill's top-level agency may be named at the report's title level or a section
+        # below it (e.g. Energy-Water nests "Corps of Engineers--Civil" under a department
+        # title), so accept a match under either.
+        agency_names = (_normalize(acc["title"]), _normalize(acc.get("bureau")))
+        if any(amount in by_agency.get(name, set()) for name in agency_names if name):
             method = "agency"
         elif acc["match_path"] is not None and _component_sum(by_path.get(tuple(acc["match_path"]), set()), amount):
             method = "component-sum"

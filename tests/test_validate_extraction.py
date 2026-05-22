@@ -153,6 +153,14 @@ _MAX_UNVALIDATED = {
     "labor_hhs": 15,
     # Defense (comparative source): every leaf appropriation account recalls.
     "defense": 0,
+    # Energy-Water (comparative source): 6 structural misses — accounts the bill itemizes
+    # (Nuclear Energy), fee-offset gross/net (NRC salaries and expenses), or general-provision
+    # transfers; verified not single bill tokens, not parser errors.
+    "energy_water": 6,
+    # CJS FY2024: out-of-corpus cross-year overfitting guard (different year of an already-
+    # covered jurisdiction). Same 2 structural misses as FY2025 (DOJ S&E the bill itemizes;
+    # PSOB indefinite "such sums") — verified absent from the bill XML.
+    "cjs_fy2024": 2,
 }
 
 _REPORT_JURISDICTIONS = [j for j in JURISDICTIONS if j.fixture_path.exists()]

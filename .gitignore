@@ -7,12 +7,21 @@ htmlcov/
 .venv/
 bills/*
 !bills/.gitkeep
+# Vendored public-domain (17 U.S.C. 105) govinfo sources for the external-validation suite:
+# the Senate reported-bill XML each validation jurisdiction checks. Pinning the exact bytes
+# keeps the committed validation_*.json fixtures reproducible and lets the suite run in CI.
+# The broader (large) bill corpus stays ignored and is fetched on demand.
+!bills/118-s-*/
+bills/118-s-*/*
+!bills/118-s-*/1_reported-in-senate.xml
 reports/*
 !reports/.gitkeep
 plans/
 test_data/*
 !test_data/validation_*.json
 !test_data/pdf/
+# Vendored committee-report HTML (public domain) — the external-validation ground-truth source.
+!test_data/CRPT-*.htm
 # Persistent PDF extraction cache (developer test-loop speedup; see tests/pdf_corpus.py)
 test_data/extract_cache/
 *.csv
