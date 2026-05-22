@@ -151,6 +151,9 @@ _KNOWN_DUPLICATE_COUNTS: dict[str, int] = {
     "116-hr-133/6_engrossed-amendment-house.xml": 132,
     "116-hr-133/7_enrolled-bill.xml": 132,
     "117-hr-2471/6_enrolled-bill.xml": 120,
+    # CJS external-validation bill (2026-05-21): two benign cross-section collisions —
+    # repeated DOJ general-provisions headings and a NASA appropriation/admin pair.
+    "118-s-4795/1_reported-in-senate.xml": 2,
 }
 
 
