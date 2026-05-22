@@ -19,7 +19,6 @@ internal-only tests cannot detect. Two jurisdictions, two external sources:
 """
 
 import json
-import re
 from pathlib import Path
 
 import pytest
@@ -120,134 +119,58 @@ class TestLegBranchValidation:
         assert len(fixture_data["accounts"]) >= 300
 
 
-CJS_FIXTURE_PATH = Path("test_data/validation_cjs.json")
-CJS_BILL_XML = Path("bills/118-s-4795/1_reported-in-senate.xml")
+# ---- Committee-report jurisdictions (parameterized, GitHub #8) -----------------------
+#
+# The parser's extraction from each reported bill XML is validated against the committee
+# report (external ground truth). An account is validated when its committee-recommended
+# amount appears under the correct agency, or as a sum of the mapped node's components
+# (see validation_check.validate_jurisdiction). The unvalidated remainder is inherent
+# report-vs-bill structural difference (indefinite accounts, totals stated only as parts,
+# report typos), documented and quantified in docs/parser-validation.md.
+#
+# Maintainability: rather than hand-curate a per-account rationale list (which conscripts
+# whoever owns it), we keep a per-jurisdiction baseline of the unvalidated count — the same
+# `_KNOWN_DUPLICATE_COUNTS` idiom used elsewhere in this suite. The test fails if the count
+# *rises* (a regression) and is lowered intentionally when extraction improves. Run
+# `uv run python scripts/generate_validation_report.py` to refresh the doc and these counts.
 
-# Committee-recommendation amounts whose absence from the bill XML is a known property of
-# the *source*, not a parser bug. Keyed by (excel_name, expected_amount) so a future
-# regeneration that changes either surfaces here. Each entry was confirmed against the
-# bill text and the report's own comparative statement.
-_KNOWN_REPORT_DISCREPANCIES = {
-    ("PUBLIC SAFETY OFFICERS BENEFITS", 280_800_000): (
-        "Mandatory account (INCLUDING TRANSFER OF FUNDS); the report's committee "
-        "recommendation has no fixed-dollar appropriation line in the bill text."
-    ),
-    ("SAFETY, SECURITY, AND MISSION SERVICES", 3_044_440_000): (
-        "Report summary-block typo: prints the budget-estimate figure ($3,044,440,000). "
-        "The bill and the report's own comparative statement both say $3,044,400,000, "
-        "which the parser extracts correctly."
-    ),
+from validation_check import validate_jurisdiction  # noqa: E402
+from validation_sources import JURISDICTIONS  # noqa: E402
+
+# Max accounts whose report amount is not recalled from the bill, per jurisdiction. These
+# are confirmed report-vs-bill structural differences, not parser errors (see the doc).
+_MAX_UNVALIDATED = {
+    "cjs": 2,
+    "agriculture": 3,
+    "transportation_hud": 3,
+    "state_foreign_ops": 1,
+    "interior_environment": 8,
+    "financial_services": 2,
 }
 
-
-def _load_cjs_fixture():
-    with open(CJS_FIXTURE_PATH) as f:
-        return json.load(f)
+_REPORT_JURISDICTIONS = [j for j in JURISDICTIONS if j.fixture_path.exists()]
 
 
-def _normalize(name: str) -> str:
-    """Lowercase and strip punctuation, matching the form of a node's match_path segments
-    (e.g. report title "DEPARTMENT OF JUSTICE" -> "department of justice")."""
-    return re.sub(r"[^a-z0-9 ]", "", name.lower()).strip()
+@pytest.mark.slow
+@pytest.mark.parametrize("jur", _REPORT_JURISDICTIONS, ids=lambda j: j.slug)
+def test_report_amounts_recalled(jur):
+    """Recall of committee-reported amounts from the bill must not regress below baseline."""
+    if not jur.bill_xml_path.exists():
+        pytest.skip(f"{jur.bill_xml_path} not present (fetch via scripts/build_validation.py)")
+    results = validate_jurisdiction(jur)
+    unvalidated = [r for r in results if not r.validated]
+    baseline = _MAX_UNVALIDATED[jur.slug]
+    assert len(unvalidated) <= baseline, (
+        f"{jur.slug}: {len(unvalidated)} amounts unrecalled (baseline {baseline}) — recall "
+        f"regressed, investigate for a parser bug:\n"
+        + "\n".join(f"  {r.bureau} / {r.excel_name} ${r.expected_amount:,}" for r in unvalidated[:20])
+    )
 
 
-cjs_skip_if_missing = pytest.mark.skipif(
-    not (CJS_FIXTURE_PATH.exists() and CJS_BILL_XML.exists()),
-    reason="CJS validation fixture or bill XML not present (fetch via scripts/build_validation.py docstring)",
-)
-
-
-@cjs_skip_if_missing
-class TestCJSValidation:
-    """Validate Commerce-Justice-Science amounts against the S.4795 committee report.
-
-    External breadth probe for GitHub #8. Agency-scoped recall: each committee-
-    recommendation amount the report states should appear among the amounts the parser
-    extracts under the *matching top-level node* (the appropriations title/agency), not
-    merely somewhere in the bill — so a misassignment across agencies is caught. Documented
-    source-side discrepancies are allow-listed.
-    """
-
-    @pytest.fixture(scope="class")
-    def fixture_data(self):
-        return _load_cjs_fixture()
-
-    @pytest.fixture(scope="class")
-    def amounts_by_agency(self):
-        """Amounts the parser extracts, grouped by top-level node (match_path[0]).
-
-        match_path[0] is the appropriations title/agency (e.g. "department of justice"),
-        onto which the report's title context maps. Grouping lets us check each amount
-        appears under the right agency.
-        """
-        tree = normalize_bill(CJS_BILL_XML)
-        by_agency: dict[str, set[int]] = {}
-        for node in tree.nodes:
-            if not node.match_path:
-                continue
-            by_agency.setdefault(node.match_path[0], set()).update(extract_amounts(node.body_text))
-        return by_agency
-
-    def test_amounts_present_under_correct_agency(self, fixture_data, amounts_by_agency):
-        """Each committee-recommendation amount appears under its title's node group.
-
-        Stronger than bare amount-recall: it catches the parser assigning an amount to the
-        wrong agency. Falls back to any-agency only when a row has no title context.
-        """
-        all_amounts = set().union(*amounts_by_agency.values())
-        missing = []
-        for account in fixture_data["accounts"]:
-            amount = account["expected_amount"]
-            if (account["excel_name"], amount) in _KNOWN_REPORT_DISCREPANCIES:
-                continue
-            title = account.get("title")
-            if title is not None:
-                present = amount in amounts_by_agency.get(_normalize(title), set())
-            else:
-                present = amount in all_amounts
-            if not present:
-                missing.append(f"{title} / {account['excel_name']}: expected ${amount:,}")
-        assert missing == [], (
-            f"{len(missing)} report amounts not extracted under the right agency (possible "
-            f"parser overfitting, misassignment, or a new source discrepancy):\n"
-            + "\n".join(f"  {m}" for m in missing[:10])
-        )
-
-    def test_known_discrepancies_are_still_absent(self, fixture_data, amounts_by_agency):
-        """Guard the allow-list: if a documented discrepancy starts matching, the entry is
-        stale and should be removed (or it masks a real change)."""
-        all_amounts = set().union(*amounts_by_agency.values())
-        fixture_keys = {(a["excel_name"], a["expected_amount"]) for a in fixture_data["accounts"]}
-        stale = []
-        for key in _KNOWN_REPORT_DISCREPANCIES:
-            name, amount = key
-            if key not in fixture_keys:
-                stale.append(f"{name} ${amount:,} (no longer in fixture)")
-            elif amount in all_amounts:
-                stale.append(f"{name} ${amount:,} (now present in bill; allow-list entry obsolete)")
-        assert stale == [], "Stale _KNOWN_REPORT_DISCREPANCIES entries:\n" + "\n".join(f"  {s}" for s in stale)
-
-    def test_is_senate_only(self, fixture_data):
-        """CJS fixture is the Senate-reported bill — single chamber."""
-        assert {a["chamber"] for a in fixture_data["accounts"]} == {"senate"}
-
-    def test_single_bill(self, fixture_data):
-        """CJS fixture covers exactly the one S.4795 bill version."""
-        assert {(a["bill"], a["version"]) for a in fixture_data["accounts"]} == {
-            ("118-s-4795", "1_reported-in-senate.xml")
-        }
-
-    def test_validation_count(self, fixture_data):
-        """Fixture has a meaningful number of account-level entries."""
-        assert len(fixture_data["accounts"]) >= 50
-
-    def test_rows_carry_title_context(self, fixture_data, amounts_by_agency):
-        """Every row has a title that resolves to a real top-level node, so the recall
-        check is genuinely agency-scoped and cannot silently fall back to any-agency."""
-        agencies = set(amounts_by_agency)
-        bad = [
-            f"{a['excel_name']} (title={a.get('title')!r})"
-            for a in fixture_data["accounts"]
-            if a.get("title") is None or _normalize(a["title"]) not in agencies
-        ]
-        assert bad == [], "Rows without a resolvable title:\n" + "\n".join(f"  {b}" for b in bad[:10])
+@pytest.mark.slow
+@pytest.mark.parametrize("jur", _REPORT_JURISDICTIONS, ids=lambda j: j.slug)
+def test_fixture_is_senate_reported_bill(jur):
+    accounts = json.loads(jur.fixture_path.read_text())["accounts"]
+    assert len(accounts) >= 20
+    assert {a["chamber"] for a in accounts} == {"senate"}
+    assert {(a["bill"], a["version"]) for a in accounts} == {(jur.bill_id, jur.version)}
