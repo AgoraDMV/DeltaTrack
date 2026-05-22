@@ -54,16 +54,19 @@ def _senate_fy25(slug, display, srpt, s_num, bill_id):
 
 
 # FY2025 Senate Appropriations Committee reports + their reported bills (govinfo).
-# Summary-block jurisdictions; tabular ones (Defense srpt204, Labor-HHS srpt207) await the
-# comparative-statement source (Phase 2) and are intentionally not listed yet.
+# These present account amounts in the 3-line summary-block form the reader targets.
 JURISDICTIONS = [
     _senate_fy25("cjs", "Commerce-Justice-Science", "198", "4795", "118-s-4795"),
     _senate_fy25("agriculture", "Agriculture-Rural Development-FDA", "193", "4690", "118-s-4690"),
     _senate_fy25("transportation_hud", "Transportation-HUD", "199", "4796", "118-s-4796"),
     _senate_fy25("state_foreign_ops", "State-Foreign Operations", "200", "4797", "118-s-4797"),
     _senate_fy25("interior_environment", "Interior-Environment", "201", "4802", "118-s-4802"),
-    _senate_fy25("energy_water", "Energy-Water Development", "205", "4927", "118-s-4927"),
     _senate_fy25("financial_services", "Financial Services-General Government", "206", "4928", "118-s-4928"),
 ]
+
+# Deferred: tabular jurisdictions whose reports present amounts in wide comparative tables
+# rather than 3-line summary blocks, so they need the comparative-statement source (Phase 2)
+# before they validate cleanly: Energy-Water (srpt205/S.4927), Defense (srpt204/S.4921),
+# Labor-HHS (srpt207/S.4942).
 
 BY_SLUG = {j.slug: j for j in JURISDICTIONS}
