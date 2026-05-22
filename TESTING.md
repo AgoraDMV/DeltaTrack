@@ -170,6 +170,16 @@ uv run pytest tests/test_pdf_corpus_smoke.py     # PDF comparison soundness acro
 To run the slow group locally, download the bill files first (see the Testing
 section of the [README](README.md#testing)).
 
+One slow test needs a file the bill downloads do not cover. The watermark-recall
+test (`test_pdf_watermark_recall.py`) reads the reported-in-Senate PDF of S.4795,
+which carries a govinfo watermark. It skips automatically if the file is absent;
+to run it, download the PDF into `test_data/`:
+
+```bash
+curl -L -o test_data/BILLS-118s4795rs.pdf \
+  https://www.govinfo.gov/content/pkg/BILLS-118s4795rs/pdf/BILLS-118s4795rs.pdf
+```
+
 ### Speeding up the PDF tests for development
 
 The slow PDF tests read every bill PDF, and reading a large omnibus takes a
