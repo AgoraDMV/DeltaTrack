@@ -126,7 +126,14 @@ def test_section_node_emits_uppercased_run_in_heading():
     assert "SEC. 101.  None of the funds" in out
 
 
+_HR4366_V1 = Path("bills/118-hr-4366/1_reported-in-house.xml")
+
+
 @pytest.mark.slow
+@pytest.mark.skipif(
+    not _HR4366_V1.exists(),
+    reason="Real bill corpus not present; download with fetch_bills.py (see README)",
+)
 def test_real_bill_serializes_without_error_and_contains_known_text():
     """Smoke test: the HR4366 reported XML has 165 nodes; the serializer
     must produce non-trivial output containing recognizable strings.
@@ -134,7 +141,7 @@ def test_real_bill_serializes_without_error_and_contains_known_text():
     Marked `slow` because it depends on the real bill corpus, which CI
     doesn't check out (matches the pattern documented in pyproject.toml).
     """
-    tree = normalize_bill(Path("bills/118-hr-4366/1_reported-in-house.xml"))
+    tree = normalize_bill(_HR4366_V1)
     out = serialize_tree(tree)
     assert len(out) > 1000
     assert "DEPARTMENT OF DEFENSE" in out
