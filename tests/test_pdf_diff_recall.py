@@ -5,10 +5,13 @@ Each fixture case asserts:
   2. The hunk's change_type matches the fixture's declared type.
   3. For numeric cases (cases 1-8: floor amendment annotations), the hunk
      has has_amendment_annotations=True.
+  4. The case's changed prose surfaces as a contiguous run in some hunk — the
+     word-level counterpart to the amount-recall tests ("would we see sneaked-in
+     language?").
 
 The fixture is the spec; failures here are the things the diff doesn't
-yet surface correctly. Document gaps in plans/pdf-text-diff-findings.md
-with one-line rationale before declaring done.
+yet surface correctly. See the Phase 5 section of
+plans/test-coverage-expansion.md for the prose-recall rationale and findings.
 """
 
 from __future__ import annotations
