@@ -16,15 +16,19 @@ bill XML; we check that our parser reads it correctly, by comparing the parser's
 ## Two independent ground-truth sources
 
 - **Legislative Branch** — 414 line items across 7 enrolled bills (113-hr-3547, 113-hr-83, 114-hr-2029, 115-hr-1625, 115-hr-244, 115-hr-5895, 116-hr-1865), chambers: house, senate. Source: an independently maintained appropriations spreadsheet. Validated *structurally* (`TestLegBranchValidation`): each curated account names a `match_path`, and the parser must produce a node there with the expected amount.
-- **6 other jurisdictions** — committee-recommended amounts parsed from the
+- **8 other jurisdictions** — committee-recommended amounts parsed from the
   FY2025 Senate Appropriations **committee reports** (govinfo `CRPT-…`), compared to what the
   parser extracts from each reported bill. The report is written by committee staff for a
   different purpose than the bill, so it is genuinely independent. (Committee reports, not CRS
-  reports.)
+  reports.) Most are read from the report's 3-line summary blocks; **tabular** jurisdictions
+  (Defense) print accounts only in the wide comparative statement, so those are read from that
+  table instead (committee-recommendation column, converted from thousands to dollars).
 
 An account is counted as **recalled** when the report's amount appears in the parser's
 extraction under the correct agency, or as a sum of the account's components (totals the bill
-states only as parts). See `validation_check.validate_jurisdiction`.
+states only as parts). See `validation_check.validate_jurisdiction`. For the comparative-
+statement source, rollup totals/subtotals and negative reduction/offset lines (rescissions,
+offsetting collections) are excluded — they are not leaf appropriation accounts.
 
 ## Current recall (committee-report jurisdictions)
 
@@ -36,8 +40,10 @@ states only as parts). See `validation_check.validate_jurisdiction`.
 | State-Foreign Operations | `118-s-4797` | 68 | 67 | 99% |
 | Interior-Environment | `118-s-4802` | 72 | 64 | 89% |
 | Financial Services-General Government | `118-s-4928` | 100 | 98 | 98% |
+| Labor-HHS-Education | `118-s-4942` | 123 | 108 | 88% |
+| Defense | `118-s-4921` | 77 | 77 | 100% |
 
-**Overall: 407 / 426 accounts recalled (95.5%).**
+**Overall: 592 / 626 accounts recalled (94.6%).**
 
 ## Why the remainder is not a parser problem
 
@@ -83,6 +89,22 @@ The full current remainder:
 **Financial Services-General Government** (2)
   - EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE / SALARIES AND EXPENSES — $77,681,000
   - EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE / SALARIES AND EXPENSES — $133,290,000
+**Labor-HHS-Education** (15)
+  - DEPARTMENT OF LABOR / SPECIAL BENEFITS FOR DISABLED COAL MINERS — $31,367,000
+  - DEPARTMENT OF LABOR / BLACK LUNG DISABILITY TRUST FUND — $485,706,000
+  - DEPARTMENT OF LABOR / OFFICE OF THE INSPECTOR GENERAL — $97,028,000
+  - DEPARTMENT OF HEALTH AND HUMAN SERVICES / HRSA-WIDE ACTIVITIES AND PROGRAM SUPPORT — $1,092,655,000
+  - DEPARTMENT OF HEALTH AND HUMAN SERVICES / IMMUNIZATION AND RESPIRATORY DISEASES — $934,291,000
+  - DEPARTMENT OF HEALTH AND HUMAN SERVICES / EMERGING AND ZOONOTIC INFECTIOUS DISEASES — $805,272,000
+  - DEPARTMENT OF HEALTH AND HUMAN SERVICES / CHRONIC DISEASE PREVENTION AND HEALTH PROMOTION — $1,463,914,000
+  - DEPARTMENT OF HEALTH AND HUMAN SERVICES / PUBLIC HEALTH AND SCIENTIFIC SERVICES — $774,497,000
+  - DEPARTMENT OF HEALTH AND HUMAN SERVICES / ENVIRONMENTAL HEALTH — $244,850,000
+  - DEPARTMENT OF HEALTH AND HUMAN SERVICES / CDC-WIDE ACTIVITIES — $681,570,000
+  - DEPARTMENT OF HEALTH AND HUMAN SERVICES / MENTAL HEALTH — $2,902,546,000
+  - DEPARTMENT OF HEALTH AND HUMAN SERVICES / REFUGEE AND ENTRANT ASSISTANCE — $6,428,214,000
+  - DEPARTMENT OF HEALTH AND HUMAN SERVICES / AGING AND DISABILITY SERVICES PROGRAMS — $2,543,817,000
+  - DEPARTMENT OF HEALTH AND HUMAN SERVICES / RETIREMENT PAY AND MEDICAL BENEFITS FOR COMMISSIONED OFFICERS — $894,795,000
+  - RELATED AGENCIES / OFFICE OF INSPECTOR GENERAL — $114,665,000
 
 ## Honest limits
 
@@ -92,8 +114,9 @@ The full current remainder:
   legislative process. It is strong for catching the parser misreading unfamiliar structure
   (which is the overfitting risk), but it is not a third-party audit.
 - Coverage is the FY2025 Senate-reported bills for these jurisdictions, plus Legislative Branch
-  across several years and both chambers. Tabular jurisdictions (Defense, Labor-HHS) and the
-  remaining subcommittees are not yet covered here.
+  across several years and both chambers. Energy-Water (whose comparative statement nests
+  accounts below a department title that differs from the bill's top-level agency, needing
+  bureau-aware mapping) and the remaining subcommittees are not yet covered here.
 
 ## Reproduce
 

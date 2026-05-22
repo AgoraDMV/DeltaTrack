@@ -1,0 +1,1790 @@
+{
+  "source": "CRPT-118srpt207, Labor-HHS-Education explanatory statement for BILLS-118s4942rs",
+  "note": "Labor-HHS-Education FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks (committee-recommendation amounts, in actual dollars) and validated against the bill XML. `match_path` is the mapped bill node when the account name resolves uniquely (strict node-level check); null otherwise, where the test falls back to agency-scoped recall via `title`. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "accounts": [
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Employment and Training Administration",
+      "excel_name": "TRAINING AND EMPLOYMENT SERVICES",
+      "match_path": [
+        "department of labor",
+        "employment and training administration",
+        "training and employment services"
+      ],
+      "expected_amount": 4019669000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Congressionally Directed Spending",
+      "excel_name": "JOB CORPS",
+      "match_path": [
+        "department of labor",
+        "employment and training administration",
+        "job corps"
+      ],
+      "expected_amount": 1760155000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Congressionally Directed Spending",
+      "excel_name": "COMMUNITY SERVICE EMPLOYMENT FOR OLDER AMERICANS",
+      "match_path": [
+        "department of labor",
+        "employment and training administration",
+        "community service employment for older americans"
+      ],
+      "expected_amount": 405000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Community Service Employment for Older Americans [CSEOA]",
+      "excel_name": "FEDERAL UNEMPLOYMENT BENEFITS AND ALLOWANCES",
+      "match_path": [
+        "department of labor",
+        "employment and training administration",
+        "federal unemployment benefits and allowances"
+      ],
+      "expected_amount": 33900000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Community Service Employment for Older Americans [CSEOA]",
+      "excel_name": "STATE UNEMPLOYMENT INSURANCE AND EMPLOYMENT SERVICE OPERATIONS",
+      "match_path": [
+        "department of labor",
+        "employment and training administration",
+        "state unemployment insurance and employment service operations"
+      ],
+      "expected_amount": 4038150000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Timely Processing of Permanent Labor Certification",
+      "excel_name": "PROGRAM ADMINISTRATION",
+      "match_path": [
+        "department of labor",
+        "employment and training administration",
+        "program administration"
+      ],
+      "expected_amount": 172915000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Employee Benefits Security Administration",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "department of labor",
+        "employee benefits security administration",
+        "salaries and expenses"
+      ],
+      "expected_amount": 206100000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Wage and Hour Division",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "department of labor",
+        "wage and hour division",
+        "salaries and expenses"
+      ],
+      "expected_amount": 267500000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Office of Labor-Management Standards",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "department of labor",
+        "office of labor-management standards",
+        "salaries and expenses"
+      ],
+      "expected_amount": 48515000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Office of Federal Contract Compliance Programs",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "department of labor",
+        "office of federal contract compliance programs",
+        "salaries and expenses"
+      ],
+      "expected_amount": 110976000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Office of Workers' Compensation Programs",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "department of labor",
+        "office of workers' compensation programs",
+        "salaries and expenses"
+      ],
+      "expected_amount": 122705000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Office of Workers' Compensation Programs",
+      "excel_name": "SPECIAL BENEFITS",
+      "match_path": [
+        "department of labor",
+        "office of workers' compensation programs",
+        "special benefits"
+      ],
+      "expected_amount": 726670000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Office of Workers' Compensation Programs",
+      "excel_name": "SPECIAL BENEFITS FOR DISABLED COAL MINERS",
+      "match_path": [
+        "department of labor",
+        "office of workers' compensation programs",
+        "special benefits for disabled coal miners"
+      ],
+      "expected_amount": 31367000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Division of Energy Employees Occupational Illness Compensation",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": null,
+      "expected_amount": 66966000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Division of Energy Employees Occupational Illness Compensation",
+      "excel_name": "BLACK LUNG DISABILITY TRUST FUND",
+      "match_path": [
+        "department of labor",
+        "office of workers' compensation programs",
+        "black lung disability trust fund"
+      ],
+      "expected_amount": 485706000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Occupational Safety and Health Administration",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "department of labor",
+        "occupational safety and health administration",
+        "salaries and expenses"
+      ],
+      "expected_amount": 637309000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Mine Safety and Health Administration",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "department of labor",
+        "mine safety and health administration",
+        "salaries and expenses"
+      ],
+      "expected_amount": 392816000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Bureau of Labor Statistics",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "department of labor",
+        "bureau of labor statistics",
+        "salaries and expenses"
+      ],
+      "expected_amount": 702952000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "Departmental Management",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "department of labor",
+        "departmental management",
+        "salaries and expenses"
+      ],
+      "expected_amount": 395197000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "The Departmental Management, Salaries and Expenses",
+      "excel_name": "INFORMATION TECHNOLOGY MODERNIZATION",
+      "match_path": null,
+      "expected_amount": 29269000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF LABOR",
+      "bureau": "The Departmental Management, Salaries and Expenses",
+      "excel_name": "OFFICE OF THE INSPECTOR GENERAL",
+      "match_path": null,
+      "expected_amount": 97028000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "The Health Resources and Services Administration [HRSA]",
+      "excel_name": "PRIMARY HEALTH CARE",
+      "match_path": [
+        "department of health and human services",
+        "health resources and services administration",
+        "primary health care"
+      ],
+      "expected_amount": 1858772000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Federally Qualified Health Center [FQHC] Look-Alike",
+      "excel_name": "HEALTH WORKFORCE",
+      "match_path": [
+        "department of health and human services",
+        "health resources and services administration",
+        "health workforce"
+      ],
+      "expected_amount": 1411376000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Nursing Workforce Diversity",
+      "excel_name": "MATERNAL AND CHILD HEALTH",
+      "match_path": [
+        "department of health and human services",
+        "health resources and services administration",
+        "maternal and child health"
+      ],
+      "expected_amount": 1181180000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Disorders [MMHSUD]",
+      "excel_name": "RYAN WHITE HIV/AIDS PROGRAM",
+      "match_path": [
+        "department of health and human services",
+        "health resources and services administration",
+        "ryan white hiv/aids program"
+      ],
+      "expected_amount": 2571041000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Disorders [MMHSUD]",
+      "excel_name": "HEALTH SYSTEMS",
+      "match_path": [
+        "department of health and human services",
+        "health resources and services administration",
+        "health systems"
+      ],
+      "expected_amount": 135009000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Organ Procurement and Transplantation Network [OPTN]",
+      "excel_name": "RURAL HEALTH",
+      "match_path": [
+        "department of health and human services",
+        "health resources and services administration",
+        "rural health"
+      ],
+      "expected_amount": 385907000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Rural Maternity and Obstetrics Management Strategies",
+      "excel_name": "FAMILY PLANNING",
+      "match_path": [
+        "department of health and human services",
+        "health resources and services administration",
+        "family planning"
+      ],
+      "expected_amount": 286479000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Rural Maternity and Obstetrics Management Strategies",
+      "excel_name": "HRSA-WIDE ACTIVITIES AND PROGRAM SUPPORT",
+      "match_path": [
+        "department of health and human services",
+        "health resources and services administration",
+        "hrsa-wide activities and program support"
+      ],
+      "expected_amount": 1092655000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Rural Maternity and Obstetrics Management Strategies",
+      "excel_name": "VACCINE INJURY COMPENSATION PROGRAM TRUST FUND",
+      "match_path": [
+        "department of health and human services",
+        "health resources and services administration",
+        "vaccine injury compensation program trust fund"
+      ],
+      "expected_amount": 15200000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Centers for Disease Control and Prevention",
+      "excel_name": "IMMUNIZATION AND RESPIRATORY DISEASES",
+      "match_path": [
+        "department of health and human services",
+        "centers for disease control and prevention",
+        "immunization and respiratory diseases"
+      ],
+      "expected_amount": 934291000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Centers for Disease Control and Prevention",
+      "excel_name": "PREVENTION",
+      "match_path": null,
+      "expected_amount": 1394056000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Centers for Disease Control and Prevention",
+      "excel_name": "EMERGING AND ZOONOTIC INFECTIOUS DISEASES",
+      "match_path": [
+        "department of health and human services",
+        "centers for disease control and prevention",
+        "emerging and zoonotic infectious diseases"
+      ],
+      "expected_amount": 805272000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Myalgic Encephalomyelitis/Chronic Fatigue Syndrome [ME/",
+      "excel_name": "CHRONIC DISEASE PREVENTION AND HEALTH PROMOTION",
+      "match_path": [
+        "department of health and human services",
+        "centers for disease control and prevention",
+        "chronic disease prevention and health promotion"
+      ],
+      "expected_amount": 1463914000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Myalgic Encephalomyelitis/Chronic Fatigue Syndrome [ME/",
+      "excel_name": "DISABILITY AND HEALTH",
+      "match_path": null,
+      "expected_amount": 210060000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Surveillance for Emerging Threats to Mothers and Babies",
+      "excel_name": "PUBLIC HEALTH AND SCIENTIFIC SERVICES",
+      "match_path": null,
+      "expected_amount": 774497000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Native Hawaiian and Pacific Islander National Health",
+      "excel_name": "ENVIRONMENTAL HEALTH",
+      "match_path": [
+        "department of health and human services",
+        "centers for disease control and prevention",
+        "environmental health"
+      ],
+      "expected_amount": 244850000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Enhancing Data-Driven Disease Detection in Newborns",
+      "excel_name": "INJURY PREVENTION AND CONTROL",
+      "match_path": [
+        "department of health and human services",
+        "centers for disease control and prevention",
+        "injury prevention and control"
+      ],
+      "expected_amount": 776379000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Enhancing Data-Driven Disease Detection in Newborns",
+      "excel_name": "OCCUPATIONAL SAFETY AND HEALTH",
+      "match_path": [
+        "department of health and human services",
+        "centers for disease control and prevention",
+        "national institute for occupational safety and health"
+      ],
+      "expected_amount": 364030000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Coal Workers' Health Surveillance Program Mobile Medical",
+      "excel_name": "ENERGY EMPLOYEES OCCUPATIONAL INJURY COMPENSATION ACT",
+      "match_path": null,
+      "expected_amount": 55358000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Coal Workers' Health Surveillance Program Mobile Medical",
+      "excel_name": "GLOBAL HEALTH",
+      "match_path": [
+        "department of health and human services",
+        "centers for disease control and prevention",
+        "global health"
+      ],
+      "expected_amount": 697613000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Soil Transmitted Helminth and Related Diseases of",
+      "excel_name": "PUBLIC HEALTH PREPAREDNESS AND RESPONSE",
+      "match_path": [
+        "department of health and human services",
+        "centers for disease control and prevention",
+        "public health preparedness and response"
+      ],
+      "expected_amount": 953200000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Public Health Emergency Preparedness Cooperative",
+      "excel_name": "BUILDINGS AND FACILITIES",
+      "match_path": null,
+      "expected_amount": 40000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Public Health Emergency Preparedness Cooperative",
+      "excel_name": "CDC-WIDE ACTIVITIES",
+      "match_path": [
+        "department of health and human services",
+        "centers for disease control and prevention",
+        "cdc-wide activities and program support"
+      ],
+      "expected_amount": 681570000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "National Institutes of Health",
+      "excel_name": "NATIONAL CANCER INSTITUTE",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national cancer institute"
+      ],
+      "expected_amount": 7490159000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Surveillance, Epidemiology, and End Results [SEER]",
+      "excel_name": "NATIONAL HEART, LUNG, AND BLOOD INSTITUTE",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national heart, lung, and blood institute"
+      ],
+      "expected_amount": 3982345000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Surveillance, Epidemiology, and End Results [SEER]",
+      "excel_name": "NATIONAL INSTITUTE OF DENTAL AND CRANIOFACIAL RESEARCH",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute of dental and craniofacial research"
+      ],
+      "expected_amount": 520163000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Advancing Head and Neck Cancer Early Detection Research",
+      "excel_name": "NATIONAL INSTITUTE OF DIABETES AND DIGESTIVE AND KIDNEY DISEASES",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute of diabetes and digestive and kidney diseases"
+      ],
+      "expected_amount": 2360721000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Advancing Head and Neck Cancer Early Detection Research",
+      "excel_name": "NATIONAL INSTITUTE OF NEUROLOGICAL DISORDERS AND STROKE",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute of neurological disorders and stroke"
+      ],
+      "expected_amount": 2951925000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Preventive and Early-Treatment Cognitive and Brain Health",
+      "excel_name": "NATIONAL INSTITUTE OF ALLERGY AND INFECTIOUS DISEASES",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute of allergy and infectious diseases"
+      ],
+      "expected_amount": 6692279000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Equipping NIH Research Programs to Target HIV/AIDS",
+      "excel_name": "NATIONAL INSTITUTE OF GENERAL MEDICAL SCIENCES",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute of general medical sciences"
+      ],
+      "expected_amount": 3269679000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "IDeA Networks for Clinical and Translational Research",
+      "excel_name": "DEVELOPMENT",
+      "match_path": [
+        "department of health and human services",
+        "administration for strategic preparedness and response",
+        "research, development, and procurement"
+      ],
+      "expected_amount": 1779078000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Learning Disabilities Research Centers and Learning",
+      "excel_name": "NATIONAL EYE INSTITUTE",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national eye institute"
+      ],
+      "expected_amount": 896549000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Learning Disabilities Research Centers and Learning",
+      "excel_name": "NATIONAL INSTITUTE OF ENVIRONMENTAL HEALTH SCIENCES",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute of environmental health sciences"
+      ],
+      "expected_amount": 913979000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Learning Disabilities Research Centers and Learning",
+      "excel_name": "NATIONAL INSTITUTE ON AGING",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute on aging"
+      ],
+      "expected_amount": 4645123000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Alzheimer's Disease/Alzheimer's Disease-Related Dementias",
+      "excel_name": "NATIONAL INSTITUTE OF ARTHRITIS AND MUSCULOSKELETAL AND SKIN DISEASES",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute of arthritis and musculoskeletal and skin diseases"
+      ],
+      "expected_amount": 685465000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Alzheimer's Disease/Alzheimer's Disease-Related Dementias",
+      "excel_name": "NATIONAL INSTITUTE OF DEAFNESS AND OTHER COMMUNICATION DISORDERS",
+      "match_path": null,
+      "expected_amount": 534333000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Alzheimer's Disease/Alzheimer's Disease-Related Dementias",
+      "excel_name": "NATIONAL INSTITUTE OF NURSING RESEARCH",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute of nursing research"
+      ],
+      "expected_amount": 197693000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Alzheimer's Disease/Alzheimer's Disease-Related Dementias",
+      "excel_name": "NATIONAL INSTITUTE ON ALCOHOL ABUSE AND ALCOHOLISM",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute on alcohol abuse and alcoholism"
+      ],
+      "expected_amount": 595318000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Alzheimer's Disease/Alzheimer's Disease-Related Dementias",
+      "excel_name": "NATIONAL INSTITUTE ON DRUG ABUSE",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute on drug abuse"
+      ],
+      "expected_amount": 1667695000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Raising Awareness and Engaging the Medical Community in",
+      "excel_name": "NATIONAL INSTITUTE OF MENTAL HEALTH",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute of mental health"
+      ],
+      "expected_amount": 2642343000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Raising Awareness and Engaging the Medical Community in",
+      "excel_name": "NATIONAL HUMAN GENOME RESEARCH INSTITUTE",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national human genome research institute"
+      ],
+      "expected_amount": 663200000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Raising Awareness and Engaging the Medical Community in",
+      "excel_name": "NATIONAL INSTITUTE OF BIOMEDICAL IMAGING AND BIOENGINEERING",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute of biomedical imaging and bioengineering"
+      ],
+      "expected_amount": 440627000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Raising Awareness and Engaging the Medical Community in",
+      "excel_name": "NATIONAL CENTER FOR COMPLEMENTARY AND INTEGRATIVE HEALTH",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national center for complementary and integrative health"
+      ],
+      "expected_amount": 170384000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Raising Awareness and Engaging the Medical Community in",
+      "excel_name": "NATIONAL INSTITUTE ON MINORITY HEALTH AND HEALTH DISPARITIES",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute on minority health and health disparities"
+      ],
+      "expected_amount": 539395000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Raising Awareness and Engaging the Medical Community in",
+      "excel_name": "SCIENCES",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national institute of general medical sciences"
+      ],
+      "expected_amount": 95162000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Raising Awareness and Engaging the Medical Community in",
+      "excel_name": "NATIONAL LIBRARY OF MEDICINE",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national library of medicine"
+      ],
+      "expected_amount": 597548000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Raising Awareness and Engaging the Medical Community in",
+      "excel_name": "NATIONAL CENTER FOR ADVANCING TRANSLATIONAL SCIENCES",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "national center for advancing translational sciences"
+      ],
+      "expected_amount": 933323000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Raising Awareness and Engaging the Medical Community in",
+      "excel_name": "OFFICE OF THE DIRECTOR",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "office of the director"
+      ],
+      "expected_amount": 3109514000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Women's Health Research Initiative and NIH-Wide SABV",
+      "excel_name": "BUILDINGS AND FACILITIES",
+      "match_path": null,
+      "expected_amount": 350000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Women's Health Research Initiative and NIH-Wide SABV",
+      "excel_name": "NIH INNOVATION ACCOUNT, CURES ACT",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "nih innovation account, cures act"
+      ],
+      "expected_amount": 127000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Women's Health Research Initiative and NIH-Wide SABV",
+      "excel_name": "ADVANCED RESEARCH PROJECTS AGENCY FOR HEALTH",
+      "match_path": [
+        "department of health and human services",
+        "national institutes of health",
+        "advanced research projects agency for health"
+      ],
+      "expected_amount": 1500000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Substance Abuse And Mental Health Services Administration",
+      "excel_name": "MENTAL HEALTH",
+      "match_path": [
+        "department of health and human services",
+        "substance abuse and mental health services administration",
+        "mental health"
+      ],
+      "expected_amount": 2902546000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Primary and Behavioral Health Care Integration Grants and",
+      "excel_name": "SUBSTANCE ABUSE TREATMENT",
+      "match_path": [
+        "department of health and human services",
+        "substance abuse and mental health services administration",
+        "substance abuse treatment"
+      ],
+      "expected_amount": 4235298000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Block Grant",
+      "excel_name": "SUBSTANCE ABUSE PREVENTION",
+      "match_path": [
+        "department of health and human services",
+        "substance abuse and mental health services administration",
+        "substance abuse prevention"
+      ],
+      "expected_amount": 246879000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Minority Fellowship Program Support for Prevention",
+      "excel_name": "HEALTH SURVEILLANCE AND PROGRAM SUPPORT",
+      "match_path": [
+        "department of health and human services",
+        "substance abuse and mental health services administration",
+        "health surveillance and program support"
+      ],
+      "expected_amount": 232920000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Centers for Medicare and Medicaid Services",
+      "excel_name": "GRANTS TO STATES FOR MEDICAID",
+      "match_path": [
+        "department of health and human services",
+        "centers for medicare & medicaid services",
+        "grants to states for medicaid"
+      ],
+      "expected_amount": 383609399000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Centers for Medicare and Medicaid Services",
+      "excel_name": "PAYMENTS TO HEALTHCARE TRUST FUNDS",
+      "match_path": null,
+      "expected_amount": 521757000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Centers for Medicare and Medicaid Services",
+      "excel_name": "PROGRAM MANAGEMENT",
+      "match_path": [
+        "department of health and human services",
+        "centers for medicare & medicaid services",
+        "program management"
+      ],
+      "expected_amount": 3669744000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Merit-Based Incentive Payment System [MIPS] Feedback",
+      "excel_name": "HEALTHCARE FRAUD AND ABUSE CONTROL",
+      "match_path": null,
+      "expected_amount": 941000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Administration for Children and Families",
+      "excel_name": "PROGRAMS",
+      "match_path": null,
+      "expected_amount": 3924000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Administration for Children and Families",
+      "excel_name": "LOW INCOME HOME ENERGY ASSISTANCE PROGRAM",
+      "match_path": [
+        "department of health and human services",
+        "administration for children and families",
+        "low income home energy assistance"
+      ],
+      "expected_amount": 4125000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Administration for Children and Families",
+      "excel_name": "REFUGEE AND ENTRANT ASSISTANCE",
+      "match_path": [
+        "department of health and human services",
+        "administration for children and families",
+        "refugee and entrant assistance"
+      ],
+      "expected_amount": 6428214000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Prioritization of Small-Scale, Community- and Family-Based",
+      "excel_name": "PAYMENTS TO STATES FOR THE CHILD CARE AND DEVELOPMENT BLOCK GRANT",
+      "match_path": [
+        "department of health and human services",
+        "administration for children and families",
+        "payments to states for the child care and development block grant"
+      ],
+      "expected_amount": 10346387000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Prioritization of Small-Scale, Community- and Family-Based",
+      "excel_name": "SOCIAL SERVICES BLOCK GRANT",
+      "match_path": [
+        "department of health and human services",
+        "administration for children and families",
+        "social services block grant"
+      ],
+      "expected_amount": 1700000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Prioritization of Small-Scale, Community- and Family-Based",
+      "excel_name": "CHILDREN AND FAMILIES SERVICES PROGRAMS",
+      "match_path": [
+        "department of health and human services",
+        "administration for children and families",
+        "children and families services programs"
+      ],
+      "expected_amount": 15544939000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Disseminate Best Practices in the Child Welfare",
+      "excel_name": "PROMOTING SAFE AND STABLE FAMILIES",
+      "match_path": [
+        "department of health and human services",
+        "administration for children and families",
+        "promoting safe and stable families"
+      ],
+      "expected_amount": 417515000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Disseminate Best Practices in the Child Welfare",
+      "excel_name": "PAYMENTS FOR FOSTER CARE AND PERMANENCY",
+      "match_path": [
+        "department of health and human services",
+        "administration for children and families",
+        "payments for foster care and permanency"
+      ],
+      "expected_amount": 6768000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Administration for Community Living",
+      "excel_name": "AGING AND DISABILITY SERVICES PROGRAMS",
+      "match_path": [
+        "department of health and human services",
+        "administration for community living",
+        "aging and disability services programs"
+      ],
+      "expected_amount": 2543817000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Public Health Emergency Medical Countermeasures Enterprise",
+      "excel_name": "RESEARCH, DEVELOPMENT, AND PROCUREMENT",
+      "match_path": [
+        "department of health and human services",
+        "administration for strategic preparedness and response",
+        "research, development, and procurement"
+      ],
+      "expected_amount": 3250991000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Antimicrobial Resistance Research Using Bispecific",
+      "excel_name": "OPERATIONS, PREPAREDNESS, AND EMERGENCY RESPONSE",
+      "match_path": [
+        "department of health and human services",
+        "administration for strategic preparedness and response",
+        "operations, preparedness, and emergency response"
+      ],
+      "expected_amount": 576606000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Office of the Secretary",
+      "excel_name": "GENERAL DEPARTMENTAL MANAGEMENT",
+      "match_path": [
+        "department of health and human services",
+        "office of the secretary",
+        "general departmental management"
+      ],
+      "expected_amount": 727964000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Office of the Assistant Secretary for Administration",
+      "excel_name": "OFFICE OF MEDICARE HEARINGS AND APPEALS",
+      "match_path": [
+        "department of health and human services",
+        "office of the secretary",
+        "medicare hearings and appeals"
+      ],
+      "expected_amount": 196000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Office of the Assistant Secretary for Administration",
+      "excel_name": "OFFICE OF THE NATIONAL COORDINATOR FOR HEALTH INFORMATION TECHNOLOGY",
+      "match_path": [
+        "department of health and human services",
+        "office of the secretary",
+        "office of the national coordinator for health information technology"
+      ],
+      "expected_amount": 69238000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Office of the Assistant Secretary for Administration",
+      "excel_name": "OFFICE OF INSPECTOR GENERAL",
+      "match_path": [
+        "department of health and human services",
+        "office of the secretary",
+        "office of inspector general"
+      ],
+      "expected_amount": 87000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Office of the Assistant Secretary for Administration",
+      "excel_name": "OFFICE FOR CIVIL RIGHTS",
+      "match_path": [
+        "department of health and human services",
+        "office of the secretary",
+        "office for civil rights"
+      ],
+      "expected_amount": 39798000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+      "bureau": "Office of the Assistant Secretary for Administration",
+      "excel_name": "RETIREMENT PAY AND MEDICAL BENEFITS FOR COMMISSIONED OFFICERS",
+      "match_path": [
+        "department of health and human services",
+        "office of the secretary",
+        "retirement pay and medical benefits for commissioned officers"
+      ],
+      "expected_amount": 894795000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF EDUCATION",
+      "bureau": "Special Institutions for Persons with Disabilities",
+      "excel_name": "AMERICAN PRINTING HOUSE FOR THE BLIND",
+      "match_path": [
+        "department of education",
+        "special institutions for persons with disabilities",
+        "american printing house for the blind"
+      ],
+      "expected_amount": 53431000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF EDUCATION",
+      "bureau": "Special Institutions for Persons with Disabilities",
+      "excel_name": "NATIONAL TECHNICAL INSTITUTE FOR THE DEAF",
+      "match_path": [
+        "department of education",
+        "special institutions for persons with disabilities",
+        "national technical institute for the deaf"
+      ],
+      "expected_amount": 96500000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF EDUCATION",
+      "bureau": "Special Institutions for Persons with Disabilities",
+      "excel_name": "GALLAUDET UNIVERSITY",
+      "match_path": [
+        "department of education",
+        "special institutions for persons with disabilities",
+        "gallaudet university"
+      ],
+      "expected_amount": 171361000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF EDUCATION",
+      "bureau": "College Housing and Academic Facilities Loans Program",
+      "excel_name": "ACCOUNT",
+      "match_path": [
+        "department of education",
+        "historically black college and university capital financing program account"
+      ],
+      "expected_amount": 20678000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF EDUCATION",
+      "bureau": "Departmental Management",
+      "excel_name": "PROGRAM ADMINISTRATION",
+      "match_path": [
+        "department of education",
+        "departmental management",
+        "program administration"
+      ],
+      "expected_amount": 419907000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF EDUCATION",
+      "bureau": "Reporting and Data Collection on Professional",
+      "excel_name": "OFFICE FOR CIVIL RIGHTS",
+      "match_path": [
+        "department of health and human services",
+        "office of the secretary",
+        "office for civil rights"
+      ],
+      "expected_amount": 150000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF EDUCATION",
+      "bureau": "Reporting and Data Collection on Professional",
+      "excel_name": "OFFICE OF INSPECTOR GENERAL",
+      "match_path": [
+        "department of health and human services",
+        "office of the secretary",
+        "office of inspector general"
+      ],
+      "expected_amount": 67500000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": null,
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": null,
+      "expected_amount": 13124000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "The Corporation for National and Community Service [CNCS]",
+      "excel_name": "OPERATING EXPENSES",
+      "match_path": [
+        "related agencies",
+        "corporation for national and community service",
+        "operating expenses"
+      ],
+      "expected_amount": 1010525000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "The Corporation for National and Community Service [CNCS]",
+      "excel_name": "THE NATIONAL SERVICE TRUST",
+      "match_path": [
+        "related agencies",
+        "corporation for national and community service",
+        "payment to the national service trust"
+      ],
+      "expected_amount": 160000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "The Corporation for National and Community Service [CNCS]",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "corporation for national and community service",
+        "salaries and expenses"
+      ],
+      "expected_amount": 99686000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "The Corporation for National and Community Service [CNCS]",
+      "excel_name": "OFFICE OF INSPECTOR GENERAL",
+      "match_path": [
+        "related agencies",
+        "corporation for national and community service",
+        "office of inspector general"
+      ],
+      "expected_amount": 7595000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "Federal Mediation and Conciliation Service",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "federal mediation and conciliation service",
+        "salaries and expenses"
+      ],
+      "expected_amount": 53705000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "Federal Mine Safety and Health Review Commission",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "federal mine safety and health review commission",
+        "salaries and expenses"
+      ],
+      "expected_amount": 17572000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "Institute of Museum and Library Services",
+      "excel_name": "OFFICE OF MUSEUM AND LIBRARIES: GRANTS AND ADMINISTRATION",
+      "match_path": null,
+      "expected_amount": 294800000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "Medicaid and Chip Payment and Access Commission",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "medicaid and chip payment and access commission",
+        "salaries and expenses"
+      ],
+      "expected_amount": 10000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "Medicare Payment Advisory Commission",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "medicare payment advisory commission",
+        "salaries and expenses"
+      ],
+      "expected_amount": 14477000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "National Council on Disability",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "national council on disability",
+        "salaries and expenses"
+      ],
+      "expected_amount": 4000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "National Labor Relations Board",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "national labor relations board",
+        "salaries and expenses"
+      ],
+      "expected_amount": 299224000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "National Mediation Board",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "national mediation board",
+        "salaries and expenses"
+      ],
+      "expected_amount": 15113000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "Occupational Safety and Health Review Commission",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "related agencies",
+        "occupational safety and health review commission",
+        "salaries and expenses"
+      ],
+      "expected_amount": 15449000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "Railroad Retirement Board",
+      "excel_name": "DUAL BENEFITS PAYMENTS ACCOUNT",
+      "match_path": [
+        "related agencies",
+        "railroad retirement board",
+        "dual benefits payments account"
+      ],
+      "expected_amount": 7000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "Railroad Retirement Board",
+      "excel_name": "FEDERAL PAYMENTS TO THE RAILROAD RETIREMENT ACCOUNTS",
+      "match_path": [
+        "related agencies",
+        "railroad retirement board",
+        "federal payments to the railroad retirement accounts"
+      ],
+      "expected_amount": 150000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "Social Security Administration",
+      "excel_name": "PAYMENTS TO SOCIAL SECURITY TRUST FUNDS",
+      "match_path": [
+        "related agencies",
+        "social security administration",
+        "payments to social security trust funds"
+      ],
+      "expected_amount": 15000000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "Social Security Administration",
+      "excel_name": "SUPPLEMENTAL SECURITY INCOME PROGRAM",
+      "match_path": [
+        "related agencies",
+        "social security administration",
+        "supplemental security income program"
+      ],
+      "expected_amount": 46388833000
+    },
+    {
+      "bill": "118-s-4942",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": "Work Incentives Planning and Assistance [WIPA] and",
+      "excel_name": "OFFICE OF INSPECTOR GENERAL",
+      "match_path": [
+        "related agencies",
+        "corporation for national and community service",
+        "office of inspector general"
+      ],
+      "expected_amount": 114665000
+    }
+  ]
+}

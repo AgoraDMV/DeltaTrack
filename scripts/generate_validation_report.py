@@ -80,11 +80,15 @@ bill XML; we check that our parser reads it correctly, by comparing the parser's
   FY2025 Senate Appropriations **committee reports** (govinfo `CRPT-…`), compared to what the
   parser extracts from each reported bill. The report is written by committee staff for a
   different purpose than the bill, so it is genuinely independent. (Committee reports, not CRS
-  reports.)
+  reports.) Most are read from the report's 3-line summary blocks; **tabular** jurisdictions
+  (Defense) print accounts only in the wide comparative statement, so those are read from that
+  table instead (committee-recommendation column, converted from thousands to dollars).
 
 An account is counted as **recalled** when the report's amount appears in the parser's
 extraction under the correct agency, or as a sum of the account's components (totals the bill
-states only as parts). See `validation_check.validate_jurisdiction`.
+states only as parts). See `validation_check.validate_jurisdiction`. For the comparative-
+statement source, rollup totals/subtotals and negative reduction/offset lines (rescissions,
+offsetting collections) are excluded — they are not leaf appropriation accounts.
 
 ## Current recall (committee-report jurisdictions)
 
@@ -123,8 +127,9 @@ The full current remainder:
   legislative process. It is strong for catching the parser misreading unfamiliar structure
   (which is the overfitting risk), but it is not a third-party audit.
 - Coverage is the FY2025 Senate-reported bills for these jurisdictions, plus Legislative Branch
-  across several years and both chambers. Tabular jurisdictions (Defense, Labor-HHS) and the
-  remaining subcommittees are not yet covered here.
+  across several years and both chambers. Energy-Water (whose comparative statement nests
+  accounts below a department title that differs from the bill's top-level agency, needing
+  bureau-aware mapping) and the remaining subcommittees are not yet covered here.
 
 ## Reproduce
 

@@ -9,13 +9,15 @@ internal-only tests cannot detect. Two jurisdictions, two external sources:
   curated account names a `match_path`, and the parser must produce a node there with the
   expected amount.
 
-- **Commerce-Justice-Science** (`TestCJSValidation`): committee-recommendation amounts
-  parsed from the S.4795 Senate committee report (Senate Report 118-198) compared against
-  amounts the parser extracts from the bill XML. This is the breadth probe for GitHub #8
-  (is the parser overfit to Legislative Branch?). It is amount-recall (does the
-  independent amount appear in the parser's output), not structural: the report and the
-  XML use different account-naming conventions, so an independent `match_path` would
-  require hand-aligning names. Structural CJS validation is a documented follow-up.
+- **Committee-report jurisdictions** (`test_report_amounts_recalled`, parameterized):
+  committee-recommendation amounts parsed from each FY2025 Senate Appropriations committee
+  report compared against amounts the parser extracts from the reported bill XML. This is
+  the breadth probe for GitHub #8 (is the parser overfit to Legislative Branch?). It is
+  amount-recall under the correct agency (or as a sum of an account's components), not a
+  hand-aligned `match_path`, because the report and the XML use different naming. Most
+  jurisdictions are read from the report's 3-line summary blocks; tabular jurisdictions
+  (Defense) are read from the comparative statement instead (in thousands). See
+  validation_sources.py and validation_check.validate_jurisdiction.
 """
 
 import json
@@ -146,6 +148,11 @@ _MAX_UNVALIDATED = {
     "state_foreign_ops": 1,
     "interior_environment": 8,
     "financial_services": 2,
+    # Labor-HHS (summary source): all 15 are program totals the bill itemizes (CDC/SAMHSA
+    # accounts funded via transfers) or indefinite funds — verified absent from the bill XML.
+    "labor_hhs": 15,
+    # Defense (comparative source): every leaf appropriation account recalls.
+    "defense": 0,
 }
 
 _REPORT_JURISDICTIONS = [j for j in JURISDICTIONS if j.fixture_path.exists()]

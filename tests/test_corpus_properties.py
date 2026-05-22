@@ -151,9 +151,18 @@ _KNOWN_DUPLICATE_COUNTS: dict[str, int] = {
     "116-hr-133/6_engrossed-amendment-house.xml": 132,
     "116-hr-133/7_enrolled-bill.xml": 132,
     "117-hr-2471/6_enrolled-bill.xml": 120,
-    # CJS external-validation bill (2026-05-21): two benign cross-section collisions —
-    # repeated DOJ general-provisions headings and a NASA appropriation/admin pair.
-    "118-s-4795/1_reported-in-senate.xml": 2,
+    # Committee-report external-validation bills (#8/#44). All duplicates are benign
+    # cross-section heading collisions (a heading repeated across the appropriation, a
+    # limitation/administrative-provisions section, and general provisions), not parser
+    # errors. These bills are gitignored (fetched via scripts/build_validation.py), so CI
+    # skips them; the counts guard local runs.
+    "118-s-4795/1_reported-in-senate.xml": 2,  # CJS: DOJ general-provisions + NASA pair
+    "118-s-4796/1_reported-in-senate.xml": 7,  # Transportation-HUD: FAA/FHWA/NHTSA/HUD repeats
+    "118-s-4797/1_reported-in-senate.xml": 1,  # State-Foreign Ops: callable-capital limitation
+    "118-s-4802/1_reported-in-senate.xml": 3,  # Interior-Environment: Forest Service repeats
+    "118-s-4928/1_reported-in-senate.xml": 5,  # Financial Services: Treasury/OPM salaries, DC funds
+    "118-s-4942/1_reported-in-senate.xml": 2,  # Labor-HHS: VETS employment-and-training lines
+    "118-s-4927/1_reported-in-senate.xml": 4,  # Energy-Water (recall deferred): Corps repeats
 }
 
 

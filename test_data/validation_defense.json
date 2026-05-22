@@ -1,0 +1,1064 @@
+{
+  "source": "CRPT-118srpt204, Defense explanatory statement for BILLS-118s4921rs",
+  "note": "Defense FY 2025 (Reported in Senate) account amounts, extracted from the committee report's comparative statement (committee-recommendation column, converted from thousands to dollars) and validated against the bill XML. `match_path` is the mapped bill node when the account name resolves uniquely (strict node-level check); null otherwise, where the test falls back to agency-scoped recall via `title`. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "accounts": [
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MILITARY PERSONNEL",
+      "bureau": null,
+      "excel_name": "Military Personnel, Army",
+      "match_path": [
+        "military personnel",
+        "military personnel, army"
+      ],
+      "expected_amount": 50702367000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MILITARY PERSONNEL",
+      "bureau": null,
+      "excel_name": "Military Personnel, Navy",
+      "match_path": [
+        "military personnel",
+        "military personnel, navy"
+      ],
+      "expected_amount": 38400554000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MILITARY PERSONNEL",
+      "bureau": null,
+      "excel_name": "Military Personnel, Marine Corps",
+      "match_path": [
+        "military personnel",
+        "military personnel, marine corps"
+      ],
+      "expected_amount": 15771387000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MILITARY PERSONNEL",
+      "bureau": null,
+      "excel_name": "Military Personnel, Air Force",
+      "match_path": [
+        "military personnel",
+        "military personnel, air force"
+      ],
+      "expected_amount": 36782371000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MILITARY PERSONNEL",
+      "bureau": null,
+      "excel_name": "Military Personnel, Space Force",
+      "match_path": [
+        "military personnel",
+        "military personnel, space force"
+      ],
+      "expected_amount": 1273037000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MILITARY PERSONNEL",
+      "bureau": null,
+      "excel_name": "Reserve Personnel, Army",
+      "match_path": [
+        "military personnel",
+        "reserve personnel, army"
+      ],
+      "expected_amount": 5457830000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MILITARY PERSONNEL",
+      "bureau": null,
+      "excel_name": "Reserve Personnel, Navy",
+      "match_path": [
+        "military personnel",
+        "reserve personnel, navy"
+      ],
+      "expected_amount": 2544945000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MILITARY PERSONNEL",
+      "bureau": null,
+      "excel_name": "Reserve Personnel, Marine Corps",
+      "match_path": [
+        "military personnel",
+        "reserve personnel, marine corps"
+      ],
+      "expected_amount": 936225000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MILITARY PERSONNEL",
+      "bureau": null,
+      "excel_name": "Reserve Personnel, Air Force",
+      "match_path": [
+        "military personnel",
+        "reserve personnel, air force"
+      ],
+      "expected_amount": 2556924000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MILITARY PERSONNEL",
+      "bureau": null,
+      "excel_name": "National Guard Personnel, Army",
+      "match_path": [
+        "military personnel",
+        "national guard personnel, army"
+      ],
+      "expected_amount": 9909645000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MILITARY PERSONNEL",
+      "bureau": null,
+      "excel_name": "National Guard Personnel, Air Force",
+      "match_path": [
+        "military personnel",
+        "national guard personnel, air force"
+      ],
+      "expected_amount": 5285794000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Army",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, army"
+      ],
+      "expected_amount": 60023592000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Navy",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, navy"
+      ],
+      "expected_amount": 75941291000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Marine Corps",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, marine corps"
+      ],
+      "expected_amount": 11215984000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Air Force",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, air force"
+      ],
+      "expected_amount": 66952360000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Space Force",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, space force"
+      ],
+      "expected_amount": 5228537000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Defense-Wide",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, defense-wide"
+      ],
+      "expected_amount": 53638689000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Counter-ISIS Train and Equip Fund [CTEF]",
+      "match_path": [
+        "operation and maintenance",
+        "counter-isis train and equip fund"
+      ],
+      "expected_amount": 528699000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Army Reserve",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, army reserve"
+      ],
+      "expected_amount": 3355777000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Navy Reserve",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, navy reserve"
+      ],
+      "expected_amount": 1335162000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Marine Corps Reserve",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, marine corps reserve"
+      ],
+      "expected_amount": 340580000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Air Force Reserve",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, air force reserve"
+      ],
+      "expected_amount": 4120296000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Army National Guard",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, army national guard"
+      ],
+      "expected_amount": 8609258000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Operation and Maintenance, Air National Guard",
+      "match_path": [
+        "operation and maintenance",
+        "operation and maintenance, air national guard"
+      ],
+      "expected_amount": 7401081000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "United States Court of Appeals for the Armed Forces",
+      "match_path": [
+        "operation and maintenance",
+        "united states court of appeals for the armed forces"
+      ],
+      "expected_amount": 21035000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Environmental Restoration, Army",
+      "match_path": [
+        "operation and maintenance",
+        "environmental restoration, army"
+      ],
+      "expected_amount": 323069000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Environmental Restoration, Navy",
+      "match_path": [
+        "operation and maintenance",
+        "environmental restoration, navy"
+      ],
+      "expected_amount": 343591000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Environmental Restoration, Air Force",
+      "match_path": [
+        "operation and maintenance",
+        "environmental restoration, air force"
+      ],
+      "expected_amount": 372524000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Environmental Restoration, Defense-Wide",
+      "match_path": [
+        "operation and maintenance",
+        "environmental restoration, defense-wide"
+      ],
+      "expected_amount": 9480000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Environmental Restoration, Formerly Used Defense Sites",
+      "match_path": [
+        "operation and maintenance",
+        "environmental restoration, formerly used defense sites"
+      ],
+      "expected_amount": 257207000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Overseas Humanitarian, Disaster, and Civic Aid",
+      "match_path": [
+        "operation and maintenance",
+        "overseas humanitarian, disaster, and civic aid"
+      ],
+      "expected_amount": 115335000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OPERATION AND MAINTENANCE",
+      "bureau": null,
+      "excel_name": "Cooperative Threat Reduction Account",
+      "match_path": [
+        "operation and maintenance",
+        "cooperative threat reduction account"
+      ],
+      "expected_amount": 350116000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Aircraft Procurement, Army",
+      "match_path": [
+        "procurement",
+        "aircraft procurement, army"
+      ],
+      "expected_amount": 3163347000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Missile Procurement, Army",
+      "match_path": [
+        "procurement"
+      ],
+      "expected_amount": 6316380000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Procurement of Weapons and Tracked Combat Vehicles, Army",
+      "match_path": [
+        "procurement",
+        "procurement of weapons and tracked combat vehicles, army"
+      ],
+      "expected_amount": 3664281000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Procurement of Ammunition, Army",
+      "match_path": [
+        "procurement",
+        "procurement of ammunition, army"
+      ],
+      "expected_amount": 3810333000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Other Procurement, Army",
+      "match_path": [
+        "procurement",
+        "other procurement, army"
+      ],
+      "expected_amount": 8880051000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Aircraft Procurement, Navy",
+      "match_path": [
+        "procurement",
+        "aircraft procurement, navy"
+      ],
+      "expected_amount": 15241216000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Weapons Procurement, Navy",
+      "match_path": [
+        "procurement",
+        "weapons procurement, navy"
+      ],
+      "expected_amount": 6568402000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Procurement of Ammunition, Navy and Marine Corps",
+      "match_path": [
+        "procurement",
+        "procurement of ammunition, navy and marine corps"
+      ],
+      "expected_amount": 1643478000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Shipbuilding and Conversion, Navy",
+      "match_path": [
+        "procurement",
+        "shipbuilding and conversion, navy"
+      ],
+      "expected_amount": 37023244000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Other Procurement, Navy",
+      "match_path": [
+        "procurement",
+        "other procurement, navy"
+      ],
+      "expected_amount": 16482271000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Procurement, Marine Corps",
+      "match_path": [
+        "procurement",
+        "procurement, marine corps"
+      ],
+      "expected_amount": 4201143000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Aircraft Procurement, Air Force",
+      "match_path": [
+        "procurement",
+        "aircraft procurement, air force"
+      ],
+      "expected_amount": 21736953000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Missile Procurement, Air Force",
+      "match_path": [
+        "procurement",
+        "missile procurement, air force"
+      ],
+      "expected_amount": 4208262000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Procurement of Ammunition, Air Force",
+      "match_path": [
+        "procurement",
+        "procurement of ammunition, air force"
+      ],
+      "expected_amount": 598855000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Other Procurement, Air Force",
+      "match_path": [
+        "procurement",
+        "other procurement, air force"
+      ],
+      "expected_amount": 29876245000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Procurement, Space Force",
+      "match_path": [
+        "procurement",
+        "procurement, space force"
+      ],
+      "expected_amount": 4078521000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Procurement, Defense-Wide",
+      "match_path": [
+        "procurement",
+        "procurement, defense-wide"
+      ],
+      "expected_amount": 5819954000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "Defense Production Act Purchases",
+      "match_path": [
+        "procurement",
+        "defense production act purchases"
+      ],
+      "expected_amount": 909377000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "PROCUREMENT",
+      "bureau": null,
+      "excel_name": "National Guard and Reserve Equipment",
+      "match_path": [
+        "procurement",
+        "national guard and reserve equipment account"
+      ],
+      "expected_amount": 1000000000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
+      "bureau": null,
+      "excel_name": "Research, Development, Test and Evaluation, Army",
+      "match_path": [
+        "research, development, test and evaluation",
+        "research, development, test and evaluation, army"
+      ],
+      "expected_amount": 14495968000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
+      "bureau": null,
+      "excel_name": "Research, Development, Test and Evaluation, Navy",
+      "match_path": [
+        "research, development, test and evaluation",
+        "research, development, test and evaluation, navy"
+      ],
+      "expected_amount": 26221839000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
+      "bureau": null,
+      "excel_name": "Research, Development, Test and Evaluation, Air Force",
+      "match_path": [
+        "research, development, test and evaluation",
+        "research, development, test and evaluation, air force"
+      ],
+      "expected_amount": 46829805000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
+      "bureau": null,
+      "excel_name": "Research, Development, Test and Evaluation, Space Force",
+      "match_path": [
+        "research, development, test and evaluation",
+        "research, development, test and evaluation, space force"
+      ],
+      "expected_amount": 19773158000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
+      "bureau": null,
+      "excel_name": "Research, Development, Test and Evaluation, Defense-Wide",
+      "match_path": [
+        "research, development, test and evaluation",
+        "research, development, test and evaluation, defense-wide"
+      ],
+      "expected_amount": 36946466000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
+      "bureau": null,
+      "excel_name": "Operational Test and Evaluation, Defense",
+      "match_path": [
+        "research, development, test and evaluation",
+        "operational test and evaluation, defense"
+      ],
+      "expected_amount": 850809000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "REVOLVING AND MANAGEMENT FUNDS",
+      "bureau": null,
+      "excel_name": "Defense Working Capital Funds",
+      "match_path": [
+        "revolving and management funds",
+        "defense working capital funds"
+      ],
+      "expected_amount": 1832921000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "REVOLVING AND MANAGEMENT FUNDS",
+      "bureau": null,
+      "excel_name": "National Defense Stockpile Transaction Fund",
+      "match_path": [
+        "revolving and management funds",
+        "national defense stockpile transaction fund"
+      ],
+      "expected_amount": 7629000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
+      "bureau": null,
+      "excel_name": "Operation and maintenance",
+      "match_path": null,
+      "expected_amount": 38241057000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
+      "bureau": null,
+      "excel_name": "Procurement",
+      "match_path": [
+        "procurement"
+      ],
+      "expected_amount": 398867000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
+      "bureau": null,
+      "excel_name": "Research, development, test and evaluation",
+      "match_path": null,
+      "expected_amount": 1968936000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
+      "bureau": null,
+      "excel_name": "Operation and maintenance",
+      "match_path": null,
+      "expected_amount": 20745000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
+      "bureau": null,
+      "excel_name": "Research, development, test and evaluation",
+      "match_path": null,
+      "expected_amount": 754762000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
+      "bureau": null,
+      "excel_name": "Drug Interdiction and Counter-Drug Activities, Defense",
+      "match_path": [
+        "other department of defense programs",
+        "drug interdiction and counter-drug activities, defense"
+      ],
+      "expected_amount": 1091479000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
+      "bureau": null,
+      "excel_name": "Office of the Inspector General",
+      "match_path": [
+        "other department of defense programs",
+        "office of the inspector general"
+      ],
+      "expected_amount": 557331000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "bureau": null,
+      "excel_name": "Intelligence Community Management Account (ICMA)",
+      "match_path": [
+        "related agencies",
+        "intelligence community management account"
+      ],
+      "expected_amount": 615507000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "GENERAL PROVISIONS",
+      "bureau": null,
+      "excel_name": "National Defense Stockpile Transaction Fund (Sec. 8034)",
+      "match_path": [
+        "general provisions",
+        "sec. 8034"
+      ],
+      "expected_amount": 600000000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "GENERAL PROVISIONS",
+      "bureau": null,
+      "excel_name": "United Service Organizations (Sec. 8049)",
+      "match_path": [
+        "general provisions",
+        "sec. 8049"
+      ],
+      "expected_amount": 24000000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "GENERAL PROVISIONS",
+      "bureau": null,
+      "excel_name": "USSOUTHCOM and USAFRICOM Allies and Partnership (Sec. 8064)",
+      "match_path": [
+        "general provisions",
+        "sec. 8064"
+      ],
+      "expected_amount": 400000000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "GENERAL PROVISIONS",
+      "bureau": null,
+      "excel_name": "Operational Readiness (Sec. 8111)",
+      "match_path": [
+        "general provisions",
+        "sec. 8111"
+      ],
+      "expected_amount": 2000000000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "GENERAL PROVISIONS",
+      "bureau": null,
+      "excel_name": "Contract Closeout (Sec. 8121)",
+      "match_path": [
+        "general provisions",
+        "sec. 8121"
+      ],
+      "expected_amount": 80000000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "GENERAL PROVISIONS",
+      "bureau": null,
+      "excel_name": "Department of Defense Credit Program Account (Sec. 8123)",
+      "match_path": [
+        "general provisions",
+        "sec. 8123"
+      ],
+      "expected_amount": 24600000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "GENERAL PROVISIONS",
+      "bureau": null,
+      "excel_name": "CENTCOM Operations and Force Protection (Sec. 8130)             .",
+      "match_path": [
+        "general provisions",
+        "sec. 8130"
+      ],
+      "expected_amount": 800000000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "GENERAL PROVISIONS",
+      "bureau": null,
+      "excel_name": "Global Counter-Terrorism and Force Protection, Including EUCOM  .",
+      "match_path": null,
+      "expected_amount": 250000000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "GENERAL PROVISIONS",
+      "bureau": null,
+      "excel_name": "Artificial Intelligence Scaling at the Combatant Commands       .",
+      "match_path": null,
+      "expected_amount": 500000000
+    },
+    {
+      "bill": "118-s-4921",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "GENERAL PROVISIONS",
+      "bureau": null,
+      "excel_name": "Fuel Shortfall (Sec. 8133) (emergency)",
+      "match_path": [
+        "general provisions",
+        "sec. 8133"
+      ],
+      "expected_amount": 1172057000
+    }
+  ]
+}
