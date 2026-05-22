@@ -69,6 +69,7 @@ class ComparativeRow:
     item: str  # item label as printed (e.g. "Operations and administration")
     committee_recommendation_thousands: int  # 3rd numeric column
     title: str | None = None  # enclosing title/agency (e.g. "MILITARY PERSONNEL")
+    bureau: str | None = None  # enclosing section header below the title (e.g. "Corps of Engineers--Civil")
 
 
 @dataclass(frozen=True)
@@ -175,22 +176,30 @@ def parse_comparative_statement(text: str) -> list[ComparativeRow]:
 
     Parsing is anchored on the canonical statement header when present, so a report's
     front-matter summary table (different column layout) is skipped. The enclosing TITLE
-    section is tracked and attached to each row as `title` (the bill-agency context). Rows
-    here include subtotals/totals as printed; leaf-row selection is the caller's concern.
+    section is tracked and attached to each row as `title`, and the most-recent section
+    header below it as `bureau` — the bill's top-level agency may sit at either level
+    (Energy-Water nests "Corps of Engineers--Civil" under "DEPARTMENT OF DEFENSE--CIVIL").
+    Rows here include subtotals/totals as printed; leaf-row selection is the caller's concern.
     """
     lines = text.split("\n")
     starts = [i for i, line in enumerate(lines) if _CANONICAL_STATEMENT_RE.search(line)]
     start = starts[-1] if starts else 0  # last == the full statement (front matter precedes it)
     rows: list[ComparativeRow] = []
     current_title: str | None = None
+    current_bureau: str | None = None
     for i in range(start, len(lines)):
         line = lines[i]
         tm = _COMPARATIVE_TITLE_RE.match(line)
         if tm:
             current_title = (tm.group(1) or "").strip() or _title_name_after(lines, i)
+            current_bureau = None  # section context resets at each new title
             continue
         m = _COMPARATIVE_ROW_RE.match(line)
         if not m:
+            # A non-data section header (ALL-CAPS agency or Title-Case bureau) refines the
+            # agency context below the title; track the most recent one.
+            if _is_heading(line) or _is_bureau_header(line):
+                current_bureau = line.strip()
             continue
         cells = _parse_cells(m.group(2))
         if len(cells) >= 3 and cells[2] is not None:
@@ -199,6 +208,7 @@ def parse_comparative_statement(text: str) -> list[ComparativeRow]:
                     item=m.group(1).strip(),
                     committee_recommendation_thousands=cells[2],
                     title=current_title,
+                    bureau=current_bureau,
                 )
             )
     return rows
