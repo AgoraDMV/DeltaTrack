@@ -1,0 +1,906 @@
+{
+  "source": "CRPT-118srpt206, Financial Services-General Government explanatory statement for BILLS-118s4928rs",
+  "note": "Financial Services-General Government FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars; `title` is the enclosing appropriations title/agency, used for agency-scoped recall. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "accounts": [
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 312294000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "COMMITTEE ON FOREIGN INVESTMENT IN THE UNITED STATES FUND",
+      "expected_amount": 21000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 235333000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "CYBERSECURITY ENHANCEMENT ACCOUNT",
+      "expected_amount": 100000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "DEPARTMENT-WIDE SYSTEMS AND CAPITAL INVESTMENTS PROGRAMS",
+      "expected_amount": 11118000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 48878000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 174250000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 215689000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 395020000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 159679000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "TAXPAYER SERVICES",
+      "expected_amount": 2780606000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "ENFORCEMENT",
+      "expected_amount": 5437622000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE TREASURY",
+      "excel_name": "TECHNOLOGY AND OPERATIONS SUPPORT",
+      "expected_amount": 4100826000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 77681000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "OPERATING EXPENSES",
+      "expected_amount": 15609000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 4903000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 17901000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 115463000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 3500000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 133290000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 19126000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 30803000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "HIGH INTENSITY DRUG TRAFFICKING AREAS PROGRAM",
+      "expected_amount": 290200000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "OTHER FEDERAL DRUG CONTROL PROGRAMS",
+      "expected_amount": 137512000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 6076000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE",
+      "excel_name": "OPERATING EXPENSES",
+      "expected_amount": 321000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 140323000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "CARE OF THE BUILDING AND GROUNDS",
+      "expected_amount": 13699000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 37102000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 21473000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 6100000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "VACCINE INJURY COMPENSATION TRUST FUND",
+      "expected_amount": 11686000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "DEFENDER SERVICES",
+      "expected_amount": 1500000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "FEES OF JURORS AND COMMISSIONERS",
+      "expected_amount": 38555000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "COURT SECURITY",
+      "expected_amount": 797510000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 103700000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 34604000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "THE JUDICIARY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 21857000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "FEDERAL PAYMENT FOR RESIDENT TUITION SUPPORT",
+      "expected_amount": 40000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "DISTRICT OF COLUMBIA",
+      "expected_amount": 97000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "FEDERAL PAYMENT TO THE DISTRICT OF COLUMBIA COURTS",
+      "expected_amount": 305000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "FEDERAL PAYMENT FOR DEFENDER SERVICES IN DISTRICT OF COLUMBIA COURTS",
+      "expected_amount": 46005000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "FOR THE DISTRICT OF COLUMBIA",
+      "expected_amount": 300000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "FEDERAL PAYMENT TO THE DISTRICT OF COLUMBIA PUBLIC DEFENDER SERVICE",
+      "expected_amount": 59305000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "FEDERAL PAYMENT TO THE CRIMINAL JUSTICE COORDINATING COUNCIL",
+      "expected_amount": 2450000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "FEDERAL PAYMENT FOR JUDICIAL COMMISSIONS",
+      "expected_amount": 898000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "FEDERAL PAYMENT FOR SCHOOL IMPROVEMENT",
+      "expected_amount": 52500000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "FEDERAL PAYMENT FOR THE DISTRICT OF COLUMBIA NATIONAL GUARD",
+      "expected_amount": 600000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "FEDERAL PAYMENT FOR TESTING AND TREATMENT OF HIV/AIDS",
+      "expected_amount": 5000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DISTRICT OF COLUMBIA",
+      "excel_name": "FEDERAL PAYMENT TO THE DISTRICT OF COLUMBIA WATER AND SEWER AUTHORITY",
+      "expected_amount": 8000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 3465000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 371000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 162485000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 8000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 30000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "ELECTION SECURITY GRANTS",
+      "expected_amount": 75000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 448075000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "OFFICE OF THE INSPECTOR GENERAL",
+      "expected_amount": 52632000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 85674000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 32100000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 450000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "FEDERAL BUILDINGS FUND--LIMITATIONS ON AVAILABILITY OF REVENUE",
+      "expected_amount": 9730814000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "CONSTRUCTION AND ACQUISITION",
+      "expected_amount": 552120000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "REPAIRS AND ALTERATIONS",
+      "expected_amount": 392572000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "RENTAL OF SPACE",
+      "expected_amount": 5586122000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "BUILDING OPERATIONS",
+      "expected_amount": 3200000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "GOVERNMENT-WIDE POLICY",
+      "expected_amount": 71186000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "OPERATING EXPENSES",
+      "expected_amount": 54478000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "CIVILIAN BOARD OF CONTRACT APPEALS",
+      "expected_amount": 10352000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "OFFICE OF INSPECTOR GENERAL",
+      "expected_amount": 74583000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "ALLOWANCES AND OFFICE STAFF FOR FORMER PRESIDENTS",
+      "expected_amount": 5500000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "FEDERAL CITIZEN SERVICES FUND",
+      "expected_amount": 90000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "EXPENSES, PRESIDENTIAL TRANSITION",
+      "expected_amount": 19424177
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "TECHNOLOGY MODERNIZATION FUND",
+      "expected_amount": 25000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "WORKING CAPITAL FUND",
+      "expected_amount": 5900000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 3000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 52000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "MORRIS K. UDALL AND STEWART L. UDALL TRUST FUND",
+      "expected_amount": 1800000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "ENVIRONMENTAL DISPUTE RESOLUTION FUND",
+      "expected_amount": 3943000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "OPERATING EXPENSES",
+      "expected_amount": 434650000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "OFFICE OF INSPECTOR GENERAL",
+      "expected_amount": 5980000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "REPAIRS AND RESTORATION",
+      "expected_amount": 10000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "COMMUNITY DEVELOPMENT REVOLVING LOAN FUND",
+      "expected_amount": 4000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 22386000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 205237000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 6908000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 31904000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 14450000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 4000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 2231000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 33550000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 385615000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "ENTREPRENEURIAL DEVELOPMENT PROGRAMS",
+      "expected_amount": 330000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "OFFICE OF INSPECTOR GENERAL",
+      "expected_amount": 47020000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "OFFICE OF ADVOCACY",
+      "expected_amount": 10211000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "BUSINESS LOANS PROGRAM ACCOUNT",
+      "expected_amount": 165000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "DISASTER LOANS PROGRAM ACCOUNT",
+      "expected_amount": 523674000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "PAYMENT TO THE POSTAL SERVICE FUND",
+      "expected_amount": 50253000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 274000000
+    },
+    {
+      "bill": "118-s-4928",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 57300000
+    }
+  ]
+}

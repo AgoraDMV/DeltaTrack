@@ -1,6 +1,6 @@
 {
-  "source": "CRPT-118srpt198 (Senate Report 118-198), CJS explanatory statement for S.4795",
-  "note": "Commerce-Justice-Science FY2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars; `title` is the enclosing appropriations title/agency, used for agency-scoped recall (the amount must appear under the matching top-level node). External ground truth for GitHub #8 (jurisdiction breadth beyond Legislative Branch). Regenerate with scripts/build_validation_cjs.py.",
+  "source": "CRPT-118srpt198, Commerce-Justice-Science explanatory statement for BILLS-118s4795rs",
+  "note": "Commerce-Justice-Science FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars; `title` is the enclosing appropriations title/agency, used for agency-scoped recall. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
   "accounts": [
     {
       "bill": "118-s-4795",

@@ -1,0 +1,654 @@
+{
+  "source": "CRPT-118srpt201, Interior-Environment explanatory statement for BILLS-118s4802rs",
+  "note": "Interior-Environment FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars; `title` is the enclosing appropriations title/agency, used for agency-scoped recall. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "accounts": [
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "MANAGEMENT OF LANDS AND RESOURCES",
+      "expected_amount": 1342510000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "OREGON AND CALIFORNIA GRANT LANDS",
+      "expected_amount": 120261000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "RANGE IMPROVEMENTS",
+      "expected_amount": 10000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "SERVICE CHARGES, DEPOSITS, AND FORFEITURES",
+      "expected_amount": 30000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "MISCELLANEOUS TRUST FUNDS",
+      "expected_amount": 26000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "RESOURCE MANAGEMENT",
+      "expected_amount": 1549935000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "CONSTRUCTION",
+      "expected_amount": 27049000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "COOPERATIVE ENDANGERED SPECIES CONSERVATION FUND",
+      "expected_amount": 23000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "NATIONAL WILDLIFE REFUGE FUND",
+      "expected_amount": 13228000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "NORTH AMERICAN WETLANDS CONSERVATION FUND",
+      "expected_amount": 49000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "NEOTROPICAL MIGRATORY BIRD CONSERVATION FUND",
+      "expected_amount": 5000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "MULTINATIONAL SPECIES CONSERVATION FUND",
+      "expected_amount": 20500000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "STATE AND TRIBAL WILDLIFE GRANTS",
+      "expected_amount": 72384000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "OPERATION OF THE NATIONAL PARK SYSTEM",
+      "expected_amount": 2994292000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "NATIONAL RECREATION AND PRESERVATION",
+      "expected_amount": 96192000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "HISTORIC PRESERVATION FUND",
+      "expected_amount": 182775000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "CONSTRUCTION",
+      "expected_amount": 202283000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "CENTENNIAL CHALLENGE",
+      "expected_amount": 15000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "SURVEYS, INVESTIGATIONS, AND RESEARCH",
+      "expected_amount": 1481963000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "OCEAN ENERGY MANAGEMENT",
+      "expected_amount": 216043000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "OFFSHORE SAFETY AND ENVIRONMENTAL ENFORCEMENT",
+      "expected_amount": 210886000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "OIL SPILL RESEARCH",
+      "expected_amount": 15099000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "REGULATION AND TECHNOLOGY",
+      "expected_amount": 118223000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "ABANDONED MINE RECLAMATION FUND",
+      "expected_amount": 164207000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "INDIAN LAND CONSOLIDATION",
+      "expected_amount": 4000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "CONTRACT SUPPORT COSTS",
+      "expected_amount": 356000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "PAYMENTS FOR TRIBAL LEASES",
+      "expected_amount": 69000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "CONSTRUCTION",
+      "expected_amount": 146022000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "INDIANS",
+      "expected_amount": 45897000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "INDIAN GUARANTEED LOAN PROGRAM ACCOUNT",
+      "expected_amount": 13616000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "EDUCATION CONSTRUCTION",
+      "expected_amount": 264775000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "FEDERAL TRUST PROGRAMS",
+      "expected_amount": 100472000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "DEPARTMENTAL OPERATIONS",
+      "expected_amount": 154945000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "ASSISTANCE TO TERRITORIES",
+      "expected_amount": 58775000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "COMPACT OF FREE ASSOCIATION",
+      "expected_amount": 813000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 101559000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 71540000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "WILDFIRE SUPPRESSION OPERATIONS RESERVE FUND",
+      "expected_amount": 360000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "CENTRAL HAZARDOUS MATERIALS FUND",
+      "expected_amount": 9801000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "ENERGY COMMUNITY REVITALIZATION PROGRAM",
+      "expected_amount": 5300000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "NATURAL RESOURCE DAMAGE ASSESSMENT FUND",
+      "expected_amount": 7769000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "WORKING CAPITAL FUND",
+      "expected_amount": 108311000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "OFFICE OF NATURAL RESOURCES REVENUE",
+      "expected_amount": 169412000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "FOREST AND RANGELAND RESEARCH",
+      "expected_amount": 319124000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "STATE, PRIVATE, AND TRIBAL FORESTRY",
+      "expected_amount": 314481000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "NATIONAL FOREST SYSTEM",
+      "expected_amount": 2009697000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "CAPITAL IMPROVEMENT AND MAINTENANCE",
+      "expected_amount": 179701000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "ACQUISITION OF LANDS FOR NATIONAL FORESTS, SPECIAL ACTS",
+      "expected_amount": 664000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "ACQUISITION OF LANDS TO COMPLETE LAND EXCHANGES",
+      "expected_amount": 150000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "RANGE BETTERMENT FUND",
+      "expected_amount": 1719000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "GIFTS, DONATIONS AND BEQUESTS FOR FOREST AND RANGELAND RESEARCH",
+      "expected_amount": 45000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "MANAGEMENT OF NATIONAL FOREST LANDS FOR SUBSISTENCE USES",
+      "expected_amount": 1099000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "WILDFIRE SUPPRESSION OPERATIONS RESERVE FUND",
+      "expected_amount": 2390000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "CONTRACT SUPPORT COSTS",
+      "expected_amount": 2036000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "PAYMENTS FOR TRIBAL LEASES",
+      "expected_amount": 400000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "TOXIC SUBSTANCES AND ENVIRONMENTAL PUBLIC HEALTH",
+      "expected_amount": 83089000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 14634000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 3500000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "PAYMENT TO THE INSTITUTE",
+      "expected_amount": 13642000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 912347000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "FACILITIES CAPITAL",
+      "expected_amount": 197645000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 186471000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "REPAIR, RESTORATION, AND RENOVATION OF BUILDINGS",
+      "expected_amount": 27369000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "OPERATIONS AND MAINTENANCE",
+      "expected_amount": 34315000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "CAPITAL REPAIR AND RESTORATION",
+      "expected_amount": 12633000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 15000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "GRANTS AND ADMINISTRATION",
+      "expected_amount": 209000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "GRANTS AND ADMINISTRATION",
+      "expected_amount": 209000000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 3834000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 8849000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "HOLOCAUST MEMORIAL MUSEUM",
+      "expected_amount": 66331000
+    },
+    {
+      "bill": "118-s-4802",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 15250000
+    }
+  ]
+}

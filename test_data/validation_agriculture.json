@@ -1,0 +1,402 @@
+{
+  "source": "CRPT-118srpt193, Agriculture-Rural Development-FDA explanatory statement for BILLS-118s4690rs",
+  "note": "Agriculture-Rural Development-FDA FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars; `title` is the enclosing appropriations title/agency, used for agency-scoped recall. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "accounts": [
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "AGRICULTURAL PROGRAMS",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 1826709000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "AGRICULTURAL PROGRAMS",
+      "excel_name": "BUILDINGS AND FACILITIES",
+      "expected_amount": 47663000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "AGRICULTURAL PROGRAMS",
+      "excel_name": "RESEARCH AND EDUCATION ACTIVITIES",
+      "expected_amount": 1078950000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "AGRICULTURAL PROGRAMS",
+      "excel_name": "NATIVE AMERICAN INSTITUTIONS ENDOWMENT FUND",
+      "expected_amount": 11880000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "AGRICULTURAL PROGRAMS",
+      "excel_name": "EXTENSION ACTIVITIES",
+      "expected_amount": 561700000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "AGRICULTURAL PROGRAMS",
+      "excel_name": "INTEGRATED ACTIVITIES",
+      "expected_amount": 41100000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "AGRICULTURAL PROGRAMS",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 1176596000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "AGRICULTURAL PROGRAMS",
+      "excel_name": "BUILDINGS AND FACILITIES",
+      "expected_amount": 5000000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "AGRICULTURAL PROGRAMS",
+      "excel_name": "MARKETING SERVICES",
+      "expected_amount": 231387000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "AGRICULTURAL PROGRAMS",
+      "excel_name": "FUNDS FOR STRENGTHENING MARKETS, INCOME, AND SUPPLY (SECTION 32)",
+      "expected_amount": 22701000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "AGRICULTURAL PROGRAMS",
+      "excel_name": "PAYMENTS TO STATES AND POSSESSIONS",
+      "expected_amount": 1000000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 244183000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "excel_name": "STATE MEDIATION GRANTS",
+      "expected_amount": 6500000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "excel_name": "GRASSROOTS SOURCE WATER PROTECTION PROGRAM",
+      "expected_amount": 7500000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "excel_name": "DAIRY INDEMNITY PROGRAM",
+      "expected_amount": 500000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "excel_name": "GEOGRAPHICALLY DISADVANTAGED FARMERS AND RANCHERS",
+      "expected_amount": 3500000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 65637000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "excel_name": "CONSERVATION OPERATIONS",
+      "expected_amount": 965754000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "excel_name": "WATERSHED AND FLOOD PREVENTION OPERATIONS",
+      "expected_amount": 51255000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "excel_name": "WATERSHED REHABILITATION PROGRAM",
+      "expected_amount": 2000000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FARM PRODUCTION AND CONSERVATION PROGRAMS",
+      "excel_name": "REIMBURSEMENT FOR NET REALIZED LOSSES",
+      "expected_amount": 12650463000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "RENTAL ASSISTANCE PROGRAM",
+      "expected_amount": 1691376000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "RURAL HOUSING VOUCHER ACCOUNT",
+      "expected_amount": 50400000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "MUTUAL AND SELF-HELP HOUSING GRANTS",
+      "expected_amount": 25000000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "RURAL HOUSING ASSISTANCE GRANTS",
+      "expected_amount": 40000000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "RURAL COMMUNITY FACILITIES PROGRAM ACCOUNT",
+      "expected_amount": 254338000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "RURAL BUSINESS PROGRAM ACCOUNT",
+      "expected_amount": 31847000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "RURAL COOPERATIVE DEVELOPMENT GRANTS",
+      "expected_amount": 25300000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "RURAL MICROENTREPRENEUR ASSISTANCE PROGRAM",
+      "expected_amount": 3713000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "HEALTHY FOOD FINANCING INITIATIVE",
+      "expected_amount": 500000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "RURAL WATER AND WASTE DISPOSAL PROGRAM ACCOUNT",
+      "expected_amount": 496490000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "RURAL ELECTRIFICATION AND TELECOMMUNICATIONS LOANS PROGRAM ACCOUNT",
+      "expected_amount": 43407000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RURAL DEVELOPMENT PROGRAMS",
+      "excel_name": "DISTANCE LEARNING, TELEMEDICINE, AND BROADBAND PROGRAM",
+      "expected_amount": 135105000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DOMESTIC FOOD PROGRAMS",
+      "excel_name": "CHILD NUTRITION PROGRAMS",
+      "expected_amount": 31775179000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DOMESTIC FOOD PROGRAMS",
+      "excel_name": "[WIC]",
+      "expected_amount": 7697000000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DOMESTIC FOOD PROGRAMS",
+      "excel_name": "SUPPLEMENTAL NUTRITION ASSISTANCE PROGRAM",
+      "expected_amount": 123227792000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DOMESTIC FOOD PROGRAMS",
+      "excel_name": "COMMODITY ASSISTANCE PROGRAM",
+      "expected_amount": 516070000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DOMESTIC FOOD PROGRAMS",
+      "excel_name": "NUTRITION PROGRAMS ADMINISTRATION",
+      "expected_amount": 177348000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FOREIGN ASSISTANCE AND RELATED PROGRAMS",
+      "excel_name": "OFFICE OF CODEX ALIMENTARIUS",
+      "expected_amount": 4922000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FOREIGN ASSISTANCE AND RELATED PROGRAMS",
+      "excel_name": "FOOD FOR PEACE TITLE II GRANTS",
+      "expected_amount": 1720607000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "FOREIGN ASSISTANCE AND RELATED PROGRAMS",
+      "excel_name": "PROGRAM GRANTS",
+      "expected_amount": 250000000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCY AND FOOD AND DRUG ADMINISTRATION",
+      "excel_name": "BUILDINGS AND FACILITIES",
+      "expected_amount": 9000000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCY AND FOOD AND DRUG ADMINISTRATION",
+      "excel_name": "FDA INNOVATION ACCOUNT, CURES ACT",
+      "expected_amount": 55000000
+    },
+    {
+      "bill": "118-s-4690",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "RELATED AGENCY AND FOOD AND DRUG ADMINISTRATION",
+      "excel_name": "FARM CREDIT ADMINISTRATION",
+      "expected_amount": 100430000
+    }
+  ]
+}

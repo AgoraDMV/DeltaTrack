@@ -1,0 +1,240 @@
+{
+  "source": "CRPT-118srpt205, Energy-Water Development explanatory statement for BILLS-118s4927rs",
+  "note": "Energy-Water Development FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars; `title` is the enclosing appropriations title/agency, used for agency-scoped recall. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "accounts": [
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "CORPS OF ENGINEERS-CIVIL",
+      "excel_name": "INVESTIGATIONS",
+      "expected_amount": 107800000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "CORPS OF ENGINEERS-CIVIL",
+      "excel_name": "PLANNING, ENGINEERING, AND DESIGN",
+      "expected_amount": 200000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "CORPS OF ENGINEERS-CIVIL",
+      "excel_name": "CONSTRUCTION",
+      "expected_amount": 2979041000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "CORPS OF ENGINEERS-CIVIL",
+      "excel_name": "MISSISSIPPI RIVER AND TRIBUTARIES",
+      "expected_amount": 375464000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "CORPS OF ENGINEERS-CIVIL",
+      "excel_name": "OPERATION AND MAINTENANCE",
+      "expected_amount": 5849129000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "CORPS OF ENGINEERS-CIVIL",
+      "excel_name": "REGULATORY PROGRAM",
+      "expected_amount": 224000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "CORPS OF ENGINEERS-CIVIL",
+      "excel_name": "FORMERLY UTILIZED SITES REMEDIAL ACTION PROGRAM",
+      "expected_amount": 325000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "CORPS OF ENGINEERS-CIVIL",
+      "excel_name": "FLOOD CONTROL AND COASTAL EMERGENCIES",
+      "expected_amount": 45000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "CORPS OF ENGINEERS-CIVIL",
+      "excel_name": "EXPENSES",
+      "expected_amount": 224000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "CORPS OF ENGINEERS-CIVIL",
+      "excel_name": "OFFICE OF THE ASSISTANT SECRETARY OF THE ARMY (CIVIL WORKS)",
+      "expected_amount": 5500000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "CORPS OF ENGINEERS-CIVIL",
+      "excel_name": "WATER INFRASTRUCTURE FINANCE AND INNOVATION PROGRAM",
+      "expected_amount": 10000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "CENTRAL UTAH PROJECT COMPLETION ACCOUNT",
+      "expected_amount": 23000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "WATER AND RELATED RESOURCES",
+      "expected_amount": 1864550000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "GROSS APPROPRIATION",
+      "expected_amount": 55656000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "CALIFORNIA BAY-DELTA RESTORATION",
+      "expected_amount": 33000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF THE INTERIOR",
+      "excel_name": "POLICY AND ADMINISTRATION",
+      "expected_amount": 66794000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "excel_name": "NON-DEFENSE ENVIRONMENTAL CLEANUP",
+      "expected_amount": 342000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "excel_name": "GROSS APPROPRIATION",
+      "expected_amount": 55000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "excel_name": "NET APPROPRIATION",
+      "expected_amount": 290422000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 532000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF ENERGY",
+      "excel_name": "REVENUES APPLIED",
+      "expected_amount": 532000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 47000000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 942558200
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "NET APPROPRIATION",
+      "expected_amount": 134886000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "GROSS APPROPRIATION",
+      "expected_amount": 15769000
+    },
+    {
+      "bill": "118-s-4927",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "NET APPROPRIATION",
+      "expected_amount": 3114000
+    }
+  ]
+}

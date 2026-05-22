@@ -153,7 +153,7 @@ def _normalize(name: str) -> str:
 
 cjs_skip_if_missing = pytest.mark.skipif(
     not (CJS_FIXTURE_PATH.exists() and CJS_BILL_XML.exists()),
-    reason="CJS validation fixture or bill XML not present (fetch via scripts/build_validation_cjs.py docstring)",
+    reason="CJS validation fixture or bill XML not present (fetch via scripts/build_validation.py docstring)",
 )
 
 

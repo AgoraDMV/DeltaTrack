@@ -1,0 +1,618 @@
+{
+  "source": "CRPT-118srpt200, State-Foreign Operations explanatory statement for BILLS-118s4797rs",
+  "note": "State-Foreign Operations FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars; `title` is the enclosing appropriations title/agency, used for agency-scoped recall. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "accounts": [
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "DIPLOMATIC PROGRAMS",
+      "expected_amount": 9731607000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "CAPITAL INVESTMENT FUND",
+      "expected_amount": 401848000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "OFFICE OF INSPECTOR GENERAL",
+      "expected_amount": 127838000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "EDUCATIONAL AND CULTURAL EXCHANGE PROGRAMS",
+      "expected_amount": 761050000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "REPRESENTATION EXPENSES",
+      "expected_amount": 7415000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "PROTECTION OF FOREIGN MISSIONS AND OFFICIALS",
+      "expected_amount": 30890000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "EMBASSY SECURITY, CONSTRUCTION, AND MAINTENANCE",
+      "expected_amount": 1907073000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "EMERGENCIES IN THE DIPLOMATIC AND CONSULAR SERVICE",
+      "expected_amount": 8885000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "REPATRIATION LOANS PROGRAM ACCOUNT",
+      "expected_amount": 1800000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "PAYMENT TO THE AMERICAN INSTITUTE IN TAIWAN",
+      "expected_amount": 38218000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "INTERNATIONAL CENTER, WASHINGTON, DISTRICT OF COLUMBIA",
+      "expected_amount": 745000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "PAYMENT TO THE FOREIGN SERVICE RETIREMENT AND DISABILITY FUND",
+      "expected_amount": 60000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "CONTRIBUTIONS TO INTERNATIONAL ORGANIZATIONS",
+      "expected_amount": 1676686000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "CONTRIBUTIONS FOR INTERNATIONAL PEACEKEEPING ACTIVITIES",
+      "expected_amount": 1234144000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 69300000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "CONSTRUCTION",
+      "expected_amount": 159550000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "AMERICAN SECTIONS, INTERNATIONAL COMMISSIONS",
+      "expected_amount": 16204000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "INTERNATIONAL FISHERIES COMMISSIONS",
+      "expected_amount": 68534000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "INTERNATIONAL BROADCASTING OPERATIONS",
+      "expected_amount": 861724000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "BROADCASTING CAPITAL IMPROVEMENTS",
+      "expected_amount": 9700000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 770000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 4000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 3059000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 2300000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF STATE AND RELATED AGENCY",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 4000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "UNITED STATES AGENCY FOR INTERNATIONAL DEVELOPMENT",
+      "excel_name": "OPERATING EXPENSES",
+      "expected_amount": 1747400000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "UNITED STATES AGENCY FOR INTERNATIONAL DEVELOPMENT",
+      "excel_name": "CAPITAL INVESTMENT FUND",
+      "expected_amount": 272888000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "UNITED STATES AGENCY FOR INTERNATIONAL DEVELOPMENT",
+      "excel_name": "OFFICE OF INSPECTOR GENERAL",
+      "expected_amount": 88800000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "GLOBAL HEALTH PROGRAMS",
+      "expected_amount": 9674950000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "DEVELOPMENT ASSISTANCE",
+      "expected_amount": 4153150000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "INTERNATIONAL DISASTER ASSISTANCE",
+      "expected_amount": 4829000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "TRANSITION INITIATIVES",
+      "expected_amount": 85000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "COMPLEX CRISES FUND",
+      "expected_amount": 60000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "ECONOMIC SUPPORT FUND",
+      "expected_amount": 4083324000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "DEMOCRACY FUND",
+      "expected_amount": 345200000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "ASSISTANCE FOR EUROPE, EURASIA AND CENTRAL ASIA",
+      "expected_amount": 902794000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "MIGRATION AND REFUGEE ASSISTANCE",
+      "expected_amount": 4028850000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "UNITED STATES EMERGENCY REFUGEE AND MIGRATION ASSISTANCE FUND",
+      "expected_amount": 100000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "PEACE CORPS",
+      "expected_amount": 479000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "MILLENNIUM CHALLENGE CORPORATION",
+      "expected_amount": 937000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "INTER-AMERICAN FOUNDATION",
+      "expected_amount": 52000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "UNITED STATES AFRICAN DEVELOPMENT FOUNDATION",
+      "expected_amount": 45000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "INTERNATIONAL AFFAIRS TECHNICAL ASSISTANCE",
+      "expected_amount": 40000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "DEBT RESTRUCTURING",
+      "expected_amount": 10000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "BILATERAL ECONOMIC ASSISTANCE",
+      "excel_name": "TROPICAL FOREST AND CORAL REEF CONSERVATION",
+      "expected_amount": 5000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INTERNATIONAL SECURITY ASSISTANCE",
+      "excel_name": "INTERNATIONAL NARCOTICS CONTROL AND LAW ENFORCEMENT",
+      "expected_amount": 1400000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INTERNATIONAL SECURITY ASSISTANCE",
+      "excel_name": "NONPROLIFERATION, ANTI-TERRORISM, DEMINING AND RELATED PROGRAMS",
+      "expected_amount": 884200000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INTERNATIONAL SECURITY ASSISTANCE",
+      "excel_name": "PEACEKEEPING OPERATIONS",
+      "expected_amount": 411050000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INTERNATIONAL SECURITY ASSISTANCE",
+      "excel_name": "INTERNATIONAL MILITARY EDUCATION AND TRAINING",
+      "expected_amount": 125425000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INTERNATIONAL SECURITY ASSISTANCE",
+      "excel_name": "FOREIGN MILITARY FINANCING PROGRAM",
+      "expected_amount": 6161425000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "INTERNATIONAL ORGANIZATIONS AND PROGRAMS",
+      "expected_amount": 474535000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "GLOBAL ENVIRONMENT FACILITY",
+      "expected_amount": 150200000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "CONTRIBUTION TO THE CLEAN TECHNOLOGY FUND",
+      "expected_amount": 150000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "DEVELOPMENT",
+      "expected_amount": 206500000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "CONTRIBUTION TO THE INTERNATIONAL DEVELOPMENT ASSOCIATION",
+      "expected_amount": 1480256000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "CONTRIBUTION TO THE ASIAN DEVELOPMENT FUND",
+      "expected_amount": 43610000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "CONTRIBUTION TO THE AFRICAN DEVELOPMENT BANK",
+      "expected_amount": 54648752
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "CONTRIBUTION TO THE AFRICAN DEVELOPMENT FUND",
+      "expected_amount": 197000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "CONTRIBUTION TO THE INTER-AMERICAN DEVELOPMENT BANK",
+      "expected_amount": 75000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "CONTRIBUTION TO THE EUROPEAN BANK FOR RECONSTRUCTION AND DEVELOPMENT",
+      "expected_amount": 50000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "CONTRIBUTION TO THE INTERNATIONAL FUND FOR AGRICULTURAL DEVELOPMENT",
+      "expected_amount": 54000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "GLOBAL AGRICULTURE AND FOOD SECURITY PROGRAM",
+      "expected_amount": 10000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "MULTILATERAL ASSISTANCE",
+      "excel_name": "TREASURY INTERNATIONAL ASSISTANCE PROGRAMS",
+      "expected_amount": 200000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXPORT AND INVESTMENT ASSISTANCE",
+      "excel_name": "INSPECTOR GENERAL",
+      "expected_amount": 9600000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXPORT AND INVESTMENT ASSISTANCE",
+      "excel_name": "ADMINISTRATIVE EXPENSES",
+      "expected_amount": 130100000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXPORT AND INVESTMENT ASSISTANCE",
+      "excel_name": "PROGRAM BUDGET APPROPRIATIONS",
+      "expected_amount": 15000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXPORT AND INVESTMENT ASSISTANCE",
+      "excel_name": "INSPECTOR GENERAL",
+      "expected_amount": 8000000
+    },
+    {
+      "bill": "118-s-4797",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "EXPORT AND INVESTMENT ASSISTANCE",
+      "excel_name": "TRADE AND DEVELOPMENT AGENCY",
+      "expected_amount": 100000000
+    }
+  ]
+}

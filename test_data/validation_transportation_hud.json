@@ -1,0 +1,609 @@
+{
+  "source": "CRPT-118srpt199, Transportation-HUD explanatory statement for BILLS-118s4796rs",
+  "note": "Transportation-HUD FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks and validated against the bill XML. Committee-recommendation amounts are in actual dollars; `title` is the enclosing appropriations title/agency, used for agency-scoped recall. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "accounts": [
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 209676000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "RESEARCH AND TECHNOLOGY",
+      "expected_amount": 57375000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "NATIONAL INFRASTRUCTURE INVESTMENTS",
+      "expected_amount": 550000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "FINANCIAL MANAGEMENT CAPITAL",
+      "expected_amount": 5000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "CYBER SECURITY INITIATIVES",
+      "expected_amount": 74600000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "OFFICE OF CIVIL RIGHTS",
+      "expected_amount": 18229000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "TRANSPORTATION PLANNING, RESEARCH, AND DEVELOPMENT",
+      "expected_amount": 45687000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "WORKING CAPITAL FUND",
+      "expected_amount": 495645000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "SMALL AND DISADVANTAGED BUSINESS UTILIZATION AND OUTREACH",
+      "expected_amount": 7026000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "PAYMENTS TO AIR CARRIERS",
+      "expected_amount": 423000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "OPERATIONS",
+      "expected_amount": 13603399000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "GRANTS-IN-AID TO AIRPORTS",
+      "expected_amount": 521155000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "HIGHWAY TRUST FUND",
+      "expected_amount": 62011047545
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "HIGHWAY INFRASTRUCTURE PROGRAMS",
+      "expected_amount": 1116889000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "SAFETY AND OPERATIONS",
+      "expected_amount": 292817000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "RAILROAD RESEARCH AND DEVELOPMENT",
+      "expected_amount": 54750000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "FEDERAL-STATE PARTNERSHIP FOR INTERCITY PASSENGER RAIL GRANTS",
+      "expected_amount": 100000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "CONSOLIDATED RAIL INFRASTRUCTURE AND SAFETY IMPROVEMENTS GRANTS",
+      "expected_amount": 375821000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "THE NATIONAL RAILROAD PASSENGER CORPORATION",
+      "expected_amount": 2638072000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "TRANSIT INFRASTRUCTURE GRANTS",
+      "expected_amount": 345661000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "TECHNICAL ASSISTANCE AND TRAINING",
+      "expected_amount": 8000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "CAPITAL INVESTMENT GRANTS",
+      "expected_amount": 2262000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "GRANTS TO THE WASHINGTON METROPOLITAN AREA TRANSIT AUTHORITY",
+      "expected_amount": 150000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "OPERATIONS AND MAINTENANCE",
+      "expected_amount": 40605000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "MARITIME SECURITY PROGRAM",
+      "expected_amount": 318000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "CABLE SECURITY FLEET",
+      "expected_amount": 10000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "TANKER SECURITY FLEET",
+      "expected_amount": 120000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "OPERATIONS AND TRAINING",
+      "expected_amount": 285287000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "STATE MARITIME ACADEMY OPERATIONS",
+      "expected_amount": 178400000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "ASSISTANCE TO SMALL SHIPYARDS",
+      "expected_amount": 20000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "SHIP DISPOSAL",
+      "expected_amount": 6000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "MARITIME GUARANTEED LOAN PROGRAM [TITLE XI]",
+      "expected_amount": 5000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "PORT INFRASTRUCTURE DEVELOPMENT PROGRAM",
+      "expected_amount": 200000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "OPERATIONAL EXPENSES",
+      "expected_amount": 32633000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "HAZARDOUS MATERIALS SAFETY",
+      "expected_amount": 86586000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF TRANSPORTATION",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 118922000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "EXECUTIVE OFFICES",
+      "expected_amount": 20400000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "ADMINISTRATIVE SUPPORT OFFICES",
+      "expected_amount": 729650000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "PROGRAM OFFICES",
+      "expected_amount": 1152300000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "INFORMATION TECHNOLOGY FUND",
+      "expected_amount": 435950000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "TENANT-BASED RENTAL ASSISTANCE",
+      "expected_amount": 35260450000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "PUBLIC HOUSING FUND",
+      "expected_amount": 8783000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "ASSISTED HOUSING INSPECTIONS AND ASSESSMENTS",
+      "expected_amount": 50000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "CHOICE NEIGHBORHOODS INITIATIVE",
+      "expected_amount": 100000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "SELF-SUFFICIENCY PROGRAMS",
+      "expected_amount": 200500000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "NATIVE AMERICAN PROGRAMS",
+      "expected_amount": 1455100000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "NATIVE HAWAIIAN HOUSING BLOCK GRANT",
+      "expected_amount": 22300000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "HOUSING OPPORTUNITIES FOR PERSONS WITH AIDS",
+      "expected_amount": 524000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "COMMUNITY DEVELOPMENT FUND",
+      "expected_amount": 4614317000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "HOME INVESTMENT PARTNERSHIPS PROGRAM",
+      "expected_amount": 1425000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "PRESERVATION AND REINVESTMENT INITIATIVE FOR COMMUNITY ENHANCEMENT",
+      "expected_amount": 10000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "SELF-HELP AND ASSISTED HOMEOWNERSHIP OPPORTUNITY PROGRAM",
+      "expected_amount": 70000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "HOMELESS ASSISTANCE GRANTS",
+      "expected_amount": 4319000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "PROJECT-BASED RENTAL ASSISTANCE",
+      "expected_amount": 16654000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "HOUSING FOR THE ELDERLY",
+      "expected_amount": 1046400000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "HOUSING FOR PERSONS WITH DISABILITIES",
+      "expected_amount": 256700000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "HOUSING COUNSELING ASSISTANCE",
+      "expected_amount": 57500000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "PAYMENT TO MANUFACTURED HOUSING FEES TRUST FUND",
+      "expected_amount": 14000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "RESEARCH AND TECHNOLOGY",
+      "expected_amount": 149500000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "FAIR HOUSING ACTIVITIES",
+      "expected_amount": 86400000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+      "excel_name": "LEAD HAZARD REDUCTION",
+      "expected_amount": 345000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 9955000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 45000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 32100000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "SALARIES AND EXPENSES",
+      "expected_amount": 145000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "PAYMENT TO THE NEIGHBORHOOD REINVESTMENT CORPORATION",
+      "expected_amount": 168000000
+    },
+    {
+      "bill": "118-s-4796",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "INDEPENDENT AGENCIES",
+      "excel_name": "OPERATING EXPENSES",
+      "expected_amount": 4300000
+    }
+  ]
+}
