@@ -8,7 +8,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "MILITARY PERSONNEL",
-      "bureau": null,
+      "bureau": "MILITARY PERSONNEL",
       "excel_name": "Military Personnel, Army",
       "match_path": [
         "military personnel",
@@ -22,7 +22,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "MILITARY PERSONNEL",
-      "bureau": null,
+      "bureau": "MILITARY PERSONNEL",
       "excel_name": "Military Personnel, Navy",
       "match_path": [
         "military personnel",
@@ -36,7 +36,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "MILITARY PERSONNEL",
-      "bureau": null,
+      "bureau": "MILITARY PERSONNEL",
       "excel_name": "Military Personnel, Marine Corps",
       "match_path": [
         "military personnel",
@@ -50,7 +50,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "MILITARY PERSONNEL",
-      "bureau": null,
+      "bureau": "MILITARY PERSONNEL",
       "excel_name": "Military Personnel, Air Force",
       "match_path": [
         "military personnel",
@@ -64,7 +64,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "MILITARY PERSONNEL",
-      "bureau": null,
+      "bureau": "MILITARY PERSONNEL",
       "excel_name": "Military Personnel, Space Force",
       "match_path": [
         "military personnel",
@@ -78,7 +78,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "MILITARY PERSONNEL",
-      "bureau": null,
+      "bureau": "MILITARY PERSONNEL",
       "excel_name": "Reserve Personnel, Army",
       "match_path": [
         "military personnel",
@@ -92,7 +92,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "MILITARY PERSONNEL",
-      "bureau": null,
+      "bureau": "MILITARY PERSONNEL",
       "excel_name": "Reserve Personnel, Navy",
       "match_path": [
         "military personnel",
@@ -106,7 +106,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "MILITARY PERSONNEL",
-      "bureau": null,
+      "bureau": "MILITARY PERSONNEL",
       "excel_name": "Reserve Personnel, Marine Corps",
       "match_path": [
         "military personnel",
@@ -120,7 +120,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "MILITARY PERSONNEL",
-      "bureau": null,
+      "bureau": "MILITARY PERSONNEL",
       "excel_name": "Reserve Personnel, Air Force",
       "match_path": [
         "military personnel",
@@ -134,7 +134,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "MILITARY PERSONNEL",
-      "bureau": null,
+      "bureau": "MILITARY PERSONNEL",
       "excel_name": "National Guard Personnel, Army",
       "match_path": [
         "military personnel",
@@ -148,7 +148,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "MILITARY PERSONNEL",
-      "bureau": null,
+      "bureau": "MILITARY PERSONNEL",
       "excel_name": "National Guard Personnel, Air Force",
       "match_path": [
         "military personnel",
@@ -162,7 +162,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Army",
       "match_path": [
         "operation and maintenance",
@@ -176,7 +176,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Navy",
       "match_path": [
         "operation and maintenance",
@@ -190,7 +190,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Marine Corps",
       "match_path": [
         "operation and maintenance",
@@ -204,7 +204,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Air Force",
       "match_path": [
         "operation and maintenance",
@@ -218,7 +218,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Space Force",
       "match_path": [
         "operation and maintenance",
@@ -232,7 +232,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Defense-Wide",
       "match_path": [
         "operation and maintenance",
@@ -246,7 +246,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Counter-ISIS Train and Equip Fund [CTEF]",
       "match_path": [
         "operation and maintenance",
@@ -260,7 +260,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Army Reserve",
       "match_path": [
         "operation and maintenance",
@@ -274,7 +274,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Navy Reserve",
       "match_path": [
         "operation and maintenance",
@@ -288,7 +288,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Marine Corps Reserve",
       "match_path": [
         "operation and maintenance",
@@ -302,7 +302,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Air Force Reserve",
       "match_path": [
         "operation and maintenance",
@@ -316,7 +316,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Army National Guard",
       "match_path": [
         "operation and maintenance",
@@ -330,7 +330,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Operation and Maintenance, Air National Guard",
       "match_path": [
         "operation and maintenance",
@@ -344,7 +344,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "United States Court of Appeals for the Armed Forces",
       "match_path": [
         "operation and maintenance",
@@ -358,7 +358,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Environmental Restoration, Army",
       "match_path": [
         "operation and maintenance",
@@ -372,7 +372,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Environmental Restoration, Navy",
       "match_path": [
         "operation and maintenance",
@@ -386,7 +386,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Environmental Restoration, Air Force",
       "match_path": [
         "operation and maintenance",
@@ -400,7 +400,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Environmental Restoration, Defense-Wide",
       "match_path": [
         "operation and maintenance",
@@ -414,7 +414,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Environmental Restoration, Formerly Used Defense Sites",
       "match_path": [
         "operation and maintenance",
@@ -428,7 +428,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Overseas Humanitarian, Disaster, and Civic Aid",
       "match_path": [
         "operation and maintenance",
@@ -442,7 +442,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OPERATION AND MAINTENANCE",
-      "bureau": null,
+      "bureau": "OPERATION AND MAINTENANCE",
       "excel_name": "Cooperative Threat Reduction Account",
       "match_path": [
         "operation and maintenance",
@@ -456,7 +456,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Aircraft Procurement, Army",
       "match_path": [
         "procurement",
@@ -470,7 +470,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Missile Procurement, Army",
       "match_path": [
         "procurement"
@@ -483,7 +483,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Procurement of Weapons and Tracked Combat Vehicles, Army",
       "match_path": [
         "procurement",
@@ -497,7 +497,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Procurement of Ammunition, Army",
       "match_path": [
         "procurement",
@@ -511,7 +511,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Other Procurement, Army",
       "match_path": [
         "procurement",
@@ -525,7 +525,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Aircraft Procurement, Navy",
       "match_path": [
         "procurement",
@@ -539,7 +539,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Weapons Procurement, Navy",
       "match_path": [
         "procurement",
@@ -553,7 +553,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Procurement of Ammunition, Navy and Marine Corps",
       "match_path": [
         "procurement",
@@ -567,7 +567,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Shipbuilding and Conversion, Navy",
       "match_path": [
         "procurement",
@@ -581,7 +581,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Other Procurement, Navy",
       "match_path": [
         "procurement",
@@ -595,7 +595,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Procurement, Marine Corps",
       "match_path": [
         "procurement",
@@ -609,7 +609,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Aircraft Procurement, Air Force",
       "match_path": [
         "procurement",
@@ -623,7 +623,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Missile Procurement, Air Force",
       "match_path": [
         "procurement",
@@ -637,7 +637,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Procurement of Ammunition, Air Force",
       "match_path": [
         "procurement",
@@ -651,7 +651,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Other Procurement, Air Force",
       "match_path": [
         "procurement",
@@ -665,7 +665,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Procurement, Space Force",
       "match_path": [
         "procurement",
@@ -679,7 +679,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Procurement, Defense-Wide",
       "match_path": [
         "procurement",
@@ -693,7 +693,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "Defense Production Act Purchases",
       "match_path": [
         "procurement",
@@ -707,7 +707,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "PROCUREMENT",
-      "bureau": null,
+      "bureau": "PROCUREMENT",
       "excel_name": "National Guard and Reserve Equipment",
       "match_path": [
         "procurement",
@@ -721,7 +721,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
-      "bureau": null,
+      "bureau": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
       "excel_name": "Research, Development, Test and Evaluation, Army",
       "match_path": [
         "research, development, test and evaluation",
@@ -735,7 +735,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
-      "bureau": null,
+      "bureau": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
       "excel_name": "Research, Development, Test and Evaluation, Navy",
       "match_path": [
         "research, development, test and evaluation",
@@ -749,7 +749,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
-      "bureau": null,
+      "bureau": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
       "excel_name": "Research, Development, Test and Evaluation, Air Force",
       "match_path": [
         "research, development, test and evaluation",
@@ -763,7 +763,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
-      "bureau": null,
+      "bureau": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
       "excel_name": "Research, Development, Test and Evaluation, Space Force",
       "match_path": [
         "research, development, test and evaluation",
@@ -777,7 +777,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
-      "bureau": null,
+      "bureau": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
       "excel_name": "Research, Development, Test and Evaluation, Defense-Wide",
       "match_path": [
         "research, development, test and evaluation",
@@ -791,7 +791,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
-      "bureau": null,
+      "bureau": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
       "excel_name": "Operational Test and Evaluation, Defense",
       "match_path": [
         "research, development, test and evaluation",
@@ -805,7 +805,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "REVOLVING AND MANAGEMENT FUNDS",
-      "bureau": null,
+      "bureau": "REVOLVING AND MANAGEMENT FUNDS",
       "excel_name": "Defense Working Capital Funds",
       "match_path": [
         "revolving and management funds",
@@ -819,7 +819,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "REVOLVING AND MANAGEMENT FUNDS",
-      "bureau": null,
+      "bureau": "REVOLVING AND MANAGEMENT FUNDS",
       "excel_name": "National Defense Stockpile Transaction Fund",
       "match_path": [
         "revolving and management funds",
@@ -833,7 +833,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
-      "bureau": null,
+      "bureau": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
       "excel_name": "Operation and maintenance",
       "match_path": null,
       "expected_amount": 38241057000
@@ -844,7 +844,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
-      "bureau": null,
+      "bureau": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
       "excel_name": "Procurement",
       "match_path": [
         "procurement"
@@ -857,7 +857,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
-      "bureau": null,
+      "bureau": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
       "excel_name": "Research, development, test and evaluation",
       "match_path": null,
       "expected_amount": 1968936000
@@ -868,7 +868,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
-      "bureau": null,
+      "bureau": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
       "excel_name": "Operation and maintenance",
       "match_path": null,
       "expected_amount": 20745000
@@ -879,7 +879,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
-      "bureau": null,
+      "bureau": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
       "excel_name": "Research, development, test and evaluation",
       "match_path": null,
       "expected_amount": 754762000
@@ -890,7 +890,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
-      "bureau": null,
+      "bureau": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
       "excel_name": "Drug Interdiction and Counter-Drug Activities, Defense",
       "match_path": [
         "other department of defense programs",
@@ -904,7 +904,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
-      "bureau": null,
+      "bureau": "OTHER DEPARTMENT OF DEFENSE PROGRAMS",
       "excel_name": "Office of the Inspector General",
       "match_path": [
         "other department of defense programs",
@@ -918,7 +918,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "RELATED AGENCIES",
-      "bureau": null,
+      "bureau": "RELATED AGENCIES",
       "excel_name": "Intelligence Community Management Account (ICMA)",
       "match_path": [
         "related agencies",
@@ -932,7 +932,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "GENERAL PROVISIONS",
-      "bureau": null,
+      "bureau": "GENERAL PROVISIONS",
       "excel_name": "National Defense Stockpile Transaction Fund (Sec. 8034)",
       "match_path": [
         "general provisions",
@@ -946,7 +946,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "GENERAL PROVISIONS",
-      "bureau": null,
+      "bureau": "GENERAL PROVISIONS",
       "excel_name": "United Service Organizations (Sec. 8049)",
       "match_path": [
         "general provisions",
@@ -960,7 +960,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "GENERAL PROVISIONS",
-      "bureau": null,
+      "bureau": "GENERAL PROVISIONS",
       "excel_name": "USSOUTHCOM and USAFRICOM Allies and Partnership (Sec. 8064)",
       "match_path": [
         "general provisions",
@@ -974,7 +974,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "GENERAL PROVISIONS",
-      "bureau": null,
+      "bureau": "GENERAL PROVISIONS",
       "excel_name": "Operational Readiness (Sec. 8111)",
       "match_path": [
         "general provisions",
@@ -988,7 +988,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "GENERAL PROVISIONS",
-      "bureau": null,
+      "bureau": "GENERAL PROVISIONS",
       "excel_name": "Contract Closeout (Sec. 8121)",
       "match_path": [
         "general provisions",
@@ -1002,7 +1002,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "GENERAL PROVISIONS",
-      "bureau": null,
+      "bureau": "GENERAL PROVISIONS",
       "excel_name": "Department of Defense Credit Program Account (Sec. 8123)",
       "match_path": [
         "general provisions",
@@ -1016,7 +1016,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "GENERAL PROVISIONS",
-      "bureau": null,
+      "bureau": "GENERAL PROVISIONS",
       "excel_name": "CENTCOM Operations and Force Protection (Sec. 8130)             .",
       "match_path": [
         "general provisions",
@@ -1030,7 +1030,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "GENERAL PROVISIONS",
-      "bureau": null,
+      "bureau": "GENERAL PROVISIONS",
       "excel_name": "Global Counter-Terrorism and Force Protection, Including EUCOM  .",
       "match_path": null,
       "expected_amount": 250000000
@@ -1041,7 +1041,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "GENERAL PROVISIONS",
-      "bureau": null,
+      "bureau": "GENERAL PROVISIONS",
       "excel_name": "Artificial Intelligence Scaling at the Combatant Commands       .",
       "match_path": null,
       "expected_amount": 500000000
@@ -1052,7 +1052,7 @@
       "fy": "FY 2025",
       "chamber": "senate",
       "title": "GENERAL PROVISIONS",
-      "bureau": null,
+      "bureau": "GENERAL PROVISIONS",
       "excel_name": "Fuel Shortfall (Sec. 8133) (emergency)",
       "match_path": [
         "general provisions",
