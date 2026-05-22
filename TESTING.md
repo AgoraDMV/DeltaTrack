@@ -25,35 +25,39 @@ what each layer does and does not establish.
 
 ### 1. Checking the numbers against an outside source
 
-This is the strongest check, and it now covers two jurisdictions through two
-independent sources:
+This is the strongest check. It now covers all twelve regular appropriations
+subcommittees, through two kinds of independent source:
 
-- **Legislative Branch appropriations.** We took a separately maintained
-  appropriations spreadsheet for Legislative Branch bills, covering both the
-  House and Senate across several years, and confirmed that the dollar amounts
-  our tool pulls out of the official bill text match the amounts in that
-  spreadsheet, in the right place in the bill's structure.
-- **Commerce-Justice-Science.** We read the account-level amounts out of the
-  Senate committee report for the CJS bill (S.4795) and confirmed that each
-  amount the committee recommended appears in what our tool extracts from the
-  bill. The committee report is written by different people for a different
-  purpose than the bill, so it is a genuinely outside source.
+- **A separately maintained spreadsheet (Legislative Branch).** We took an
+  appropriations spreadsheet kept by other people for Legislative Branch bills,
+  covering both the House and Senate across several years, and confirmed that the
+  dollar amounts our tool pulls out of the official bill text match the amounts in
+  that spreadsheet, in the right place in the bill's structure.
+- **Senate committee reports (the other eleven subcommittees).** For each of the
+  remaining subcommittees we read the account-level amounts out of the Senate
+  Appropriations committee report and confirmed that each amount the committee
+  recommended appears in what our tool extracts from the reported bill. A committee
+  report is written by different people for a different purpose than the bill, so
+  it is a genuinely outside source.
 
-Because both sources were built independently of our tool, this catches mistakes
-that checking the tool against itself never could. The CJS check did not surface
-any extraction errors; the only mismatches were two figures the committee report
-itself states differently from the bill (one is a mandatory account with no
-fixed-dollar line, the other a copy-paste slip in the report's narrative that its
-own summary table contradicts).
+Because every source was built independently of our tool, this catches mistakes
+that checking the tool against itself never could. Across the committee-report
+checks, the amounts we cannot recall are confirmed report-versus-bill differences
+(indefinite accounts with no fixed-dollar line, totals the bill states only as
+their parts, and a few report typos the report's own summary tables contradict),
+not extraction errors. The per-subcommittee counts are tracked so they cannot
+quietly rise.
 
-**Limit:** the two jurisdictions are checked to different depths. Legislative
-Branch appropriations is checked structurally (right amount, right place) across
-several bills and both chambers. CJS is checked as amount-recall (the right
-amounts are present) on a single Senate-reported bill, because the report and
-the bill name accounts differently. Either way, ten of the twelve subcommittee
-jurisdictions still have no outside-source check. This remains the biggest known
-gap, and we
-track it on purpose.
+**Limit:** the twelve subcommittees are checked to different depths. Legislative
+Branch is checked structurally, meaning the right amount in the right place,
+across several bills and both chambers. The other eleven are checked as
+amount-recall, meaning the right amounts are present under the right agency, on a
+single Senate-reported bill each, because the report and the bill name accounts
+differently. Two consequences follow, and we track both on purpose: an amount that
+landed on the wrong account inside the right agency would still pass the recall
+check, and the House versions of those eleven subcommittees have no outside-source
+check at all, because House committee reports print their account tables as images
+we cannot read.
 
 ### 2. Sanity checks across every bill we have
 
@@ -130,8 +134,10 @@ We keep these in the open rather than papering over them:
 - **Large combined bills.** In omnibus bills that bundle many areas together,
   section numbers repeat across areas, which makes matching harder. The tool
   handles this, but it is the trickiest case.
-- **Narrow outside-source coverage.** As noted in check 1, most of the twelve
-  subcommittee areas still have no outside-source check.
+- **Outside-source depth varies.** As noted in check 1, all twelve subcommittees
+  now have an outside-source check, but only Legislative Branch is checked for the
+  right place rather than just the right amount, and only it is checked on the
+  House side. The other eleven rest on a single Senate-reported bill each.
 
 ## Running the tests
 
