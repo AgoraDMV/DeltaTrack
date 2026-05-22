@@ -161,6 +161,14 @@ _MAX_UNVALIDATED = {
     # covered jurisdiction). Same 2 structural misses as FY2025 (DOJ S&E the bill itemizes;
     # PSOB indefinite "such sums") — verified absent from the bill XML.
     "cjs_fy2024": 2,
+    # MilCon-VA (summary source): 1 miss — VA Medical Care Collection Fund (offsetting/
+    # mandatory), absent from the bill.
+    "milcon_va": 1,
+    # Homeland Security FY2024 (the Senate didn't report FY2025): 5 non-bug misses — 3 are
+    # the report's Title I worded "...Operations..." vs the bill's "...Situational Awareness..."
+    # (amount correctly extracted under the right agency), 2 absent (Coast Guard mandatory
+    # health-care accrual, fee-funded USCIS Operations and Support).
+    "homeland_security": 5,
 }
 
 _REPORT_JURISDICTIONS = [j for j in JURISDICTIONS if j.fixture_path.exists()]
@@ -186,6 +194,8 @@ def test_report_amounts_recalled(jur):
 @pytest.mark.parametrize("jur", _REPORT_JURISDICTIONS, ids=lambda j: j.slug)
 def test_fixture_is_senate_reported_bill(jur):
     accounts = json.loads(jur.fixture_path.read_text())["accounts"]
-    assert len(accounts) >= 20
+    # Floor guards against a trivially-empty fixture. MilCon-VA is the smallest jurisdiction
+    # (19 summary-block accounts), so the floor sits below that.
+    assert len(accounts) >= 15
     assert {a["chamber"] for a in accounts} == {"senate"}
     assert {(a["bill"], a["version"]) for a in accounts} == {(jur.bill_id, jur.version)}

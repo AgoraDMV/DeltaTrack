@@ -16,7 +16,7 @@ bill XML; we check that our parser reads it correctly, by comparing the parser's
 ## Two independent ground-truth sources
 
 - **Legislative Branch** — 414 line items across 7 enrolled bills (113-hr-3547, 113-hr-83, 114-hr-2029, 115-hr-1625, 115-hr-244, 115-hr-5895, 116-hr-1865), chambers: house, senate. Source: an independently maintained appropriations spreadsheet. Validated *structurally* (`TestLegBranchValidation`): each curated account names a `match_path`, and the parser must produce a node there with the expected amount.
-- **10 other jurisdictions** — committee-recommended amounts parsed from the
+- **12 other jurisdictions** — committee-recommended amounts parsed from the
   FY2025 Senate Appropriations **committee reports** (govinfo `CRPT-…`), compared to what the
   parser extracts from each reported bill. The report is written by committee staff for a
   different purpose than the bill, so it is genuinely independent. (Committee reports, not CRS
@@ -41,11 +41,13 @@ offsetting collections) are excluded — they are not leaf appropriation account
 | Interior-Environment | `118-s-4802` | 72 | 64 | 89% |
 | Financial Services-General Government | `118-s-4928` | 100 | 98 | 98% |
 | Labor-HHS-Education | `118-s-4942` | 123 | 108 | 88% |
+| Military Construction-VA | `118-s-4677` | 19 | 18 | 95% |
 | Defense | `118-s-4921` | 77 | 77 | 100% |
 | Energy-Water | `118-s-4927` | 67 | 61 | 91% |
 | Commerce-Justice-Science (FY2024) | `118-s-2321` | 75 | 73 | 97% |
+| Homeland Security (FY2024) | `118-s-2625` | 35 | 30 | 86% |
 
-**Overall: 726 / 768 accounts recalled (94.5%).**
+**Overall: 774 / 822 accounts recalled (94.2%).**
 
 ## Why the remainder is not a parser problem
 
@@ -107,6 +109,8 @@ The full current remainder:
   - DEPARTMENT OF HEALTH AND HUMAN SERVICES / AGING AND DISABILITY SERVICES PROGRAMS — $2,543,817,000
   - DEPARTMENT OF HEALTH AND HUMAN SERVICES / RETIREMENT PAY AND MEDICAL BENEFITS FOR COMMISSIONED OFFICERS — $894,795,000
   - RELATED AGENCIES / OFFICE OF INSPECTOR GENERAL — $114,665,000
+**Military Construction-VA** (1)
+  - DEPARTMENT OF VETERANS AFFAIRS / MEDICAL CARE COLLECTION FUND — $4,632,000,000
 **Energy-Water** (6)
   - DEPARTMENT OF DEFENSE--CIVIL / Water Infrastructure Finance and Innovation Program Account — $10,000,000
   - DEPARTMENT OF THE INTERIOR / Central Valley Project Restoration Fund — $55,656,000
@@ -117,6 +121,12 @@ The full current remainder:
 **Commerce-Justice-Science (FY2024)** (2)
   - DEPARTMENT OF JUSTICE / SALARIES AND EXPENSES — $3,210,719,000
   - DEPARTMENT OF JUSTICE / PUBLIC SAFETY OFFICERS BENEFITS — $208,800,000
+**Homeland Security (FY2024)** (5)
+  - DEPARTMENTAL MANAGEMENT, OPERATIONS, INTELLIGENCE, AND OVERSIGHT / PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS — $73,365,000
+  - DEPARTMENTAL MANAGEMENT, OPERATIONS, INTELLIGENCE, AND OVERSIGHT / OPERATIONS AND SUPPORT — $341,497,000
+  - DEPARTMENTAL MANAGEMENT, OPERATIONS, INTELLIGENCE, AND OVERSIGHT / OPERATIONS AND SUPPORT — $237,000,000
+  - SECURITY, ENFORCEMENT, AND INVESTIGATIONS / HEALTH CARE FUND CONTRIBUTION — $277,000,000
+  - RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES / OPERATIONS AND SUPPORT — $455,661,000
 
 ## Guarding against overfitting
 
@@ -141,9 +151,10 @@ specific bills we happen to have. Three things push against that:
 - The committee-report check is internal-consistency between two documents of the same
   legislative process. It is strong for catching the parser misreading unfamiliar structure
   (which is the overfitting risk), but it is not a third-party audit.
-- Coverage is the FY2025 Senate-reported bills for these jurisdictions, plus Legislative Branch
-  across several years and both chambers. The remaining FY2025 subcommittees (e.g. Homeland
-  Security, MilCon-VA) and other years/chambers are not yet covered here.
+- Coverage now spans all 12 regular Senate appropriations subcommittees: 11 via committee
+  reports here (FY2025, except Homeland Security — the Senate never reported an FY2025 DHS
+  bill, so its FY2024 reported bill is used instead) plus Legislative Branch via the
+  spreadsheet source. Other years and the House chamber are not exhaustively covered.
 
 ## Reproduce
 

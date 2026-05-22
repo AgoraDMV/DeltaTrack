@@ -1,0 +1,487 @@
+{
+  "source": "CRPT-118srpt85, Homeland Security (FY2024) explanatory statement for BILLS-118s2625rs",
+  "note": "Homeland Security (FY2024) FY 2024 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks (committee-recommendation amounts, in actual dollars) and validated against the bill XML. `match_path` is the mapped bill node when the account name resolves uniquely (strict node-level check); null otherwise, where the test falls back to agency-scoped recall via `title`. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "accounts": [
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "DEPARTMENTAL MANAGEMENT, OPERATIONS, INTELLIGENCE, AND OVERSIGHT",
+      "bureau": "Office of the Secretary and Executive Management",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "departmental management, intelligence, situational awareness, and oversight",
+        "office of the secretary and executive management",
+        "operations and support"
+      ],
+      "expected_amount": 286563000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "DEPARTMENTAL MANAGEMENT, OPERATIONS, INTELLIGENCE, AND OVERSIGHT",
+      "bureau": "Management Directorate",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "departmental management, intelligence, situational awareness, and oversight",
+        "management directorate",
+        "operations and support"
+      ],
+      "expected_amount": 1700952000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "DEPARTMENTAL MANAGEMENT, OPERATIONS, INTELLIGENCE, AND OVERSIGHT",
+      "bureau": "Briefings on the Homeland Security Advanced Recognition",
+      "excel_name": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+      "match_path": null,
+      "expected_amount": 73365000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "DEPARTMENTAL MANAGEMENT, OPERATIONS, INTELLIGENCE, AND OVERSIGHT",
+      "bureau": "The Intelligence, Analysis, and Situational Awareness",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": null,
+      "expected_amount": 341497000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "DEPARTMENTAL MANAGEMENT, OPERATIONS, INTELLIGENCE, AND OVERSIGHT",
+      "bureau": "The Intelligence, Analysis, and Situational Awareness",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": null,
+      "expected_amount": 237000000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "Prioritizing the Acquisition of Innovative and Emerging",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": null,
+      "expected_amount": 16598076000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "Identifying Fentanyl Analogues and Related Substances at",
+      "excel_name": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+      "match_path": null,
+      "expected_amount": 1152529000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "U.S. Immigration and Customs Enforcement",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "security, enforcement, and investigations",
+        "u.s. immigration and customs enforcement",
+        "operations and support"
+      ],
+      "expected_amount": 8836263000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "Transportation Management Office [TMO] and the Juvenile and",
+      "excel_name": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+      "match_path": [
+        "security, enforcement, and investigations",
+        "transportation security administration",
+        "procurement, construction, and improvements"
+      ],
+      "expected_amount": 50100000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "Transportation Security Administration",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "security, enforcement, and investigations",
+        "transportation security administration",
+        "operations and support"
+      ],
+      "expected_amount": 7400729000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "Federal Flight Deck Officer [FFDO] and Flight Crew Training",
+      "excel_name": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+      "match_path": [
+        "research, development, training, and services",
+        "federal law enforcement training centers",
+        "procurement, construction, and improvements"
+      ],
+      "expected_amount": 13939000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "Coast Guard",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "security, enforcement, and investigations",
+        "coast guard",
+        "operations and support"
+      ],
+      "expected_amount": 10063203000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "Obstruction of Safe Navigation in U.S. Territorial",
+      "excel_name": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+      "match_path": null,
+      "expected_amount": 1118322000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "The Coast Guard's Research and Development [R&D]",
+      "excel_name": "HEALTH CARE FUND CONTRIBUTION",
+      "match_path": null,
+      "expected_amount": 277000000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "The Coast Guard's Research and Development [R&D]",
+      "excel_name": "RETIRED PAY",
+      "match_path": [
+        "security, enforcement, and investigations",
+        "coast guard",
+        "retired pay"
+      ],
+      "expected_amount": 1147244000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "United States Secret Service",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "security, enforcement, and investigations",
+        "united states secret service",
+        "operations and support"
+      ],
+      "expected_amount": 2903030000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "Support for Missing and Exploited Children Investigations",
+      "excel_name": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+      "match_path": null,
+      "expected_amount": 69098000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+      "bureau": "Support for Missing and Exploited Children Investigations",
+      "excel_name": "RESEARCH AND DEVELOPMENT",
+      "match_path": [
+        "security, enforcement, and investigations",
+        "united states secret service",
+        "research and development"
+      ],
+      "expected_amount": 4217000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "PROTECTION, PREPAREDNESS, RESPONSE, AND RECOVERY",
+      "bureau": "The Cybersecurity and Infrastructure Security Agency [CISA]",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "protection, preparedness, response, and recovery",
+        "cybersecurity and infrastructure security agency",
+        "operations and support"
+      ],
+      "expected_amount": 2401752000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "PROTECTION, PREPAREDNESS, RESPONSE, AND RECOVERY",
+      "bureau": "Strengthening National Positioning, Navigation, and Timing",
+      "excel_name": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+      "match_path": null,
+      "expected_amount": 605334000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "PROTECTION, PREPAREDNESS, RESPONSE, AND RECOVERY",
+      "bureau": "Federal Emergency Management Agency",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "protection, preparedness, response, and recovery",
+        "federal emergency management agency",
+        "operations and support"
+      ],
+      "expected_amount": 1434306000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "PROTECTION, PREPAREDNESS, RESPONSE, AND RECOVERY",
+      "bureau": "Federal Emergency Management Agency",
+      "excel_name": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+      "match_path": [
+        "protection, preparedness, response, and recovery",
+        "federal emergency management agency",
+        "procurement, construction, and improvements"
+      ],
+      "expected_amount": 100420000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "PROTECTION, PREPAREDNESS, RESPONSE, AND RECOVERY",
+      "bureau": "Federal Emergency Management Agency",
+      "excel_name": "FEDERAL ASSISTANCE",
+      "match_path": [
+        "protection, preparedness, response, and recovery",
+        "federal emergency management agency",
+        "federal assistance"
+      ],
+      "expected_amount": 3467115000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "PROTECTION, PREPAREDNESS, RESPONSE, AND RECOVERY",
+      "bureau": "Law Enforcement Terrorism Prevention Activities [LETPA]",
+      "excel_name": "DISASTER RELIEF FUND",
+      "match_path": [
+        "protection, preparedness, response, and recovery",
+        "federal emergency management agency",
+        "disaster relief fund"
+      ],
+      "expected_amount": 20261000000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "PROTECTION, PREPAREDNESS, RESPONSE, AND RECOVERY",
+      "bureau": "Law Enforcement Terrorism Prevention Activities [LETPA]",
+      "excel_name": "NATIONAL FLOOD INSURANCE FUND",
+      "match_path": [
+        "protection, preparedness, response, and recovery",
+        "federal emergency management agency",
+        "national flood insurance fund"
+      ],
+      "expected_amount": 239983000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES",
+      "bureau": "United States Citizenship and Immigration Services [USCIS]",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "research, development, training, and services",
+        "u.s. citizenship and immigration services",
+        "operations and support"
+      ],
+      "expected_amount": 455661000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES",
+      "bureau": "Federal Law Enforcement Training Centers",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "research, development, training, and services",
+        "federal law enforcement training centers",
+        "operations and support"
+      ],
+      "expected_amount": 352611000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES",
+      "bureau": "Federal Law Enforcement Training Centers",
+      "excel_name": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+      "match_path": [
+        "research, development, training, and services",
+        "federal law enforcement training centers",
+        "procurement, construction, and improvements"
+      ],
+      "expected_amount": 8000000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES",
+      "bureau": "Science and Technology",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "research, development, training, and services",
+        "science and technology directorate",
+        "operations and support"
+      ],
+      "expected_amount": 367183000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES",
+      "bureau": "Projecting and Planning For Future Flow to U.S. Southwest",
+      "excel_name": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+      "match_path": null,
+      "expected_amount": 43579000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES",
+      "bureau": "Projecting and Planning For Future Flow to U.S. Southwest",
+      "excel_name": "RESEARCH AND DEVELOPMENT",
+      "match_path": null,
+      "expected_amount": 352496000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES",
+      "bureau": "Countering Weapons of Mass Destruction Office",
+      "excel_name": "OPERATIONS AND SUPPORT",
+      "match_path": [
+        "research, development, training, and services",
+        "countering weapons of mass destruction office",
+        "operations and support"
+      ],
+      "expected_amount": 156946000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES",
+      "bureau": "Countering Weapons of Mass Destruction Office",
+      "excel_name": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+      "match_path": [
+        "research, development, training, and services",
+        "countering weapons of mass destruction office",
+        "procurement, construction, and improvements"
+      ],
+      "expected_amount": 15360000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES",
+      "bureau": "Countering Weapons of Mass Destruction Office",
+      "excel_name": "RESEARCH AND DEVELOPMENT",
+      "match_path": [
+        "research, development, training, and services",
+        "countering weapons of mass destruction office",
+        "research and development"
+      ],
+      "expected_amount": 48751000
+    },
+    {
+      "bill": "118-s-2625",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2024",
+      "chamber": "senate",
+      "title": "RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES",
+      "bureau": "Countering Weapons of Mass Destruction Office",
+      "excel_name": "FEDERAL ASSISTANCE",
+      "match_path": [
+        "research, development, training, and services",
+        "countering weapons of mass destruction office",
+        "federal assistance"
+      ],
+      "expected_amount": 132764000
+    }
+  ]
+}

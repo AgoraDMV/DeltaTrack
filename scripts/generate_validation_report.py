@@ -142,9 +142,10 @@ specific bills we happen to have. Three things push against that:
 - The committee-report check is internal-consistency between two documents of the same
   legislative process. It is strong for catching the parser misreading unfamiliar structure
   (which is the overfitting risk), but it is not a third-party audit.
-- Coverage is the FY2025 Senate-reported bills for these jurisdictions, plus Legislative Branch
-  across several years and both chambers. The remaining FY2025 subcommittees (e.g. Homeland
-  Security, MilCon-VA) and other years/chambers are not yet covered here.
+- Coverage now spans all 12 regular Senate appropriations subcommittees: 11 via committee
+  reports here (FY2025, except Homeland Security — the Senate never reported an FY2025 DHS
+  bill, so its FY2024 reported bill is used instead) plus Legislative Branch via the
+  spreadsheet source. Other years and the House chamber are not exhaustively covered.
 
 ## Reproduce
 

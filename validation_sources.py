@@ -71,6 +71,7 @@ JURISDICTIONS = [
     # Labor-HHS carries 123 summary blocks in its narrative, so it uses the summary source
     # like the rest despite being a large bill; its comparative statement is over-decomposed.
     _senate_fy25("labor_hhs", "Labor-HHS-Education", "207", "4942", "118-s-4942"),
+    _senate_fy25("milcon_va", "Military Construction-VA", "191", "4677", "118-s-4677"),
     # Tabular jurisdictions: accounts appear only in the comparative statement (in thousands).
     _senate_fy25("defense", "Defense", "204", "4921", "118-s-4921", source="comparative"),
     # Energy-Water nests accounts below the TITLE (e.g. Corps of Engineers--Civil under
@@ -81,6 +82,15 @@ JURISDICTIONS = [
     # jurisdiction. The bill (S.2321) and report (srpt62) are not otherwise in our corpus, so
     # comparable recall here is evidence the parser is not overfit to FY2025 formatting.
     _senate_fy25("cjs_fy2024", "Commerce-Justice-Science (FY2024)", "62", "2321", "118-s-2321", fy="FY 2024"),
+    # Homeland Security: the Senate did NOT report an FY2025 DHS bill (committee draft only,
+    # no S. number / numbered report), so coverage uses the FY2024 reported bill (S.2625,
+    # srpt85) — another out-of-corpus year. The House FY2025 DHS bill exists but House reports
+    # render their account tables as images, so they can't be read.
+    _senate_fy25("homeland_security", "Homeland Security (FY2024)", "85", "2625", "118-s-2625", fy="FY 2024"),
 ]
+
+# Coverage note: with MilCon-VA and Homeland Security, all 12 regular Senate appropriations
+# subcommittees are now represented (Legislative Branch via the separate spreadsheet source,
+# the other 11 via committee reports). DHS is the FY2024 bill because FY2025 was never reported.
 
 BY_SLUG = {j.slug: j for j in JURISDICTIONS}
