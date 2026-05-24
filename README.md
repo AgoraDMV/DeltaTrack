@@ -150,7 +150,7 @@ A bill goes through several versions as it moves through the legislative process
 
 Four modules:
 
-- **`fetch_bills.py`** - Downloads bill XML from Congress.gov API v3. CLI commands: `versions`, `download`, `download-all`.
+- **`fetch_bills.py`** - Downloads bill XML and PDF from Congress.gov API v3 (`--format xml|pdf|both`, default `xml`). CLI commands: `versions`, `download`, `download-all`.
 - **`bill_tree.py`** - Normalizes bill XML into a `BillTree` of `BillNode` objects. Handles divisions, titles, and flat sections, plus structural containers within titles (subtitle, part, chapter, subchapter). Captures preamble sections that sit alongside divisions or titles.
 - **`diff_bill.py`** - Compares two `BillTree`s. Uses division-aware matching for omnibus bills (resolves cross-division path collisions by normalized division title). Detects false matches via text similarity, reconciles moved sections, and extracts dollar amounts (stripping floor amendment annotations before comparison, flagging their presence separately).
 - **`formatters/diff_html.py`** - Generates standalone HTML reports from diff output (via adapters that feed both XML and PDF diffs through one renderer) with sidebar navigation, financial summary table, and word-level inline diffs.
@@ -196,6 +196,12 @@ uv run python fetch_bills.py download 115 hr 244
 uv run python fetch_bills.py download 114 hr 2029
 uv run python fetch_bills.py download 113 hr 83
 uv run python fetch_bills.py download 113 hr 3547
+```
+
+These fetch XML, which covers the XML-based tests. The PDF comparison tests (`test_pdf_*`) also need each bill's PDF rendering. Add `--format both` to any download to fetch the PDF alongside the XML, for example:
+
+```bash
+uv run python fetch_bills.py download 118 hr 4366 --format both
 ```
 
 The validation tests compare extracted line items across Legislative Branch bills (both chambers, multiple fiscal years) against amounts from a curated appropriations spreadsheet. The corpus property tests (`test_corpus_properties.py`) check dollar coverage, path uniqueness, and character coverage across all downloaded bills. See [TESTING.md](TESTING.md) for what each validation layer proves and where the gaps are.

@@ -168,7 +168,10 @@ uv run pytest tests/test_pdf_corpus_smoke.py     # PDF comparison soundness acro
 ```
 
 To run the slow group locally, download the bill files first (see the Testing
-section of the [README](README.md#testing)).
+section of the [README](README.md#testing)). The PDF comparison tests
+(`test_pdf_*`) need each bill's PDF as well as its XML; pass `--format both`
+to `fetch_bills.py download` to fetch both at once, e.g.
+`uv run python fetch_bills.py download 118 hr 4366 --format both`.
 
 One slow test needs a file the bill downloads do not cover. The watermark-recall
 test (`test_pdf_watermark_recall.py`) reads the reported-in-Senate PDF of S.4795,
