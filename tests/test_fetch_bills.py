@@ -1,5 +1,6 @@
 """Tests for fetch_bills.py."""
 
+import argparse
 import time
 
 import httpx
@@ -8,6 +9,8 @@ import respx
 
 from fetch_bills import (
     api_get,
+    build_parser,
+    cmd_download,
     congress_for_year,
     download_version_xml,
     fetch_all_committee_bills,
@@ -356,3 +359,57 @@ class TestDownloadVersionXml:
         with httpx.Client() as client:
             with pytest.raises(httpx.HTTPStatusError):
                 download_version_xml(client, "https://www.congress.gov/missing.xml")
+
+
+class TestCmdDownloadFormats:
+    TEXT_URL = "https://api.congress.gov/v3/bill/118/hr/4366/text"
+    XML_URL = "https://www.congress.gov/118/bills/hr4366/rh.xml"
+    PDF_URL = "https://www.congress.gov/118/bills/hr4366/rh.pdf"
+
+    def _payload(self):
+        return {
+            "textVersions": [
+                {
+                    "date": "2023-06-27T04:00:00Z",
+                    "type": "Reported in House",
+                    "formats": [
+                        {"type": "PDF", "url": self.PDF_URL},
+                        {"type": "Formatted XML", "url": self.XML_URL},
+                    ],
+                }
+            ]
+        }
+
+    def _args(self, tmp_path, fmt):
+        return argparse.Namespace(
+            congress=118, bill_type="hr", number=4366, version=None, output_dir=tmp_path, format=fmt
+        )
+
+    @respx.mock
+    def test_download_both_writes_xml_and_pdf(self, tmp_path):
+        respx.get(self.TEXT_URL).respond(200, json=self._payload())
+        respx.get(self.XML_URL).respond(200, content=b"<bill/>")
+        respx.get(self.PDF_URL).respond(200, content=b"%PDF-1.7")
+        with httpx.Client() as client:
+            cmd_download(client, self._args(tmp_path, "both"), TEST_API_KEY)
+        bill_dir = tmp_path / "118-hr-4366"
+        assert (bill_dir / "1_reported-in-house.xml").read_bytes() == b"<bill/>"
+        assert (bill_dir / "1_reported-in-house.pdf").read_bytes() == b"%PDF-1.7"
+
+    @respx.mock
+    def test_download_pdf_only(self, tmp_path):
+        respx.get(self.TEXT_URL).respond(200, json=self._payload())
+        respx.get(self.PDF_URL).respond(200, content=b"%PDF-1.7")
+        with httpx.Client() as client:
+            cmd_download(client, self._args(tmp_path, "pdf"), TEST_API_KEY)
+        bill_dir = tmp_path / "118-hr-4366"
+        assert (bill_dir / "1_reported-in-house.pdf").exists()
+        assert not (bill_dir / "1_reported-in-house.xml").exists()
+
+    def test_parser_format_defaults_to_xml(self):
+        args = build_parser().parse_args(["download", "118", "hr", "4366"])
+        assert args.format == "xml"
+
+    def test_parser_accepts_format_both(self):
+        args = build_parser().parse_args(["download", "118", "hr", "4366", "--format", "both"])
+        assert args.format == "both"
