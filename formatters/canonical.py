@@ -26,7 +26,7 @@ from formatters.view_model import ChangeView, DiffView
 from parsers.pdf_anchors import Anchor, breadcrumb_for
 
 SCHEMA_VERSION = "1.2"
-GENERATOR_NAME = "appropriations_bills"
+GENERATOR_NAME = "deltatrack"
 
 
 # ---------- Shared helpers ---------------------------------------------------

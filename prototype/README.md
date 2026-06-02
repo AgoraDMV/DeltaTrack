@@ -1,7 +1,7 @@
 # Staffer Tool UI Prototype
 
 A static HTML/CSS/JS prototype of how a browser-extension version of the
-bill-diff tool would feel. Built for the May 12, 2026 civic-tech demo.
+DeltaTrack tool would feel. Built for the May 12, 2026 civic-tech demo.
 
 This is **not** the extension. It mocks the look, navigation, and view modes
 the real MV3 extension will eventually ship with. There is no upload, no

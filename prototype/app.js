@@ -1,5 +1,5 @@
 /* ----------------------------------------------------------------------
-   Bill Diff — Staffer Tool Prototype (vanilla JS, no framework)
+   DeltaTrack — Staffer Tool Prototype (vanilla JS, no framework)
 
    Loads canonical diff JSON (schema v1.2) and renders two views:
      - changes: per-change tracked-changes blocks (default)
