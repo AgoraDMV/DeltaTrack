@@ -1,4 +1,4 @@
-# Bill Diff
+# DeltaTrack
 
 Downloads U.S. bill text from Congress.gov and compares versions structurally. Shows what changed between versions: added, removed, modified, and moved sections, with optional financial change filtering.
 
