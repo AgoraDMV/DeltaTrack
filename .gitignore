@@ -5,6 +5,8 @@ __pycache__/
 .coverage
 htmlcov/
 .venv/
+# Git worktrees live inside the repo here; never commit them as gitlinks
+.claude/worktrees/
 bills/*
 !bills/.gitkeep
 # Vendored public-domain (17 U.S.C. 105) govinfo sources for the external-validation suite:
