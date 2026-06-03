@@ -25,6 +25,10 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
+# Report unused imports (F401) but never let `ruff check --fix` auto-delete them
+# (pre-commit, manual runs, or the editor hook). Otherwise an import added in one
+# edit is stripped before its consumer lands in the next. Still flagged at lint time.
+unfixable = ["F401"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
