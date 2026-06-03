@@ -286,7 +286,7 @@ def generate_synthetic() -> None:
     state: dict = {}
     canonical = {
         "schema_version": SCHEMA_VERSION,
-        "generator": {"name": "appropriations_bills", "version": "0-synthetic"},
+        "generator": {"name": "deltatrack", "version": "0-synthetic"},
         "bill": {"type": "HR", "number": "DEMO-2026", "congress": 119},
         "versions": {
             "v1": {"label": "Committee Print", "version_number": 1, "source": "pdf"},

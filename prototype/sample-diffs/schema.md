@@ -43,7 +43,7 @@ Top-level field: `schema_version: "1.2"`.
 ```jsonc
 {
   "schema_version": "1.1",
-  "generator": { "name": "appropriations_bills", "version": "0.x" },
+  "generator": { "name": "deltatrack", "version": "0.x" },
   "bill":      { "type": "HR", "number": 4366, "congress": 118 },
   "versions": {
     "v1": { "label": "Engrossed in House", "version_number": 1,    "source": "xml" },

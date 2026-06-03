@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2",
   "generator": {
-    "name": "appropriations_bills",
+    "name": "deltatrack",
     "version": "0"
   },
   "bill": {

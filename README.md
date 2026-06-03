@@ -1,10 +1,10 @@
-# Bill Diff
+# DeltaTrack
 
 Downloads U.S. bill text from Congress.gov and compares versions structurally. Shows what changed between versions: added, removed, modified, and moved sections, with optional financial change filtering.
 
 Works on any bill type (HR, S, HJRES, etc.), not just appropriations.
 
-**See it in action:** [Committee vs. Floor](https://willhea.github.io/civic_tech_appropriations_bills/hr4366_committee_vs_floor.html) | [House vs. Senate](https://willhea.github.io/civic_tech_appropriations_bills/hr4366_house_vs_senate.html) (example reports for HR 4366, 118th Congress)
+**See it in action:** [Committee vs. Floor](https://agoradmv.github.io/DeltaTrack/hr4366_committee_vs_floor.html) | [House vs. Senate](https://agoradmv.github.io/DeltaTrack/hr4366_house_vs_senate.html) (example reports for HR 4366, 118th Congress)
 
 ## Prerequisites
 

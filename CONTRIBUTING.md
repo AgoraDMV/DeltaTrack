@@ -1,4 +1,4 @@
-# Contributing to Bill Diff
+# Contributing to DeltaTrack
 
 Thanks for your interest in contributing! This project compares versions of U.S. appropriations bills to make the legislative process more transparent. Contributions of all kinds are welcome: bug fixes, new features, documentation improvements, and bug reports.
 
@@ -14,8 +14,8 @@ Thanks for your interest in contributing! This project compares versions of U.S.
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/civic_tech_appropriations_bills.git
-cd civic_tech_appropriations_bills
+git clone https://github.com/YOUR_USERNAME/DeltaTrack.git
+cd DeltaTrack
 
 # Install dependencies (including dev tools)
 uv sync
