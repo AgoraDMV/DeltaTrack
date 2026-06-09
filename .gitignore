@@ -1,4 +1,7 @@
 .env
+# Private operator/AI notes — threat analysis, exact resource thresholds, etc.
+# Never publish: see docs-for-ai/deployment-security-notes.md
+docs-for-ai/
 .DS_Store
 __pycache__/
 .pytest_cache/

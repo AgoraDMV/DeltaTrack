@@ -7,6 +7,10 @@ dependencies = [
     "httpx>=0.28",
     "pypdfium2>=5.8.0",
     "python-dotenv>=1.0",
+    # Web service (server/) — wraps the diff engine as a FastAPI app served by uvicorn.
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "python-multipart>=0.0.18",  # 0.0.18 fixes CVE-2024-53981 (multipart DoS); also the floor pip-audit checks
 ]
 
 [dependency-groups]

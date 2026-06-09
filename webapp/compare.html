@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DeltaTrack — Compare two bill PDFs</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-bar" role="banner">
+    <div class="app-bar__brand">
+      <a class="app-bar__home" href="index.html" aria-label="DeltaTrack home">
+        <span class="app-bar__logo" aria-hidden="true">▮▯</span>
+        <span class="app-bar__name">DeltaTrack</span>
+      </a>
+    </div>
+    <div class="app-bar__bill" id="bill-summary" aria-live="polite" hidden>
+      <span class="bill-title" id="bill-title">—</span>
+      <span class="bill-versions" id="bill-versions"></span>
+    </div>
+    <div class="app-bar__actions">
+      <div class="view-toggle" role="tablist" aria-label="View mode" hidden>
+        <button class="view-toggle__btn is-active" data-view="changes" role="tab" aria-selected="true">Changes</button>
+        <button class="view-toggle__btn" data-view="full" role="tab" aria-selected="false">Full bill</button>
+      </div>
+      <button class="btn" id="reset-btn">Compare other documents</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <!-- Upload panel: the real "Add a bill" -->
+    <section class="upload-panel" id="upload-panel">
+      <h1 class="upload-panel__title">Compare two versions of a bill</h1>
+      <p class="upload-panel__lead">
+        Upload the <strong>start</strong> PDF and the <strong>end</strong> PDF. We diff them on our
+        server and show you exactly what changed — section moves, edits, and dollar amounts.
+        Your session is not tracked, and uploaded files are processed in memory and never stored.
+      </p>
+
+      <div class="upload-grid">
+        <div class="upload-slot" id="start-slot" tabindex="0" role="button" aria-label="Choose the start PDF">
+          <div class="upload-slot__label">Start version (older)</div>
+          <div class="upload-slot__hint">Drop a PDF here or click to browse</div>
+          <div class="upload-slot__name" id="start-name"></div>
+          <input type="file" id="start-input" accept="application/pdf,.pdf" hidden />
+        </div>
+
+        <div class="upload-arrow" aria-hidden="true">→</div>
+
+        <div class="upload-slot" id="end-slot" tabindex="0" role="button" aria-label="Choose the end PDF">
+          <div class="upload-slot__label">End version (newer)</div>
+          <div class="upload-slot__hint">Drop a PDF here or click to browse</div>
+          <div class="upload-slot__name" id="end-name"></div>
+          <input type="file" id="end-input" accept="application/pdf,.pdf" hidden />
+        </div>
+      </div>
+
+      <div class="upload-error" id="upload-error" role="alert" hidden></div>
+
+      <div class="upload-actions">
+        <button class="btn btn--primary" id="compare-btn" disabled>Compare</button>
+        <span class="upload-note">PDF only · up to 150 MB each</span>
+      </div>
+    </section>
+
+    <!-- Result: rendered by DTRenderer -->
+    <section class="result" id="result-section" hidden>
+      <div class="result__toolbar">
+        <h2 class="result__title">Filter changes</h2>
+        <label class="filter-row"><input type="radio" name="filter" value="all" checked /> All</label>
+        <label class="filter-row"><input type="radio" name="filter" value="financial" /> Financial only</label>
+        <label class="filter-row"><input type="radio" name="filter" value="structural" /> Structural only</label>
+      </div>
+      <div class="content" id="content"></div>
+    </section>
+  </main>
+
+  <script src="js/renderer.js"></script>
+  <script src="js/compare.js"></script>
+</body>
+</html>
