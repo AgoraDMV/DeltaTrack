@@ -1,10 +1,10 @@
 /* ----------------------------------------------------------------------
    DeltaTrack — server-side compare flow
 
-   The real version of the prototype's mocked "Add a bill": pick a start PDF
-   and an end PDF, POST them to /api/compare, and hand the canonical diff JSON
-   back to DTRenderer for display. Nothing is uploaded until the user clicks
-   Compare; nothing is stored after the response comes back.
+   Pick a start PDF and an end PDF, POST them to /api/compare?output=html,
+   and open the standalone HTML report in a new browser tab. Nothing is
+   uploaded until the user clicks Compare; nothing is stored after the
+   response comes back.
    ---------------------------------------------------------------------- */
 (function () {
   const MAX_BYTES = 150 * 1024 * 1024; // keep in sync with server MAX_UPLOAD_BYTES
@@ -25,7 +25,7 @@
       files[which] = file || null;
       nameEl.textContent = file ? file.name : '';
       slot.classList.toggle('has-file', !!file);
-      clearError();
+      clearMessages();
       updateButton();
     };
 
@@ -63,13 +63,25 @@
 
   // --- Submit --------------------------------------------------------------
 
+  function writeReportTab(tab, html) {
+    tab.document.open();
+    tab.document.write(html);
+    tab.document.close();
+  }
+
   async function onCompare() {
-    clearError();
+    clearMessages();
     const errs = [
       await validate(files.start, 'Start PDF'),
       await validate(files.end, 'End PDF'),
     ].filter(Boolean);
     if (errs.length) { showError(errs.join(' ')); return; }
+
+    const tab = window.open('about:blank', '_blank', 'noopener');
+    if (!tab) {
+      showError('Pop-up blocked. Allow pop-ups for this site to view the report.');
+      return;
+    }
 
     setLoading(true);
     const body = new FormData();
@@ -77,65 +89,70 @@
     body.append('end_pdf', files.end);
 
     try {
-      const res = await fetch('/api/compare', { method: 'POST', body });
+      const res = await fetch('/api/compare?output=html', { method: 'POST', body });
       if (!res.ok) {
         let detail = `Request failed (HTTP ${res.status}).`;
         try { const j = await res.json(); if (j && j.detail) detail = j.detail; } catch (_) {}
         throw new Error(detail);
       }
-      const canonical = await res.json();
-      showResult(canonical);
+      const html = await res.text();
+      writeReportTab(tab, html);
+      showSuccess('Report opened in a new tab. You can compare another pair here.');
     } catch (err) {
+      tab.close();
       showError(String(err.message || err));
     } finally {
       setLoading(false);
     }
   }
 
-  // --- View transitions ----------------------------------------------------
-
   function setLoading(on) {
     $('compare-btn').disabled = on || !(files.start && files.end);
     $('compare-btn').textContent = on ? 'Comparing…' : 'Compare';
-  }
-
-  function showResult(canonical) {
-    $('upload-panel').hidden = true;
-    $('result-section').hidden = false;
-    document.querySelector('.view-toggle').hidden = false;
-    window.DTRenderer.render(canonical);
-    window.scrollTo({ top: 0 });
-  }
-
-  function resetToUpload() {
-    $('result-section').hidden = true;
-    document.querySelector('.view-toggle').hidden = true;
-    $('bill-summary').hidden = true;
-    $('upload-panel').hidden = false;
-    window.DTRenderer.reset();
   }
 
   function showError(msg) {
     const el = $('upload-error');
     el.textContent = msg;
     el.hidden = false;
+    $('upload-success').hidden = true;
   }
 
-  function clearError() {
+  function showSuccess(msg) {
+    const el = $('upload-success');
+    el.textContent = msg;
+    el.hidden = false;
     $('upload-error').hidden = true;
   }
 
+  function clearMessages() {
+    $('upload-error').hidden = true;
+    $('upload-success').hidden = true;
+  }
+
   // --- Example mode (no upload, no server call) ----------------------------
-  // Landing page links here with ?example=1 to show a real bundled diff so
-  // visitors can see the output before uploading anything.
+  // Landing page links here with ?example=1 to show a bundled report.
 
   async function loadExample() {
+    setLoading(true);
+    clearMessages();
+    const tab = window.open('about:blank', '_blank', 'noopener');
+    if (!tab) {
+      showError('Pop-up blocked. Allow pop-ups for this site to view the sample report.');
+      setLoading(false);
+      return;
+    }
     try {
-      const res = await fetch('sample/example.json');
+      const res = await fetch('sample/example.html');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      showResult(await res.json());
+      const html = await res.text();
+      writeReportTab(tab, html);
+      showSuccess('Sample report opened in a new tab.');
     } catch (err) {
-      showError(`Couldn't load the sample diff: ${String(err.message || err)}`);
+      tab.close();
+      showError(`Couldn't load the sample report: ${String(err.message || err)}`);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -145,7 +162,6 @@
   wireSlot('end');
   updateButton();
   $('compare-btn').addEventListener('click', onCompare);
-  $('reset-btn').addEventListener('click', resetToUpload);
 
   if (new URLSearchParams(location.search).has('example')) loadExample();
 })();

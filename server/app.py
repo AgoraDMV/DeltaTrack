@@ -2,11 +2,12 @@
 
 Stateless by design: uploaded PDFs live only for the duration of a request (in a
 temp dir deleted immediately by ``compare_pdfs``), nothing is persisted, and the
-canonical result is returned to the caller. No analytics, no per-client logging —
-this honors the "your session is not tracked" promise shown in the UI.
+result is returned to the caller. No analytics, no per-client logging — this
+honors the "your session is not tracked" promise shown in the UI.
 
 The single interactive endpoint is ``POST /api/compare``: upload a start PDF and
-an end PDF, get back canonical diff JSON (schema v1.2) that the front-end renders.
+an end PDF, get back a standalone HTML diff report (default) or canonical JSON
+(``?output=json``).
 """
 
 from __future__ import annotations
@@ -14,11 +15,11 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from server.pdf_compare import compare_pdfs
+from server.pdf_compare import compare_pdfs, compare_pdfs_html
 
 # The static front-end (webapp/) ships alongside this package and is served by
 # the app itself — see the StaticFiles mount at the bottom of the file.
@@ -82,20 +83,23 @@ def _label_from_filename(name: str | None, fallback: str) -> str:
 async def compare(
     start_pdf: UploadFile = File(...),
     end_pdf: UploadFile = File(...),
-) -> JSONResponse:
+    output: str = Query("html", pattern="^(html|json)$"),
+):
     start_bytes = await _read_pdf(start_pdf, "start_pdf")
     end_bytes = await _read_pdf(end_pdf, "end_pdf")
 
     start_label = _label_from_filename(start_pdf.filename, "Start version")
     end_label = _label_from_filename(end_pdf.filename, "End version")
 
+    compare_fn = compare_pdfs_html if output == "html" else compare_pdfs
+
     try:
         async with _semaphore:
             # The diff is CPU-bound and blocking; run it off the event loop so
             # one request can't stall the server, and cap it with a timeout.
-            canonical = await asyncio.wait_for(
+            result = await asyncio.wait_for(
                 asyncio.to_thread(
-                    compare_pdfs,
+                    compare_fn,
                     start_bytes,
                     end_bytes,
                     start_label=start_label,
@@ -114,7 +118,9 @@ async def compare(
             detail="Could not diff these files. Are both valid bill-text PDFs?",
         )
 
-    return JSONResponse(canonical)
+    if output == "html":
+        return HTMLResponse(result, media_type="text/html; charset=utf-8")
+    return JSONResponse(result)
 
 
 # Static front-end, mounted LAST and at "/" so the explicit /api/* routes above

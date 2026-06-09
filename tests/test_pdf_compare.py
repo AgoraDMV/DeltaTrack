@@ -84,3 +84,45 @@ def test_compare_pdfs_returns_valid_canonical():
     jsonschema = pytest.importorskip("jsonschema")
     schema = json.loads(SCHEMA.read_text())
     jsonschema.validate(canonical, schema)
+
+
+@pytest.mark.slow
+def test_compare_pdfs_html_returns_standalone_report():
+    start = BILL_DIR / "1_reported-in-house.pdf"
+    end = BILL_DIR / "2_engrossed-in-house.pdf"
+    if not start.exists() or not end.exists():
+        pytest.skip("sample bill PDFs not present (bills/118-hr-4366/)")
+
+    from server.pdf_compare import compare_pdfs_html
+
+    html = compare_pdfs_html(
+        start.read_bytes(),
+        end.read_bytes(),
+        start_label="Reported in House",
+        end_label="Engrossed in House",
+    )
+
+    assert html.lstrip().startswith("<!DOCTYPE html>")
+    assert "change-card" in html
+    assert "financial-table" in html
+    assert "Reported in House" in html
+    assert "Engrossed in House" in html
+
+
+@pytest.mark.slow
+def test_compare_api_returns_html():
+    start = BILL_DIR / "1_reported-in-house.pdf"
+    end = BILL_DIR / "2_engrossed-in-house.pdf"
+    if not start.exists() or not end.exists():
+        pytest.skip("sample bill PDFs not present (bills/118-hr-4366/)")
+
+    resp = _client().post(
+        "/api/compare?output=html",
+        files={
+            "start_pdf": ("start.pdf", start.read_bytes(), "application/pdf"),
+            "end_pdf": ("end.pdf", end.read_bytes(), "application/pdf"),
+        },
+    )
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers.get("content-type", "")
+    assert "change-card" in resp.text
