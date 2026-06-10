@@ -45,6 +45,30 @@ app = FastAPI(
 _semaphore = asyncio.Semaphore(MAX_CONCURRENT_DIFFS)
 
 
+def _forwarded_proto(request: Request) -> str | None:
+    """Best-effort client scheme from reverse-proxy headers (None if unknown)."""
+    if raw := request.headers.get("x-forwarded-proto"):
+        return raw.split(",")[0].strip().lower()
+
+    if request.headers.get("x-forwarded-ssl", "").lower() in ("on", "1", "true"):
+        return "https"
+
+    if port := request.headers.get("x-forwarded-port", "").strip():
+        if port == "443":
+            return "https"
+        if port == "80":
+            return "http"
+
+    forwarded = request.headers.get("forwarded", "")
+    for segment in forwarded.split(","):
+        for part in segment.split(";"):
+            part = part.strip()
+            if part.lower().startswith("proto="):
+                return part.split("=", 1)[1].strip().strip('"').lower()
+
+    return None
+
+
 def _https_redirect_target(request: Request) -> str:
     """Build an absolute https URL from the proxied Host + request path."""
     host = request.headers.get("host") or request.url.netloc
@@ -58,12 +82,12 @@ def _https_redirect_target(request: Request) -> str:
 
 @app.middleware("http")
 async def force_https_behind_proxy(request: Request, call_next):
-    """Redirect http→https when a front proxy signals cleartext via X-Forwarded-Proto.
+    """Redirect http→https when the proxy signals cleartext.
 
-    Apache .htaccess in webapp/ is not consulted on the proxy-only deploy path; this
-    is the in-app backstop. Local dev (no X-Forwarded-Proto) is unaffected."""
-    proto = request.headers.get("x-forwarded-proto", "").split(",")[0].strip().lower()
-    if proto == "http":
+    Primary redirect is Apache ``RewriteRule`` (see docs/https-redirect.md). This
+    middleware is a backstop when ``X-Forwarded-Proto: http`` (or port 80) is set.
+    Local dev (no forwarded headers) is unaffected."""
+    if _forwarded_proto(request) == "http":
         status = 301 if request.method in ("GET", "HEAD") else 308
         return RedirectResponse(_https_redirect_target(request), status_code=status)
     return await call_next(request)

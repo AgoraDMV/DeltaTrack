@@ -4,9 +4,9 @@ Brief map of the live home page, how it relates to the Python CLI, and where to 
 
 **Live site:** [deltatrack.agoradmv.org](https://deltatrack.agoradmv.org) (served by the FastAPI app below).
 
-HTTP→HTTPS: enable **Force HTTPS** in ISPConfig on the vhost (primary). The app also
-redirects when the proxy sends `X-Forwarded-Proto: http` (`server/app.py` middleware).
-`webapp/.htaccess` is not relied on — Apache proxies all traffic to uvicorn.
+HTTP→HTTPS: see **[docs/https-redirect.md](https-redirect.md)** — Apache `RewriteRule`
+before `ProxyPass` + ISPConfig **Force HTTPS**. App middleware is a backstop only.
+`webapp/.htaccess` is not used (Apache proxies all traffic to uvicorn).
 
 ---
 

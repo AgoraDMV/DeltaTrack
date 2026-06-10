@@ -42,6 +42,16 @@ def test_http_redirects_to_https_for_get():
     assert resp.headers["location"] == "https://deltatrack.agoradmv.org/index.html"
 
 
+def test_http_redirects_to_https_when_forwarded_port_80():
+    resp = _client().get(
+        "/",
+        headers={"X-Forwarded-Port": "80", "Host": "deltatrack.agoradmv.org"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 301
+    assert resp.headers["location"] == "https://deltatrack.agoradmv.org/"
+
+
 def test_http_redirects_to_https_for_post():
     resp = _client().post(
         "/api/compare",
