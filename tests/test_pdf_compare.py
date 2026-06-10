@@ -32,6 +32,31 @@ def _client():
     return TestClient(app)
 
 
+def test_http_redirects_to_https_for_get():
+    resp = _client().get(
+        "/index.html",
+        headers={"X-Forwarded-Proto": "http", "Host": "deltatrack.agoradmv.org"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 301
+    assert resp.headers["location"] == "https://deltatrack.agoradmv.org/index.html"
+
+
+def test_http_redirects_to_https_for_post():
+    resp = _client().post(
+        "/api/compare",
+        headers={"X-Forwarded-Proto": "http", "Host": "deltatrack.agoradmv.org"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 308
+    assert resp.headers["location"] == "https://deltatrack.agoradmv.org/api/compare"
+
+
+def test_no_redirect_without_forwarded_proto():
+    resp = _client().get("/", follow_redirects=False)
+    assert resp.status_code == 200
+
+
 def test_compare_rejects_non_pdf():
     # start_pdf lacks the %PDF magic → 415 before any diffing happens.
     resp = _client().post(

@@ -15,8 +15,8 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from server.pdf_compare import compare_pdfs, compare_pdfs_html
@@ -43,6 +43,30 @@ app = FastAPI(
 # Limits how many diffs run at once. Paired with a process memory ceiling + the
 # per-request timeout below, this keeps one heavy upload from starving the box.
 _semaphore = asyncio.Semaphore(MAX_CONCURRENT_DIFFS)
+
+
+def _https_redirect_target(request: Request) -> str:
+    """Build an absolute https URL from the proxied Host + request path."""
+    host = request.headers.get("host") or request.url.netloc
+    path = request.url.path
+    query = request.url.query
+    target = f"https://{host}{path}"
+    if query:
+        target += f"?{query}"
+    return target
+
+
+@app.middleware("http")
+async def force_https_behind_proxy(request: Request, call_next):
+    """Redirect http→https when a front proxy signals cleartext via X-Forwarded-Proto.
+
+    Apache .htaccess in webapp/ is not consulted on the proxy-only deploy path; this
+    is the in-app backstop. Local dev (no X-Forwarded-Proto) is unaffected."""
+    proto = request.headers.get("x-forwarded-proto", "").split(",")[0].strip().lower()
+    if proto == "http":
+        status = 301 if request.method in ("GET", "HEAD") else 308
+        return RedirectResponse(_https_redirect_target(request), status_code=status)
+    return await call_next(request)
 
 
 async def _read_pdf(upload: UploadFile, field: str) -> bytes:

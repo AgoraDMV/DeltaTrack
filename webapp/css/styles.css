@@ -122,6 +122,19 @@ a { color: var(--accent); }
 
 .landing__sample { text-align: center; color: var(--text-dim); margin-top: 36px; }
 
+/* ---------- Site footer ---------- */
+.site-footer {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 24px 40px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.site-footer p { margin: 0; line-height: 1.6; }
+.site-footer a { color: var(--accent); }
+
 /* ---------- Page shell (compare) ---------- */
 .page { max-width: 1080px; margin: 0 auto; padding: 28px 24px 64px; }
 
