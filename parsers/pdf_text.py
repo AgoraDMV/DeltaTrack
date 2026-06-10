@@ -197,3 +197,35 @@ def extract_clean_pages(pdf_path: Path) -> list[Page]:
         return pages
     finally:
         pdf.close()
+
+
+def pdf_full_text(pages: list[Page]) -> tuple[str, dict[tuple[int, int], tuple[int, int]]]:
+    """Render cleaned PDF pages with their original line numbers, so the
+    full-bill view matches how the printed bill looks. Each line gets a
+    5-char right-aligned line-number prefix (blank padding when the source
+    line was unnumbered). Pages are separated by a blank line.
+
+    Returns (text, line_offsets) where line_offsets maps (page_number,
+    line_number) -> (start_char, end_char) in `text`. Only lines with a
+    non-None line_number are indexed; unnumbered lines aren't reachable
+    via change.location anyway. This is the producer counterpart consumed
+    by pdf_diff_to_canonical(..., line_offsets=...) to fill full_text_span.
+    """
+    chunks: list[str] = []
+    line_offsets: dict[tuple[int, int], tuple[int, int]] = {}
+    pos = 0
+    for i, page in enumerate(pages):
+        if i > 0:
+            chunks.append("")  # blank line between pages
+            pos += 1  # for the trailing newline
+        for line in page.lines:
+            prefix = f"{line.line_number:>5}" if line.line_number is not None else " " * 5
+            rendered = f"{prefix}  {line.text}"
+            line_start = pos
+            line_end = pos + len(rendered)
+            if line.line_number is not None:
+                line_offsets[(page.page_number, line.line_number)] = (line_start, line_end)
+            chunks.append(rendered)
+            pos = line_end + 1  # +1 for the joining newline
+    text = "\n".join(chunks)
+    return text, line_offsets
