@@ -63,10 +63,18 @@
 
   // --- Submit --------------------------------------------------------------
 
+  // Open a blank tab synchronously on user click so the browser treats it as
+  // allowed. Do NOT pass "noopener" here — that makes window.open return null
+  // even when the tab opens, which breaks document.write below.
+  function openReportTab() {
+    return window.open('about:blank', '_blank');
+  }
+
   function writeReportTab(tab, html) {
     tab.document.open();
     tab.document.write(html);
     tab.document.close();
+    tab.opener = null;
   }
 
   async function onCompare() {
@@ -77,7 +85,7 @@
     ].filter(Boolean);
     if (errs.length) { showError(errs.join(' ')); return; }
 
-    const tab = window.open('about:blank', '_blank', 'noopener');
+    const tab = openReportTab();
     if (!tab) {
       showError('Pop-up blocked. Allow pop-ups for this site to view the report.');
       return;
@@ -99,7 +107,7 @@
       writeReportTab(tab, html);
       showSuccess('Report opened in a new tab. You can compare another pair here.');
     } catch (err) {
-      tab.close();
+      if (tab) tab.close();
       showError(String(err.message || err));
     } finally {
       setLoading(false);
@@ -136,7 +144,7 @@
   async function loadExample() {
     setLoading(true);
     clearMessages();
-    const tab = window.open('about:blank', '_blank', 'noopener');
+    const tab = openReportTab();
     if (!tab) {
       showError('Pop-up blocked. Allow pop-ups for this site to view the sample report.');
       setLoading(false);
@@ -149,7 +157,7 @@
       writeReportTab(tab, html);
       showSuccess('Sample report opened in a new tab.');
     } catch (err) {
-      tab.close();
+      if (tab) tab.close();
       showError(`Couldn't load the sample report: ${String(err.message || err)}`);
     } finally {
       setLoading(false);
