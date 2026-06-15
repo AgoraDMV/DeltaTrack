@@ -47,6 +47,22 @@ def _extract_and_diff(
     return diff_pdfs(old_pages, new_pages), old_pages, new_pages
 
 
+_CONGRESS_RE = re.compile(r"(\d{1,3})(?:ST|ND|RD|TH)\s+CONGRESS", re.IGNORECASE)
+
+
+def _derive_congress(pages: list[Page]) -> str:
+    """Pull the Congress number from the cover (e.g. "118TH CONGRESS" → "118").
+
+    GPO PDFs carry no metadata, so the number is read from the front matter;
+    returns "" when not found (the renderer then omits the "th Congress" suffix).
+    """
+    if not pages:
+        return ""
+    head = "\n".join(line.text for line in pages[0].lines[:10])
+    m = _CONGRESS_RE.search(head)
+    return m.group(1) if m else ""
+
+
 def _build_canonical(
     pdf_diff: PdfDiff,
     old_pages: list[Page],
@@ -54,6 +70,7 @@ def _build_canonical(
     start_label: str,
     end_label: str,
     *,
+    congress: str = "",
     printed: bool = False,
 ) -> dict:
     """Canonical diff JSON (schema v1.2) with full text + per-change spans.
@@ -71,7 +88,7 @@ def _build_canonical(
         pdf_diff,
         bill_type="",
         bill_number="",
-        congress="",
+        congress=congress,
         v1_label=start_label,
         v2_label=end_label,
         full_text={"v1": v1_text, "v2": v2_text},
@@ -126,7 +143,8 @@ def compare_pdfs(
 ) -> dict:
     """Diff two PDF documents and return canonical diff JSON (schema v1.2)."""
     pdf_diff, old_pages, new_pages = _extract_and_diff(start_bytes, end_bytes)
-    return _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label)
+    congress = _derive_congress(new_pages)
+    return _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label, congress=congress)
 
 
 def compare_pdfs_html(
@@ -142,16 +160,19 @@ def compare_pdfs_html(
     carry the full-bill view and an embedded ``diff.json`` for export.
     """
     pdf_diff, old_pages, new_pages = _extract_and_diff(start_bytes, end_bytes)
+    congress = _derive_congress(new_pages)
     view = pdf_diff_to_view(
         pdf_diff,
         bill_type="",
         bill_number="",
-        congress="",
+        congress=congress,
         v1_label=start_label,
         v2_label=end_label,
     )
-    canonical = _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label)
-    display_canonical = _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label, printed=True)
+    canonical = _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label, congress=congress)
+    display_canonical = _build_canonical(
+        pdf_diff, old_pages, new_pages, start_label, end_label, congress=congress, printed=True
+    )
     title = _derive_bill_title(canonical)
     sections = _section_nav(pdf_diff, new_pages)
     return format_diff_html(

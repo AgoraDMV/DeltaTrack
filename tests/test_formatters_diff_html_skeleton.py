@@ -57,6 +57,16 @@ def test_versions_line_with_version_numbers():
     assert "118th Congress" in html
 
 
+def test_versions_line_omits_congress_when_unknown():
+    """An empty congress (PDF metadata absent) drops the suffix entirely —
+    no dangling "· th Congress"."""
+    html = format_diff_html(_empty(congress=""))
+    versions_marker = '<div class="versions">'
+    start = html.index(versions_marker) + len(versions_marker)
+    block = html[start : html.index("</div>", start)]
+    assert "Congress" not in block
+
+
 def test_versions_line_without_version_numbers():
     """When both version numbers are None (e.g. PDF inputs), no v1:/v2: prefix."""
     html = format_diff_html(_empty(v1_version_number=None, v2_version_number=None))

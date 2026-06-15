@@ -261,7 +261,11 @@ def _versions_html(view: DiffView) -> str:
     else:
         v1 = escape(view.v1_label)
         v2 = escape(view.v2_label)
-    return f"{v1} &rarr; {v2} · {escape(str(view.congress))}th Congress"
+    line = f"{v1} &rarr; {v2}"
+    congress = str(view.congress).strip()
+    if congress:  # omit the suffix entirely when unknown, not "· th Congress"
+        line += f" · {escape(congress)}th Congress"
+    return line
 
 
 def _summary_bar_html(summary: dict[str, int]) -> str:
