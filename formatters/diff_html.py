@@ -1211,10 +1211,13 @@ document.addEventListener('DOMContentLoaded', function() {
   function clearFind() {
     var parents = [];
     document.querySelectorAll('mark.find-hit').forEach(function(m) {
-      m.parentNode.replaceChild(document.createTextNode(m.textContent), m);
-      parents.push(m.parentNode);
+      var p = m.parentNode;  // capture before replaceChild detaches m
+      p.replaceChild(document.createTextNode(m.textContent), m);
+      parents.push(p);
     });
-    parents.forEach(function(p) { if (p) p.normalize(); });
+    // Merge the text nodes left behind, else repeated searches fragment the
+    // text and matches stop being found within a single node.
+    parents.forEach(function(p) { p.normalize(); });
     findHits = [];
     findIdx = -1;
   }
@@ -1249,17 +1252,21 @@ document.addEventListener('DOMContentLoaded', function() {
     var nodes = [];  // snapshot before mutating the tree
     while (walker.nextNode()) nodes.push(walker.currentNode);
     nodes.forEach(function(node) {
-      var lower = node.nodeValue.toLowerCase();
-      var starts = [], from = 0, at;
-      while ((at = lower.indexOf(ql, from)) !== -1) { starts.push(at); from = at + ql.length; }
-      for (var k = starts.length - 1; k >= 0; k--) {  // wrap right-to-left so offsets stay valid
-        var tail = node.splitText(starts[k]);
-        tail.splitText(ql.length);
+      var text = node.nodeValue, lower = text.toLowerCase();
+      // Rebuild the node as [text, <mark>, text, …] in one replaceChild — no
+      // splitText juggling, no index invalidation.
+      var frag = document.createDocumentFragment();
+      var last = 0, at;
+      while ((at = lower.indexOf(ql, last)) !== -1) {
+        if (at > last) frag.appendChild(document.createTextNode(text.slice(last, at)));
         var mark = document.createElement('mark');
         mark.className = 'find-hit';
-        mark.textContent = tail.nodeValue;
-        tail.parentNode.replaceChild(mark, tail);
+        mark.textContent = text.slice(at, at + ql.length);
+        frag.appendChild(mark);
+        last = at + ql.length;
       }
+      if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
     });
     findHits = [].slice.call(root.querySelectorAll('mark.find-hit'));
     findIdx = -1;
