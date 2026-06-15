@@ -46,7 +46,7 @@ def _view(changes) -> DiffView:
 
 def test_nav_item_basic():
     item = _build_nav_item(_change(), 0)
-    assert item.startswith('<li class="nav-item" data-type="modified">')
+    assert item.startswith('<li class="nav-item" data-type="modified" data-financial="0">')
     assert 'href="#change-0"' in item
     assert '<span class="badge badge-modified">modified</span>' in item
     assert "TITLE I &gt; Customs" in item
@@ -70,7 +70,7 @@ def test_nav_item_degraded_adds_unanchored_class():
         _change(degraded=True, nav_label_html="(uncategorized) — p.2 L5"),
         0,
     )
-    assert '<li class="nav-item unanchored" data-type="modified">' in item
+    assert '<li class="nav-item unanchored" data-type="modified" data-financial="0">' in item
 
 
 def test_sidebar_emits_one_li_per_change():
