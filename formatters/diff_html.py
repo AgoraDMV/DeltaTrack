@@ -479,7 +479,7 @@ def _export_modal_html(canonical: dict | None) -> str:
         "<h2>Export this comparison</h2>"
         '<p class="export-modal__lead">Download the data, then ask an AI assistant to explain it.</p>'
         '<div class="export-downloads">'
-        '<button id="dl-json" class="export-dl export-dl--primary" type="button">Download diff.json</button>'
+        '<button id="dl-json" class="export-dl" type="button">Download diff.json</button>'
         '<button id="dl-html" class="export-dl" type="button">Download report.html</button>'
         "</div>"
         '<div id="export-prompts" class="export-prompts">'
@@ -634,7 +634,7 @@ ins { background: #bbf7d0; text-decoration: none; color: #166534; padding: 0 1px
 .view-toggle__btn { padding: 6px 16px; border: 0; background: #fff; cursor: pointer;
   font: inherit; font-size: 13px; color: #333; }
 .view-toggle__btn + .view-toggle__btn { border-left: 1px solid #ccc; }
-.view-toggle__btn.is-active { background: #0056b3; color: #fff; }
+.view-toggle__btn.is-active { background: #6c757d; color: #fff; }
 .view[hidden] { display: none; }
 
 /* Full-bill tracked-changes view */
@@ -663,10 +663,9 @@ ins { background: #bbf7d0; text-decoration: none; color: #166534; padding: 0 1px
 .export-modal__panel h2 { font-size: 18px; margin-bottom: 4px; }
 .export-modal__lead { color: #666; font-size: 14px; margin-bottom: 16px; }
 .export-downloads { display: flex; gap: 10px; flex-wrap: wrap; }
-.export-dl { padding: 8px 16px; border: 1px solid #ccc; border-radius: 6px; background: #fff;
-  cursor: pointer; font: inherit; font-size: 14px; }
-.export-dl--primary { background: #0056b3; color: #fff; border-color: #0056b3; }
-.export-dl:hover { filter: brightness(0.95); }
+.export-dl { padding: 8px 16px; border: 1px solid #0056b3; border-radius: 6px; background: #0056b3;
+  color: #fff; cursor: pointer; font: inherit; font-size: 14px; }
+.export-dl:hover { background: #00408a; }
 .export-prompts { margin-top: 20px; border-top: 1px solid #eee; padding-top: 16px; }
 .export-prompts[hidden] { display: none; }
 .export-prompts h3 { font-size: 15px; margin-bottom: 4px; }
