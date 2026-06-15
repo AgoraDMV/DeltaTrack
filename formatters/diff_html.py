@@ -556,6 +556,21 @@ def _export_button_html(canonical: dict | None) -> str:
     return '<button id="export-open" class="export-btn" type="button">Export and Share</button>'
 
 
+def _nav_controls_html(canonical: dict | None) -> str:
+    """Prev / counter / Next change navigation. PDF path only (same gate as the
+    view toggle and export). JS wires the buttons, the counter, and the active
+    target set per view; see the navigation block in `_JS`."""
+    if not _has_full_bill(canonical):
+        return ""
+    return (
+        '<div class="nav-controls" role="group" aria-label="Navigate changes">'
+        '<button id="btn-prev" type="button" aria-label="Previous change" disabled>&larr;</button>'
+        '<span id="nav-counter" class="nav-counter" aria-live="polite">0 / 0</span>'
+        '<button id="btn-next" type="button" aria-label="Next change">&rarr;</button>'
+        "</div>"
+    )
+
+
 def _export_modal_html(canonical: dict | None) -> str:
     """Modal: download diff.json / report.html, then reveal the AI prompts.
 
@@ -643,15 +658,16 @@ def format_diff_html(
 <h1>{heading}</h1>
 <div class="versions">{_versions_html(view)}</div>
 <div class="summary-bar">{_summary_bar_html(view.summary)}</div>
+</div>
+<div class="action-bar">
 {_view_toggle_html(canonical)}
+<div class="action-bar__group">
+{_nav_controls_html(canonical)}
 {_export_button_html(canonical)}
+</div>
 </div>
 {_views_html(view, canonical, display_canonical)}
 </div>
-</div>
-<div class="nav-buttons">
-<button id="btn-prev">&larr; Prev</button>
-<button id="btn-next">Next &rarr;</button>
 </div>
 {_export_modal_html(canonical)}
 {data_script}
@@ -780,7 +796,21 @@ del { background: var(--rem-bg); text-decoration: line-through; color: var(--rem
 ins { background: var(--add-bg); text-decoration: none; color: var(--add-fg); padding: 0 1px; border-radius: 3px; }
 
 /* View toggle (Changes / Full bill) — neutral grey, distinct from action buttons */
-.view-toggle { display: inline-flex; margin-top: 12px; border: 1px solid var(--border);
+/* Sticky action bar: view toggle (left), nav + export (right) */
+.action-bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px; flex-wrap: wrap; background: var(--bg);
+  border-bottom: 1px solid var(--border); padding: 10px 0; margin-bottom: 16px; }
+.action-bar__group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.nav-controls { display: inline-flex; align-items: center; gap: 4px; }
+.nav-controls button { padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--card); cursor: pointer; font-family: var(--sans); font-size: 14px;
+  box-shadow: var(--shadow-soft); }
+.nav-controls button:hover { background: var(--secondary); }
+.nav-controls button[disabled] { opacity: 0.4; cursor: default; box-shadow: none; }
+.nav-counter { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted-fg);
+  min-width: 3.5em; text-align: center; }
+
+.view-toggle { display: inline-flex; border: 1px solid var(--border);
   border-radius: var(--radius); overflow: hidden; }
 .view-toggle__btn { padding: 6px 16px; border: 0; background: var(--card); cursor: pointer;
   font: inherit; font-family: var(--sans); font-size: 13px; color: var(--fg); }
@@ -807,7 +837,7 @@ ins { background: var(--add-bg); text-decoration: none; color: var(--add-fg); pa
 .removed-block .diff-del { white-space: pre-wrap; }
 
 /* Export button + modal */
-.export-btn { margin-top: 12px; margin-left: 12px; padding: 6px 16px; border: 1px solid var(--primary);
+.export-btn { padding: 6px 16px; border: 1px solid var(--primary);
   border-radius: var(--radius); background: var(--primary); color: var(--primary-fg); cursor: pointer;
   font: inherit; font-family: var(--sans); font-size: 13px; }
 .export-btn:hover { filter: brightness(1.25); }
@@ -846,11 +876,8 @@ ins { background: var(--add-bg); text-decoration: none; color: var(--add-fg); pa
 .financial-callout .delta.decrease { color: var(--destructive); font-weight: 600; }
 .financial-callout .delta.increase { color: var(--success); font-weight: 600; }
 
-/* Navigation buttons */
-.nav-buttons { position: fixed; bottom: 20px; right: 20px; display: flex; gap: 8px; z-index: 10; }
-.nav-buttons button { padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--card); cursor: pointer; font-family: var(--sans); font-size: 13px; box-shadow: var(--shadow-soft); }
-.nav-buttons button:hover { background: var(--secondary); }
+/* Nav targets clear the sticky action bar when scrolled to via Prev/Next */
+.change-card, .full-bill [id^="attr-"], .removed-block { scroll-margin-top: 64px; }
 
 /* Collapsible sidebar + responsive layout */
 .sidebar { transition: transform 0.2s ease; z-index: 40; padding-top: 56px; }
@@ -867,11 +894,19 @@ body.nav-collapsed .main { margin-left: 0; padding-left: 64px; }
   .sidebar { box-shadow: 0 8px 24px -8px rgba(28,28,58,0.35); }
   .report-header h1 { font-size: 20px; }
   .summary-bar { gap: 8px; }
+  /* Don't pin the top bar over the fixed hamburger; drop nav to a thumb-reach
+     bottom bar and pad the page so the last content clears it. */
+  .action-bar { position: static; }
+  body { padding-bottom: 64px; }
+  .nav-controls { position: fixed; left: 0; right: 0; bottom: 0; z-index: 35;
+    justify-content: center; gap: 24px; background: var(--card);
+    border-top: 1px solid var(--border); box-shadow: 0 -2px 10px rgba(28,28,58,0.12);
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
 }
 
 /* Print */
 @media print {
-  .sidebar, .nav-buttons, .sidebar-toggle, #sidebar-filter { display: none; }
+  .sidebar, .action-bar, .sidebar-toggle, #sidebar-filter { display: none; }
   .main { margin-left: 0; }
   .change-card { break-inside: avoid; }
 }
@@ -982,19 +1017,53 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   if (window.innerWidth < 820) document.body.classList.add('nav-collapsed');
 
-  // Prev/next navigation
-  var cards = document.querySelectorAll('.change-card');
+  // Prev/next change navigation. View-aware: steps visible cards in the Changes
+  // view and the inline highlights in the Full bill view; counter reflects the
+  // active filter. Refreshed when the view or filter changes (see refreshNav).
+  var prevBtn = document.getElementById('btn-prev');
+  var nextBtn = document.getElementById('btn-next');
+  var counter = document.getElementById('nav-counter');
   var current = -1;
-  function goTo(idx) {
-    if (idx >= 0 && idx < cards.length) {
-      current = idx;
-      cards[idx].scrollIntoView({behavior: 'smooth', block: 'start'});
+  function navTargets() {
+    var full = document.querySelector('.view-full');
+    if (full && !full.hidden) {
+      return [].slice.call(full.querySelectorAll('[id^="attr-"], .removed-block'));
     }
+    // Changes view: only cards the active filter leaves visible.
+    return [].slice.call(document.querySelectorAll('.view-changes .change-card'))
+      .filter(function(c) { return c.offsetParent !== null; });
   }
-  var prev = document.getElementById('btn-prev');
-  var next = document.getElementById('btn-next');
-  if (prev) prev.addEventListener('click', function() { goTo(current - 1); });
-  if (next) next.addEventListener('click', function() { goTo(current + 1); });
+  function refreshNav() {
+    var n = navTargets().length;
+    if (current >= n) current = n - 1;
+    if (counter) counter.textContent = (current + 1) + ' / ' + n;
+    if (prevBtn) prevBtn.disabled = current <= 0;
+    if (nextBtn) nextBtn.disabled = current >= n - 1;
+  }
+  function goTo(idx) {
+    var targets = navTargets();
+    if (idx >= 0 && idx < targets.length) {
+      current = idx;
+      targets[idx].scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+    refreshNav();
+  }
+  if (prevBtn) prevBtn.addEventListener('click', function() { goTo(current - 1); });
+  if (nextBtn) nextBtn.addEventListener('click', function() { goTo(current + 1); });
+  // Arrow keys, unless the user is typing in the search box.
+  document.addEventListener('keydown', function(e) {
+    if (e.target === searchInput || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'ArrowRight') { goTo(current + 1); }
+    else if (e.key === 'ArrowLeft') { goTo(current - 1); }
+  });
+  // Recompute targets (and reset position) when the view or filter changes.
+  function resetNav() { current = -1; refreshNav(); }
+  toggleBtns.forEach(function(b) { b.addEventListener('click', resetNav); });
+  document.querySelectorAll('input[name="change-filter"]').forEach(function(r) {
+    r.addEventListener('change', resetNav);
+  });
+  if (searchInput) searchInput.addEventListener('input', resetNav);
+  refreshNav();
 
   // Financial table sort (groups rowspan rows together by data-group)
   document.querySelectorAll('.financial-table th').forEach(function(th, colIdx) {

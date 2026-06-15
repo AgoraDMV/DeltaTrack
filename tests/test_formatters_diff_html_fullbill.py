@@ -88,6 +88,23 @@ def test_toggle_and_both_views_present():
     assert 'class="view view-full"' in html
 
 
+def test_action_bar_has_nav_controls_and_counter():
+    html = format_diff_html(_view(), _canonical())
+    assert 'class="action-bar"' in html
+    assert 'class="nav-controls"' in html
+    assert 'id="nav-counter"' in html
+    assert 'id="btn-prev"' in html
+    assert 'id="btn-next"' in html
+    # The old fixed bottom-right box is gone.
+    assert 'class="nav-buttons"' not in html
+
+
+def test_no_nav_controls_without_canonical():
+    html = format_diff_html(_view())
+    assert 'class="nav-controls"' not in html
+    assert 'id="nav-counter"' not in html
+
+
 def test_added_and_modified_marks_projected():
     html = format_diff_html(_view(), _canonical())
     # Added: just an <ins> around the v2 slice.
