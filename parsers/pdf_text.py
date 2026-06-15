@@ -65,7 +65,16 @@ class Line:
 @dataclass(frozen=True)
 class Page:
     page_number: int  # 1-based
-    lines: tuple[Line, ...]
+    lines: tuple[Line, ...]  # soft-hyphens rejoined into whole words; what the diff compares
+    # The original printed lines (pre-merge): one entry per line the GPO actually
+    # printed, with its own margin number and hyphenated word breaks intact. Used
+    # only by the full-bill display so it can match the printed page; empty for
+    # Pages built directly in tests / by the anchor parser, which don't display.
+    print_lines: tuple[Line, ...] = ()
+    # Parallel to `lines`: for each merged line, the [start, end) slice of
+    # `print_lines` it was built from, so a merged-line coordinate can be mapped
+    # back onto the printed lines it covers.
+    merge_ranges: tuple[tuple[int, int], ...] = ()
 
     @property
     def text(self) -> str:
@@ -135,13 +144,12 @@ def normalize_glyphs(text: str) -> str:
     return text
 
 
-def parse_lines(chrome_stripped: str) -> tuple[Line, ...]:
-    """Parse chrome-stripped page text into Line records.
+def _parse_print_lines(chrome_stripped: str) -> list[Line]:
+    """Parse chrome-stripped page text into one Line per printed line.
 
     Each body line in a GPO bill begins with `<line_number> <content>`. Lines
-    that don't fit (anomalies, empty lines) get `line_number=None`. Soft hyphens
-    that span two consecutive lines are rejoined into the earlier line; the
-    later line's record is dropped.
+    that don't fit (anomalies, empty lines, cover-page text) get
+    `line_number=None`. No rejoining — this is the printed layout verbatim.
     """
     parsed: list[Line] = []
     for raw_line in chrome_stripped.split("\n"):
@@ -150,13 +158,23 @@ def parse_lines(chrome_stripped: str) -> tuple[Line, ...]:
             parsed.append(Line(int(m.group(1)), m.group(2)))
         else:
             parsed.append(Line(None, raw_line))
+    return parsed
 
-    # Rejoin per-page soft hyphens at line boundaries: when line[i] ends with
-    # `WORD-` and line[i+1].text starts with a lowercase letter, merge them.
-    # Chain: a single hunk in the GPO source can span 3+ lines (e.g. `wel-\n
-    # fare; ... (in-\ncreased by …)`), so the merged line itself may end in
-    # another soft hyphen that needs joining with the line after.
+
+def _merge_print_lines(parsed: list[Line]) -> tuple[list[Line], list[tuple[int, int]]]:
+    """Rejoin per-page soft hyphens at line boundaries.
+
+    When line[i] ends with `WORD-` and line[i+1] starts lowercase, merge them
+    into the earlier line and drop the later record. Chain: a single hunk can
+    span 3+ lines (e.g. `wel-\\nfare; ... (in-\\ncreased by …)`), so the merged
+    line may itself end in another soft hyphen to join with the line after.
+
+    Returns the merged lines and, parallel to them, the `[start, end)` slice of
+    `parsed` each merged line was built from (so callers can map a merged line
+    back to the printed lines it covers).
+    """
     merged: list[Line] = []
+    ranges: list[tuple[int, int]] = []
     i = 0
     while i < len(parsed):
         current = parsed[i]
@@ -171,7 +189,18 @@ def parse_lines(chrome_stripped: str) -> tuple[Line, ...]:
             current = Line(current.line_number, current.text[:-1] + parsed[next_i].text)
             next_i += 1
         merged.append(current)
+        ranges.append((i, next_i))
         i = next_i
+    return merged, ranges
+
+
+def parse_lines(chrome_stripped: str) -> tuple[Line, ...]:
+    """Parse chrome-stripped page text into merged (whole-word) Line records.
+
+    Convenience wrapper over `_parse_print_lines` + `_merge_print_lines` for
+    callers that only need the rejoined lines the diff compares.
+    """
+    merged, _ = _merge_print_lines(_parse_print_lines(chrome_stripped))
     return tuple(merged)
 
 
@@ -193,17 +222,38 @@ def extract_clean_pages(pdf_path: Path) -> list[Page]:
         for i in range(len(pdf)):
             raw = pdf[i].get_textpage().get_text_range()
             chrome_stripped = strip_page_chrome(normalize_raw(raw))
-            pages.append(Page(i + 1, parse_lines(chrome_stripped)))
+            print_lines = _parse_print_lines(chrome_stripped)
+            merged, ranges = _merge_print_lines(print_lines)
+            pages.append(Page(i + 1, tuple(merged), tuple(print_lines), tuple(ranges)))
         return pages
     finally:
         pdf.close()
 
 
+def _render_lines(lines: tuple[Line, ...]) -> tuple[list[str], list[tuple[int, int]]]:
+    """Render a page's lines as `{number:>5}  {content}` rows (five-space pad
+    when unnumbered). Returns the rendered rows and, parallel to them, each
+    row's (start, end) char span relative to a 0-based page start."""
+    rows: list[str] = []
+    spans: list[tuple[int, int]] = []
+    pos = 0
+    for line in lines:
+        prefix = f"{line.line_number:>5}" if line.line_number is not None else " " * 5
+        rendered = f"{prefix}  {line.text}"
+        spans.append((pos, pos + len(rendered)))
+        rows.append(rendered)
+        pos += len(rendered) + 1  # +1 for the joining newline
+    return rows, spans
+
+
 def pdf_full_text(pages: list[Page]) -> tuple[str, dict[tuple[int, int], tuple[int, int]]]:
-    """Render cleaned PDF pages with their original line numbers, so the
-    full-bill view matches how the printed bill looks. Each line gets a
-    5-char right-aligned line-number prefix (blank padding when the source
-    line was unnumbered). Pages are separated by a blank line.
+    """Render the merged (whole-word) page lines with their line numbers.
+
+    This is the canonical full text: it backs the embedded ``diff.json`` and the
+    export, and its offsets anchor change spans. Each line gets a 5-char
+    right-aligned line-number prefix (blank padding when unnumbered); pages are
+    separated by a blank line. For the print-faithful reading view, see
+    ``pdf_full_text_print``.
 
     Returns (text, line_offsets) where line_offsets maps (page_number,
     line_number) -> (start_char, end_char) in `text`. Only lines with a
@@ -213,19 +263,48 @@ def pdf_full_text(pages: list[Page]) -> tuple[str, dict[tuple[int, int], tuple[i
     """
     chunks: list[str] = []
     line_offsets: dict[tuple[int, int], tuple[int, int]] = {}
-    pos = 0
+    base = 0
     for i, page in enumerate(pages):
         if i > 0:
             chunks.append("")  # blank line between pages
-            pos += 1  # for the trailing newline
-        for line in page.lines:
-            prefix = f"{line.line_number:>5}" if line.line_number is not None else " " * 5
-            rendered = f"{prefix}  {line.text}"
-            line_start = pos
-            line_end = pos + len(rendered)
+            base += 1  # for the trailing newline
+        rows, spans = _render_lines(page.lines)
+        for line, (s, e) in zip(page.lines, spans):
             if line.line_number is not None:
-                line_offsets[(page.page_number, line.line_number)] = (line_start, line_end)
-            chunks.append(rendered)
-            pos = line_end + 1  # +1 for the joining newline
-    text = "\n".join(chunks)
-    return text, line_offsets
+                line_offsets[(page.page_number, line.line_number)] = (base + s, base + e)
+        chunks.extend(rows)
+        base += spans[-1][1] + 1 if spans else 0
+    return "\n".join(chunks), line_offsets
+
+
+def pdf_full_text_print(pages: list[Page]) -> tuple[str, dict[tuple[int, int], tuple[int, int]]]:
+    """Render the *original printed* lines (pre-merge) for the full-bill view.
+
+    Unlike `pdf_full_text`, this keeps every printed line number and the GPO
+    line breaks (soft-hyphenated words stay split, as on the page), so the
+    on-screen text matches a printed copy line for line.
+
+    Returns (text, line_offsets) where line_offsets maps (page_number,
+    **merged** line_number) -> (start_char, end_char) in this print-faithful
+    text, spanning all the printed lines the merged line was built from. Keying
+    by the merged line number (via `Page.merge_ranges`) lets change spans —
+    which are expressed in merged-line coordinates — land on the right printed
+    lines when fed to pdf_diff_to_canonical(..., line_offsets=...).
+    """
+    chunks: list[str] = []
+    line_offsets: dict[tuple[int, int], tuple[int, int]] = {}
+    base = 0
+    for i, page in enumerate(pages):
+        if i > 0:
+            chunks.append("")  # blank line between pages
+            base += 1
+        rows, spans = _render_lines(page.print_lines)
+        for line, (start_idx, end_idx) in zip(page.lines, page.merge_ranges):
+            if line.line_number is None:
+                continue
+            start = base + spans[start_idx][0]
+            end = base + spans[end_idx - 1][1]
+            line_offsets[(page.page_number, line.line_number)] = (start, end)
+        chunks.extend(rows)
+        base += spans[-1][1] + 1 if spans else 0
+    return "\n".join(chunks), line_offsets

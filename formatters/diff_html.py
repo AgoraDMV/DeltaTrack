@@ -520,8 +520,12 @@ def _full_bill_html(canonical: dict) -> str:
     return f'{meta}<div class="full-bill">{"".join(parts)}</div>{appendix}'
 
 
-def _views_html(view: DiffView, canonical: dict | None) -> str:
-    """Main content: classic cards, or the toggled changes/full-bill pair."""
+def _views_html(view: DiffView, canonical: dict | None, display_canonical: dict | None = None) -> str:
+    """Main content: classic cards, or the toggled changes/full-bill pair.
+
+    The full-bill view renders from ``display_canonical`` when given (the
+    print-faithful text + spans) and falls back to ``canonical`` otherwise.
+    """
     changes_inner = (
         f"{_build_financial_summary(view)}\n<h2>Changes</h2>\n{_cards_section_html(view)}"
         '\n<p class="filter-empty" id="filter-empty" hidden>No changes match this filter.</p>'
@@ -530,7 +534,7 @@ def _views_html(view: DiffView, canonical: dict | None) -> str:
         return changes_inner
     return (
         f'<div class="view view-changes">{changes_inner}</div>'
-        f'<div class="view view-full" hidden>{_full_bill_html(canonical)}</div>'
+        f'<div class="view view-full" hidden>{_full_bill_html(display_canonical or canonical)}</div>'
     )
 
 
@@ -587,12 +591,23 @@ def _export_modal_html(canonical: dict | None) -> str:
     )
 
 
-def format_diff_html(view: DiffView, canonical: dict | None = None, title: str | None = None) -> str:
+def format_diff_html(
+    view: DiffView,
+    canonical: dict | None = None,
+    title: str | None = None,
+    *,
+    display_canonical: dict | None = None,
+) -> str:
     """Assemble a complete standalone HTML report from a DiffView.
 
     When ``canonical`` is provided (PDF path), the canonical diff JSON is
     embedded so the report can offer the full-bill view and the export
     download client-side. When omitted (XML path), the report is unchanged.
+
+    ``display_canonical``, when given, supplies the print-faithful text + spans
+    the on-screen full-bill view renders from (the PDF path passes one built
+    from the original printed lines); the embedded/exported ``canonical`` keeps
+    the merged whole-word text regardless.
 
     ``title``, when given, sets the report heading (the PDF path passes a bill
     title derived from the document); otherwise it falls back to the bill
@@ -631,7 +646,7 @@ def format_diff_html(view: DiffView, canonical: dict | None = None, title: str |
 {_view_toggle_html(canonical)}
 {_export_button_html(canonical)}
 </div>
-{_views_html(view, canonical)}
+{_views_html(view, canonical, display_canonical)}
 </div>
 </div>
 <div class="nav-buttons">

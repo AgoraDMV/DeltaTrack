@@ -25,7 +25,7 @@ from diff_pdf import PdfDiff, diff_pdfs
 from formatters.adapters import pdf_diff_to_view
 from formatters.canonical import pdf_diff_to_canonical
 from formatters.diff_html import format_diff_html
-from parsers.pdf_text import Page, extract_clean_pages, pdf_full_text
+from parsers.pdf_text import Page, extract_clean_pages, pdf_full_text, pdf_full_text_print
 
 
 def _extract_and_diff(
@@ -53,15 +53,20 @@ def _build_canonical(
     new_pages: list[Page],
     start_label: str,
     end_label: str,
+    *,
+    printed: bool = False,
 ) -> dict:
     """Canonical diff JSON (schema v1.2) with full text + per-change spans.
 
     Shared by both entry points: it is the JSON response on the JSON path and
-    the embedded ``diff.json`` (driving the full-bill view + export) on the
-    HTML path.
+    the embedded ``diff.json`` (driving export) on the HTML path. With
+    ``printed=True`` the full text and spans use the print-faithful rendering
+    (`pdf_full_text_print`) instead of the merged whole-word text — that variant
+    drives only the on-screen full-bill view, not the embed/export.
     """
-    v1_text, v1_offsets = pdf_full_text(old_pages)
-    v2_text, v2_offsets = pdf_full_text(new_pages)
+    render = pdf_full_text_print if printed else pdf_full_text
+    v1_text, v1_offsets = render(old_pages)
+    v2_text, v2_offsets = render(new_pages)
     return pdf_diff_to_canonical(
         pdf_diff,
         bill_type="",
@@ -146,5 +151,6 @@ def compare_pdfs_html(
         v2_label=end_label,
     )
     canonical = _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label)
+    display_canonical = _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label, printed=True)
     title = _derive_bill_title(canonical)
-    return format_diff_html(view, canonical=canonical, title=title)
+    return format_diff_html(view, canonical=canonical, display_canonical=display_canonical, title=title)

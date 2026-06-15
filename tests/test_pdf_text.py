@@ -5,12 +5,50 @@ from __future__ import annotations
 from parsers.pdf_text import (
     Line,
     Page,
+    _merge_print_lines,
+    _parse_print_lines,
     normalize_glyphs,
     normalize_raw,
     page_range_text,
+    pdf_full_text,
+    pdf_full_text_print,
     rejoin_soft_hyphens,
     strip_page_chrome,
 )
+
+
+def _print_page(page_number: int, chrome_stripped: str) -> Page:
+    """Build a Page the way extract_clean_pages does: pre-merge print lines plus
+    the soft-hyphen-merged lines and their constituent ranges."""
+    print_lines = _parse_print_lines(chrome_stripped)
+    merged, ranges = _merge_print_lines(print_lines)
+    return Page(page_number, tuple(merged), tuple(print_lines), tuple(ranges))
+
+
+class TestPdfFullTextPrint:
+    # Two printed lines where a soft hyphen merges line 8 into line 9 for the
+    # diff, but the printed view should keep both lines and the hyphen.
+    _SRC = "8 For acquisition and equip-\n9 ment of public works\n10 Marine Corps as authorized"
+
+    def test_keeps_every_printed_line_and_hyphen(self):
+        text, _ = pdf_full_text_print([_print_page(1, self._SRC)])
+        assert "    8  For acquisition and equip-" in text
+        assert "    9  ment of public works" in text
+        assert "   10  Marine Corps as authorized" in text
+
+    def test_merged_line_offset_spans_its_printed_lines(self):
+        text, offsets = pdf_full_text_print([_print_page(1, self._SRC)])
+        # Merged line 8 absorbed printed line 9, so its span covers both 8 and 9.
+        start, end = offsets[(1, 8)]
+        assert text[start:end] == "    8  For acquisition and equip-\n    9  ment of public works"
+        # Line 10 didn't merge, so its span is just itself.
+        s10, e10 = offsets[(1, 10)]
+        assert text[s10:e10] == "   10  Marine Corps as authorized"
+
+    def test_merged_full_text_collapses_the_hyphen(self):
+        # Contrast: the canonical (merged) text rejoins the word onto one line.
+        text, _ = pdf_full_text([_print_page(1, self._SRC)])
+        assert "    8  For acquisition and equipment of public works" in text
 
 
 def _page(page_number: int, text: str) -> Page:
