@@ -6,10 +6,10 @@ from uploaded bytes instead of files on disk:
 
     extract_clean_pages()  (parsers.pdf_text)
     diff_pdfs()            (diff_pdf)
-    pdf_full_text()        (parsers.pdf_text)   — JSON path only
-    pdf_diff_to_canonical()(formatters.canonical) — JSON path
+    pdf_full_text()        (parsers.pdf_text)   — both paths (full text + offsets)
+    pdf_diff_to_canonical()(formatters.canonical) — both paths (JSON out / embedded)
     pdf_diff_to_view()     (formatters.adapters) — HTML path
-    format_diff_html()     (formatters.diff_html) — HTML path
+    format_diff_html()     (formatters.diff_html) — HTML path (view + canonical)
 
 No subprocess; no persistence. The temp files exist only long enough for
 pypdfium2 to open them and are deleted before this function returns.
@@ -46,18 +46,21 @@ def _extract_and_diff(
     return diff_pdfs(old_pages, new_pages), old_pages, new_pages
 
 
-def compare_pdfs(
-    start_bytes: bytes,
-    end_bytes: bytes,
-    *,
-    start_label: str = "Start version",
-    end_label: str = "End version",
+def _build_canonical(
+    pdf_diff: PdfDiff,
+    old_pages: list[Page],
+    new_pages: list[Page],
+    start_label: str,
+    end_label: str,
 ) -> dict:
-    """Diff two PDF documents and return canonical diff JSON (schema v1.2)."""
-    pdf_diff, old_pages, new_pages = _extract_and_diff(start_bytes, end_bytes)
+    """Canonical diff JSON (schema v1.2) with full text + per-change spans.
+
+    Shared by both entry points: it is the JSON response on the JSON path and
+    the embedded ``diff.json`` (driving the full-bill view + export) on the
+    HTML path.
+    """
     v1_text, v1_offsets = pdf_full_text(old_pages)
     v2_text, v2_offsets = pdf_full_text(new_pages)
-
     return pdf_diff_to_canonical(
         pdf_diff,
         bill_type="",
@@ -70,6 +73,18 @@ def compare_pdfs(
     )
 
 
+def compare_pdfs(
+    start_bytes: bytes,
+    end_bytes: bytes,
+    *,
+    start_label: str = "Start version",
+    end_label: str = "End version",
+) -> dict:
+    """Diff two PDF documents and return canonical diff JSON (schema v1.2)."""
+    pdf_diff, old_pages, new_pages = _extract_and_diff(start_bytes, end_bytes)
+    return _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label)
+
+
 def compare_pdfs_html(
     start_bytes: bytes,
     end_bytes: bytes,
@@ -77,8 +92,12 @@ def compare_pdfs_html(
     start_label: str = "Start version",
     end_label: str = "End version",
 ) -> str:
-    """Diff two PDF documents and return a standalone HTML report."""
-    pdf_diff, _, _ = _extract_and_diff(start_bytes, end_bytes)
+    """Diff two PDF documents and return a standalone HTML report.
+
+    The canonical dict is computed and handed to the renderer so the report can
+    carry the full-bill view and an embedded ``diff.json`` for export.
+    """
+    pdf_diff, old_pages, new_pages = _extract_and_diff(start_bytes, end_bytes)
     view = pdf_diff_to_view(
         pdf_diff,
         bill_type="",
@@ -87,4 +106,5 @@ def compare_pdfs_html(
         v1_label=start_label,
         v2_label=end_label,
     )
-    return format_diff_html(view)
+    canonical = _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label)
+    return format_diff_html(view, canonical=canonical)

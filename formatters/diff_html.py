@@ -11,6 +11,7 @@ staffers see one consistent product regardless of source format.
 
 from __future__ import annotations
 
+import json
 from html import escape
 
 from formatters._text import fmt_dollar, word_diff
@@ -20,6 +21,19 @@ __all__ = ["format_diff_html"]
 
 
 _SUMMARY_ORDER = ("modified", "added", "removed", "moved")
+
+
+def _embed_canonical(canonical: dict) -> str:
+    """Inline the canonical diff JSON so the report is self-contained.
+
+    The standalone report opens in a new tab with no server round-trip
+    available (the service is stateless), so the full-bill view and the
+    export download both read this embedded payload client-side. ``</`` is
+    neutralized so the JSON can't terminate the surrounding <script> tag.
+    """
+    payload = json.dumps(canonical, ensure_ascii=False, separators=(",", ":"))
+    payload = payload.replace("</", "<\\/")
+    return f'<script type="application/json" id="diff-data">{payload}</script>'
 
 
 def _build_card(change: ChangeView, index: int) -> str:
@@ -289,9 +303,15 @@ def _build_financial_summary(view: DiffView) -> str:
     return "\n".join(lines)
 
 
-def format_diff_html(view: DiffView) -> str:
-    """Assemble a complete standalone HTML report from a DiffView."""
+def format_diff_html(view: DiffView, canonical: dict | None = None) -> str:
+    """Assemble a complete standalone HTML report from a DiffView.
+
+    When ``canonical`` is provided (PDF path), the canonical diff JSON is
+    embedded so the report can offer the full-bill view and the export
+    download client-side. When omitted (XML path), the report is unchanged.
+    """
     bill_label = _bill_label(view)
+    data_script = _embed_canonical(canonical) if canonical else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -320,6 +340,7 @@ def format_diff_html(view: DiffView) -> str:
 <button id="btn-prev">&larr; Prev</button>
 <button id="btn-next">Next &rarr;</button>
 </div>
+{data_script}
 <script>
 {_JS}
 </script>
