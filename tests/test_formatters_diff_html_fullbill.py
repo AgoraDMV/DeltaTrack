@@ -31,31 +31,36 @@ def _view(**overrides) -> DiffView:
 
 
 def _canonical() -> dict:
-    # v2 text indices:  ADD0(0-4) MOD1(5-9) KEEP(10-14)
+    # full_text mirrors pdf_full_text output: each line is "{num:>5}  {content}"
+    # (five-space pad when unnumbered), pages joined by a blank line. Content
+    # char spans for the single-page v2 below:
+    #   line 1 "ADD0" -> 7..11   line 2 "MOD1" -> 19..23   line 3 "KEEP" -> 31..35
+    v2 = "    1  ADD0\n    2  MOD1\n    3  KEEP"
+    v1 = "    1  OLD0\n    2  OLD1\n    3  GONE"  # "GONE" content at 31..35
     return {
         "schema_version": "1.2",
-        "full_text": {"v1": "OLD0 OLD1 GONE", "v2": "ADD0 MOD1 KEEP"},
+        "full_text": {"v1": v1, "v2": v2},
         "changes": [
             {
                 "id": "c-1",
                 "change_type": "added",
                 "text": {"old": None, "new": "ADD0"},
                 "path": {"v1": None, "v2": ["TITLE I"]},
-                "full_text_span": {"v1": None, "v2": {"start": 0, "end": 4}},
+                "full_text_span": {"v1": None, "v2": {"start": 7, "end": 11}},
             },
             {
                 "id": "c-2",
                 "change_type": "modified",
                 "text": {"old": "old1", "new": "MOD1"},
                 "path": {"v1": ["TITLE I"], "v2": ["TITLE I"]},
-                "full_text_span": {"v1": {"start": 0, "end": 4}, "v2": {"start": 5, "end": 9}},
+                "full_text_span": {"v1": {"start": 7, "end": 11}, "v2": {"start": 19, "end": 23}},
             },
             {
                 "id": "c-3",
                 "change_type": "removed",
                 "text": {"old": "GONE", "new": None},
                 "path": {"v1": ["TITLE I", "SEC 2"], "v2": None},
-                "full_text_span": {"v1": {"start": 10, "end": 14}, "v2": None},
+                "full_text_span": {"v1": {"start": 31, "end": 35}, "v2": None},
             },
         ],
     }
@@ -87,10 +92,31 @@ def test_added_and_modified_marks_projected():
     html = format_diff_html(_view(), _canonical())
     # Added: just an <ins> around the v2 slice.
     assert '<ins class="diff-add" id="attr-c-1">ADD0</ins>' in html
-    # Modified: old struck through, new inserted.
-    assert '<del class="diff-del">old1</del><ins class="diff-add" id="attr-c-2">MOD1</ins>' in html
+    # Modified: new text inserted (the old text renders as its own del rows).
+    assert '<ins class="diff-add" id="attr-c-2">MOD1</ins>' in html
     # Untouched tail text remains.
     assert "KEEP" in html
+
+
+def test_full_bill_rows_carry_line_number_gutter():
+    """Each source line renders as a row with its line number in the gutter."""
+    html = format_diff_html(_view(), _canonical())
+    # Page marker precedes the rows; line numbers sit in the gutter column.
+    assert '<div class="fb-page">p. 1</div>' in html
+    assert '<span class="fb-gutter">1</span>' in html
+    assert '<span class="fb-gutter">3</span>' in html
+    # The readable text column carries the content without the gutter prefix.
+    assert '<span class="fb-text"><ins class="diff-add" id="attr-c-1">ADD0</ins></span>' in html
+
+
+def test_modified_old_text_renders_as_del_rows():
+    """A modified change's old text is split into struck gutter rows, not a
+    single multi-line blob inside one cell."""
+    html = format_diff_html(_view(), _canonical())
+    assert (
+        '<div class="fb-row fb-del-row"><span class="fb-gutter"></span>'
+        '<span class="fb-text"><del class="diff-del">old1</del></span></div>'
+    ) in html
 
 
 def test_removed_appendix_lists_removals():

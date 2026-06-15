@@ -333,28 +333,113 @@ def _view_toggle_html(canonical: dict | None) -> str:
     )
 
 
-def _render_v2_mark(change: dict, v2_slice: str) -> str:
-    """Wrap a placed change's v2 text slice with the right tracked-change mark."""
+def _move_note(change: dict) -> str:
+    """Tooltip text for a moved span: a relocation note, with renumbering if known."""
+    move = change.get("move") or {}
+    if move.get("kind") == "renumbered":
+        return (
+            f"moved here (renumbered {escape(str(move.get('old_label', '')))}"
+            f" → {escape(str(move.get('new_label', '')))})"
+        )
+    return "moved here"
+
+
+def _wrap_mark(change: dict, slice_text: str, emitted_ids: set[str]) -> str:
+    """Wrap one line's slice of a placed change with the right tracked-change mark.
+
+    A change can span several source lines; this is called once per line it
+    touches, marking the *new* (v2) text. The ``id`` anchor is emitted only on
+    the change's first piece (tracked via ``emitted_ids``) so multi-line changes
+    stay valid HTML. A modified change's deleted old text is rendered separately
+    as its own rows (see ``_del_rows``), not inline here.
+    """
     cid = escape(str(change.get("id", "")))
     ct = change.get("change_type")
-    if ct == "added":
-        return f'<ins class="diff-add" id="attr-{cid}">{escape(v2_slice)}</ins>'
-    if ct == "modified":
-        old = (change.get("text") or {}).get("old") or ""
-        return (
-            f'<del class="diff-del">{escape(old)}</del><ins class="diff-add" id="attr-{cid}">{escape(v2_slice)}</ins>'
-        )
+    id_attr = ""
+    if cid and cid not in emitted_ids:
+        id_attr = f' id="attr-{cid}"'
+        emitted_ids.add(cid)
+    esc = escape(slice_text)
+    if ct in ("added", "modified"):
+        return f'<ins class="diff-add"{id_attr}>{esc}</ins>'
     if ct == "moved":
-        move = change.get("move") or {}
-        if move.get("kind") == "renumbered":
-            note = (
-                f"moved here (renumbered {escape(str(move.get('old_label', '')))}"
-                f" → {escape(str(move.get('new_label', '')))})"
-            )
-        else:
-            note = "moved here"
-        return f'<span class="moved-mark" id="attr-{cid}" title="{note}">{escape(v2_slice)}</span>'
-    return f'<del class="diff-del">{escape(v2_slice)}</del>'
+        return f'<span class="moved-mark"{id_attr} title="{_move_note(change)}">{esc}</span>'
+    return f'<del class="diff-del">{esc}</del>'
+
+
+def _del_rows(old_text: str) -> str:
+    """Render a modified change's deleted old text as struck-through gutter rows.
+
+    The old hunk text carries its own line breaks; splitting on them keeps each
+    line inside the row grid (instead of one multi-line blob in a single cell)
+    so the deletion reads in line with the surrounding bill.
+    """
+    rows = []
+    for line in old_text.split("\n"):
+        rows.append(
+            '<div class="fb-row fb-del-row"><span class="fb-gutter"></span>'
+            f'<span class="fb-text"><del class="diff-del">{escape(line)}</del></span></div>'
+        )
+    return "".join(rows)
+
+
+def _parse_full_bill_lines(text: str) -> list[dict]:
+    """Split pdf_full_text output into per-source-line display rows.
+
+    Each rendered line is ``{number:>5}  {content}`` (five spaces of padding when
+    the source line was unnumbered) and pages are separated by a single empty
+    line. Returns rows carrying the page number, the source line number, and the
+    char span of the *content* alone (the gutter prefix excluded) so change marks
+    land on the text, not on the line-number column. Blank-content lines are
+    dropped to avoid stray vertical gaps.
+    """
+    rows: list[dict] = []
+    page = 1
+    pos = 0
+    for raw in text.split("\n"):
+        start = pos
+        pos += len(raw) + 1  # +1 for the newline join() consumed
+        if raw == "":
+            page += 1  # the blank line between pages
+            continue
+        content = raw[7:]
+        if content == "":
+            continue
+        prefix = raw[:5].strip()
+        rows.append(
+            {
+                "page": page,
+                "line": int(prefix) if prefix.isdigit() else None,
+                "start": start + 7,
+                "end": start + len(raw),
+            }
+        )
+    return rows
+
+
+def _render_fb_row_body(text: str, row: dict, marks: list[dict], emitted_ids: set[str]) -> str:
+    """Render one row's content, wrapping any change spans that overlap it.
+
+    ``marks`` is sorted by start and non-overlapping, so a single forward scan
+    over the row's content range produces correctly ordered output. A change that
+    spans multiple rows is clamped to this row's range here and re-wrapped on each
+    row it covers.
+    """
+    cs, ce = row["start"], row["end"]
+    out: list[str] = []
+    p = cs
+    for mark in marks:
+        s, e = mark["start"], mark["end"]
+        if e <= cs or s >= ce:
+            continue
+        a, b = max(s, cs), min(e, ce)
+        if a > p:
+            out.append(escape(text[p:a]))
+        out.append(_wrap_mark(mark["change"], text[a:b], emitted_ids))
+        p = b
+    if p < ce:
+        out.append(escape(text[p:ce]))
+    return "".join(out)
 
 
 def _full_bill_meta_html(*, total: int, placed: int, removed: int, unplaced: int) -> str:
@@ -413,21 +498,46 @@ def _full_bill_html(canonical: dict) -> str:
             unplaced += 1
     placed_changes.sort(key=lambda c: c["full_text_span"]["v2"]["start"])
 
-    parts: list[str] = []
+    marks: list[dict] = []
     cursor = 0
-    placed = 0
     for change in placed_changes:
         start = change["full_text_span"]["v2"]["start"]
         end = change["full_text_span"]["v2"]["end"]
         if start < cursor:
             continue  # overlapping span; first placement wins
-        if start > cursor:
-            parts.append(escape(v2_text[cursor:start]))
-        parts.append(_render_v2_mark(change, v2_text[start:end]))
+        marks.append({"start": start, "end": end, "change": change})
         cursor = end
-        placed += 1
-    if cursor < len(v2_text):
-        parts.append(escape(v2_text[cursor:]))
+    placed = len(marks)
+
+    emitted_ids: set[str] = set()
+    emitted_dels: set[str] = set()
+    parts: list[str] = []
+    seen_page = 0
+    for row in _parse_full_bill_lines(v2_text):
+        if row["page"] != seen_page:
+            seen_page = row["page"]
+            parts.append(f'<div class="fb-page">p. {seen_page}</div>')
+        # A modified change's deleted old text renders as its own rows, just
+        # before the first row carrying its new text, so the deletion sits in
+        # line with the surrounding bill instead of as one blob in a cell.
+        for mark in marks:
+            change = mark["change"]
+            if change.get("change_type") != "modified":
+                continue
+            cid = str(change.get("id", ""))
+            if cid in emitted_dels:
+                continue
+            if mark["end"] <= row["start"] or mark["start"] >= row["end"]:
+                continue
+            old = (change.get("text") or {}).get("old") or ""
+            if old:
+                parts.append(_del_rows(old))
+            emitted_dels.add(cid)
+        gutter = str(row["line"]) if row["line"] is not None else ""
+        body = _render_fb_row_body(v2_text, row, marks, emitted_ids)
+        parts.append(
+            f'<div class="fb-row"><span class="fb-gutter">{gutter}</span><span class="fb-text">{body}</span></div>'
+        )
 
     meta = _full_bill_meta_html(
         total=len(canonical.get("changes", [])),
@@ -694,7 +804,15 @@ ins { background: var(--add-bg); text-decoration: none; color: var(--add-fg); pa
 
 /* Full-bill tracked-changes view */
 .full-bill-meta { font-size: 13px; color: var(--muted-fg); margin-bottom: 12px; }
-.full-bill { white-space: pre-wrap; font-size: 14px; line-height: 1.7; font-family: var(--mono); }
+.full-bill { font-size: 14px; line-height: 1.7; }
+.fb-row { display: grid; grid-template-columns: 3em 1fr; gap: 14px; align-items: baseline; }
+.fb-gutter { font-family: var(--mono); font-size: 11px; color: var(--muted-fg); text-align: right;
+  user-select: none; -webkit-user-select: none; }
+.fb-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.fb-del-row .fb-text { opacity: 0.85; }
+.fb-page { font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--muted-fg);
+  margin: 18px 0 6px; border-top: 1px dashed var(--border); padding-top: 6px; user-select: none; }
+.full-bill > .fb-page:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
 .full-bill .moved-mark { background: var(--secondary); color: var(--primary); padding: 0 1px; }
 .removed-appendix { margin-top: 28px; border-top: 1px solid var(--border); padding-top: 16px; }
 .removed-appendix__note { font-size: 13px; color: var(--muted-fg); margin-bottom: 12px; }
