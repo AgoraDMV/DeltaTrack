@@ -179,9 +179,37 @@ def _build_nav_item(change: ChangeView, index: int) -> str:
     )
 
 
+def _build_change_groups(view: DiffView) -> str:
+    """Group nav items under collapsible section headers (collapsed by default).
+
+    Insertion-ordered by first appearance; an empty `group_label` collects into a
+    trailing "Uncategorized" group. `_build_nav_item`'s <li> is unchanged — only
+    the wrapping differs. Returns "<ul></ul>" when there are no changes.
+    """
+    groups: dict[str, list[str]] = {}
+    for i, c in enumerate(view.changes):
+        groups.setdefault(c.group_label or "Uncategorized", []).append(_build_nav_item(c, i))
+    if not groups:
+        return "<ul></ul>"
+    # Insertion order, but "Uncategorized" always trails the real sections.
+    labels = [label for label in groups if label != "Uncategorized"]
+    if "Uncategorized" in groups:
+        labels.append("Uncategorized")
+    blocks = [
+        f'<details class="nav-group"><summary>{escape(label)}'
+        f' <span class="nav-group__count">({len(groups[label])})</span></summary>'
+        f"<ul>{''.join(groups[label])}</ul></details>"
+        for label in labels
+    ]
+    return "".join(blocks)
+
+
 def _build_sidebar(view: DiffView) -> str:
-    """Render the sidebar nav. Empty <ul></ul> when there are no changes."""
-    items = "".join(_build_nav_item(c, i) for i, c in enumerate(view.changes))
+    """Render the sidebar: change-type filters + changes grouped by section.
+
+    The full-bill TOC variant is rendered alongside by `_build_sidebar_toc` and
+    swapped in by the view toggle.
+    """
     return (
         '<nav class="sidebar">\n'
         '<div class="filters">\n'
@@ -190,7 +218,7 @@ def _build_sidebar(view: DiffView) -> str:
         '<label class="filter-row"><input type="radio" name="change-filter" value="financial"> Financial</label>\n'
         '<label class="filter-row"><input type="radio" name="change-filter" value="structural"> Structural</label>\n'
         "</div>\n"
-        f"<ul>{items}</ul>\n"
+        f"{_build_change_groups(view)}\n"
         "</nav>"
     )
 
@@ -732,6 +760,18 @@ h1, h2, h3, h4 { font-family: var(--serif); letter-spacing: -0.02em; }
 .sidebar a:hover { background: var(--secondary); }
 .sidebar .nav-item.unanchored a { color: var(--muted-fg); font-style: italic; }
 
+/* Collapsible section groups in the changes sidebar */
+.nav-group { margin-bottom: 4px; }
+.nav-group > summary { cursor: pointer; padding: 6px 8px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 600; color: var(--fg); list-style: none;
+  display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.nav-group > summary::-webkit-details-marker { display: none; }
+.nav-group > summary::before { content: "\\25b8"; color: var(--muted-fg); font-size: 10px; margin-right: 2px; }
+.nav-group[open] > summary::before { content: "\\25be"; }
+.nav-group > summary:hover { background: var(--secondary); }
+.nav-group__count { color: var(--muted-fg); font-weight: 400; font-variant-numeric: tabular-nums; }
+.nav-group ul { margin: 2px 0 6px 10px; }
+
 /* Filters */
 .filters { margin-bottom: 16px; }
 .filters__title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
@@ -1032,6 +1072,15 @@ document.addEventListener('DOMContentLoaded', function() {
       var a = li.querySelector('a');
       var card = a ? document.getElementById(a.getAttribute('href').slice(1)) : null;
       li.style.display = (card && card.style.display !== 'none') ? '' : 'none';
+    });
+    // Update each section group's count and hide groups with no visible items.
+    document.querySelectorAll('.nav-group').forEach(function(g) {
+      var vis = [].slice.call(g.querySelectorAll('.nav-item')).filter(function(li) {
+        return li.style.display !== 'none';
+      }).length;
+      g.style.display = vis === 0 ? 'none' : '';
+      var cnt = g.querySelector('.nav-group__count');
+      if (cnt) cnt.textContent = '(' + vis + ')';
     });
     var empty = document.getElementById('filter-empty');
     if (empty) empty.hidden = visible !== 0;

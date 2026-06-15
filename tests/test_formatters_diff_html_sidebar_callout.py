@@ -86,6 +86,24 @@ def test_sidebar_filter_radios_present():
     assert "<ul></ul>" in sidebar  # empty when no changes
 
 
+def test_sidebar_groups_changes_by_section():
+    sidebar = _build_sidebar(
+        _view(
+            [
+                _change(group_label="TITLE I"),
+                _change(group_label="TITLE I", change_type="added"),
+                _change(group_label="TITLE II"),
+                _change(group_label=""),  # falls into Uncategorized
+            ]
+        )
+    )
+    assert sidebar.count('<details class="nav-group">') == 3  # collapsed (no open attr)
+    assert '<summary>TITLE I <span class="nav-group__count">(2)</span></summary>' in sidebar
+    assert '<summary>TITLE II <span class="nav-group__count">(1)</span></summary>' in sidebar
+    assert '<summary>Uncategorized <span class="nav-group__count">(1)</span></summary>' in sidebar
+    assert sidebar.count("<li ") == 4  # every change still rendered
+
+
 # ---------- Callout ---------------------------------------------------------
 
 
