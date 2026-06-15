@@ -92,8 +92,12 @@ def test_added_and_modified_marks_projected():
     html = format_diff_html(_view(), _canonical())
     # Added: just an <ins> around the v2 slice.
     assert '<ins class="diff-add" id="attr-c-1">ADD0</ins>' in html
-    # Modified: new text inserted (the old text renders as its own del rows).
-    assert '<ins class="diff-add" id="attr-c-2">MOD1</ins>' in html
+    # Modified: new text highlighted in place; old text is not shown inline (it
+    # lives in the Changes cards), so "old1" never reaches the full-bill view.
+    assert '<span class="diff-mod" id="attr-c-2"' in html
+    assert ">MOD1</span>" in html
+    assert '<del class="diff-del">old1</del>' not in html  # old text not rendered inline
+    assert "fb-del-row" not in html
     # Untouched tail text remains.
     assert "KEEP" in html
 
@@ -109,14 +113,13 @@ def test_full_bill_rows_carry_line_number_gutter():
     assert '<span class="fb-text"><ins class="diff-add" id="attr-c-1">ADD0</ins></span>' in html
 
 
-def test_modified_old_text_renders_as_del_rows():
-    """A modified change's old text is split into struck gutter rows, not a
-    single multi-line blob inside one cell."""
+def test_modified_highlighted_in_place_without_old_text():
+    """A modified change highlights its new text in place; the old text stays in
+    the Changes cards (not echoed into the full-bill view)."""
     html = format_diff_html(_view(), _canonical())
-    assert (
-        '<div class="fb-row fb-del-row"><span class="fb-gutter"></span>'
-        '<span class="fb-text"><del class="diff-del">old1</del></span></div>'
-    ) in html
+    assert 'title="modified — see Changes for the old text"' in html
+    assert "fb-del-row" not in html
+    assert '<del class="diff-del">old1</del>' not in html
 
 
 def test_removed_appendix_lists_removals():

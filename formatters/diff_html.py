@@ -350,8 +350,10 @@ def _wrap_mark(change: dict, slice_text: str, emitted_ids: set[str]) -> str:
     A change can span several source lines; this is called once per line it
     touches, marking the *new* (v2) text. The ``id`` anchor is emitted only on
     the change's first piece (tracked via ``emitted_ids``) so multi-line changes
-    stay valid HTML. A modified change's deleted old text is rendered separately
-    as its own rows (see ``_del_rows``), not inline here.
+    stay valid HTML. Modified spans are highlighted in place rather than shown
+    with their old text inline — the precise old→new wording lives in the
+    Changes cards, which keeps this reading view compact (PDF hunks can run to
+    hundreds of lines, and the old text is often just a re-wrap of the new).
     """
     cid = escape(str(change.get("id", "")))
     ct = change.get("change_type")
@@ -360,27 +362,13 @@ def _wrap_mark(change: dict, slice_text: str, emitted_ids: set[str]) -> str:
         id_attr = f' id="attr-{cid}"'
         emitted_ids.add(cid)
     esc = escape(slice_text)
-    if ct in ("added", "modified"):
+    if ct == "added":
         return f'<ins class="diff-add"{id_attr}>{esc}</ins>'
+    if ct == "modified":
+        return f'<span class="diff-mod"{id_attr} title="modified — see Changes for the old text">{esc}</span>'
     if ct == "moved":
         return f'<span class="moved-mark"{id_attr} title="{_move_note(change)}">{esc}</span>'
     return f'<del class="diff-del">{esc}</del>'
-
-
-def _del_rows(old_text: str) -> str:
-    """Render a modified change's deleted old text as struck-through gutter rows.
-
-    The old hunk text carries its own line breaks; splitting on them keeps each
-    line inside the row grid (instead of one multi-line blob in a single cell)
-    so the deletion reads in line with the surrounding bill.
-    """
-    rows = []
-    for line in old_text.split("\n"):
-        rows.append(
-            '<div class="fb-row fb-del-row"><span class="fb-gutter"></span>'
-            f'<span class="fb-text"><del class="diff-del">{escape(line)}</del></span></div>'
-        )
-    return "".join(rows)
 
 
 def _parse_full_bill_lines(text: str) -> list[dict]:
@@ -510,29 +498,12 @@ def _full_bill_html(canonical: dict) -> str:
     placed = len(marks)
 
     emitted_ids: set[str] = set()
-    emitted_dels: set[str] = set()
     parts: list[str] = []
     seen_page = 0
     for row in _parse_full_bill_lines(v2_text):
         if row["page"] != seen_page:
             seen_page = row["page"]
             parts.append(f'<div class="fb-page">p. {seen_page}</div>')
-        # A modified change's deleted old text renders as its own rows, just
-        # before the first row carrying its new text, so the deletion sits in
-        # line with the surrounding bill instead of as one blob in a cell.
-        for mark in marks:
-            change = mark["change"]
-            if change.get("change_type") != "modified":
-                continue
-            cid = str(change.get("id", ""))
-            if cid in emitted_dels:
-                continue
-            if mark["end"] <= row["start"] or mark["start"] >= row["end"]:
-                continue
-            old = (change.get("text") or {}).get("old") or ""
-            if old:
-                parts.append(_del_rows(old))
-            emitted_dels.add(cid)
         gutter = str(row["line"]) if row["line"] is not None else ""
         body = _render_fb_row_body(v2_text, row, marks, emitted_ids)
         parts.append(
@@ -809,7 +780,7 @@ ins { background: var(--add-bg); text-decoration: none; color: var(--add-fg); pa
 .fb-gutter { font-family: var(--mono); font-size: 11px; color: var(--muted-fg); text-align: right;
   user-select: none; -webkit-user-select: none; }
 .fb-text { white-space: pre-wrap; overflow-wrap: anywhere; }
-.fb-del-row .fb-text { opacity: 0.85; }
+.full-bill .diff-mod { background: #fbf0d9; border-bottom: 2px solid var(--gold); }
 .fb-page { font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--muted-fg);
   margin: 18px 0 6px; border-top: 1px dashed var(--border); padding-top: 6px; user-select: none; }
 .full-bill > .fb-page:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
