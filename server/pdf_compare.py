@@ -17,6 +17,7 @@ pypdfium2 to open them and are deleted before this function returns.
 
 from __future__ import annotations
 
+import re
 import tempfile
 from pathlib import Path
 
@@ -73,6 +74,44 @@ def _build_canonical(
     )
 
 
+_BILL_DESIGNATOR = re.compile(
+    r"\b(H\.\s?R\.|S\.\s?J\.\s?RES\.|H\.\s?J\.\s?RES\.|S\.\s?CON\.\s?RES\.|H\.\s?CON\.\s?RES\."
+    r"|S\.\s?RES\.|H\.\s?RES\.|S\.)\s?(\d{1,5})\b"
+)
+
+
+def _derive_bill_title(canonical: dict) -> str:
+    """Best-effort report heading from the document's opening text.
+
+    Pulls the chamber designator (e.g. "H.R. 4366") and the long title that
+    follows "AN ACT" / "A BILL". Returns "" when neither is found (the renderer
+    then falls back to a generic heading). This parses GPO front matter
+    heuristically and is not yet validated across bill types — see the
+    deep-data-testing follow-up.
+    """
+    full_text = canonical.get("full_text") or {}
+    text = full_text.get("v2") or full_text.get("v1") or ""
+    head = " ".join(line.strip() for line in text[:1500].splitlines() if line.strip())
+
+    designator = ""
+    m = _BILL_DESIGNATOR.search(head)
+    if m:
+        designator = f"{m.group(1).replace(' ', '')} {m.group(2)}"
+
+    title = ""
+    m2 = re.search(r"\bAN ACT\b\s+(.+?\bpurposes\.)", head, re.IGNORECASE) or re.search(
+        r"\bA BILL\b\s+(.+?\bpurposes\.)", head, re.IGNORECASE
+    )
+    if m2:
+        title = re.sub(r"\s+", " ", m2.group(1)).strip()
+        if len(title) > 140:
+            title = title[:137].rstrip() + "…"
+
+    if designator and title:
+        return f"{designator} — {title}"
+    return designator or title
+
+
 def compare_pdfs(
     start_bytes: bytes,
     end_bytes: bytes,
@@ -107,4 +146,5 @@ def compare_pdfs_html(
         v2_label=end_label,
     )
     canonical = _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label)
-    return format_diff_html(view, canonical=canonical)
+    title = _derive_bill_title(canonical)
+    return format_diff_html(view, canonical=canonical, title=title)

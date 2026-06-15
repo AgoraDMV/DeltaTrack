@@ -184,14 +184,13 @@ def _build_sidebar(view: DiffView) -> str:
     items = "".join(_build_nav_item(c, i) for i, c in enumerate(view.changes))
     return (
         '<nav class="sidebar">\n'
+        '<input type="search" id="sidebar-filter" placeholder="Search words or terms…">\n'
         '<div class="filters">\n'
         '<div class="filters__title">Filter changes</div>\n'
         '<label class="filter-row"><input type="radio" name="change-filter" value="all" checked> All</label>\n'
-        '<label class="filter-row"><input type="radio" name="change-filter" value="financial"> Financial only</label>\n'
-        '<label class="filter-row"><input type="radio" name="change-filter" value="structural">'
-        " Structural only</label>\n"
+        '<label class="filter-row"><input type="radio" name="change-filter" value="financial"> Financial</label>\n'
+        '<label class="filter-row"><input type="radio" name="change-filter" value="structural"> Structural</label>\n'
         "</div>\n"
-        '<input type="text" id="sidebar-filter" placeholder="Filter sections...">\n'
         f"<ul>{items}</ul>\n"
         "</nav>"
     )
@@ -507,31 +506,45 @@ def _export_modal_html(canonical: dict | None) -> str:
     )
 
 
-def format_diff_html(view: DiffView, canonical: dict | None = None) -> str:
+def format_diff_html(view: DiffView, canonical: dict | None = None, title: str | None = None) -> str:
     """Assemble a complete standalone HTML report from a DiffView.
 
     When ``canonical`` is provided (PDF path), the canonical diff JSON is
     embedded so the report can offer the full-bill view and the export
     download client-side. When omitted (XML path), the report is unchanged.
+
+    ``title``, when given, sets the report heading (the PDF path passes a bill
+    title derived from the document); otherwise it falls back to the bill
+    label, or a generic heading when no label is available.
     """
     bill_label = _bill_label(view)
+    if title and title.strip():
+        heading = escape(title.strip())
+        doc_title = f"{escape(title.strip())} — Diff"
+    elif bill_label.strip():
+        heading = f"{bill_label} &mdash; Comparison"
+        doc_title = f"{bill_label} — Diff"
+    else:
+        heading = "Bill Comparison"
+        doc_title = "Bill Comparison — Diff"
     data_script = _embed_canonical(canonical) if canonical else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{bill_label} — Diff</title>
+<title>{doc_title}</title>
 <style>
 {_CSS}
 </style>
 </head>
 <body>
+<button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar" title="Toggle sidebar">&#9776;</button>
 <div class="layout">
 {_build_sidebar(view)}
 <div class="main">
 <div class="report-header">
-<h1>{bill_label} &mdash; Comparison</h1>
+<h1>{heading}</h1>
 <div class="versions">{_versions_html(view)}</div>
 <div class="summary-bar">{_summary_bar_html(view.summary)}</div>
 {_view_toggle_html(canonical)}
@@ -735,9 +748,26 @@ ins { background: var(--add-bg); text-decoration: none; color: var(--add-fg); pa
   background: var(--card); cursor: pointer; font-family: var(--sans); font-size: 13px; box-shadow: var(--shadow-soft); }
 .nav-buttons button:hover { background: var(--secondary); }
 
+/* Collapsible sidebar + responsive layout */
+.sidebar { transition: transform 0.2s ease; z-index: 40; padding-top: 56px; }
+.main { transition: margin-left 0.2s ease; }
+.sidebar-toggle { position: fixed; top: 12px; left: 12px; z-index: 60; width: 38px; height: 38px;
+  border: 1px solid var(--border); border-radius: var(--radius); background: var(--card);
+  color: var(--fg); cursor: pointer; font-size: 16px; box-shadow: var(--shadow-soft); }
+.sidebar-toggle:hover { background: var(--secondary); }
+body.nav-collapsed .sidebar { transform: translateX(-100%); }
+body.nav-collapsed .main { margin-left: 0; padding-left: 64px; }
+@media (max-width: 820px) {
+  .main { margin-left: 0; padding: 64px 18px 24px; }
+  body.nav-collapsed .main { padding-left: 18px; }
+  .sidebar { box-shadow: 0 8px 24px -8px rgba(28,28,58,0.35); }
+  .report-header h1 { font-size: 20px; }
+  .summary-bar { gap: 8px; }
+}
+
 /* Print */
 @media print {
-  .sidebar, .nav-buttons, #sidebar-filter { display: none; }
+  .sidebar, .nav-buttons, .sidebar-toggle, #sidebar-filter { display: none; }
   .main { margin-left: 0; }
   .change-card { break-inside: avoid; }
 }
@@ -808,39 +838,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Change-type filters (All / Financial only / Structural only)
-  var changeFilter = function(mode) {
-    var match = function(el) {
+  // Combined filter: change-type radios + free-text search over card content.
+  var searchInput = document.getElementById('sidebar-filter');
+  function applyFilters() {
+    var typeEl = document.querySelector('input[name="change-filter"]:checked');
+    var mode = typeEl ? typeEl.value : 'all';
+    var q = (searchInput ? searchInput.value : '').trim().toLowerCase();
+    var typeOk = function(el) {
       if (mode === 'financial') return el.dataset.financial === '1';
       if (mode === 'structural') return el.dataset.type !== 'modified';
       return true;
     };
     var visible = 0;
     document.querySelectorAll('.change-card').forEach(function(c) {
-      var show = match(c);
+      var show = typeOk(c) && (!q || c.textContent.toLowerCase().indexOf(q) !== -1);
       c.style.display = show ? '' : 'none';
       if (show) visible++;
     });
+    // Mirror each nav item to its target card's visibility (keeps search in sync).
     document.querySelectorAll('.sidebar .nav-item').forEach(function(li) {
-      li.style.display = match(li) ? '' : 'none';
+      var a = li.querySelector('a');
+      var card = a ? document.getElementById(a.getAttribute('href').slice(1)) : null;
+      li.style.display = (card && card.style.display !== 'none') ? '' : 'none';
     });
     var empty = document.getElementById('filter-empty');
     if (empty) empty.hidden = visible !== 0;
-  };
+  }
   document.querySelectorAll('input[name="change-filter"]').forEach(function(r) {
-    r.addEventListener('change', function() { if (r.checked) changeFilter(r.value); });
+    r.addEventListener('change', applyFilters);
   });
+  if (searchInput) searchInput.addEventListener('input', applyFilters);
 
-  // Sidebar filter
-  var filter = document.getElementById('sidebar-filter');
-  if (filter) {
-    filter.addEventListener('input', function() {
-      var q = this.value.toLowerCase();
-      document.querySelectorAll('.sidebar li').forEach(function(li) {
-        li.style.display = li.textContent.toLowerCase().includes(q) ? '' : 'none';
-      });
+  // Collapsible sidebar (and off-canvas on small screens).
+  var sidebarToggle = document.getElementById('sidebar-toggle');
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', function() {
+      document.body.classList.toggle('nav-collapsed');
     });
   }
+  if (window.innerWidth < 820) document.body.classList.add('nav-collapsed');
 
   // Prev/next navigation
   var cards = document.querySelectorAll('.change-card');
