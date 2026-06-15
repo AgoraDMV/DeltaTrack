@@ -116,10 +116,12 @@ def test_export_button_and_modal_present():
     assert 'id="dl-html"' in html
 
 
-def test_export_prompts_rendered_but_hidden_until_download():
+def test_export_prompts_shown_immediately():
     html = format_diff_html(_view(), _canonical())
-    # The prompts block ships hidden; JS reveals it after a download fires.
-    assert 'id="export-prompts" class="export-prompts" hidden' in html
+    # Prompts are visible as soon as the modal opens — not gated on a download.
+    assert 'id="export-prompts" class="export-prompts"' in html
+    assert 'id="export-prompts" class="export-prompts" hidden' not in html
+    assert "<h3>Ask AI</h3>" in html
     for prompt in _LLM_PROMPTS:
         assert prompt in html
 

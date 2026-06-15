@@ -454,7 +454,7 @@ def _export_button_html(canonical: dict | None) -> str:
     """The Export button that opens the download/prompts modal. PDF path only."""
     if not _has_full_bill(canonical):
         return ""
-    return '<button id="export-open" class="export-btn" type="button">Export &amp; ask AI</button>'
+    return '<button id="export-open" class="export-btn" type="button">Export and Share</button>'
 
 
 def _export_modal_html(canonical: dict | None) -> str:
@@ -482,10 +482,10 @@ def _export_modal_html(canonical: dict | None) -> str:
         '<button id="dl-json" class="export-dl export-dl--primary" type="button">Download diff.json</button>'
         '<button id="dl-html" class="export-dl" type="button">Download report.html</button>'
         "</div>"
-        '<div id="export-prompts" class="export-prompts" hidden>'
-        "<h3>Ask ChatGPT, Claude, or Copilot</h3>"
-        '<p class="export-prompts__lead">Upload the <code>diff.json</code> you just downloaded, '
-        "then paste any of these:</p>"
+        '<div id="export-prompts" class="export-prompts">'
+        "<h3>Ask AI</h3>"
+        '<p class="export-prompts__lead">Download the <code>diff.json</code> above, upload it to '
+        "your AI assistant, then paste any of these:</p>"
         f'<ul class="prompt-list">{prompts}</ul>'
         "</div>"
         "</div></div>"
@@ -737,17 +737,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (e.key === 'Escape' && !exportModal.hidden) closeExport();
     });
 
-    var revealPrompts = function() {
-      var p = document.getElementById('export-prompts');
-      if (p) p.hidden = false;
-    };
     var downloadBlob = function(filename, text, type) {
       var url = URL.createObjectURL(new Blob([text], {type: type}));
       var a = document.createElement('a');
       a.href = url; a.download = filename;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
-      revealPrompts();
     };
     var dlJson = document.getElementById('dl-json');
     if (dlJson) dlJson.addEventListener('click', function() {
