@@ -80,9 +80,9 @@ def test_sidebar_emits_one_li_per_change():
     assert sidebar.index('href="#change-0"') < sidebar.index('href="#change-1"')
 
 
-def test_sidebar_filter_input_present():
+def test_sidebar_filter_radios_present():
     sidebar = _build_sidebar(_view([]))
-    assert 'id="sidebar-filter"' in sidebar
+    assert 'name="change-filter"' in sidebar  # text search moved to the action bar
     assert "<ul></ul>" in sidebar  # empty when no changes
 
 

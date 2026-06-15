@@ -184,7 +184,6 @@ def _build_sidebar(view: DiffView) -> str:
     items = "".join(_build_nav_item(c, i) for i, c in enumerate(view.changes))
     return (
         '<nav class="sidebar">\n'
-        '<input type="search" id="sidebar-filter" placeholder="Search words or terms…">\n'
         '<div class="filters">\n'
         '<div class="filters__title">Filter changes</div>\n'
         '<label class="filter-row"><input type="radio" name="change-filter" value="all" checked> All</label>\n'
@@ -571,6 +570,22 @@ def _nav_controls_html(canonical: dict | None) -> str:
     )
 
 
+def _find_bar_html(canonical: dict | None) -> str:
+    """In-page find: highlights matches in the active view and steps through them
+    (Ctrl+F style). PDF path only. JS wires the input, counter, and stepping; see
+    the find block in `_JS`."""
+    if not _has_full_bill(canonical):
+        return ""
+    return (
+        '<div class="find-bar" role="search">'
+        '<input id="find-input" type="search" placeholder="Find in view…" aria-label="Find in view">'
+        '<span id="find-counter" class="find-counter" aria-live="polite">0 / 0</span>'
+        '<button id="find-prev" type="button" aria-label="Previous match" disabled>&uarr;</button>'
+        '<button id="find-next" type="button" aria-label="Next match" disabled>&darr;</button>'
+        "</div>"
+    )
+
+
 def _export_modal_html(canonical: dict | None) -> str:
     """Modal: download diff.json / report.html, then reveal the AI prompts.
 
@@ -660,7 +675,10 @@ def format_diff_html(
 <div class="summary-bar">{_summary_bar_html(view.summary)}</div>
 </div>
 <div class="action-bar">
+<div class="action-bar__left">
 {_view_toggle_html(canonical)}
+{_find_bar_html(canonical)}
+</div>
 <div class="action-bar__group">
 {_nav_controls_html(canonical)}
 {_export_button_html(canonical)}
@@ -800,7 +818,19 @@ ins { background: var(--add-bg); text-decoration: none; color: var(--add-fg); pa
 .action-bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center;
   justify-content: space-between; gap: 12px; flex-wrap: wrap; background: var(--bg);
   border-bottom: 1px solid var(--border); padding: 10px 0; margin-bottom: 16px; }
+.action-bar__left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .action-bar__group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.find-bar { display: inline-flex; align-items: center; gap: 4px; }
+.find-bar input { padding: 5px 10px; border: 1px solid var(--border); border-radius: var(--radius);
+  font: inherit; font-family: var(--sans); font-size: 13px; width: 180px; background: var(--card); }
+.find-bar button { padding: 5px 9px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--card); cursor: pointer; font-family: var(--sans); font-size: 13px; }
+.find-bar button:hover { background: var(--secondary); }
+.find-bar button[disabled] { opacity: 0.4; cursor: default; }
+.find-counter { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--muted-fg);
+  min-width: 3.5em; text-align: center; }
+mark.find-hit { background: var(--accent); color: inherit; border-radius: 2px; scroll-margin-top: 64px; }
+mark.find-hit--current { background: var(--gold); color: #fff; }
 .nav-controls { display: inline-flex; align-items: center; gap: 4px; }
 .nav-controls button { padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius);
   background: var(--card); cursor: pointer; font-family: var(--sans); font-size: 14px;
@@ -894,19 +924,24 @@ body.nav-collapsed .main { margin-left: 0; padding-left: 64px; }
   .sidebar { box-shadow: 0 8px 24px -8px rgba(28,28,58,0.35); }
   .report-header h1 { font-size: 20px; }
   .summary-bar { gap: 8px; }
-  /* Don't pin the top bar over the fixed hamburger; drop nav to a thumb-reach
-     bottom bar and pad the page so the last content clears it. */
+  /* Don't pin the top bar over the fixed hamburger; drop nav + find to a
+     thumb-reach bottom bar (find row above the change-nav row) and pad the page
+     so the last content clears both. */
   .action-bar { position: static; }
-  body { padding-bottom: 64px; }
+  body { padding-bottom: 108px; }
   .nav-controls { position: fixed; left: 0; right: 0; bottom: 0; z-index: 35;
     justify-content: center; gap: 24px; background: var(--card);
     border-top: 1px solid var(--border); box-shadow: 0 -2px 10px rgba(28,28,58,0.12);
     padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
+  .find-bar { position: fixed; left: 0; right: 0; bottom: 46px; z-index: 35;
+    justify-content: center; background: var(--card); border-top: 1px solid var(--border);
+    padding: 8px 16px; }
+  .find-bar input { flex: 1; max-width: 320px; }
 }
 
 /* Print */
 @media print {
-  .sidebar, .action-bar, .sidebar-toggle, #sidebar-filter { display: none; }
+  .sidebar, .action-bar, .sidebar-toggle { display: none; }
   .main { margin-left: 0; }
   .change-card { break-inside: avoid; }
 }
@@ -977,12 +1012,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Combined filter: change-type radios + free-text search over card content.
-  var searchInput = document.getElementById('sidebar-filter');
+  // Change-type filter: All / Financial / Structural (radios only).
   function applyFilters() {
     var typeEl = document.querySelector('input[name="change-filter"]:checked');
     var mode = typeEl ? typeEl.value : 'all';
-    var q = (searchInput ? searchInput.value : '').trim().toLowerCase();
     var typeOk = function(el) {
       if (mode === 'financial') return el.dataset.financial === '1';
       if (mode === 'structural') return el.dataset.type !== 'modified';
@@ -990,11 +1023,11 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     var visible = 0;
     document.querySelectorAll('.change-card').forEach(function(c) {
-      var show = typeOk(c) && (!q || c.textContent.toLowerCase().indexOf(q) !== -1);
+      var show = typeOk(c);
       c.style.display = show ? '' : 'none';
       if (show) visible++;
     });
-    // Mirror each nav item to its target card's visibility (keeps search in sync).
+    // Mirror each nav item to its target card's visibility.
     document.querySelectorAll('.sidebar .nav-item').forEach(function(li) {
       var a = li.querySelector('a');
       var card = a ? document.getElementById(a.getAttribute('href').slice(1)) : null;
@@ -1006,7 +1039,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('input[name="change-filter"]').forEach(function(r) {
     r.addEventListener('change', applyFilters);
   });
-  if (searchInput) searchInput.addEventListener('input', applyFilters);
 
   // Collapsible sidebar (and off-canvas on small screens).
   var sidebarToggle = document.getElementById('sidebar-toggle');
@@ -1050,9 +1082,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   if (prevBtn) prevBtn.addEventListener('click', function() { goTo(current - 1); });
   if (nextBtn) nextBtn.addEventListener('click', function() { goTo(current + 1); });
-  // Arrow keys, unless the user is typing in the search box.
+  // Arrow keys for change-nav, unless the user is typing in a field.
   document.addEventListener('keydown', function(e) {
-    if (e.target === searchInput || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target.tagName === 'INPUT' || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === 'ArrowRight') { goTo(current + 1); }
     else if (e.key === 'ArrowLeft') { goTo(current - 1); }
   });
@@ -1062,8 +1094,95 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('input[name="change-filter"]').forEach(function(r) {
     r.addEventListener('change', resetNav);
   });
-  if (searchInput) searchInput.addEventListener('input', resetNav);
   refreshNav();
+
+  // In-page find: highlight matches in the active view and step through them.
+  var findInput = document.getElementById('find-input');
+  var findCounter = document.getElementById('find-counter');
+  var findPrev = document.getElementById('find-prev');
+  var findNext = document.getElementById('find-next');
+  var findHits = [];
+  var findIdx = -1;
+  function activeView() {
+    var full = document.querySelector('.view-full');
+    if (full && !full.hidden) return full;
+    return document.querySelector('.view-changes') || document.body;
+  }
+  function clearFind() {
+    var parents = [];
+    document.querySelectorAll('mark.find-hit').forEach(function(m) {
+      m.parentNode.replaceChild(document.createTextNode(m.textContent), m);
+      parents.push(m.parentNode);
+    });
+    parents.forEach(function(p) { if (p) p.normalize(); });
+    findHits = [];
+    findIdx = -1;
+  }
+  function updateFindCounter() {
+    if (findCounter) findCounter.textContent = (findIdx + 1) + ' / ' + findHits.length;
+    if (findPrev) findPrev.disabled = findHits.length === 0;
+    if (findNext) findNext.disabled = findHits.length === 0;
+  }
+  function setCurrentHit(i) {
+    if (!findHits.length) { updateFindCounter(); return; }
+    if (findHits[findIdx]) findHits[findIdx].classList.remove('find-hit--current');
+    findIdx = (i % findHits.length + findHits.length) % findHits.length;
+    var cur = findHits[findIdx];
+    cur.classList.add('find-hit--current');
+    cur.scrollIntoView({behavior: 'smooth', block: 'center'});
+    updateFindCounter();
+  }
+  function runFind() {
+    clearFind();
+    var q = (findInput ? findInput.value : '').trim();
+    if (q.length < 2) { updateFindCounter(); return; }
+    var root = activeView();
+    var ql = q.toLowerCase();
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(node) {
+        if (!node.nodeValue || node.nodeValue.toLowerCase().indexOf(ql) === -1) return NodeFilter.FILTER_REJECT;
+        var el = node.parentElement;  // skip filter-hidden subtrees
+        if (!el || (el.offsetParent === null && el.tagName !== 'BODY')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [];  // snapshot before mutating the tree
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function(node) {
+      var lower = node.nodeValue.toLowerCase();
+      var starts = [], from = 0, at;
+      while ((at = lower.indexOf(ql, from)) !== -1) { starts.push(at); from = at + ql.length; }
+      for (var k = starts.length - 1; k >= 0; k--) {  // wrap right-to-left so offsets stay valid
+        var tail = node.splitText(starts[k]);
+        tail.splitText(ql.length);
+        var mark = document.createElement('mark');
+        mark.className = 'find-hit';
+        mark.textContent = tail.nodeValue;
+        tail.parentNode.replaceChild(mark, tail);
+      }
+    });
+    findHits = [].slice.call(root.querySelectorAll('mark.find-hit'));
+    findIdx = -1;
+    updateFindCounter();
+    if (findHits.length) setCurrentHit(0);
+  }
+  if (findInput) {
+    var findTimer;
+    findInput.addEventListener('input', function() {
+      clearTimeout(findTimer);
+      findTimer = setTimeout(runFind, 150);
+    });
+    findInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); setCurrentHit(findIdx + (e.shiftKey ? -1 : 1)); }
+    });
+  }
+  if (findPrev) findPrev.addEventListener('click', function() { setCurrentHit(findIdx - 1); });
+  if (findNext) findNext.addEventListener('click', function() { setCurrentHit(findIdx + 1); });
+  // Re-scope find to whatever's now visible when the view or filter changes.
+  toggleBtns.forEach(function(b) { b.addEventListener('click', function() { setTimeout(runFind, 0); }); });
+  document.querySelectorAll('input[name="change-filter"]').forEach(function(r) {
+    r.addEventListener('change', function() { setTimeout(runFind, 0); });
+  });
 
   // Financial table sort (groups rowspan rows together by data-group)
   document.querySelectorAll('.financial-table th').forEach(function(th, colIdx) {

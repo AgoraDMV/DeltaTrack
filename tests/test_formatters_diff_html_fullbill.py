@@ -105,6 +105,21 @@ def test_no_nav_controls_without_canonical():
     assert 'id="nav-counter"' not in html
 
 
+def test_find_bar_present():
+    html = format_diff_html(_view(), _canonical())
+    assert 'id="find-input"' in html
+    assert 'id="find-counter"' in html
+    assert 'id="find-prev"' in html
+    assert 'id="find-next"' in html
+    # The sidebar search box is gone.
+    assert 'id="sidebar-filter"' not in html
+
+
+def test_no_find_bar_without_canonical():
+    html = format_diff_html(_view())
+    assert 'id="find-input"' not in html
+
+
 def test_added_and_modified_marks_projected():
     html = format_diff_html(_view(), _canonical())
     # Added: just an <ins> around the v2 slice.
