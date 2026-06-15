@@ -153,4 +153,25 @@ def compare_pdfs_html(
     canonical = _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label)
     display_canonical = _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label, printed=True)
     title = _derive_bill_title(canonical)
-    return format_diff_html(view, canonical=canonical, display_canonical=display_canonical, title=title)
+    sections = _section_nav(pdf_diff, new_pages)
+    return format_diff_html(
+        view, canonical=canonical, display_canonical=display_canonical, title=title, sections=sections
+    )
+
+
+def _section_nav(pdf_diff: PdfDiff, new_pages: list[Page]) -> list[dict]:
+    """Section-jump list for the full-bill view's TOC.
+
+    Maps each v2 anchor (TITLE / SEC. / account heading) to its char offset in
+    the print-faithful display text, so the renderer can id the matching row and
+    the sidebar can link to it. `pdf_full_text_print`'s offsets are keyed by the
+    same (page, merged-line) coordinates the anchors use; unresolved anchors are
+    skipped.
+    """
+    _, offsets = pdf_full_text_print(new_pages)
+    sections: list[dict] = []
+    for a in pdf_diff.v2_anchors:
+        rng = offsets.get((a.page_number, a.line_number))
+        if rng is not None:
+            sections.append({"label": a.text, "kind": a.kind, "start": rng[0]})
+    return sections

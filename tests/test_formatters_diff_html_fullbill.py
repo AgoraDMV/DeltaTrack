@@ -120,6 +120,27 @@ def test_no_find_bar_without_canonical():
     assert 'id="find-input"' not in html
 
 
+def test_full_bill_toc_links():
+    # section start 0 lands on the first display row ("ADD0"), which gets id="sec-0".
+    sections = [{"label": "TITLE I", "kind": "title", "start": 0}]
+    html = format_diff_html(_view(), _canonical(), sections=sections)
+    assert 'class="sidebar-toc"' in html
+    assert 'href="#sec-0"' in html
+    assert 'id="sec-0"' in html
+    assert "TITLE I" in html
+
+
+def test_toc_empty_state_when_no_sections():
+    html = format_diff_html(_view(), _canonical(), sections=[])
+    assert 'class="sidebar-toc"' in html
+    assert "No sections detected." in html
+
+
+def test_no_toc_without_canonical():
+    html = format_diff_html(_view())
+    assert 'class="sidebar-toc"' not in html
+
+
 def test_added_and_modified_marks_projected():
     html = format_diff_html(_view(), _canonical())
     # Added: just an <ins> around the v2 slice.

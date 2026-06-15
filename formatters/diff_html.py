@@ -204,14 +204,28 @@ def _build_change_groups(view: DiffView) -> str:
     return "".join(blocks)
 
 
-def _build_sidebar(view: DiffView) -> str:
-    """Render the sidebar: change-type filters + changes grouped by section.
+def _build_toc(sections: list[dict]) -> str:
+    """Full-bill section navigation: jump links to each heading, indented by kind."""
+    if not sections:
+        return '<p class="toc-empty">No sections detected.</p>'
+    items = "".join(
+        f'<li class="toc-item toc-{escape(s.get("kind") or "")}"><a href="#sec-{i}">{escape(s["label"])}</a></li>'
+        for i, s in enumerate(sections)
+    )
+    return f'<div class="toc__title">Sections</div><ul class="toc">{items}</ul>'
 
-    The full-bill TOC variant is rendered alongside by `_build_sidebar_toc` and
-    swapped in by the view toggle.
+
+def _build_sidebar(view: DiffView, sections: list[dict] | None = None) -> str:
+    """Render the sidebar with both view variants inside one ``<nav>``.
+
+    ``.sidebar-changes`` (filters + changes grouped by section) is shown in the
+    Changes view; ``.sidebar-toc`` (full-bill section jump list) in the Full bill
+    view — the JS view toggle swaps them. The TOC variant is rendered only when
+    ``sections`` is provided (the PDF/full-bill path); ``None`` (XML/no full bill)
+    renders just the changes variant and the swap no-ops.
     """
-    return (
-        '<nav class="sidebar">\n'
+    changes_pane = (
+        '<div class="sidebar-changes">\n'
         '<div class="filters">\n'
         '<div class="filters__title">Filter changes</div>\n'
         '<label class="filter-row"><input type="radio" name="change-filter" value="all" checked> All</label>\n'
@@ -219,8 +233,10 @@ def _build_sidebar(view: DiffView) -> str:
         '<label class="filter-row"><input type="radio" name="change-filter" value="structural"> Structural</label>\n'
         "</div>\n"
         f"{_build_change_groups(view)}\n"
-        "</nav>"
+        "</div>"
     )
+    toc_pane = "" if sections is None else f'<div class="sidebar-toc" hidden>{_build_toc(sections)}</div>'
+    return f'<nav class="sidebar">\n{changes_pane}\n{toc_pane}\n</nav>'
 
 
 def _versions_html(view: DiffView) -> str:
@@ -425,6 +441,7 @@ def _parse_full_bill_lines(text: str) -> list[dict]:
             {
                 "page": page,
                 "line": int(prefix) if prefix.isdigit() else None,
+                "raw_start": start,  # line start incl. gutter prefix (matches section offsets)
                 "start": start + 7,
                 "end": start + len(raw),
             }
@@ -489,12 +506,16 @@ def _removed_appendix_html(removed: list[dict], v1_text: str) -> str:
     )
 
 
-def _full_bill_html(canonical: dict) -> str:
+def _full_bill_html(canonical: dict, sections: list[dict] | None = None) -> str:
     """Project the change set inline onto the end-version full text.
 
     Mirrors the canonical full-text view: end-version text with each change's
     span wrapped as a tracked change, removals collected in an appendix, and a
     meta line accounting for any change whose span couldn't be placed.
+
+    ``sections`` (when given) carries each heading's char offset into the same
+    text; the row at that offset is given an ``id="sec-{i}"`` so the sidebar TOC
+    can jump to it.
     """
     full_text = canonical.get("full_text") or {}
     v2_text = full_text.get("v2") or ""
@@ -524,6 +545,9 @@ def _full_bill_html(canonical: dict) -> str:
         cursor = end
     placed = len(marks)
 
+    # Heading char offset -> TOC index, so the heading's row gets id="sec-{i}".
+    sec_starts = {s["start"]: i for i, s in enumerate(sections or [])}
+
     emitted_ids: set[str] = set()
     parts: list[str] = []
     seen_page = 0
@@ -533,8 +557,11 @@ def _full_bill_html(canonical: dict) -> str:
             parts.append(f'<div class="fb-page">p. {seen_page}</div>')
         gutter = str(row["line"]) if row["line"] is not None else ""
         body = _render_fb_row_body(v2_text, row, marks, emitted_ids)
+        sid = sec_starts.get(row["raw_start"])
+        row_id = f' id="sec-{sid}"' if sid is not None else ""
         parts.append(
-            f'<div class="fb-row"><span class="fb-gutter">{gutter}</span><span class="fb-text">{body}</span></div>'
+            f'<div class="fb-row"{row_id}><span class="fb-gutter">{gutter}</span>'
+            f'<span class="fb-text">{body}</span></div>'
         )
 
     meta = _full_bill_meta_html(
@@ -547,7 +574,12 @@ def _full_bill_html(canonical: dict) -> str:
     return f'{meta}<div class="full-bill">{"".join(parts)}</div>{appendix}'
 
 
-def _views_html(view: DiffView, canonical: dict | None, display_canonical: dict | None = None) -> str:
+def _views_html(
+    view: DiffView,
+    canonical: dict | None,
+    display_canonical: dict | None = None,
+    sections: list[dict] | None = None,
+) -> str:
     """Main content: classic cards, or the toggled changes/full-bill pair.
 
     The full-bill view renders from ``display_canonical`` when given (the
@@ -559,10 +591,8 @@ def _views_html(view: DiffView, canonical: dict | None, display_canonical: dict 
     )
     if not _has_full_bill(canonical):
         return changes_inner
-    return (
-        f'<div class="view view-changes">{changes_inner}</div>'
-        f'<div class="view view-full" hidden>{_full_bill_html(display_canonical or canonical)}</div>'
-    )
+    full_bill = _full_bill_html(display_canonical or canonical, sections)
+    return f'<div class="view view-changes">{changes_inner}</div><div class="view view-full" hidden>{full_bill}</div>'
 
 
 # Ready-made questions a staffer can paste into an LLM alongside the diff.json.
@@ -655,6 +685,7 @@ def format_diff_html(
     title: str | None = None,
     *,
     display_canonical: dict | None = None,
+    sections: list[dict] | None = None,
 ) -> str:
     """Assemble a complete standalone HTML report from a DiffView.
 
@@ -695,7 +726,7 @@ def format_diff_html(
 <body>
 <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar" title="Toggle sidebar">&#9776;</button>
 <div class="layout">
-{_build_sidebar(view)}
+{_build_sidebar(view, sections if _has_full_bill(canonical) else None)}
 <div class="main">
 <div class="report-header">
 <h1>{heading}</h1>
@@ -712,7 +743,7 @@ def format_diff_html(
 {_export_button_html(canonical)}
 </div>
 </div>
-{_views_html(view, canonical, display_canonical)}
+{_views_html(view, canonical, display_canonical, sections)}
 </div>
 </div>
 {_export_modal_html(canonical)}
@@ -947,7 +978,19 @@ mark.find-hit--current { background: var(--gold); color: #fff; }
 .financial-callout .delta.increase { color: var(--success); font-weight: 600; }
 
 /* Nav targets clear the sticky action bar when scrolled to via Prev/Next */
-.change-card, .full-bill [id^="attr-"], .removed-block { scroll-margin-top: 64px; }
+.change-card, .full-bill [id^="attr-"], .full-bill [id^="sec-"], .removed-block { scroll-margin-top: 64px; }
+
+/* Full-bill section TOC (sidebar variant) */
+.sidebar-changes[hidden], .sidebar-toc[hidden] { display: none; }
+.toc__title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted-fg); margin-bottom: 8px; font-weight: 600; }
+.toc { list-style: none; }
+.toc-item a { display: block; padding: 4px 8px; text-decoration: none; color: var(--fg);
+  font-size: 13px; border-radius: var(--radius); }
+.toc-item a:hover { background: var(--secondary); }
+.toc-title a { font-weight: 600; }
+.toc-section a, .toc-account a { padding-left: 20px; color: var(--muted-fg); }
+.toc-empty { color: var(--muted-fg); font-size: 13px; padding: 8px; }
 
 /* Collapsible sidebar + responsive layout */
 .sidebar { transition: transform 0.2s ease; z-index: 40; padding-top: 56px; }
@@ -992,6 +1035,8 @@ _JS = """\
 document.addEventListener('DOMContentLoaded', function() {
   // View toggle (Changes / Full bill)
   var toggleBtns = document.querySelectorAll('.view-toggle__btn');
+  var sidebarChanges = document.querySelector('.sidebar-changes');
+  var sidebarToc = document.querySelector('.sidebar-toc');
   function showView(name) {
     toggleBtns.forEach(function(b) {
       var on = b.dataset.view === name;
@@ -1001,12 +1046,18 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.view').forEach(function(el) {
       el.hidden = !el.classList.contains('view-' + name);
     });
+    // Swap the sidebar variant (only when a TOC variant was rendered).
+    if (sidebarToc) {
+      sidebarToc.hidden = name !== 'full';
+      if (sidebarChanges) sidebarChanges.hidden = name === 'full';
+    }
   }
   toggleBtns.forEach(function(b) {
     b.addEventListener('click', function() { showView(b.dataset.view); });
   });
-  // Sidebar anchors (#change-N) live in the changes view; jump back to it first.
-  document.querySelectorAll('.sidebar a').forEach(function(a) {
+  // Change-list anchors (#change-N) live in the changes view; jump back to it
+  // first. TOC links (.sidebar-toc a) just scroll within the full-bill view.
+  document.querySelectorAll('.sidebar-changes a').forEach(function(a) {
     a.addEventListener('click', function() { showView('changes'); });
   });
 
