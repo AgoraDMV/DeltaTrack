@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import re
 
-from formatters.diff_html import format_diff_html
+from formatters.diff_html import _LLM_PROMPTS, format_diff_html
 from formatters.view_model import DiffView
 
 
@@ -106,6 +106,28 @@ def test_meta_accounts_for_placed_and_removed():
     meta = re.search(r'<div class="full-bill-meta">(.*?)</div>', html).group(1)
     assert "2 of 3 changes shown inline" in meta
     assert "1 removed below" in meta
+
+
+def test_export_button_and_modal_present():
+    html = format_diff_html(_view(), _canonical())
+    assert 'id="export-open"' in html
+    assert 'id="export-modal"' in html
+    assert 'id="dl-json"' in html
+    assert 'id="dl-html"' in html
+
+
+def test_export_prompts_rendered_but_hidden_until_download():
+    html = format_diff_html(_view(), _canonical())
+    # The prompts block ships hidden; JS reveals it after a download fires.
+    assert 'id="export-prompts" class="export-prompts" hidden' in html
+    for prompt in _LLM_PROMPTS:
+        assert prompt in html
+
+
+def test_no_export_without_canonical():
+    html = format_diff_html(_view())
+    assert 'id="export-open"' not in html
+    assert 'id="export-modal"' not in html
 
 
 def test_canonical_json_embedded_and_valid():

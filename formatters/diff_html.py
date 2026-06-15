@@ -439,6 +439,59 @@ def _views_html(view: DiffView, canonical: dict | None) -> str:
     )
 
 
+# Ready-made questions a staffer can paste into an LLM alongside the diff.json.
+# Tailored to the canonical schema (sections, amounts) and appropriations bills.
+_LLM_PROMPTS = (
+    "Summarize the most significant changes between these two versions of the bill in plain English.",
+    "Which programs or accounts had their funding increased or decreased, and by how much? Put it in a table.",
+    "List every section that was added or removed between the two versions.",
+    "Beyond dollar amounts, are there any policy, legal, or eligibility changes I should be aware of?",
+    "Explain what changed in a specific section (give me the section number) and why it might matter.",
+)
+
+
+def _export_button_html(canonical: dict | None) -> str:
+    """The Export button that opens the download/prompts modal. PDF path only."""
+    if not _has_full_bill(canonical):
+        return ""
+    return '<button id="export-open" class="export-btn" type="button">Export &amp; ask AI</button>'
+
+
+def _export_modal_html(canonical: dict | None) -> str:
+    """Modal: download diff.json / report.html, then reveal the AI prompts.
+
+    Built entirely client-side from the embedded canonical + the page's own
+    HTML — no server round-trip, consistent with the stateless report.
+    """
+    if not _has_full_bill(canonical):
+        return ""
+    prompts = "".join(
+        f'<li class="prompt-item">'
+        f'<button class="prompt-copy" type="button">Copy</button>'
+        f'<span class="prompt-text">{escape(p)}</span></li>'
+        for p in _LLM_PROMPTS
+    )
+    return (
+        '<div id="export-modal" class="export-modal" hidden>'
+        '<div class="export-modal__backdrop" data-close></div>'
+        '<div class="export-modal__panel" role="dialog" aria-modal="true" aria-label="Export">'
+        '<button class="export-modal__close" data-close aria-label="Close">&times;</button>'
+        "<h2>Export this comparison</h2>"
+        '<p class="export-modal__lead">Download the data, then ask an AI assistant to explain it.</p>'
+        '<div class="export-downloads">'
+        '<button id="dl-json" class="export-dl export-dl--primary" type="button">Download diff.json</button>'
+        '<button id="dl-html" class="export-dl" type="button">Download report.html</button>'
+        "</div>"
+        '<div id="export-prompts" class="export-prompts" hidden>'
+        "<h3>Ask ChatGPT, Claude, or Copilot</h3>"
+        '<p class="export-prompts__lead">Upload the <code>diff.json</code> you just downloaded, '
+        "then paste any of these:</p>"
+        f'<ul class="prompt-list">{prompts}</ul>'
+        "</div>"
+        "</div></div>"
+    )
+
+
 def format_diff_html(view: DiffView, canonical: dict | None = None) -> str:
     """Assemble a complete standalone HTML report from a DiffView.
 
@@ -467,6 +520,7 @@ def format_diff_html(view: DiffView, canonical: dict | None = None) -> str:
 <div class="versions">{_versions_html(view)}</div>
 <div class="summary-bar">{_summary_bar_html(view.summary)}</div>
 {_view_toggle_html(canonical)}
+{_export_button_html(canonical)}
 </div>
 {_views_html(view, canonical)}
 </div>
@@ -475,6 +529,7 @@ def format_diff_html(view: DiffView, canonical: dict | None = None) -> str:
 <button id="btn-prev">&larr; Prev</button>
 <button id="btn-next">Next &rarr;</button>
 </div>
+{_export_modal_html(canonical)}
 {data_script}
 <script>
 {_JS}
@@ -593,6 +648,36 @@ ins { background: #bbf7d0; text-decoration: none; color: #166534; padding: 0 1px
 .removed-block__head { font-size: 13px; color: #555; margin-bottom: 4px; font-weight: 600; }
 .removed-block .diff-del { white-space: pre-wrap; }
 
+/* Export button + modal */
+.export-btn { margin-top: 12px; margin-left: 12px; padding: 6px 16px; border: 1px solid #0056b3;
+  border-radius: 6px; background: #0056b3; color: #fff; cursor: pointer; font: inherit; font-size: 13px; }
+.export-btn:hover { background: #00408a; }
+.export-modal { position: fixed; inset: 0; z-index: 50; display: flex;
+  align-items: center; justify-content: center; }
+.export-modal[hidden] { display: none; }
+.export-modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+.export-modal__panel { position: relative; background: #fff; border-radius: 8px; padding: 24px 28px;
+  max-width: 560px; width: 92%; max-height: 88vh; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.25); }
+.export-modal__close { position: absolute; top: 10px; right: 14px; border: 0; background: none;
+  font-size: 24px; line-height: 1; cursor: pointer; color: #888; }
+.export-modal__panel h2 { font-size: 18px; margin-bottom: 4px; }
+.export-modal__lead { color: #666; font-size: 14px; margin-bottom: 16px; }
+.export-downloads { display: flex; gap: 10px; flex-wrap: wrap; }
+.export-dl { padding: 8px 16px; border: 1px solid #ccc; border-radius: 6px; background: #fff;
+  cursor: pointer; font: inherit; font-size: 14px; }
+.export-dl--primary { background: #0056b3; color: #fff; border-color: #0056b3; }
+.export-dl:hover { filter: brightness(0.95); }
+.export-prompts { margin-top: 20px; border-top: 1px solid #eee; padding-top: 16px; }
+.export-prompts[hidden] { display: none; }
+.export-prompts h3 { font-size: 15px; margin-bottom: 4px; }
+.export-prompts__lead { font-size: 13px; color: #666; margin-bottom: 12px; }
+.prompt-list { list-style: none; }
+.prompt-item { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; font-size: 13px; }
+.prompt-copy { flex: none; padding: 3px 10px; border: 1px solid #ccc; border-radius: 4px;
+  background: #f7f7f7; cursor: pointer; font: inherit; font-size: 12px; }
+.prompt-copy:hover { background: #ececec; }
+.prompt-text { line-height: 1.5; }
+
 /* Financial callout (canonical: PDF's flex rows) */
 .financial-callout { margin-top: 12px; padding: 10px 14px; background: #f0f7ff;
   border: 1px solid #b6d4fe; border-radius: 4px; font-size: 13px;
@@ -637,6 +722,53 @@ document.addEventListener('DOMContentLoaded', function() {
   // Sidebar anchors (#change-N) live in the changes view; jump back to it first.
   document.querySelectorAll('.sidebar a').forEach(function(a) {
     a.addEventListener('click', function() { showView('changes'); });
+  });
+
+  // Export modal: download diff.json / report.html, then reveal AI prompts.
+  var exportOpen = document.getElementById('export-open');
+  var exportModal = document.getElementById('export-modal');
+  if (exportOpen && exportModal) {
+    var closeExport = function() { exportModal.hidden = true; };
+    exportOpen.addEventListener('click', function() { exportModal.hidden = false; });
+    exportModal.querySelectorAll('[data-close]').forEach(function(el) {
+      el.addEventListener('click', closeExport);
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && !exportModal.hidden) closeExport();
+    });
+
+    var revealPrompts = function() {
+      var p = document.getElementById('export-prompts');
+      if (p) p.hidden = false;
+    };
+    var downloadBlob = function(filename, text, type) {
+      var url = URL.createObjectURL(new Blob([text], {type: type}));
+      var a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+      revealPrompts();
+    };
+    var dlJson = document.getElementById('dl-json');
+    if (dlJson) dlJson.addEventListener('click', function() {
+      var raw = document.getElementById('diff-data').textContent;
+      downloadBlob('diff.json', JSON.stringify(JSON.parse(raw), null, 2), 'application/json');
+    });
+    var dlHtml = document.getElementById('dl-html');
+    if (dlHtml) dlHtml.addEventListener('click', function() {
+      downloadBlob('report.html', '<!DOCTYPE html>\\n' + document.documentElement.outerHTML, 'text/html');
+    });
+  }
+  // Prompt copy buttons
+  document.querySelectorAll('.prompt-copy').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var text = btn.parentElement.querySelector('.prompt-text').textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        var prev = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(function() { btn.textContent = prev; }, 1200);
+      });
+    });
   });
 
   // Sidebar filter
