@@ -303,6 +303,142 @@ def _build_financial_summary(view: DiffView) -> str:
     return "\n".join(lines)
 
 
+def _has_full_bill(canonical: dict | None) -> bool:
+    """Full-bill view is available only when the canonical carries v2 full text."""
+    return bool(canonical and (canonical.get("full_text") or {}).get("v2"))
+
+
+def _view_toggle_html(canonical: dict | None) -> str:
+    """Changes/Full segmented control. Empty when there's no full text to show."""
+    if not _has_full_bill(canonical):
+        return ""
+    return (
+        '<div class="view-toggle" role="tablist" aria-label="View mode">'
+        '<button class="view-toggle__btn is-active" data-view="changes" role="tab"'
+        ' aria-selected="true">Changes</button>'
+        '<button class="view-toggle__btn" data-view="full" role="tab"'
+        ' aria-selected="false">Full bill</button>'
+        "</div>"
+    )
+
+
+def _render_v2_mark(change: dict, v2_slice: str) -> str:
+    """Wrap a placed change's v2 text slice with the right tracked-change mark."""
+    cid = escape(str(change.get("id", "")))
+    ct = change.get("change_type")
+    if ct == "added":
+        return f'<ins class="diff-add" id="attr-{cid}">{escape(v2_slice)}</ins>'
+    if ct == "modified":
+        old = (change.get("text") or {}).get("old") or ""
+        return (
+            f'<del class="diff-del">{escape(old)}</del><ins class="diff-add" id="attr-{cid}">{escape(v2_slice)}</ins>'
+        )
+    if ct == "moved":
+        move = change.get("move") or {}
+        if move.get("kind") == "renumbered":
+            note = (
+                f"moved here (renumbered {escape(str(move.get('old_label', '')))}"
+                f" → {escape(str(move.get('new_label', '')))})"
+            )
+        else:
+            note = "moved here"
+        return f'<span class="moved-mark" id="attr-{cid}" title="{note}">{escape(v2_slice)}</span>'
+    return f'<del class="diff-del">{escape(v2_slice)}</del>'
+
+
+def _full_bill_meta_html(*, total: int, placed: int, removed: int, unplaced: int) -> str:
+    bits = [f"{placed} of {total} changes shown inline"]
+    if removed:
+        bits.append(f"{removed} removed below")
+    if unplaced:
+        bits.append(f"{unplaced} not placed (see Changes)")
+    return f'<div class="full-bill-meta">{" &middot; ".join(bits)}</div>'
+
+
+def _removed_appendix_html(removed: list[dict], v1_text: str) -> str:
+    """List removals (which have no v2 home) below the projected v2 text."""
+    blocks: list[str] = []
+    for change in removed:
+        span = change["full_text_span"]["v1"]
+        text = v1_text[span["start"] : span["end"]]
+        path = " &gt; ".join(escape(p) for p in ((change.get("path") or {}).get("v1") or []))
+        heading = path or "<em>(unknown location)</em>"
+        cid = escape(str(change.get("id", "")))
+        blocks.append(
+            f'<article class="removed-block" id="attr-{cid}">'
+            f'<div class="removed-block__head">{heading}</div>'
+            f'<del class="diff-del">{escape(text)}</del></article>'
+        )
+    return (
+        '<section class="removed-appendix">'
+        "<h3>Removed in end version</h3>"
+        '<p class="removed-appendix__note">These sections existed in the start version and have '
+        "no corresponding location in the end version.</p>"
+        f"{''.join(blocks)}</section>"
+    )
+
+
+def _full_bill_html(canonical: dict) -> str:
+    """Project the change set inline onto the end-version full text.
+
+    Mirrors the canonical full-text view: end-version text with each change's
+    span wrapped as a tracked change, removals collected in an appendix, and a
+    meta line accounting for any change whose span couldn't be placed.
+    """
+    full_text = canonical.get("full_text") or {}
+    v2_text = full_text.get("v2") or ""
+    v1_text = full_text.get("v1") or ""
+
+    placed_changes: list[dict] = []
+    removed: list[dict] = []
+    unplaced = 0
+    for change in canonical.get("changes", []):
+        span = change.get("full_text_span") or {}
+        if span.get("v2"):
+            placed_changes.append(change)
+        elif change.get("change_type") == "removed" and span.get("v1"):
+            removed.append(change)
+        else:
+            unplaced += 1
+    placed_changes.sort(key=lambda c: c["full_text_span"]["v2"]["start"])
+
+    parts: list[str] = []
+    cursor = 0
+    placed = 0
+    for change in placed_changes:
+        start = change["full_text_span"]["v2"]["start"]
+        end = change["full_text_span"]["v2"]["end"]
+        if start < cursor:
+            continue  # overlapping span; first placement wins
+        if start > cursor:
+            parts.append(escape(v2_text[cursor:start]))
+        parts.append(_render_v2_mark(change, v2_text[start:end]))
+        cursor = end
+        placed += 1
+    if cursor < len(v2_text):
+        parts.append(escape(v2_text[cursor:]))
+
+    meta = _full_bill_meta_html(
+        total=len(canonical.get("changes", [])),
+        placed=placed,
+        removed=len(removed),
+        unplaced=unplaced,
+    )
+    appendix = _removed_appendix_html(removed, v1_text) if removed else ""
+    return f'{meta}<div class="full-bill">{"".join(parts)}</div>{appendix}'
+
+
+def _views_html(view: DiffView, canonical: dict | None) -> str:
+    """Main content: classic cards, or the toggled changes/full-bill pair."""
+    changes_inner = f"{_build_financial_summary(view)}\n<h2>Changes</h2>\n{_cards_section_html(view)}"
+    if not _has_full_bill(canonical):
+        return changes_inner
+    return (
+        f'<div class="view view-changes">{changes_inner}</div>'
+        f'<div class="view view-full" hidden>{_full_bill_html(canonical)}</div>'
+    )
+
+
 def format_diff_html(view: DiffView, canonical: dict | None = None) -> str:
     """Assemble a complete standalone HTML report from a DiffView.
 
@@ -330,10 +466,9 @@ def format_diff_html(view: DiffView, canonical: dict | None = None) -> str:
 <h1>{bill_label} &mdash; Comparison</h1>
 <div class="versions">{_versions_html(view)}</div>
 <div class="summary-bar">{_summary_bar_html(view.summary)}</div>
+{_view_toggle_html(canonical)}
 </div>
-{_build_financial_summary(view)}
-<h2>Changes</h2>
-{_cards_section_html(view)}
+{_views_html(view, canonical)}
 </div>
 </div>
 <div class="nav-buttons">
@@ -438,6 +573,26 @@ tr.decrease .change-amount { color: #721c24; }
 del { background: #fecdd3; text-decoration: line-through; color: #9a3412; padding: 0 1px; }
 ins { background: #bbf7d0; text-decoration: none; color: #166534; padding: 0 1px; }
 
+/* View toggle (Changes / Full bill) */
+.view-toggle { display: inline-flex; margin-top: 12px; border: 1px solid #ccc;
+  border-radius: 6px; overflow: hidden; }
+.view-toggle__btn { padding: 6px 16px; border: 0; background: #fff; cursor: pointer;
+  font: inherit; font-size: 13px; color: #333; }
+.view-toggle__btn + .view-toggle__btn { border-left: 1px solid #ccc; }
+.view-toggle__btn.is-active { background: #0056b3; color: #fff; }
+.view[hidden] { display: none; }
+
+/* Full-bill tracked-changes view */
+.full-bill-meta { font-size: 13px; color: #666; margin-bottom: 12px; }
+.full-bill { white-space: pre-wrap; font-size: 14px; line-height: 1.7;
+  font-family: 'SF Mono', Menlo, Consolas, monospace; }
+.full-bill .moved-mark { background: #cce5ff; color: #004085; padding: 0 1px; }
+.removed-appendix { margin-top: 28px; border-top: 1px solid #ddd; padding-top: 16px; }
+.removed-appendix__note { font-size: 13px; color: #666; margin-bottom: 12px; }
+.removed-block { margin-bottom: 12px; }
+.removed-block__head { font-size: 13px; color: #555; margin-bottom: 4px; font-weight: 600; }
+.removed-block .diff-del { white-space: pre-wrap; }
+
 /* Financial callout (canonical: PDF's flex rows) */
 .financial-callout { margin-top: 12px; padding: 10px 14px; background: #f0f7ff;
   border: 1px solid #b6d4fe; border-radius: 4px; font-size: 13px;
@@ -464,6 +619,26 @@ ins { background: #bbf7d0; text-decoration: none; color: #166534; padding: 0 1px
 
 _JS = """\
 document.addEventListener('DOMContentLoaded', function() {
+  // View toggle (Changes / Full bill)
+  var toggleBtns = document.querySelectorAll('.view-toggle__btn');
+  function showView(name) {
+    toggleBtns.forEach(function(b) {
+      var on = b.dataset.view === name;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('.view').forEach(function(el) {
+      el.hidden = !el.classList.contains('view-' + name);
+    });
+  }
+  toggleBtns.forEach(function(b) {
+    b.addEventListener('click', function() { showView(b.dataset.view); });
+  });
+  // Sidebar anchors (#change-N) live in the changes view; jump back to it first.
+  document.querySelectorAll('.sidebar a').forEach(function(a) {
+    a.addEventListener('click', function() { showView('changes'); });
+  });
+
   // Sidebar filter
   var filter = document.getElementById('sidebar-filter');
   if (filter) {
