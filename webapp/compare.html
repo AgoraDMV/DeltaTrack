@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DeltaTrack — Compare two bill PDFs</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-bar" role="banner">
+    <div class="app-bar__brand">
+      <a class="app-bar__home" href="index.html" aria-label="DeltaTrack home">
+        <span class="app-bar__logo" aria-hidden="true">▮▯</span>
+        <span class="app-bar__name">DeltaTrack</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="upload-panel" id="upload-panel">
+      <h1 class="upload-panel__title">Compare two versions of a bill</h1>
+      <p class="upload-panel__lead">
+        Upload the <strong>start</strong> PDF and the <strong>end</strong> PDF. We diff them on our
+        server and open a full HTML report in a new tab — sidebar navigation, financial summary,
+        and word-level changes. Your session is not tracked, and uploaded files are processed in
+        memory and never stored.
+      </p>
+
+      <div class="upload-grid">
+        <div class="upload-slot" id="start-slot" tabindex="0" role="button" aria-label="Choose the start PDF">
+          <div class="upload-slot__label">Start version (older)</div>
+          <div class="upload-slot__hint">Drop a PDF here or click to browse</div>
+          <div class="upload-slot__name" id="start-name"></div>
+          <input type="file" id="start-input" accept="application/pdf,.pdf" hidden />
+        </div>
+
+        <div class="upload-arrow" aria-hidden="true">→</div>
+
+        <div class="upload-slot" id="end-slot" tabindex="0" role="button" aria-label="Choose the end PDF">
+          <div class="upload-slot__label">End version (newer)</div>
+          <div class="upload-slot__hint">Drop a PDF here or click to browse</div>
+          <div class="upload-slot__name" id="end-name"></div>
+          <input type="file" id="end-input" accept="application/pdf,.pdf" hidden />
+        </div>
+      </div>
+
+      <div class="upload-error" id="upload-error" role="alert" hidden></div>
+      <div class="upload-success" id="upload-success" role="status" hidden></div>
+
+      <div class="upload-actions">
+        <button class="btn btn--primary" id="compare-btn" disabled>Compare</button>
+        <span class="upload-note">PDF only · up to 150 MB each · report opens in a new tab</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <p>
+      Provided by
+      <a href="https://www.civictechdc.org/" rel="noopener noreferrer">Civic Tech DC</a>,
+      a 501(c)(3) nonpartisan nonprofit.
+      For questions, email
+      <a href="mailto:team@civictechdc.org">team@civictechdc.org</a>.
+    </p>
+  </footer>
+
+  <script src="js/compare.js"></script>
+</body>
+</html>

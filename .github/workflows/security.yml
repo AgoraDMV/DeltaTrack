@@ -1,0 +1,39 @@
+name: security
+
+# Dependency-vulnerability gate. Mandatory check for the develop and main
+# branches: runs on every PR targeting them (so it blocks the merge) and on
+# direct pushes to them, plus a weekly cron to catch newly-disclosed CVEs in
+# dependencies that haven't changed.
+#
+# To make it truly mandatory, add "pip-audit (production deps)" as a required
+# status check in the branch protection rules for both main and develop.
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  pip-audit:
+    name: pip-audit (production deps)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      # Resolve the production dependency set from uv.lock (excluding the dev
+      # group and the project itself) and audit those pinned versions against
+      # the PyPI advisory DB. pip-audit exits non-zero if any has a known vuln.
+      - name: Export production requirements
+        run: uv export --frozen --no-dev --no-emit-project --format requirements-txt -o requirements-prod.txt
+
+      - name: Audit dependencies
+        run: uvx pip-audit -r requirements-prod.txt

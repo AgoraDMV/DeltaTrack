@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DeltaTrack — See exactly what changed between two bills</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="app-bar" role="banner">
+    <div class="app-bar__brand">
+      <span class="app-bar__logo" aria-hidden="true">▮▯</span>
+      <span class="app-bar__name">DeltaTrack</span>
+    </div>
+  </header>
+
+  <main class="landing">
+    <section class="landing__intro">
+      <h1 class="landing__title">See exactly what changed between two versions of a bill.</h1>
+      <p class="landing__lead">
+        DeltaTrack compares two versions of legislative text and shows you the real differences —
+        sections added, removed, moved, and reworded, plus every dollar amount that changed.
+        Choose how you want to run it.
+      </p>
+    </section>
+
+    <section class="paths" aria-label="Choose how to process">
+      <!-- Left: future browser-only path, disabled for now -->
+      <article class="path-card path-card--disabled" aria-disabled="true">
+        <div class="path-card__badge path-card__badge--soon">Coming soon</div>
+        <h2 class="path-card__title">Browser-only</h2>
+        <p class="path-card__tagline">No data leaves your browser.</p>
+        <p class="path-card__body">
+          The entire diff runs locally in your browser — your documents are never uploaded
+          anywhere. Ideal for sensitive drafts. This mode is in development (WebAssembly).
+        </p>
+        <span class="path-card__cta path-card__cta--disabled">Not yet available</span>
+      </article>
+
+      <!-- Right: active server path -->
+      <a class="path-card path-card--active" href="compare.html">
+        <div class="path-card__badge path-card__badge--ready">Available now</div>
+        <h2 class="path-card__title">Process on our server</h2>
+        <p class="path-card__tagline">Upload a start PDF and an end PDF.</p>
+        <p class="path-card__body">
+          We run the full diff engine on our server and return the result to your browser.
+          <strong>Your session is not tracked</strong>, and uploaded files are processed in
+          memory and never stored.
+        </p>
+        <span class="path-card__cta">Compare two PDFs →</span>
+      </a>
+    </section>
+
+    <p class="landing__sample">
+        Just want to see what the output looks like?
+        <a href="compare.html?example=1">View a sample report</a> (opens in a new tab).
+    </p>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <p>
+      Provided by
+      <a href="https://www.civictechdc.org/" rel="noopener noreferrer">Civic Tech DC</a>,
+      a 501(c)(3) nonpartisan nonprofit.
+      For questions, email
+      <a href="mailto:team@civictechdc.org">team@civictechdc.org</a>.
+    </p>
+  </footer>
+</body>
+</html>
