@@ -69,3 +69,8 @@ def test_compare_xml_html_gutterless_fullbill():
     # Full bill text survives intact (the 7-char-gutter truncation bug is gone).
     assert "DEPARTMENT OF DEFENSE" in html
     assert '">ENT OF DEFENSE' not in html
+    # Parity with the PDF report: a section TOC and a long-title heading.
+    assert 'class="sidebar-toc"' in html
+    assert "toc-group" in html
+    assert 'id="sec-0"' in html
+    assert "Making appropriations" in html  # official-title in the heading

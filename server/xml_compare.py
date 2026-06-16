@@ -22,24 +22,26 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-from bill_tree import normalize_bill
+from bill_tree import bill_title, normalize_bill
 from diff_bill import bill_diff_to_dict, diff_bills, filter_diff
 from formatters.canonical import view_from_canonical, xml_diff_to_canonical
 from formatters.diff_html import format_diff_html
-from formatters.text_serializer import serialize_tree
+from formatters.text_serializer import serialize_tree, serialize_tree_with_offsets
 
 
-def _build_canonical(
+def _build(
     start_bytes: bytes,
     end_bytes: bytes,
     start_label: str,
     end_label: str,
-) -> dict:
-    """Parse, diff, and serialize both XML versions into canonical JSON.
+) -> tuple[dict, list[dict], str]:
+    """Parse, diff, and serialize both XML versions.
 
-    Temp files exist only long enough for ``normalize_bill`` to read them. The
-    filename-derived labels override the XML's embedded version names so the
-    report reflects what the user uploaded (matching the PDF path).
+    Returns ``(canonical, sections, title)``: the canonical diff JSON, the v2
+    section jump-list for the full-bill TOC, and the report heading. Temp files
+    exist only long enough for ``normalize_bill`` to read them. The filename-derived
+    labels override the XML's embedded version names so the report reflects what the
+    user uploaded (matching the PDF path).
     """
     with tempfile.TemporaryDirectory(prefix="deltatrack-") as tmp:
         start_path = Path(tmp) / "start.xml"
@@ -55,8 +57,11 @@ def _build_canonical(
     diff_dict["old_version"] = start_label
     diff_dict["new_version"] = end_label
 
-    full_text = {"v1": serialize_tree(old_tree), "v2": serialize_tree(new_tree)}
-    return xml_diff_to_canonical(diff_dict, full_text=full_text)
+    # One walk of v2 produces both its full text and the TOC offsets into it.
+    v2_text, sections = serialize_tree_with_offsets(new_tree)
+    full_text = {"v1": serialize_tree(old_tree), "v2": v2_text}
+    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text)
+    return canonical, sections, bill_title(new_tree)
 
 
 def compare_xml(
@@ -67,7 +72,7 @@ def compare_xml(
     end_label: str = "End version",
 ) -> dict:
     """Diff two bill XML documents and return canonical diff JSON (schema v1.2)."""
-    return _build_canonical(start_bytes, end_bytes, start_label, end_label)
+    return _build(start_bytes, end_bytes, start_label, end_label)[0]
 
 
 def compare_xml_html(
@@ -81,8 +86,9 @@ def compare_xml_html(
 
     The DiffView is rebuilt from the canonical (``view_from_canonical``) so the
     rendered report and the embedded ``diff.json`` come from one source of truth.
-    The XML full-bill view renders gutterless (no PDF line-number column).
+    The XML full-bill view renders gutterless (no PDF line-number column), with a
+    section TOC and bill-title heading matching the PDF report.
     """
-    canonical = _build_canonical(start_bytes, end_bytes, start_label, end_label)
+    canonical, sections, title = _build(start_bytes, end_bytes, start_label, end_label)
     view = view_from_canonical(canonical)
-    return format_diff_html(view, canonical=canonical)
+    return format_diff_html(view, canonical=canonical, title=title, sections=sections)

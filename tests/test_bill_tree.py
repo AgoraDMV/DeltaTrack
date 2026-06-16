@@ -896,6 +896,28 @@ class TestNormalizeBill:
         assert tree.nodes[0].match_path == ("department of defense", "military construction, army")
         assert tree.nodes[0].display_path == ("DEPARTMENT OF DEFENSE", "Military construction, army")
 
+    def test_official_title_parsed_from_form(self, tmp_path):
+        """The long <official-title> is captured for the report heading."""
+        xml = (
+            '<bill bill-stage="Reported-in-House">'
+            "<form>"
+            "<congress>118th CONGRESS</congress>"
+            "<legis-num>H. R. 4366</legis-num>"
+            "<official-title>Making appropriations for military construction, "
+            "and for other purposes.</official-title>"
+            "</form>"
+            '<legis-body style="appropriations">'
+            '<title id="T1"><enum>I</enum><header>DEPARTMENT OF DEFENSE</header>'
+            '<appropriations-intermediate id="AI1"><header>Military construction, army</header>'
+            "<text>For acquisition, $1.</text></appropriations-intermediate></title>"
+            "</legis-body></bill>"
+        )
+        xml_path = tmp_path / "1_reported-in-house.xml"
+        xml_path.write_text(xml)
+
+        tree = normalize_bill(xml_path)
+        assert tree.official_title == "Making appropriations for military construction, and for other purposes."
+
     def test_no_titles_sections_only(self, tmp_path):
         """Bill with just sections under body (e.g., HR 2882 v1)."""
         xml = (
