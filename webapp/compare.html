@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DeltaTrack — Compare two bill PDFs</title>
+  <title>DeltaTrack — Compare two bill versions</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -20,11 +20,21 @@
     <section class="upload-panel" id="upload-panel">
       <h1 class="upload-panel__title">Compare two versions of a bill</h1>
       <p class="upload-panel__lead">
-        Upload the <strong>start</strong> PDF and the <strong>end</strong> PDF. We diff them on our
-        server and open a full HTML report in a new tab — sidebar navigation, financial summary,
-        and word-level changes. Your session is not tracked, and uploaded files are processed in
-        memory and never stored.
+        Upload the <strong>start</strong> and <strong>end</strong> versions — two PDFs or two
+        bill-XML files. We diff them on our server and open a full HTML report in a new tab —
+        sidebar navigation, financial summary, and word-level changes. Your session is not tracked,
+        and uploaded files are processed in memory and never stored.
       </p>
+
+      <fieldset class="format-toggle" id="format-toggle">
+        <legend class="format-toggle__legend">File type</legend>
+        <label class="format-toggle__opt">
+          <input type="radio" name="format" value="pdf" checked /> PDF
+        </label>
+        <label class="format-toggle__opt">
+          <input type="radio" name="format" value="xml" /> XML
+        </label>
+      </fieldset>
       <p class="upload-panel__lead">
         The report also has a <strong>full-bill view</strong> (read the whole bill with changes
         marked inline) and an <strong>Export</strong> button: download the comparison as
@@ -33,18 +43,18 @@
       </p>
 
       <div class="upload-grid">
-        <div class="upload-slot" id="start-slot" tabindex="0" role="button" aria-label="Choose the start PDF">
+        <div class="upload-slot" id="start-slot" tabindex="0" role="button" aria-label="Choose the start file">
           <div class="upload-slot__label">Start version (older)</div>
-          <div class="upload-slot__hint">Drop a PDF here or click to browse</div>
+          <div class="upload-slot__hint">Drop a file here or click to browse</div>
           <div class="upload-slot__name" id="start-name"></div>
           <input type="file" id="start-input" accept="application/pdf,.pdf" hidden />
         </div>
 
         <div class="upload-arrow" aria-hidden="true">→</div>
 
-        <div class="upload-slot" id="end-slot" tabindex="0" role="button" aria-label="Choose the end PDF">
+        <div class="upload-slot" id="end-slot" tabindex="0" role="button" aria-label="Choose the end file">
           <div class="upload-slot__label">End version (newer)</div>
-          <div class="upload-slot__hint">Drop a PDF here or click to browse</div>
+          <div class="upload-slot__hint">Drop a file here or click to browse</div>
           <div class="upload-slot__name" id="end-name"></div>
           <input type="file" id="end-input" accept="application/pdf,.pdf" hidden />
         </div>
@@ -55,7 +65,7 @@
 
       <div class="upload-actions">
         <button class="btn btn--primary" id="compare-btn" disabled>Compare</button>
-        <span class="upload-note">PDF only · up to 150 MB each · report opens in a new tab</span>
+        <span class="upload-note" id="upload-note">PDF · up to 150 MB each · report opens in a new tab</span>
       </div>
     </section>
   </main>

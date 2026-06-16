@@ -20,6 +20,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from server.pdf_compare import compare_pdfs, compare_pdfs_html
+from server.xml_compare import compare_xml, compare_xml_html
 
 # The static front-end (webapp/) ships alongside this package and is served by
 # the app itself — see the StaticFiles mount at the bottom of the file.
@@ -31,6 +32,12 @@ CHUNK_SIZE = 1024 * 1024  # 1 MB read granularity for the streaming size guard
 PDF_MAGIC = b"%PDF"
 MAX_CONCURRENT_DIFFS = 2  # bound CPU; a large diff is heavy
 DIFF_TIMEOUT_S = 120
+
+# Format → (label-extension, html entry point, json entry point).
+_COMPARE = {
+    "pdf": (".pdf", compare_pdfs_html, compare_pdfs),
+    "xml": (".xml", compare_xml_html, compare_xml),
+}
 
 app = FastAPI(
     title="DeltaTrack API",
@@ -93,10 +100,16 @@ async def force_https_behind_proxy(request: Request, call_next):
     return await call_next(request)
 
 
-async def _read_pdf(upload: UploadFile, field: str) -> bytes:
+def _looks_like_xml(data: bytes) -> bool:
+    """A bill XML starts with the prolog or a root element (after any BOM/space)."""
+    head = data.lstrip(b"\xef\xbb\xbf \t\r\n")
+    return head[:1] == b"<"
+
+
+async def _read_upload(upload: UploadFile, field: str, fmt: str) -> bytes:
     """Read an upload in bounded chunks, aborting the moment it exceeds the size
     cap so an oversized body is never fully buffered in memory, then validate the
-    PDF magic bytes before it reaches the diff engine.
+    format's magic bytes before it reaches the diff engine.
 
     An upstream request-body limit is the first line of defense in production; this
     is the in-process backstop for any path that doesn't sit behind a proxy."""
@@ -110,36 +123,40 @@ async def _read_pdf(upload: UploadFile, field: str) -> bytes:
     if total == 0:
         raise HTTPException(status_code=400, detail=f"{field}: empty file.")
     data = b"".join(chunks)
-    if not data.startswith(PDF_MAGIC):
+    if fmt == "pdf" and not data.startswith(PDF_MAGIC):
         raise HTTPException(status_code=415, detail=f"{field}: not a PDF (missing %PDF header).")
+    if fmt == "xml" and not _looks_like_xml(data):
+        raise HTTPException(status_code=415, detail=f"{field}: not XML (no leading '<').")
     return data
 
 
-def _label_from_filename(name: str | None, fallback: str) -> str:
+def _label_from_filename(name: str | None, fallback: str, ext: str) -> str:
     """Derive a human label from the uploaded filename, defensively (strip any
-    path components a client might send, drop the .pdf extension)."""
+    path components a client might send, drop the format extension)."""
     if not name:
         return fallback
     stem = name.rsplit("/", 1)[-1].rsplit("\\", 1)[-1]
-    if stem.lower().endswith(".pdf"):
-        stem = stem[:-4]
+    if stem.lower().endswith(ext):
+        stem = stem[: -len(ext)]
     stem = stem.strip()
     return stem or fallback
 
 
 @app.post("/api/compare")
 async def compare(
-    start_pdf: UploadFile = File(...),
-    end_pdf: UploadFile = File(...),
+    start_file: UploadFile = File(...),
+    end_file: UploadFile = File(...),
     output: str = Query("html", pattern="^(html|json)$"),
+    fmt: str = Query("pdf", alias="format", pattern="^(pdf|xml)$"),
 ):
-    start_bytes = await _read_pdf(start_pdf, "start_pdf")
-    end_bytes = await _read_pdf(end_pdf, "end_pdf")
+    ext, html_fn, json_fn = _COMPARE[fmt]
+    start_bytes = await _read_upload(start_file, "start_file", fmt)
+    end_bytes = await _read_upload(end_file, "end_file", fmt)
 
-    start_label = _label_from_filename(start_pdf.filename, "Start version")
-    end_label = _label_from_filename(end_pdf.filename, "End version")
+    start_label = _label_from_filename(start_file.filename, "Start version", ext)
+    end_label = _label_from_filename(end_file.filename, "End version", ext)
 
-    compare_fn = compare_pdfs_html if output == "html" else compare_pdfs
+    compare_fn = html_fn if output == "html" else json_fn
 
     try:
         async with _semaphore:
@@ -163,7 +180,7 @@ async def compare(
         # Never leak engine internals or filesystem paths to the caller.
         raise HTTPException(
             status_code=422,
-            detail="Could not diff these files. Are both valid bill-text PDFs?",
+            detail=f"Could not diff these files. Are both valid bill-text {fmt.upper()} files?",
         )
 
     if output == "html":
