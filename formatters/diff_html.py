@@ -387,6 +387,18 @@ def _has_full_bill(canonical: dict | None) -> bool:
     return bool(canonical and (canonical.get("full_text") or {}).get("v2"))
 
 
+def _full_text_is_guttered(canonical: dict) -> bool:
+    """Whether full_text lines carry the PDF line-number gutter.
+
+    ``pdf_full_text`` emits each line as a fixed 7-char gutter (``{num:>5}  ``)
+    plus content; the XML pipeline serialises plain paragraph text with no gutter.
+    Default to guttered (the PDF path that built this view); only an explicit
+    ``xml`` v2 source switches the parser to gutterless paragraph flow.
+    """
+    src = ((canonical.get("versions") or {}).get("v2") or {}).get("source")
+    return src != "xml"
+
+
 def _view_toggle_html(canonical: dict | None) -> str:
     """Changes/Full segmented control. Empty when there's no full text to show."""
     if not _has_full_bill(canonical):
@@ -439,24 +451,48 @@ def _wrap_mark(change: dict, slice_text: str, emitted_ids: set[str]) -> str:
     return f'<del class="diff-del">{esc}</del>'
 
 
-def _parse_full_bill_lines(text: str) -> list[dict]:
-    """Split pdf_full_text output into per-source-line display rows.
+def _parse_full_bill_lines(text: str, *, guttered: bool = True) -> list[dict]:
+    """Split full_text into per-source-line display rows.
 
-    Each rendered line is ``{number:>5}  {content}`` (five spaces of padding when
-    the source line was unnumbered) and pages are separated by a single empty
-    line. Returns rows carrying the page number, the source line number, and the
-    char span of the *content* alone (the gutter prefix excluded) so change marks
-    land on the text, not on the line-number column. Blank-content lines are
-    dropped to avoid stray vertical gaps.
+    PDF path (``guttered=True``): each rendered line is ``{number:>5}  {content}``
+    (five spaces of padding when the source line was unnumbered) and pages are
+    separated by a single empty line. Returns rows carrying the page number, the
+    source line number, and the char span of the *content* alone (the gutter
+    prefix excluded) so change marks land on the text, not the line-number column.
+
+    XML path (``guttered=False``): lines are plain paragraph text starting at
+    column 0 with no line numbers or pages. Each non-blank line is one row whose
+    span is the whole line; a blank line marks a paragraph break, recorded as
+    ``para`` on the following row so the renderer can space blocks apart. Stripping
+    a 7-char gutter here would chop the first word off every line.
+
+    Blank-content lines are dropped either way to avoid stray vertical gaps.
     """
     rows: list[dict] = []
     page = 1
     pos = 0
+    prev_blank = False
     for raw in text.split("\n"):
         start = pos
         pos += len(raw) + 1  # +1 for the newline join() consumed
         if raw == "":
-            page += 1  # the blank line between pages
+            if guttered:
+                page += 1  # the blank line between pages
+            else:
+                prev_blank = True  # paragraph break in gutterless text
+            continue
+        if not guttered:
+            rows.append(
+                {
+                    "page": None,
+                    "line": None,
+                    "raw_start": start,
+                    "start": start,
+                    "end": start + len(raw),
+                    "para": prev_blank,
+                }
+            )
+            prev_blank = False
             continue
         content = raw[7:]
         if content == "":
@@ -573,21 +609,26 @@ def _full_bill_html(canonical: dict, sections: list[dict] | None = None) -> str:
     # Heading char offset -> TOC index, so the heading's row gets id="sec-{i}".
     sec_starts = {s["start"]: i for i, s in enumerate(sections or [])}
 
+    guttered = _full_text_is_guttered(canonical)
     emitted_ids: set[str] = set()
     parts: list[str] = []
     seen_page = 0
-    for row in _parse_full_bill_lines(v2_text):
-        if row["page"] != seen_page:
+    for row in _parse_full_bill_lines(v2_text, guttered=guttered):
+        if guttered and row["page"] != seen_page:
             seen_page = row["page"]
             parts.append(f'<div class="fb-page">p. {seen_page}</div>')
-        gutter = str(row["line"]) if row["line"] is not None else ""
         body = _render_fb_row_body(v2_text, row, marks, emitted_ids)
         sid = sec_starts.get(row["raw_start"])
         row_id = f' id="sec-{sid}"' if sid is not None else ""
-        parts.append(
-            f'<div class="fb-row"{row_id}><span class="fb-gutter">{gutter}</span>'
-            f'<span class="fb-text">{body}</span></div>'
-        )
+        if guttered:
+            gutter = str(row["line"]) if row["line"] is not None else ""
+            parts.append(
+                f'<div class="fb-row"{row_id}><span class="fb-gutter">{gutter}</span>'
+                f'<span class="fb-text">{body}</span></div>'
+            )
+        else:
+            row_cls = "fb-row fb-row--para" if row.get("para") else "fb-row"
+            parts.append(f'<div class="{row_cls}"{row_id}><span class="fb-text">{body}</span></div>')
 
     meta = _full_bill_meta_html(
         total=len(canonical.get("changes", [])),
@@ -596,7 +637,8 @@ def _full_bill_html(canonical: dict, sections: list[dict] | None = None) -> str:
         unplaced=unplaced,
     )
     appendix = _removed_appendix_html(removed, v1_text) if removed else ""
-    return f'{meta}<div class="full-bill">{"".join(parts)}</div>{appendix}'
+    fb_cls = "full-bill" if guttered else "full-bill full-bill--no-gutter"
+    return f'{meta}<div class="{fb_cls}">{"".join(parts)}</div>{appendix}'
 
 
 def _views_html(
@@ -951,6 +993,9 @@ mark.find-hit--current { background: var(--gold); color: #fff; }
 .fb-gutter { font-family: var(--mono); font-size: 11px; color: var(--muted-fg); text-align: right;
   user-select: none; -webkit-user-select: none; }
 .fb-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+/* XML full_text has no line-number gutter: plain paragraph flow. */
+.full-bill--no-gutter .fb-row { display: block; }
+.full-bill--no-gutter .fb-row--para { margin-top: 0.9em; }
 .full-bill .diff-mod { background: #fbf0d9; border-bottom: 2px solid var(--gold); }
 .fb-page { font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--muted-fg);
   margin: 18px 0 6px; border-top: 1px dashed var(--border); padding-top: 6px; user-select: none; }

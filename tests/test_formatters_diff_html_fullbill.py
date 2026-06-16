@@ -169,6 +169,52 @@ def test_added_and_modified_marks_projected():
     assert "KEEP" in html
 
 
+def _xml_canonical() -> dict:
+    """An XML-source canonical: full_text is gutterless paragraph text (no PDF
+    line-number column), with blank lines separating blocks. ``versions.v2.source``
+    is what flips the renderer into gutterless mode.
+
+    v2 char offsets:
+      "DEPARTMENT OF DEFENSE"        0..21
+      (blank line)
+      "Military construction, army"  23..50
+    """
+    v2 = "DEPARTMENT OF DEFENSE\n\nMilitary construction, army"
+    v1 = "DEPARTMENT OF DEFENSE\n\narmy construction"
+    return {
+        "schema_version": "1.2",
+        "versions": {"v1": {"source": "xml"}, "v2": {"source": "xml"}},
+        "full_text": {"v1": v1, "v2": v2},
+        "changes": [
+            {
+                "id": "x-1",
+                "change_type": "modified",
+                "text": {"old": "army construction", "new": "Military construction, army"},
+                "path": {"v1": ["DOD"], "v2": ["DOD"]},
+                "full_text_span": {"v1": {"start": 23, "end": 40}, "v2": {"start": 23, "end": 50}},
+            },
+        ],
+    }
+
+
+def test_xml_full_bill_gutterless_no_truncation():
+    """XML full_text has no line-number gutter; the renderer must not strip a
+    fixed 7-char prefix off every line (the PDF-path bug that turned
+    "Military" into "y" and "DEPARTMENT" into "ENT OF DEFENSE")."""
+    html = format_diff_html(_view(), _xml_canonical())
+    # Heading and body survive intact — no leading characters chopped.
+    assert "DEPARTMENT OF DEFENSE" in html
+    assert "Military construction, army" in html
+    # The 7-char-gutter bug would surface as truncation right after a tag's ">".
+    assert '">ENT OF DEFENSE' not in html
+    assert '">y construction' not in html
+    # Gutterless mode: no synthesized line numbers, no PDF page markers.
+    assert 'class="fb-page"' not in html
+    assert '<span class="fb-gutter">' not in html
+    # The modified span is still highlighted in place with the new text.
+    assert '<span class="diff-mod" id="attr-x-1"' in html
+
+
 def test_full_bill_rows_carry_line_number_gutter():
     """Each source line renders as a row with its line number in the gutter."""
     html = format_diff_html(_view(), _canonical())

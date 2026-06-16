@@ -23,7 +23,9 @@ from bill_tree import normalize_bill
 from diff_bill import bill_diff_to_dict, diff_bills
 from diff_pdf import diff_pdfs
 from formatters.adapters import pdf_diff_to_view, xml_dict_to_view
+from formatters.canonical import xml_diff_to_canonical
 from formatters.diff_html import format_diff_html
+from formatters.text_serializer import serialize_tree
 from parsers.pdf_text import extract_clean_pages
 
 PROJECT_ROOT = Path(__file__).parent
@@ -79,7 +81,11 @@ def render_xml_diff(spec: ExampleSpec) -> Path:
         diff_dict["old_version_number"] = v1_num
     if v2_num is not None:
         diff_dict["new_version_number"] = v2_num
-    html = format_diff_html(xml_dict_to_view(diff_dict))
+    # Carry the serialized full text so the report offers the full-bill view.
+    # XML full_text is gutterless paragraph flow (no PDF line-number column).
+    full_text = {"v1": serialize_tree(v1), "v2": serialize_tree(v2)}
+    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text)
+    html = format_diff_html(xml_dict_to_view(diff_dict), canonical=canonical)
     out = EXAMPLES / f"{spec.bill_type}{spec.bill_number}_xml_diff.html"
     out.write_text(html)
     return out

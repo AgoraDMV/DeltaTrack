@@ -742,9 +742,13 @@ def cmd_compare(args: argparse.Namespace) -> None:
 
     if fmt == "html":
         from formatters.adapters import xml_dict_to_view
+        from formatters.canonical import xml_diff_to_canonical
         from formatters.diff_html import format_diff_html
+        from formatters.text_serializer import serialize_tree
 
-        output = format_diff_html(xml_dict_to_view(diff_dict))
+        full_text = {"v1": serialize_tree(old_tree), "v2": serialize_tree(new_tree)}
+        canonical = xml_diff_to_canonical(diff_dict, full_text=full_text)
+        output = format_diff_html(xml_dict_to_view(diff_dict), canonical=canonical)
     else:
         output = json.dumps(diff_dict, indent=2)
 
