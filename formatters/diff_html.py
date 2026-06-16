@@ -205,14 +205,35 @@ def _build_change_groups(view: DiffView) -> str:
 
 
 def _build_toc(sections: list[dict]) -> str:
-    """Full-bill section navigation: jump links to each heading, indented by kind."""
+    """Full-bill section navigation: each TITLE (labelled with its descriptor) is
+    a collapsible group; its sections/accounts nest beneath and link to their row.
+    Collapsed by default; clicking a title expands it and jumps to it."""
     if not sections:
         return '<p class="toc-empty">No sections detected.</p>'
-    items = "".join(
-        f'<li class="toc-item toc-{escape(s.get("kind") or "")}"><a href="#sec-{i}">{escape(s["label"])}</a></li>'
-        for i, s in enumerate(sections)
+
+    def child_li(i: int, s: dict) -> str:
+        return f'<li class="toc-child"><a href="#sec-{i}">{escape(s["label"])}</a></li>'
+
+    pre: list[str] = []  # any sections before the first title (uncommon)
+    groups: list[tuple[str, list[str]]] = []  # (title summary, child <li>s)
+    for i, s in enumerate(sections):
+        if s.get("kind") == "title":
+            desc = s.get("descriptor") or ""
+            label = escape(s["label"]) + (f" &mdash; {escape(desc)}" if desc else "")
+            groups.append((f'<summary><a href="#sec-{i}">{label}</a></summary>', []))
+        elif groups:
+            groups[-1][1].append(child_li(i, s))
+        else:
+            pre.append(child_li(i, s))
+
+    blocks: list[str] = []
+    if pre:
+        blocks.append(f'<ul class="toc">{"".join(pre)}</ul>')
+    blocks.extend(
+        f'<details class="toc-group">{summary}<ul class="toc">{"".join(children)}</ul></details>'
+        for summary, children in groups
     )
-    return f'<div class="toc__title">Sections</div><ul class="toc">{items}</ul>'
+    return f'<div class="toc__title">Sections</div>{"".join(blocks)}'
 
 
 def _build_sidebar(view: DiffView, sections: list[dict] | None = None) -> str:
@@ -989,11 +1010,18 @@ mark.find-hit--current { background: var(--gold); color: #fff; }
 .toc__title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--muted-fg); margin-bottom: 8px; font-weight: 600; }
 .toc { list-style: none; }
-.toc-item a { display: block; padding: 4px 8px; text-decoration: none; color: var(--fg);
+.toc-group { margin-bottom: 2px; }
+.toc-group > summary { cursor: pointer; padding: 6px 8px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 600; color: var(--fg); list-style: none; }
+.toc-group > summary::-webkit-details-marker { display: none; }
+.toc-group > summary::before { content: "\\25b8"; color: var(--muted-fg); font-size: 10px; margin-right: 4px; }
+.toc-group[open] > summary::before { content: "\\25be"; }
+.toc-group > summary:hover { background: var(--secondary); }
+.toc-group > summary a { color: inherit; text-decoration: none; }
+.toc-group ul { margin: 2px 0 6px 14px; }
+.toc-child a { display: block; padding: 4px 8px; text-decoration: none; color: var(--muted-fg);
   font-size: 13px; border-radius: var(--radius); }
-.toc-item a:hover { background: var(--secondary); }
-.toc-title a { font-weight: 600; }
-.toc-section a, .toc-account a { padding-left: 20px; color: var(--muted-fg); }
+.toc-child a:hover { background: var(--secondary); color: var(--fg); }
 .toc-empty { color: var(--muted-fg); font-size: 13px; padding: 8px; }
 
 /* Collapsible sidebar + responsive layout */

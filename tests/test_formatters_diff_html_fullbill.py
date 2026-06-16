@@ -130,6 +130,20 @@ def test_full_bill_toc_links():
     assert "TITLE I" in html
 
 
+def test_full_bill_toc_nests_sections_under_titles():
+    # starts 0 / 12 land on display rows 1 ("ADD0") and 2 ("MOD1").
+    sections = [
+        {"label": "TITLE I", "kind": "title", "start": 0, "descriptor": "DEPARTMENT OF DEFENSE"},
+        {"label": "SEC. 101", "kind": "section", "start": 12},
+    ]
+    html = format_diff_html(_view(), _canonical(), sections=sections)
+    assert '<details class="toc-group">' in html
+    assert "TITLE I &mdash; DEPARTMENT OF DEFENSE" in html  # descriptor labels the bare title
+    assert 'href="#sec-0"' in html  # title is itself a jump target
+    assert '<li class="toc-child"><a href="#sec-1">SEC. 101</a></li>' in html  # section nested under it
+    assert 'id="sec-0"' in html and 'id="sec-1"' in html
+
+
 def test_toc_empty_state_when_no_sections():
     html = format_diff_html(_view(), _canonical(), sections=[])
     assert 'class="sidebar-toc"' in html
