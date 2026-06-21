@@ -10,24 +10,13 @@ import re
 import sys
 import time
 from pathlib import Path
+from shared.http import request_with_retry
+from shared.bill_types import BILL_TYPES
 
 import httpx
 from dotenv import load_dotenv
 
 BASE_URL = "https://api.congress.gov/v3"
-
-# (human-readable label, congress.gov URL slug)
-BILL_TYPES = {
-    "hr": ("H.R.", "house-bill"),
-    "s": ("S.", "senate-bill"),
-    "hjres": ("H.J.Res.", "house-joint-resolution"),
-    "sjres": ("S.J.Res.", "senate-joint-resolution"),
-    "hres": ("H.Res.", "house-resolution"),
-    "sres": ("S.Res.", "senate-resolution"),
-    "hconres": ("H.Con.Res.", "house-concurrent-resolution"),
-    "sconres": ("S.Con.Res.", "senate-concurrent-resolution"),
-}
-
 
 def sanitize_version_name(name: str) -> str:
     """Convert a version type like 'Reported in House' to 'reported-in-house'."""
@@ -63,30 +52,6 @@ def get_api_key() -> str:
         )
     return key
 
-
-def api_get(client: httpx.Client, path: str, params: dict | None = None, *, api_key: str) -> dict:
-    """Make a GET request to the Congress.gov API with basic retry."""
-    request_params = {**(params or {}), "api_key": api_key, "format": "json"}
-    url = f"{BASE_URL}{path}" if path.startswith("/") else path
-
-    last_resp = None
-    for attempt in range(3):
-        last_resp = client.get(url, params=request_params)
-        if last_resp.status_code == 429:
-            print("Rate limited, waiting 60s...", file=sys.stderr)
-            time.sleep(60)
-            continue
-        if last_resp.status_code >= 500:
-            time.sleep(2**attempt)
-            continue
-        last_resp.raise_for_status()
-        return last_resp.json()
-
-    # All retries exhausted
-    last_resp.raise_for_status()
-    return {}  # unreachable, raise_for_status throws on 429/5xx
-
-
 def fetch_all_committee_bills(
     client: httpx.Client, chamber: str, committee_code: str, *, api_key: str, page_size: int = 250
 ) -> list[dict]:
@@ -96,7 +61,7 @@ def fetch_all_committee_bills(
     offset = 0
 
     while True:
-        data = api_get(client, path, {"limit": page_size, "offset": offset}, api_key=api_key)
+        data = request_with_retry(client, path, {"limit": page_size, "offset": offset, "format": "json", "api_key": api_key})
         bills = data.get("committee-bills", {}).get("bills", [])
         all_bills.extend(bills)
         total = data.get("pagination", {}).get("count", 0)
@@ -124,7 +89,7 @@ def fetch_text_versions(
 ) -> list[dict]:
     """Fetch all text versions for a bill, in chronological order (oldest first)."""
     path = f"/bill/{congress}/{bill_type}/{number}/text"
-    data = api_get(client, path, api_key=api_key)
+    data = request_with_retry(client, path, {"format": "json", "api_key": api_key})
     versions = data.get("textVersions", [])
     # Sort chronologically (oldest first). Null-dated versions (e.g. Enrolled Bill)
     # get the max date so they sort alongside the latest entries, with type name
@@ -373,6 +338,9 @@ def main():
     load_dotenv()
     api_key = get_api_key()
     parser = build_parser()
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(0)
     args = parser.parse_args()
 
     with httpx.Client(timeout=30) as client:
