@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Download bill text versions from Congress.gov.
 
 Uses the Congress.gov API v3 to fetch bill text in XML format

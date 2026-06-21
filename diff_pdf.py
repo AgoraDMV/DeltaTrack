@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Block-level diff for PDF bill versions, parallel to diff_bill.py for XML.
 
 A bill is grouped into anchor-delimited blocks (TITLE / SEC. / account heading)
