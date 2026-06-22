@@ -7,8 +7,8 @@ import time
 
 import httpx
 
+BASE_URL = "https://api.congress.gov/v3"
 LOG_API_REQUESTS = True
-
 
 def request_with_retry(
     client: httpx.Client,
@@ -48,3 +48,20 @@ def request_with_retry(
 
     last_resp.raise_for_status()
     return last_resp
+
+def api_get(
+    client: httpx.Client,
+    path: str,
+    *,
+    api_key: str,
+    params: dict | None = None,
+) -> dict:
+    """GET a congress.gov API v3 JSON endpoint with retries.
+
+    Ensures we always use a fully-qualified URL (avoids relative-URL regressions).
+    """
+    url = f"{BASE_URL}{path}"
+    request_params = dict(params or {})
+    request_params["api_key"] = api_key
+    resp = request_with_retry(client, url, request_params)
+    return resp.json()

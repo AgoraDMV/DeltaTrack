@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from collections import namedtuple
 import csv
 import json
 from pathlib import Path
-from typing import Any, Iterable, Literal, Tuple
+from typing import Any, Iterable, Literal, Optional, Tuple
+
+from shared.bill_types import BILL_TYPES
 
 BillRecord = dict[str, Any]
 InsertMode = Literal["merge", "skip"]
@@ -25,6 +28,17 @@ def make_bill_id(congress: int | str, bill_type: str, number: int | str) -> str:
     """Build a bill id slug from a congress number, bill type, and bill number."""
     return f"{congress}-{bill_type}-{number}"
 
+
+BillIdentifier = namedtuple("BillIdentifier", ["congress", "bill_type", "number", "version"])
+def parse_bill_id(slug: str) -> BillIdentifier:
+    """Parse `congress-type-number[:version]` into a typed identifier."""
+    id_version = slug.split(":")
+    id, version = id_version[0], None if len(id_version) == 1 else id_version[1]
+    congress, bill_type, number = id.split("-")
+    if bill_type not in BILL_TYPES:
+        raise ValueError(f"Unknown bill type '{bill_type}' in slug: {slug}")
+
+    return BillIdentifier(congress=congress, bill_type=bill_type, number=number, version=version)
 
 class BillIndex:
     """

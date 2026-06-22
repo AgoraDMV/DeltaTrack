@@ -12,6 +12,7 @@ htmlcov/
 .claude/worktrees/
 bills/*
 !bills/.gitkeep
+!bills/large_bills.csv
 # Vendored public-domain (17 U.S.C. 105) govinfo sources for the external-validation suite:
 # the Senate reported-bill XML each validation jurisdiction checks. Pinning the exact bytes
 # keeps the committed validation_*.json fixtures reproducible and lets the suite run in CI.

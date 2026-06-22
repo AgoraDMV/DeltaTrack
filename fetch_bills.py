@@ -7,13 +7,15 @@ for downstream comparison between versions.
 """
 
 import argparse
+import datetime
 import os
 import re
 import sys
 import time
 from pathlib import Path
-from shared.http import request_with_retry
+from shared.http import request_with_retry, api_get
 from shared.bill_types import BILL_TYPES
+from bill_index import BillIndex, parse_bill_id
 
 import httpx
 from dotenv import load_dotenv
@@ -63,7 +65,12 @@ def fetch_all_committee_bills(
     offset = 0
 
     while True:
-        data = request_with_retry(client, path, {"limit": page_size, "offset": offset, "format": "json", "api_key": api_key})
+        data = api_get(
+            client,
+            path,
+            api_key=api_key,
+            params={"limit": page_size, "offset": offset, "format": "json"},
+        )
         bills = data.get("committee-bills", {}).get("bills", [])
         all_bills.extend(bills)
         total = data.get("pagination", {}).get("count", 0)
@@ -91,7 +98,7 @@ def fetch_text_versions(
 ) -> list[dict]:
     """Fetch all text versions for a bill, in chronological order (oldest first)."""
     path = f"/bill/{congress}/{bill_type}/{number}/text"
-    data = request_with_retry(client, path, {"format": "json", "api_key": api_key})
+    data = api_get(client, path, api_key=api_key, params={"format": "json"})
     versions = data.get("textVersions", [])
     # Sort chronologically (oldest first). Null-dated versions (e.g. Enrolled Bill)
     # get the max date so they sort alongside the latest entries, with type name
@@ -133,24 +140,14 @@ def save_version(
     return path
 
 
-def download_version_xml(client: httpx.Client, url: str) -> bytes:
+def download_bill_version(client: httpx.Client, url: str, timeout: int = 60) -> bytes:
     """Download raw XML content from a congress.gov URL, with retry."""
-    last_resp = None
-    for attempt in range(3):
-        last_resp = client.get(url)
-        if last_resp.status_code == 429:
-            print("Rate limited, waiting 60s...", file=sys.stderr)
-            time.sleep(60)
-            continue
-        if last_resp.status_code >= 500:
-            time.sleep(2**attempt)
-            continue
-        last_resp.raise_for_status()
-        return last_resp.content
+    resp = request_with_retry(client, url, timeout=timeout)
+    return resp.content if resp else b""
 
-    last_resp.raise_for_status()
-    return b""  # unreachable
-
+# Backwards-compatible name used by older unit tests/docs.
+def download_version_xml(client: httpx.Client, url: str) -> bytes:
+    return download_bill_version(client, url)
 
 def get_xml_url(version: dict) -> str | None:
     """Extract the XML format URL from a version's formats list."""
@@ -187,6 +184,7 @@ def download_version(
     index: int,
     total: int,
     formats: list[str],
+    timeout: int = 60,
 ) -> None:
     """Download the requested format(s) for a single version, skipping existing files."""
     vtype = version.get("type", "unknown")
@@ -200,9 +198,17 @@ def download_version(
             print(f"  Already exists: {dest}", file=sys.stderr)
             continue
         print(f"  Downloading version {index}/{total} ({fmt}): {vtype}...", file=sys.stderr)
-        content = download_version_xml(client, url)
-        save_version(content, output_dir, congress, bill_type, number, index, vtype, ext=fmt)
-        print(f"  Saved: {dest}", file=sys.stderr)
+        try:
+            content = download_bill_version(client, url, timeout=timeout)
+            save_version(content, output_dir, congress, bill_type, number, index, vtype, ext=fmt)
+            print(f"  Saved: {dest}", file=sys.stderr)
+        except Exception as exc:
+            # Don't kill the whole batch: write an error marker beside the target.
+            error_path = Path(str(dest) + ".error")
+            error_path.parent.mkdir(parents=True, exist_ok=True)
+            error_path.write_text(str(exc), encoding="utf-8")
+            print(f"  FAILED: wrote {error_path.name}", file=sys.stderr)
+            continue
 
 
 def cmd_versions(client: httpx.Client, args: argparse.Namespace, api_key: str):
@@ -245,8 +251,70 @@ def cmd_download(client: httpx.Client, args: argparse.Namespace, api_key: str):
         )
 
 
+def download_all_versions(
+    client: httpx.Client,
+    *,
+    output_dir: Path,
+    congress: int,
+    bill_type: str,
+    number: int,
+    api_key: str,
+    formats: list[str],
+    timeout: int = 60,
+) -> None:
+    """Download every available text version for one bill."""
+    label, _ = BILL_TYPES.get(bill_type, (bill_type.upper(), ""))
+    print(f"\n{label} {number} ({congress}th Congress):", file=sys.stderr)
+
+    versions = fetch_text_versions(client, congress, bill_type, number, api_key=api_key)
+    if not versions:
+        print("  No text versions available", file=sys.stderr)
+        return
+
+    total = len(versions)
+    for version_index, version in enumerate(versions, 1):
+        download_version(
+            client,
+            version,
+            output_dir=output_dir,
+            congress=congress,
+            bill_type=bill_type,
+            number=number,
+            index=version_index,
+            total=total,
+            formats=formats,
+            timeout=timeout,
+        )
+
+
 def cmd_download_all(client: httpx.Client, args: argparse.Namespace, api_key: str):
     """Download all appropriations bill versions for a year range."""
+    if args.start_year is None and args.end_year is None and args.file is None:
+        print("start_year, end_year, or file must be provided.", file=sys.stderr)
+        sys.exit(1)
+    formats = formats_from_arg(args.format)
+    if args.file:
+        index = BillIndex(args.file)
+        bill_ids = [b["id"].strip() for b in index.bills if b.get("id", "").strip()]
+
+        print(f"Downloading {len(bill_ids)} bills from {args.file}", file=sys.stderr)
+        for raw_slug in bill_ids:
+            ident = parse_bill_id(raw_slug)
+            download_all_versions(
+                client,
+                output_dir=args.output_dir,
+                congress=ident.congress,
+                bill_type=ident.bill_type,
+                number=ident.number,
+                api_key=api_key,
+                formats=formats,
+            )
+
+        return
+
+
+    start_year = args.start_year or 1789
+    end_year = args.end_year or datetime.now().year
     if args.start_year > args.end_year:
         print(f"start_year ({args.start_year}) must be <= end_year ({args.end_year}).", file=sys.stderr)
         sys.exit(1)
@@ -277,27 +345,16 @@ def cmd_download_all(client: httpx.Client, args: argparse.Namespace, api_key: st
         congress = bill.get("congress")
         bill_type = bill.get("type", "").lower()
         number = bill.get("number")
-        label, _ = BILL_TYPES.get(bill_type, (bill_type.upper(), ""))
-        print(f"\n{label} {number} ({congress}th Congress):", file=sys.stderr)
-
-        versions = fetch_text_versions(client, congress, bill_type, number, api_key=api_key)
-        if not versions:
-            print("  No text versions available", file=sys.stderr)
-            continue
-
         formats = formats_from_arg(args.format)
-        for index, version in enumerate(versions, 1):
-            download_version(
-                client,
-                version,
-                output_dir=args.output_dir,
-                congress=congress,
-                bill_type=bill_type,
-                number=number,
-                index=index,
-                total=len(versions),
-                formats=formats,
-            )
+        download_all_versions(
+            client,
+            output_dir=args.output_dir,
+            congress=int(congress),
+            bill_type=bill_type,
+            number=int(number),
+            api_key=api_key,
+            formats=formats,
+        )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -321,16 +378,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_dl.add_argument("--version", type=int, default=None, help="Specific version number (1-indexed)")
     p_dl.add_argument("--output-dir", type=Path, default=Path("bills"), help="Output directory")
     p_dl.add_argument(
-        "--format", choices=["xml", "pdf", "both"], default="xml", help="Format(s) to download (default: xml)"
+        "--format", choices=["xml", "pdf", "both"], default="both", help="Format(s) to download (default: pdf)"
     )
 
     # download-all: bulk download for a year range
     p_all = subparsers.add_parser("download-all", help="Download all appropriations bill versions for a year range")
-    p_all.add_argument("start_year", type=int, help="Start year (e.g. 2024)")
-    p_all.add_argument("end_year", type=int, help="End year (e.g. 2026)")
+    p_all.add_argument("--start_year", type=int, default = None, help="Start year (e.g. 2024)")
+    p_all.add_argument("--end_year", type=int, default = None, help="End year (e.g. 2026)")
+    p_all.add_argument("--file", type=Path, default=None, help="CSV file path with an 'id' column")
     p_all.add_argument("--output-dir", type=Path, default=Path("bills"), help="Output directory")
     p_all.add_argument(
-        "--format", choices=["xml", "pdf", "both"], default="xml", help="Format(s) to download (default: xml)"
+        "--format", choices=["xml", "pdf", "both"], default="both", help="Format(s) to download (default: pdf)"
     )
 
     return parser
