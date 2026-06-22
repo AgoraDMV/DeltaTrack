@@ -11,14 +11,14 @@ import datetime
 import os
 import re
 import sys
-import time
 from pathlib import Path
-from shared.http import request_with_retry, api_get
-from shared.bill_types import BILL_TYPES
-from bill_index import BillIndex, parse_bill_id
 
 import httpx
 from dotenv import load_dotenv
+
+from bill_index import BillIndex, parse_bill_id
+from shared.bill_types import BILL_TYPES
+from shared.http import api_get, request_with_retry
 
 BASE_URL = "https://api.congress.gov/v3"
 
@@ -315,10 +315,10 @@ def cmd_download_all(client: httpx.Client, args: argparse.Namespace, api_key: st
 
     start_year = args.start_year or 1789
     end_year = args.end_year or datetime.now().year
-    if args.start_year > args.end_year:
-        print(f"start_year ({args.start_year}) must be <= end_year ({args.end_year}).", file=sys.stderr)
+    if start_year > end_year:
+        print(f"start_year ({start_year}) must be <= end_year ({end_year}).", file=sys.stderr)
         sys.exit(1)
-    target_congresses = sorted({congress_for_year(y) for y in range(args.start_year, args.end_year + 1)})
+    target_congresses = sorted({congress_for_year(y) for y in range(start_year, end_year + 1)})
     print(f"Target congresses: {target_congresses}", file=sys.stderr)
 
     # Fetch all bills from both committees
@@ -378,7 +378,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_dl.add_argument("--version", type=int, default=None, help="Specific version number (1-indexed)")
     p_dl.add_argument("--output-dir", type=Path, default=Path("bills"), help="Output directory")
     p_dl.add_argument(
-        "--format", choices=["xml", "pdf", "both"], default="both", help="Format(s) to download (default: pdf)"
+        "--format", choices=["xml", "pdf", "both"], default="pdf", help="Format(s) to download (default: pdf)"
     )
 
     # download-all: bulk download for a year range
@@ -388,7 +388,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_all.add_argument("--file", type=Path, default=None, help="CSV file path with an 'id' column")
     p_all.add_argument("--output-dir", type=Path, default=Path("bills"), help="Output directory")
     p_all.add_argument(
-        "--format", choices=["xml", "pdf", "both"], default="both", help="Format(s) to download (default: pdf)"
+        "--format", choices=["xml", "pdf", "both"], default="pdf", help="Format(s) to download (default: pdf)"
     )
 
     return parser
