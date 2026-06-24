@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from bill_tree import BillNode, BillTree, normalize_bill, normalize_division_title
+from shared.version_stems import version_number_from_stem
 
 # --- Financial amount extraction ---
 
@@ -736,15 +737,13 @@ def cmd_compare(args: argparse.Namespace) -> None:
 
     # Extract version numbers from filenames (e.g., "1_reported-in-house.xml" -> 1)
     for key, xml_arg in (("old_version_number", args.old_xml), ("new_version_number", args.new_xml)):
-        stem = Path(xml_arg).stem
-        prefix = stem.split("_", 1)[0]
-        if prefix.isdigit():
-            diff_dict[key] = int(prefix)
+        num = version_number_from_stem(Path(xml_arg).stem)
+        if num is not None:
+            diff_dict[key] = num
 
     if fmt == "html":
         from bill_tree import bill_title
-        from formatters.adapters import xml_dict_to_view
-        from formatters.canonical import xml_diff_to_canonical
+        from formatters.canonical import view_from_canonical, xml_diff_to_canonical
         from formatters.diff_html import format_diff_html
         from formatters.text_serializer import serialize_tree, serialize_tree_with_offsets
 
@@ -752,7 +751,7 @@ def cmd_compare(args: argparse.Namespace) -> None:
         full_text = {"v1": serialize_tree(old_tree), "v2": v2_text}
         canonical = xml_diff_to_canonical(diff_dict, full_text=full_text)
         output = format_diff_html(
-            xml_dict_to_view(diff_dict),
+            view_from_canonical(canonical),
             canonical=canonical,
             title=bill_title(new_tree),
             sections=sections,

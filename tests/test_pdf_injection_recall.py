@@ -21,10 +21,16 @@ import pytest
 from recall_text import normalize_for_recall
 
 from diff_pdf import PdfDiff, diff_pdfs
-from formatters.adapters import pdf_diff_to_view
+from formatters.canonical import pdf_diff_to_canonical, view_from_canonical
 from formatters.diff_html import format_diff_html
 from parsers.pdf_anchors import extract_anchors
 from parsers.pdf_text import Line, Page
+
+
+def pdf_diff_to_view(diff: PdfDiff, **meta):
+    """Route the PdfDiff through canonical -> view, the sole production path."""
+    return view_from_canonical(pdf_diff_to_canonical(diff, **meta))
+
 
 # ---- Injection helpers (operate on the frozen Page/Line dataclasses) ---------
 

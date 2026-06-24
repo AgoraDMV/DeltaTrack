@@ -35,6 +35,7 @@ from typing import Literal
 from diff_bill import _move_candidates, _text_similarity_at_least, match_amounts
 from parsers.pdf_anchors import Anchor, extract_anchors
 from parsers.pdf_text import Page
+from shared.version_stems import label_from_stem
 
 ChangeType = Literal["added", "removed", "modified", "moved"]
 PageLineRange = tuple[int, int, int, int]  # (start_page, start_line, end_page, end_line)
@@ -397,19 +398,6 @@ def diff_pdfs(v1_pages: list[Page], v2_pages: list[Page]) -> PdfDiff:
 # ---- CLI ---------------------------------------------------------------------
 
 
-def _label_from_stem(stem: str) -> str:
-    """Human-readable label from a filename stem.
-
-    Strips a leading `<n>_` version prefix when present (mirrors
-    render_examples), e.g. "1_reported-in-house" -> "reported-in-house".
-    Otherwise returns the stem unchanged.
-    """
-    parts = stem.split("_", 1)
-    if len(parts) == 2 and parts[0].isdigit():
-        return parts[1]
-    return stem
-
-
 def render_pdf_diff_html(
     v1_pdf: Path,
     v2_pdf: Path,
@@ -431,8 +419,8 @@ def render_pdf_diff_html(
     return compare_pdfs_html(
         v1_pdf.read_bytes(),
         v2_pdf.read_bytes(),
-        start_label=v1_label if v1_label is not None else _label_from_stem(v1_pdf.stem),
-        end_label=v2_label if v2_label is not None else _label_from_stem(v2_pdf.stem),
+        start_label=v1_label if v1_label is not None else label_from_stem(v1_pdf.stem),
+        end_label=v2_label if v2_label is not None else label_from_stem(v2_pdf.stem),
     )
 
 

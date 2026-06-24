@@ -9,9 +9,18 @@ all get resolved here.
 from __future__ import annotations
 
 from diff_pdf import PdfDiff, PdfHunk
-from formatters.adapters import pdf_diff_to_view
+from formatters.canonical import pdf_diff_to_canonical, view_from_canonical
 from formatters.view_model import ChangeView, DiffView
 from parsers.pdf_anchors import Anchor
+
+
+def pdf_diff_to_view(diff: PdfDiff, **meta) -> DiffView:
+    """Route the PdfDiff through canonical -> view, the sole production path.
+
+    Preserves these adapter-contract assertions now that the direct builder is gone.
+    """
+    return view_from_canonical(pdf_diff_to_canonical(diff, **meta))
+
 
 TITLE_I = Anchor(page_number=1, line_number=1, kind="title", text="TITLE I")
 SEC_101 = Anchor(page_number=1, line_number=10, kind="section", text="SEC. 101")

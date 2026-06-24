@@ -7,7 +7,7 @@ from uploaded bytes instead of files on disk:
     diff_pdfs()            (diff_pdf)
     pdf_full_text()        (parsers.pdf_text)   — both paths (full text + offsets)
     pdf_diff_to_canonical()(formatters.canonical) — both paths (JSON out / embedded)
-    pdf_diff_to_view()     (formatters.adapters) — HTML path
+    view_from_canonical()  (formatters.canonical) — canonical → DiffView (HTML path)
     format_diff_html()     (formatters.diff_html) — HTML path (view + canonical)
 
 No subprocess; no persistence. The temp files exist only long enough for
@@ -21,8 +21,7 @@ import tempfile
 from pathlib import Path
 
 from diff_pdf import PdfDiff, diff_pdfs
-from formatters.adapters import pdf_diff_to_view
-from formatters.canonical import pdf_diff_to_canonical
+from formatters.canonical import pdf_diff_to_canonical, view_from_canonical
 from formatters.diff_html import format_diff_html
 from parsers.pdf_anchors import Anchor
 from parsers.pdf_text import Page, extract_clean_pages, pdf_full_text, pdf_full_text_print
@@ -161,15 +160,11 @@ def compare_pdfs_html(
     """
     pdf_diff, old_pages, new_pages = _extract_and_diff(start_bytes, end_bytes)
     congress = _derive_congress(new_pages)
-    view = pdf_diff_to_view(
-        pdf_diff,
-        bill_type="",
-        bill_number="",
-        congress=congress,
-        v1_label=start_label,
-        v2_label=end_label,
-    )
     canonical = _build_canonical(pdf_diff, old_pages, new_pages, start_label, end_label, congress=congress)
+    # Per-change card text comes from the hunks, so it is identical regardless of the
+    # printed flag; derive the view from the (non-printed) canonical for consistency
+    # with the embedded diff.json.
+    view = view_from_canonical(canonical)
     display_canonical = _build_canonical(
         pdf_diff, old_pages, new_pages, start_label, end_label, congress=congress, printed=True
     )

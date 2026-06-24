@@ -9,14 +9,14 @@ fallback, "Renumbered" form) is exercised via test_formatters_adapters_pdf.py.
 from __future__ import annotations
 
 from diff_pdf import PdfDiff, PdfHunk
-from formatters.adapters import pdf_diff_to_view
+from formatters.canonical import pdf_diff_to_canonical, view_from_canonical
 from formatters.diff_html import format_diff_html
 from parsers.pdf_anchors import Anchor
 
 
 def format_pdf_html(diff: PdfDiff, **kwargs) -> str:
     """Local helper preserving the historical PdfDiff -> HTML entry point."""
-    return format_diff_html(pdf_diff_to_view(diff, **kwargs))
+    return format_diff_html(view_from_canonical(pdf_diff_to_canonical(diff, **kwargs)))
 
 
 def _empty_diff() -> PdfDiff:
