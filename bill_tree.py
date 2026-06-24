@@ -98,16 +98,100 @@ def find_bill_body(root: ET.Element) -> ET.Element:
 
 _LIST_MARKER_RE = re.compile(r" (?=\((?:[0-9]{1,2}|[a-z]{1,4}|[A-Z])\))")
 
+# Block-level (structural) tags whose text is a distinct unit and must be
+# separated from an adjacent sibling's text by a space. Everything not listed
+# here is treated as inline (e.g. external-xref, quote, italic, term,
+# short-title, added-phrase), where text flows through the element with no
+# separator — so "sub<external-xref>chapter 59</external-xref>" stays
+# "subchapter 59" and "(<external-xref>Public Law 95-..." stays "(Public Law".
+_BLOCK_TAGS = frozenset(
+    {
+        "text",
+        "header",
+        "paragraph",
+        "proviso",
+        "subparagraph",
+        "subsection",
+        "section",
+        "clause",
+        "subclause",
+        "quoted-block",
+        "after-quoted-block",
+        "title",
+        "subtitle",
+        "continuation-text",
+        "division",
+        "part",
+        "chapter",
+        "item",
+        "subitem",
+        "list-item",
+        "toc",
+        "toc-entry",
+        "appropriations-major",
+        "appropriations-intermediate",
+        "appropriations-small",
+        "row",
+        "entry",
+        "committee-name",
+        "action",
+        "action-date",
+        "action-desc",
+        "form",
+        "header-in-text",
+    }
+)
+
+
+def _itertext_block_spaced(element: ET.Element) -> str:
+    """Flatten an element to text, inserting a space between block-level siblings.
+
+    ElementTree's ``itertext`` concatenates an element's descendants with no
+    separator, so two adjacent block siblings whose source has no whitespace
+    between them run together (``<header>Effective date</header><text>The
+    amendments...</text>`` -> ``Effective dateThe amendments``). This walks the
+    tree and inserts a single space before a block-level child when the text so
+    far doesn't already end in whitespace, but only when:
+
+    - the preceding sibling is not an ``enum`` (a marker like ``(c)`` attaches
+      to the following text without a space, per _LIST_MARKER_RE's convention), and
+    - the child's own text starts with an alphanumeric (a new word), so we don't
+      push punctuation off its anchor (``(1).`` stays ``(1).``, not ``(1). .``).
+
+    The result only ever *adds* spaces; it never removes or reorders text.
+    """
+    parts: list[str] = []
+    if element.text:
+        parts.append(element.text)
+    prev_tag = None
+    for child in element:
+        child_text = _itertext_block_spaced(child)
+        if (
+            child.tag in _BLOCK_TAGS
+            and prev_tag != "enum"
+            and parts
+            and parts[-1]
+            and not parts[-1][-1].isspace()
+            and child_text[:1].isalnum()
+        ):
+            parts.append(" ")
+        parts.append(child_text)
+        if child.tail:
+            parts.append(child.tail)
+        prev_tag = child.tag
+    return "".join(parts)
+
 
 def extract_text_content(element: ET.Element) -> str:
     """Recursively extract all text content from an XML element.
 
-    Collapses runs of whitespace into single spaces and removes spaces
-    before parenthetical list markers like (1), (A), (iv) so that
-    formatting differences between bill versions don't appear as
-    textual changes.
+    Inserts a space between adjacent block-level siblings (see
+    _itertext_block_spaced), collapses runs of whitespace into single spaces,
+    and removes spaces before parenthetical list markers like (1), (A), (iv) so
+    that formatting differences between bill versions don't appear as textual
+    changes.
     """
-    text = " ".join("".join(element.itertext()).split())
+    text = " ".join(_itertext_block_spaced(element).split())
     return _LIST_MARKER_RE.sub("", text)
 
 

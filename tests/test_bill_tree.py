@@ -85,6 +85,37 @@ class TestExtractTextContent:
         el = ET.fromstring("<text>the (Comptroller) shall</text>")
         assert extract_text_content(el) == "the (Comptroller) shall"
 
+    def test_block_siblings_separated_by_space(self):
+        # Adjacent block-level siblings with no whitespace between them in the
+        # source must not run together (#17): header + text -> "date The...".
+        el = ET.fromstring(
+            "<subsection><enum>(c)</enum><header>Effective date</header><text>The amendments made.</text></subsection>"
+        )
+        assert extract_text_content(el) == "(c)Effective date The amendments made."
+
+    def test_inline_element_does_not_split_word(self):
+        # Inline elements (external-xref, quote, italic, ...) carry continuation
+        # text; a separator here would break the word ("subchapter").
+        el = ET.fromstring("<text>authorized by sub<external-xref>chapter 59</external-xref> of title 5</text>")
+        assert extract_text_content(el) == "authorized by subchapter 59 of title 5"
+
+    def test_inline_after_open_paren_stays_attached(self):
+        # No space inserted after "(" before an inline citation.
+        el = ET.fromstring("<text>Act of 1978 (<external-xref>Public Law 95-123</external-xref>)</text>")
+        assert extract_text_content(el) == "Act of 1978 (Public Law 95-123)"
+
+    def test_enum_marker_stays_attached_to_following_text(self):
+        # An enum marker attaches to the text that follows it without a space,
+        # matching _LIST_MARKER_RE's convention (no "(1) None").
+        el = ET.fromstring("<paragraph><enum>(1)</enum><text>None of the funds.</text></paragraph>")
+        assert extract_text_content(el) == "(1)None of the funds."
+
+    def test_punctuation_starting_block_not_pushed_off_anchor(self):
+        # A block whose text starts with punctuation does not get a leading
+        # space ("(1)." stays "(1).", not "(1) ." or "(1). .").
+        el = ET.fromstring("<subsection><text>in subparagraph (1)</text><clause><text>.</text></clause></subsection>")
+        assert extract_text_content(el) == "in subparagraph(1)."
+
 
 class TestExtractSectionText:
     def test_simple_lead_in_only(self):
