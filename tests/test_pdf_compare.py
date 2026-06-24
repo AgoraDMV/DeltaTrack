@@ -17,7 +17,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 BILL_DIR = ROOT / "bills" / "118-hr-4366"
-SCHEMA = ROOT / "prototype" / "sample-diffs" / "schema.json"
+SCHEMA = ROOT / "schema" / "canonical-diff.schema.json"
 
 
 # ---------- Fast API-guard tests -------------------------------------------

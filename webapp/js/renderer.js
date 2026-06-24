@@ -1,7 +1,7 @@
 /* ----------------------------------------------------------------------
    DeltaTrack — canonical diff renderer (vanilla JS, no framework)
 
-   Lifted from the prototype (prototype/app.js), trimmed to a pure renderer:
+   Originally lifted from the now-retired prototype demo, trimmed to a pure renderer:
    the sample library, "add bill"/"export" mocks, and sample fetching are
    gone. It renders one canonical diff JSON document (schema v1.2) — whatever
    the /api/compare endpoint returns — into two views:
