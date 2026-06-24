@@ -536,7 +536,12 @@ def _extract_section_text(section: ET.Element) -> str:
         if child.tag in ("enum", "header"):
             continue
         parts.append(extract_text_content(child))
-    text = "".join(parts).strip()
+    # Join with a space so adjacent parts keep a word boundary (a bare
+    # "".join produced run-together text like "...funds.(b)Whoever..." and
+    # "...2028:Military..."), then re-apply the list-marker normalization so the
+    # space before parenthetical markers like (b) stays stripped, matching the
+    # single-<text> branch and avoiding golden churn on the common case.
+    text = _LIST_MARKER_RE.sub("", " ".join(part for part in parts if part)).strip()
     return text
 
 

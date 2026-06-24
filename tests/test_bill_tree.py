@@ -112,6 +112,31 @@ class TestExtractSectionText:
         assert "Rule of construction applies." in result
         assert "amended by adding" in result
 
+    def test_sibling_parts_joined_with_space(self):
+        # Adjacent non-marker parts must not run together (#17): the join keeps a
+        # word boundary while still stripping the space before list markers.
+        section = ET.fromstring(
+            "<section><enum>3.</enum>"
+            "<text>available until September 30, 2028:</text>"
+            "<subsection><text>Military Construction, Army, $25,000,000.</text></subsection>"
+            "</section>"
+        )
+        result = _extract_section_text(section)
+        assert "2028: Military Construction" in result
+        assert "2028:Military" not in result
+
+    def test_list_marker_space_still_stripped(self):
+        # The space before a parenthetical list marker stays stripped after the
+        # space-preserving join, so output does not churn for the common case.
+        section = ET.fromstring(
+            "<section><enum>4.</enum>"
+            "<text>None of the funds may be used.</text>"
+            "<subsection><enum>(b)</enum><text>Whoever violates this section.</text></subsection>"
+            "</section>"
+        )
+        result = _extract_section_text(section)
+        assert "used.(b)Whoever" in result
+
 
 class TestGetHeaderText:
     def test_with_header(self):
