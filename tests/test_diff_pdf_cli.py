@@ -36,10 +36,10 @@ class TestParser:
         assert args.v2_pdf == Path("b.pdf")
         assert args.output == Path("out.html")
 
-    def test_metadata_defaults(self):
+    def test_label_defaults(self):
         args = build_parser().parse_args(["a.pdf", "b.pdf"])
-        assert args.bill_type == ""
         assert args.v1_label is None
+        assert args.v2_label is None
 
 
 @requires_corpus
@@ -51,6 +51,10 @@ class TestCli:
         assert html.lstrip().lower().startswith("<!doctype html") or "<html" in html.lower()
         assert "reported-in-house" in html
         assert "engrossed-in-house" in html
+        # Delegating to compare_pdfs_html means the report carries the
+        # full-bill view + embedded export, not just the changed-section cards.
+        assert "full-bill" in html
+        assert "diff.json" in html
 
     def test_stdout_when_no_output(self, capsys):
         main([str(V1), str(V2)])
