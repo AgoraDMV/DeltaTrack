@@ -38,7 +38,7 @@ class TestParser:
 
     def test_metadata_defaults(self):
         args = build_parser().parse_args(["a.pdf", "b.pdf"])
-        assert args.bill_type == "unknown"
+        assert args.bill_type == ""
         assert args.v1_label is None
 
 

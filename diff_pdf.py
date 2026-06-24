@@ -414,7 +414,7 @@ def render_pdf_diff_html(
     v1_pdf: Path,
     v2_pdf: Path,
     *,
-    bill_type: str = "unknown",
+    bill_type: str = "",
     bill_number: int | str = "",
     congress: int | str = "",
     v1_label: str | None = None,
@@ -452,7 +452,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("v1_pdf", type=Path, help="Path to the older PDF")
     parser.add_argument("v2_pdf", type=Path, help="Path to the newer PDF")
     parser.add_argument("-o", "--output", type=Path, help="Output HTML file (default: stdout)")
-    parser.add_argument("--bill-type", default="unknown", help="Bill type, e.g. hr, s (cosmetic)")
+    parser.add_argument("--bill-type", default="", help="Bill type, e.g. hr, s (cosmetic)")
     parser.add_argument("--bill-number", default="", help="Bill number (cosmetic)")
     parser.add_argument("--congress", default="", help="Congress number (cosmetic)")
     parser.add_argument("--v1-label", help="Label for the older version (default: filename stem)")
