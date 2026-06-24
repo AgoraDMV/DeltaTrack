@@ -101,6 +101,48 @@ def test_unanchored_hunk_is_degraded_with_uncategorized_label():
     assert "p.2" in cv.nav_label_html
 
 
+def test_pdf_change_group_label_from_title():
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=SEC_101,
+        v2_anchor=SEC_101,
+        v1_range=(1, 10, 1, 20),
+        v2_range=(1, 10, 1, 20),
+        v1_text="old",
+        v2_text="new",
+    )
+    diff = _diff(hunks=[hunk], v1_anchors=[TITLE_I, SEC_101], v2_anchors=[TITLE_I, SEC_101])
+    assert pdf_diff_to_view(diff, **_meta()).changes[0].group_label == "TITLE I"
+
+
+def test_removed_change_group_label_from_v1_anchor():
+    hunk = PdfHunk(
+        change_type="removed",
+        v1_anchor=SEC_101,
+        v2_anchor=None,
+        v1_range=(1, 10, 1, 20),
+        v2_range=None,
+        v1_text="goodbye",
+        v2_text="",
+    )
+    diff = _diff(hunks=[hunk], v1_anchors=[TITLE_I, SEC_101], v2_anchors=[])
+    assert pdf_diff_to_view(diff, **_meta()).changes[0].group_label == "TITLE I"
+
+
+def test_unanchored_change_group_label_empty():
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=None,
+        v2_anchor=None,
+        v1_range=(2, 5, 2, 8),
+        v2_range=(2, 5, 2, 8),
+        v1_text="x",
+        v2_text="y",
+    )
+    diff = _diff(hunks=[hunk])
+    assert pdf_diff_to_view(diff, **_meta()).changes[0].group_label == ""
+
+
 def test_citation_html_pre_rendered_with_v1_v2_spans():
     hunk = PdfHunk(
         change_type="modified",

@@ -142,6 +142,13 @@ a { color: var(--accent); }
 .upload-panel__title { font-size: 24px; margin: 0 0 10px; }
 .upload-panel__lead { color: var(--text-dim); max-width: 720px; margin: 0 0 24px; }
 
+.format-toggle {
+  border: 0; margin: 0 0 16px; padding: 0;
+  display: flex; align-items: center; gap: 14px;
+}
+.format-toggle__legend { float: left; font-size: 13px; font-weight: 600; color: var(--text); padding: 0; margin-right: 4px; }
+.format-toggle__opt { font-size: 14px; color: var(--text); display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+
 .upload-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: stretch; }
 @media (max-width: 640px) { .upload-grid { grid-template-columns: 1fr; } .upload-arrow { display: none; } }
 

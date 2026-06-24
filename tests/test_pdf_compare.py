@@ -68,12 +68,12 @@ def test_no_redirect_without_forwarded_proto():
 
 
 def test_compare_rejects_non_pdf():
-    # start_pdf lacks the %PDF magic → 415 before any diffing happens.
+    # start_file lacks the %PDF magic → 415 before any diffing happens.
     resp = _client().post(
         "/api/compare",
         files={
-            "start_pdf": ("a.pdf", b"not a pdf at all", "application/pdf"),
-            "end_pdf": ("b.pdf", b"%PDF-1.4 whatever", "application/pdf"),
+            "start_file": ("a.pdf", b"not a pdf at all", "application/pdf"),
+            "end_file": ("b.pdf", b"%PDF-1.4 whatever", "application/pdf"),
         },
     )
     assert resp.status_code == 415
@@ -83,11 +83,35 @@ def test_compare_rejects_empty_file():
     resp = _client().post(
         "/api/compare",
         files={
-            "start_pdf": ("a.pdf", b"", "application/pdf"),
-            "end_pdf": ("b.pdf", b"%PDF-1.4 whatever", "application/pdf"),
+            "start_file": ("a.pdf", b"", "application/pdf"),
+            "end_file": ("b.pdf", b"%PDF-1.4 whatever", "application/pdf"),
         },
     )
     assert resp.status_code == 400
+
+
+def test_compare_xml_rejects_non_xml():
+    # format=xml but the bytes don't start with "<" → 415 before any diffing.
+    resp = _client().post(
+        "/api/compare?format=xml",
+        files={
+            "start_file": ("a.xml", b"not xml at all", "application/xml"),
+            "end_file": ("b.xml", b"<?xml version='1.0'?><bill/>", "application/xml"),
+        },
+    )
+    assert resp.status_code == 415
+
+
+def test_compare_pdf_bytes_rejected_when_format_xml():
+    # A PDF uploaded under the XML option is caught by the magic-byte check.
+    resp = _client().post(
+        "/api/compare?format=xml",
+        files={
+            "start_file": ("a.pdf", b"%PDF-1.4 whatever", "application/pdf"),
+            "end_file": ("b.xml", b"<?xml version='1.0'?><bill/>", "application/xml"),
+        },
+    )
+    assert resp.status_code == 415
 
 
 # ---------- Slow end-to-end engine test ------------------------------------
@@ -154,10 +178,21 @@ def test_compare_api_returns_html():
     resp = _client().post(
         "/api/compare?output=html",
         files={
-            "start_pdf": ("start.pdf", start.read_bytes(), "application/pdf"),
-            "end_pdf": ("end.pdf", end.read_bytes(), "application/pdf"),
+            "start_file": ("start.pdf", start.read_bytes(), "application/pdf"),
+            "end_file": ("end.pdf", end.read_bytes(), "application/pdf"),
         },
     )
     assert resp.status_code == 200
     assert "text/html" in resp.headers.get("content-type", "")
     assert "change-card" in resp.text
+
+
+def test_derive_congress_from_cover():
+    from parsers.pdf_text import Line, Page
+    from server.pdf_compare import _derive_congress
+
+    page = Page(1, (Line(None, "118TH CONGRESS"), Line(None, "1ST SESSION H. R. 4366")))
+    assert _derive_congress([page]) == "118"
+    # No cover match → empty (renderer then omits the "th Congress" suffix).
+    assert _derive_congress([Page(1, (Line(None, "AN ACT"),))]) == ""
+    assert _derive_congress([]) == ""

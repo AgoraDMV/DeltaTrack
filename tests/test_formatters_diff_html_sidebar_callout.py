@@ -46,7 +46,7 @@ def _view(changes) -> DiffView:
 
 def test_nav_item_basic():
     item = _build_nav_item(_change(), 0)
-    assert item.startswith('<li class="nav-item" data-type="modified">')
+    assert item.startswith('<li class="nav-item" data-type="modified" data-financial="0">')
     assert 'href="#change-0"' in item
     assert '<span class="badge badge-modified">modified</span>' in item
     assert "TITLE I &gt; Customs" in item
@@ -70,7 +70,7 @@ def test_nav_item_degraded_adds_unanchored_class():
         _change(degraded=True, nav_label_html="(uncategorized) — p.2 L5"),
         0,
     )
-    assert '<li class="nav-item unanchored" data-type="modified">' in item
+    assert '<li class="nav-item unanchored" data-type="modified" data-financial="0">' in item
 
 
 def test_sidebar_emits_one_li_per_change():
@@ -80,10 +80,28 @@ def test_sidebar_emits_one_li_per_change():
     assert sidebar.index('href="#change-0"') < sidebar.index('href="#change-1"')
 
 
-def test_sidebar_filter_input_present():
+def test_sidebar_filter_radios_present():
     sidebar = _build_sidebar(_view([]))
-    assert 'id="sidebar-filter"' in sidebar
+    assert 'name="change-filter"' in sidebar  # text search moved to the action bar
     assert "<ul></ul>" in sidebar  # empty when no changes
+
+
+def test_sidebar_groups_changes_by_section():
+    sidebar = _build_sidebar(
+        _view(
+            [
+                _change(group_label="TITLE I"),
+                _change(group_label="TITLE I", change_type="added"),
+                _change(group_label="TITLE II"),
+                _change(group_label=""),  # falls into Uncategorized
+            ]
+        )
+    )
+    assert sidebar.count('<details class="nav-group">') == 3  # collapsed (no open attr)
+    assert '<summary>TITLE I <span class="nav-group__count">(2)</span></summary>' in sidebar
+    assert '<summary>TITLE II <span class="nav-group__count">(1)</span></summary>' in sidebar
+    assert '<summary>Uncategorized <span class="nav-group__count">(1)</span></summary>' in sidebar
+    assert sidebar.count("<li ") == 4  # every change still rendered
 
 
 # ---------- Callout ---------------------------------------------------------

@@ -177,7 +177,7 @@ class TestFormatHtml:
     def test_contains_sidebar(self):
         html = format_html(_sample_diff_dict())
         assert "sidebar" in html
-        assert "sidebar-filter" in html
+        assert 'name="change-filter"' in html
 
     def test_contains_change_cards(self):
         html = format_html(_sample_diff_dict())

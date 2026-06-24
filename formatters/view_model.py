@@ -56,6 +56,10 @@ class ChangeView:
     """Already filtered to "real" amount changes (both sides present and
     differing). The renderer iterates without re-filtering."""
 
+    group_label: str = ""
+    """Raw (unescaped) section label the sidebar groups this change under —
+    the top of its breadcrumb (e.g. "TITLE I"). Empty → "Uncategorized"."""
+
 
 @dataclass(frozen=True)
 class DiffView:

@@ -95,6 +95,7 @@ def _change_view_from_xml(change: dict) -> ChangeView:
         old_text=change.get("old_text") or "",
         new_text=change.get("new_text") or "",
         amount_pairs=_real_changes(pairs),
+        group_label=((change.get("display_path_new") or change.get("display_path_old") or [""]) or [""])[0],
     )
 
 
@@ -214,6 +215,24 @@ def _pdf_move_info_html(
     return f'<div class="move-info">{label}</div>'
 
 
+def _pdf_group_label(
+    hunk: PdfHunk,
+    v1_anchors: tuple[Anchor, ...],
+    v2_anchors: tuple[Anchor, ...],
+) -> str:
+    """Top-of-breadcrumb section label (e.g. "TITLE I") the sidebar groups by.
+
+    Uses the same v2-then-v1 anchor preference as the heading, so a removed
+    change groups under its v1 title. Returns "" (→ "Uncategorized") when no
+    anchor resolves.
+    """
+    anchor, anchors = (hunk.v2_anchor, v2_anchors) if hunk.v2_anchor is not None else (hunk.v1_anchor, v1_anchors)
+    if anchor is None:
+        return ""
+    chain = breadcrumb_for(anchor, anchors)
+    return chain[0] if chain else ""
+
+
 def _change_view_from_pdf(
     hunk: PdfHunk,
     v1_anchors: tuple[Anchor, ...],
@@ -231,6 +250,7 @@ def _change_view_from_pdf(
         old_text=hunk.v1_text or "",
         new_text=hunk.v2_text or "",
         amount_pairs=_real_changes(hunk.amount_pairs),
+        group_label=_pdf_group_label(hunk, v1_anchors, v2_anchors),
     )
 
 
