@@ -8,9 +8,8 @@ One consumer:
   view_from_canonical(canonical)          -> DiffView
 
 The producers are tested against the canonical JSON shape directly. The
-consumer is tested for round-trip parity against the existing
-xml_dict_to_view / pdf_diff_to_view adapters, so the existing HTML
-renderer keeps working unchanged.
+consumer (view_from_canonical) is tested via the adapter-contract suites
+(test_formatters_adapters_{xml,pdf}.py), which now route through canonical.
 """
 
 from __future__ import annotations
@@ -21,10 +20,8 @@ from pathlib import Path
 import pytest
 
 from diff_pdf import PdfDiff, PdfHunk
-from formatters.adapters import pdf_diff_to_view, xml_dict_to_view
 from formatters.canonical import (
     pdf_diff_to_canonical,
-    view_from_canonical,
     xml_diff_to_canonical,
 )
 from parsers.pdf_anchors import Anchor
@@ -364,51 +361,6 @@ def test_pdf_amounts_filtered_to_real_changes():
     diff = PdfDiff(hunks=(hunk,), v1_anchors=(SEC_101,), v2_anchors=(SEC_101,))
     canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
     assert canonical["changes"][0]["amounts"] == [{"old": 1000, "new": 1500}]
-
-
-# ---------- Round-trip parity ------------------------------------------------
-
-
-def test_xml_round_trip_preserves_view_for_renderer():
-    """xml_diff_to_canonical -> view_from_canonical reproduces the same DiffView
-    that xml_dict_to_view would produce directly. This means the existing HTML
-    renderer keeps working unchanged when fed canonical JSON."""
-    diff_dict = _xml_diff_dict(
-        changes=[
-            {
-                "change_type": "modified",
-                "display_path_old": ["TITLE I", "Customs"],
-                "display_path_new": ["TITLE I", "Customs"],
-                "section_number": "101",
-                "old_text": "old",
-                "new_text": "new",
-                "financial": {"paired_amounts": [(1000, 1500)]},
-            },
-            {
-                "change_type": "moved",
-                "display_path_old": ["OLD"],
-                "display_path_new": ["NEW"],
-                "old_text": "same",
-                "new_text": "same",
-                "section_number": "",
-            },
-        ]
-    )
-    direct = xml_dict_to_view(diff_dict)
-    via_canonical = view_from_canonical(xml_diff_to_canonical(diff_dict))
-    assert via_canonical == direct
-
-
-def test_pdf_round_trip_preserves_view_for_renderer():
-    hunks = (
-        PdfHunk("modified", SEC_101, SEC_101, (1, 10, 1, 20), (2, 5, 2, 8), "old", "new"),
-        PdfHunk("moved", SEC_101, SEC_201, (1, 10, 1, 20), (5, 1, 5, 12), "same body", "same body"),
-        PdfHunk("modified", None, None, (3, 1, 3, 4), (3, 1, 3, 4), "x", "y"),
-    )
-    diff = PdfDiff(hunks=hunks, v1_anchors=(TITLE_I, SEC_101), v2_anchors=(TITLE_I, SEC_201))
-    direct = pdf_diff_to_view(diff, **_pdf_meta())
-    via_canonical = view_from_canonical(pdf_diff_to_canonical(diff, **_pdf_meta()))
-    assert via_canonical == direct
 
 
 # ---------- Schema validation -------------------------------------------------

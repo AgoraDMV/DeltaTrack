@@ -37,9 +37,9 @@ def _real_amount_pairs(
 ) -> list[dict]:
     """Filter pairs to "real" changes and emit canonical dict form.
 
-    Mirrors formatters.adapters._real_changes: keep pairs where both sides
-    are present and old != new. The producer guarantees this filter so a
-    consumer reading the JSON doesn't have to reimplement it.
+    Keep pairs where both sides are present and old != new. The producer
+    guarantees this filter so a consumer reading the JSON doesn't have to
+    reimplement it.
     """
     return [{"old": old, "new": new} for old, new in pairs if old is not None and new is not None and old != new]
 
@@ -319,8 +319,7 @@ def _join_path(parts: list[str] | None) -> str:
 
 
 def _format_range_str(rng: dict | None) -> str:
-    """Renders 'p.X L.Y' or 'p.X' when line is null. Mirrors
-    formatters.adapters._pdf_format_range so degraded labels come out byte-equal."""
+    """Renders 'p.X L.Y' or 'p.X' when line is null."""
     if rng is None:
         return "—"
     sp, sl, ep, el = rng["start_page"], rng["start_line"], rng["end_page"], rng["end_line"]

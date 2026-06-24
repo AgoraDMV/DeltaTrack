@@ -8,13 +8,13 @@ modules; word_diff lives in formatters._text.
 import pytest
 
 from formatters._text import word_diff
-from formatters.adapters import xml_dict_to_view
+from formatters.canonical import view_from_canonical, xml_diff_to_canonical
 from formatters.diff_html import format_diff_html
 
 
 def format_html(diff_dict):
     """Local helper preserving the historical dict -> HTML entry point."""
-    return format_diff_html(xml_dict_to_view(diff_dict))
+    return format_diff_html(view_from_canonical(xml_diff_to_canonical(diff_dict)))
 
 
 class TestWordDiff:

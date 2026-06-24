@@ -21,12 +21,10 @@ from pathlib import Path
 
 from bill_tree import bill_title, normalize_bill
 from diff_bill import bill_diff_to_dict, diff_bills
-from diff_pdf import diff_pdfs
-from formatters.adapters import pdf_diff_to_view, xml_dict_to_view
-from formatters.canonical import xml_diff_to_canonical
+from formatters.canonical import view_from_canonical, xml_diff_to_canonical
 from formatters.diff_html import format_diff_html
 from formatters.text_serializer import serialize_tree, serialize_tree_with_offsets
-from parsers.pdf_text import extract_clean_pages
+from server.pdf_compare import compare_pdfs_html
 from shared.version_stems import label_from_stem, version_number_from_stem
 
 PROJECT_ROOT = Path(__file__).parent
@@ -77,7 +75,7 @@ def render_xml_diff(spec: ExampleSpec) -> Path:
     full_text = {"v1": serialize_tree(v1), "v2": v2_text}
     canonical = xml_diff_to_canonical(diff_dict, full_text=full_text)
     html = format_diff_html(
-        xml_dict_to_view(diff_dict),
+        view_from_canonical(canonical),
         canonical=canonical,
         title=bill_title(v2),
         sections=sections,
@@ -88,19 +86,15 @@ def render_xml_diff(spec: ExampleSpec) -> Path:
 
 
 def render_pdf_diff(spec: ExampleSpec) -> Path:
+    # Delegate to the same pipeline the web app and CLI use, so the committed
+    # example carries the full-bill text view, section TOC, and embedded export
+    # rather than the thin per-change-only report.
     bill_dir = BILLS / spec.bill_dir
-    v1 = extract_clean_pages(bill_dir / f"{spec.v1_filename_stem}.pdf")
-    v2 = extract_clean_pages(bill_dir / f"{spec.v2_filename_stem}.pdf")
-    diff = diff_pdfs(v1, v2)
-    html = format_diff_html(
-        pdf_diff_to_view(
-            diff,
-            bill_type=spec.bill_type,
-            bill_number=spec.bill_number,
-            congress=spec.congress,
-            v1_label=label_from_stem(spec.v1_filename_stem),
-            v2_label=label_from_stem(spec.v2_filename_stem),
-        )
+    html = compare_pdfs_html(
+        (bill_dir / f"{spec.v1_filename_stem}.pdf").read_bytes(),
+        (bill_dir / f"{spec.v2_filename_stem}.pdf").read_bytes(),
+        start_label=label_from_stem(spec.v1_filename_stem),
+        end_label=label_from_stem(spec.v2_filename_stem),
     )
     out = EXAMPLES / f"{spec.bill_type}{spec.bill_number}_pdf_diff.html"
     out.write_text(html)

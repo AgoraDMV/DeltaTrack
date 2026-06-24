@@ -10,8 +10,16 @@ These tests pin the contract; the renderer's own snapshot tests come later.
 
 from __future__ import annotations
 
-from formatters.adapters import xml_dict_to_view
+from formatters.canonical import view_from_canonical, xml_diff_to_canonical
 from formatters.view_model import ChangeView, DiffView
+
+
+def xml_dict_to_view(diff_dict: dict) -> DiffView:
+    """Route the XML diff dict through canonical -> view, the sole production path.
+
+    Preserves these adapter-contract assertions now that the direct builder is gone.
+    """
+    return view_from_canonical(xml_diff_to_canonical(diff_dict))
 
 
 def _diff_dict(*, changes=None, **overrides) -> dict:

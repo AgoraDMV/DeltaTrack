@@ -1,9 +1,9 @@
 """Unified HTML renderer for both XML and PDF bill diffs.
 
-Consumes a DiffView produced by an adapter (formatters.adapters.xml_dict_to_view
-or .pdf_diff_to_view). The renderer does not branch on which pipeline produced
-the view — pipeline-specific data (citations, degraded styling, section
-numbers) is rendered when present and omitted when absent.
+Consumes a DiffView produced by formatters.canonical.view_from_canonical. The
+renderer does not branch on which pipeline produced the view — pipeline-specific
+data (citations, degraded styling, section numbers) is rendered when present and
+omitted when absent.
 
 The HTML output and CSS are deliberately shared across both pipelines so
 staffers see one consistent product regardless of source format.

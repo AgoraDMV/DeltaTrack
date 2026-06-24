@@ -72,7 +72,7 @@ uv run python render_examples.py   # writes examples/hr8752_pdf_diff.html
 |---|---|---|
 | Input | Congress.gov XML on disk | User PDF bytes (upload) |
 | Diff engine | `diff_bill.py` | `diff_pdf.py` |
-| HTML renderer | `format_diff_html` via `xml_dict_to_view` | `format_diff_html` via `pdf_diff_to_view` |
+| HTML renderer | `format_diff_html` via `view_from_canonical` | `format_diff_html` via `view_from_canonical` |
 | CLI entrypoint | `diff_bill.py compare … --format html` | `server/pdf_compare.py` (HTTP) or snippet above |
 
 XML and PDF paths can disagree on section boundaries and change counts for the same bill pair; compare like with like when validating.
@@ -90,7 +90,8 @@ server/app.py                    ← FastAPI: upload guards, concurrency, timeou
 server/pdf_compare.py            ← thin wrapper (bytes in → HTML out)
   │  extract_clean_pages()       parsers/pdf_text.py
   │  diff_pdfs()                 diff_pdf.py
-  │  pdf_diff_to_view()          formatters/adapters.py
+  │  pdf_diff_to_canonical()     formatters/canonical.py
+  │  view_from_canonical()       formatters/canonical.py
   │  format_diff_html()          formatters/diff_html.py
   ▼
 Standalone HTML report           ← opened in new tab by webapp/js/compare.js
@@ -130,7 +131,7 @@ Production ops (hosting, limits, systemd) live in gitignored `docs-for-ai/deploy
 
 **Diff accuracy or report content** — edit the Python engine, not the web UI:
 
-- `diff_pdf.py`, `parsers/`, `formatters/diff_html.py`, `formatters/adapters.py`
+- `diff_pdf.py`, `parsers/`, `formatters/diff_html.py`, `formatters/canonical.py`
 - Re-run PDF tests: `uv run pytest tests/test_pdf_*`
 - Regenerate committed examples if output shape changes: `uv run python render_examples.py`
 
