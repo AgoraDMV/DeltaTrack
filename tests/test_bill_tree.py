@@ -142,6 +142,21 @@ class TestExtractTextContent:
         el = ET.fromstring("<clause><enum>110</enum><text>Definitions apply.</text></clause>")
         assert extract_text_content(el) == "110 Definitions apply."
 
+    def test_linebreak_becomes_a_space(self):
+        # Multi-line table cells separate values with an empty <linebreak/> that
+        # carries no character, so without handling the lines mash together
+        # ("$66,464,000Initial Non-Federal"). A linebreak is whitespace.
+        # From the Army Corps project table in 116-hr-133.
+        el = ET.fromstring("<entry>Initial Federal: $66,464,000<linebreak/>Initial Non-Federal: $35,789,000</entry>")
+        result = extract_text_content(el)
+        assert result == "Initial Federal: $66,464,000 Initial Non-Federal: $35,789,000"
+        assert "$66,464,000Initial" not in result
+
+    def test_pagebreak_becomes_a_space(self):
+        # A <pagebreak/> is likewise a visual break, not part of a word.
+        el = ET.fromstring("<text>End of page.<pagebreak/>Next section begins.</text>")
+        assert extract_text_content(el) == "End of page. Next section begins."
+
 
 class TestExtractSectionText:
     def test_simple_lead_in_only(self):

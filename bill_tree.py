@@ -142,6 +142,12 @@ _BLOCK_TAGS = frozenset(
     }
 )
 
+# Empty break elements that represent visual whitespace (a line wrap or page
+# break), not part of a word. They carry no character, so multi-line table cells
+# like "$66,464,000<linebreak/>Initial Non-Federal" mash without treating the
+# break as a space. GPO XML does not hyphenate across these, so a space is safe.
+_BREAK_TAGS = frozenset({"linebreak", "pagebreak"})
+
 
 def _itertext_block_spaced(element: ET.Element) -> str:
     """Flatten an element to text, inserting a space between block-level siblings.
@@ -162,6 +168,8 @@ def _itertext_block_spaced(element: ET.Element) -> str:
     - the child's own text starts with an alphanumeric (a new word), so we don't
       push punctuation off its anchor (``(1).`` stays ``(1).``, not ``(1). .``).
 
+    Empty break elements (``_BREAK_TAGS``) are emitted as a space.
+
     The result only ever *adds* spaces; it never removes or reorders text.
     """
     parts: list[str] = []
@@ -169,6 +177,14 @@ def _itertext_block_spaced(element: ET.Element) -> str:
         parts.append(element.text)
     prev_paren_enum = False
     for child in element:
+        if child.tag in _BREAK_TAGS:
+            # Emit the break as whitespace; the final split()/join collapses any
+            # resulting double space.
+            parts.append(" ")
+            if child.tail:
+                parts.append(child.tail)
+            prev_paren_enum = False
+            continue
         child_text = _itertext_block_spaced(child)
         if (
             child.tag in _BLOCK_TAGS
