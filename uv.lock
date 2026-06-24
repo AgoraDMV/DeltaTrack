@@ -271,7 +271,7 @@ dev = [
     { name = "pytest-xdist", specifier = ">=3.6" },
     { name = "reportlab", specifier = ">=4.5.1" },
     { name = "respx", specifier = ">=0.22" },
-    { name = "ruff", specifier = ">=0.11" },
+    { name = "ruff", specifier = "==0.15.10" },
 ]
 
 [[package]]
