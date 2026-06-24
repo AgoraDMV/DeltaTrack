@@ -23,10 +23,13 @@ similarity (`_text_similarity`) from diff_bill.py.
 
 from __future__ import annotations
 
+import argparse
 import difflib
 import re
+import sys
 from collections import Counter
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
 from diff_bill import _move_candidates, _text_similarity_at_least, match_amounts
@@ -389,3 +392,77 @@ def diff_pdfs(v1_pages: list[Page], v2_pages: list[Page]) -> PdfDiff:
         v1_anchors=tuple(v1_anchors),
         v2_anchors=tuple(v2_anchors),
     )
+
+
+# ---- CLI ---------------------------------------------------------------------
+
+
+def _label_from_stem(stem: str) -> str:
+    """Human-readable label from a filename stem.
+
+    Strips a leading `<n>_` version prefix when present (mirrors
+    render_examples), e.g. "1_reported-in-house" -> "reported-in-house".
+    Otherwise returns the stem unchanged.
+    """
+    parts = stem.split("_", 1)
+    if len(parts) == 2 and parts[0].isdigit():
+        return parts[1]
+    return stem
+
+
+def render_pdf_diff_html(
+    v1_pdf: Path,
+    v2_pdf: Path,
+    *,
+    v1_label: str | None = None,
+    v2_label: str | None = None,
+) -> str:
+    """Render an HTML diff page for two PDF paths.
+
+    Delegates to ``server.pdf_compare.compare_pdfs_html`` — the same pipeline
+    the web app uses — so the report carries the full-bill text view, in-page
+    search, section TOC, and embedded export. Title and Congress are derived
+    from the PDF front matter; labels default to the (de-prefixed) filename
+    stems. Imported lazily to avoid a circular import (pdf_compare imports
+    diff_pdf).
+    """
+    from server.pdf_compare import compare_pdfs_html
+
+    return compare_pdfs_html(
+        v1_pdf.read_bytes(),
+        v2_pdf.read_bytes(),
+        start_label=v1_label if v1_label is not None else _label_from_stem(v1_pdf.stem),
+        end_label=v2_label if v2_label is not None else _label_from_stem(v2_pdf.stem),
+    )
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Diff two PDF bill versions and produce an HTML diff page "
+        "(full-bill view, search, and export included).",
+    )
+    parser.add_argument("v1_pdf", type=Path, help="Path to the older PDF")
+    parser.add_argument("v2_pdf", type=Path, help="Path to the newer PDF")
+    parser.add_argument("-o", "--output", type=Path, help="Output HTML file (default: stdout)")
+    parser.add_argument("--v1-label", help="Label for the older version (default: filename stem)")
+    parser.add_argument("--v2-label", help="Label for the newer version (default: filename stem)")
+    return parser
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = build_parser().parse_args(argv)
+    html = render_pdf_diff_html(
+        args.v1_pdf,
+        args.v2_pdf,
+        v1_label=args.v1_label,
+        v2_label=args.v2_label,
+    )
+    if args.output:
+        args.output.write_text(html)
+        print(f"Wrote {args.output}", file=sys.stderr)
+    else:
+        print(html)
+
+
+if __name__ == "__main__":
+    main()
