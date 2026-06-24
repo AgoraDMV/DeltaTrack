@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/AgoraDMV/DeltaTrack/prototype/sample-diffs/schema.json",
+  "$id": "https://github.com/AgoraDMV/DeltaTrack/schema/canonical-diff.schema.json",
   "title": "Canonical Diff JSON",
-  "description": "Pipeline-neutral diff between two bill versions. See schema.md for prose spec.",
+  "description": "Pipeline-neutral diff between two bill versions. See canonical-diff.md for prose spec.",
   "type": "object",
   "required": ["schema_version", "bill", "versions", "summary", "changes"],
   "additionalProperties": false,
