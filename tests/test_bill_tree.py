@@ -6,6 +6,7 @@ import pytest
 from bill_tree import (
     BillNode,
     _extract_appropriations_text,
+    _extract_section_text,
     extract_text_content,
     find_bill_body,
     get_header_text,
@@ -83,6 +84,33 @@ class TestExtractTextContent:
     def test_long_parenthetical_spacing_kept(self):
         el = ET.fromstring("<text>the (Comptroller) shall</text>")
         assert extract_text_content(el) == "the (Comptroller) shall"
+
+
+class TestExtractSectionText:
+    def test_simple_lead_in_only(self):
+        # A plain <text> section with no payload returns just that line.
+        section = ET.fromstring(
+            "<section><enum>1.</enum><header>Short title</header>"
+            "<text>This Act may be cited as the Example Act.</text></section>"
+        )
+        assert _extract_section_text(section) == "This Act may be cited as the Example Act."
+
+    def test_quoted_block_payload_included(self):
+        # "Amend ... by adding the following" sections carry the substantive
+        # text inside <quoted-block>, whose subsections are nested (not direct
+        # children). The lead-in <text> must not short-circuit past it. (#11)
+        section = ET.fromstring(
+            "<section><enum>2.</enum>"
+            "<text>Title XII is amended by adding at the end the following:</text>"
+            "<quoted-block>"
+            "<subsection><enum>(a)</enum><text>$20,000,000 is authorized.</text></subsection>"
+            "<subsection><enum>(b)</enum><text>Rule of construction applies.</text></subsection>"
+            "</quoted-block></section>"
+        )
+        result = _extract_section_text(section)
+        assert "$20,000,000 is authorized." in result
+        assert "Rule of construction applies." in result
+        assert "amended by adding" in result
 
 
 class TestGetHeaderText:

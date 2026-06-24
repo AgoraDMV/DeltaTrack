@@ -512,18 +512,25 @@ def _extract_appropriations_text(element: ET.Element) -> str:
 def _extract_section_text(section: ET.Element) -> str:
     """Extract text from a section element.
 
-    If the section has a direct <text> child, use that.
+    If the section is a simple lead-in line (a direct <text> child with no
+    subsections or quoted-block payload), use that text directly.
     Otherwise, extract all text recursively from the section
-    (excluding the enum and header), which captures subsections.
+    (excluding the enum and header), which captures subsections and the
+    <quoted-block> body of "amend ... by adding the following" sections.
     Returns empty string if no text content found.
     """
     text_el = section.find("text")
     has_subsections = section.find("subsection") is not None
-    if text_el is not None and not has_subsections:
+    # A <quoted-block> holds the amendment payload (the text being inserted into
+    # existing law); its subsections are nested inside it, not direct children of
+    # the section, so has_subsections misses them. Without this guard an amendment
+    # section returns only its lead-in line and the payload is silently dropped.
+    has_quoted_block = section.find("quoted-block") is not None
+    if text_el is not None and not has_subsections and not has_quoted_block:
         return extract_text_content(text_el)
 
-    # No direct <text> child, or has both <text> and <subsection> children.
-    # Extract text from everything except enum and header.
+    # No direct <text> child, or the section carries a subsection / quoted-block
+    # payload. Extract text from everything except enum and header.
     parts = []
     for child in section:
         if child.tag in ("enum", "header"):
