@@ -39,7 +39,6 @@ class ExampleSpec:
     bill_dir: str  # under bills/, e.g. "118-hr-8752"
     bill_type: str  # "hr", "s", etc.
     bill_number: int
-    congress: int
     v1_filename_stem: str  # e.g. "1_reported-in-house"
     v2_filename_stem: str  # e.g. "2_engrossed-in-house"
 
@@ -49,7 +48,6 @@ EXAMPLES_TO_RENDER: list[ExampleSpec] = [
         bill_dir="118-hr-8752",
         bill_type="hr",
         bill_number=8752,
-        congress=118,
         v1_filename_stem="1_reported-in-house",
         v2_filename_stem="2_engrossed-in-house",
     ),
