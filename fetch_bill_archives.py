@@ -42,6 +42,14 @@ _BILLSTATUS_XML_GLOB = "BILLSTATUS*.xml"
 _BILLSTATUS_XML_NAME_RE = re.compile(r"^BILLSTATUS-(\d+)([a-z]+)(\d+)\.xml$", re.IGNORECASE)
 LOG_PERFORMANCE = False
 
+_LEGACY_COLUMN_RENAMES = {
+    "action_count": "actionCount",
+    "version_count": "versionCount",
+    "budget_estimate_count": "budgetEstimateCount",
+    "amendment_count": "amendmentCount",
+    "related_bills_count": "relatedBillsCount",
+}
+
 
 # STEP 1: Download zip archives
 # The fastest way to get massive amounts of bill metadata is to download complete zip archives from govinfo bulk data.
@@ -399,6 +407,7 @@ def parse_bill_archives(
     tasks = enumerate_tasks(from_congress, to_congress, bill_types=bill_types)
     task_count = len(tasks)
     index = index or BillIndex(DEFAULT_BILLS_DIR / "bills.csv")
+    index.rename_columns(_LEGACY_COLUMN_RENAMES)
     for task_index, (congress, bill_type) in enumerate(tasks, start=1):
         prefix = _progress_prefix(task_index, task_count)
 

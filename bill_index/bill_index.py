@@ -1,5 +1,22 @@
-"""Bill metadata index backed by CSV + in-memory records."""
+"""
+A cache for bill metadata, intended to accumulate information about large volumes of bills.
 
+The guiding idea behind the cache is that each bill has an identifying slug of the form:
+
+{congress}-{type}-{number}
+
+e.g. `119-hr-1` for the 1st House Resolution bill of the 119th Congress.
+
+Aside from a uniquely identifying slug, each bill can have arbitrary metadata. Adding a bill to the index will automatically update metadata if a bill with the same ID exists already, otherwise create a new record. The bill index can be used to prevent duplicate downloads when managing large volumes of bill data or to combine metadata from different sources.
+
+Usage:
+index = BillIndex(csv_path)
+records: list[dict] = index.bills
+bill_ids: list[str] = [record["id"] for record in records]
+latest_hr_bills = index.fetch_all(119, "hr")
+for senate, bill_type, bill_number, doc_version in map(parse_bill_id, records):
+    ...
+"""
 from __future__ import annotations
 
 import csv
@@ -12,16 +29,6 @@ from shared.bill_types import BILL_TYPES
 
 BillRecord = dict[str, Any]
 InsertMode = Literal["merge", "skip"]
-
-_QUOTED_TEXT_COLUMNS = frozenset({"title", "status", "policyArea"})
-
-_LEGACY_COLUMN_RENAMES = {
-    "action_count": "actionCount",
-    "version_count": "versionCount",
-    "budget_estimate_count": "budgetEstimateCount",
-    "amendment_count": "amendmentCount",
-    "related_bills_count": "relatedBillsCount",
-}
 
 
 def make_bill_id(congress: int | str, bill_type: str, number: int | str) -> str:
@@ -133,9 +140,6 @@ class BillIndex:
         columns_before = list(self._columns)
         self._expand_columns([column for record in records for column in record])
         columns_changed = self._columns != columns_before
-        migrated = self._migrate_legacy_columns()
-        if migrated:
-            columns_changed = True
 
         new_records, existing_records = self.find_new_and_existing_bills(records)
 
@@ -183,8 +187,6 @@ class BillIndex:
                 self._records.append(bill)
                 self._bills_by_id[bill["id"]] = bill
 
-        if self._records:
-            self._migrate_legacy_columns()
 
     def save(self) -> None:
         """Persist in-memory records to CSV."""
@@ -217,10 +219,10 @@ class BillIndex:
             for record in self._records:
                 record[column] = ""
 
-    def _migrate_legacy_columns(self) -> bool:
-        """Rename superseded columns in place and drop legacy names."""
+    def rename_columns(self, renames: dict[str, str], *, save: bool = True) -> bool:
+        """Rename columns in place, preserving values. Returns True if any columns changed."""
         migrated = False
-        for old_name, new_name in _LEGACY_COLUMN_RENAMES.items():
+        for old_name, new_name in renames.items():
             if old_name not in self._columns:
                 continue
 
@@ -234,6 +236,9 @@ class BillIndex:
 
             self._columns = [column for column in self._columns if column != old_name]
             migrated = True
+
+        if migrated and save:
+            self.save()
 
         return migrated
 
@@ -253,21 +258,21 @@ class BillIndex:
                 raise ValueError(f"Bill record is missing an id: {record}")
 
 
-def _format_csv_cell(column: str, value: Any) -> str:
-    """Format one CSV cell: quote title/status, leave other fields unquoted."""
+def _format_csv_cell(value: Any) -> str:
+    """Format one CSV cell, quoting values that contain commas, quotes, or newlines."""
     if value is None:
         text = ""
     else:
         text = str(value)
 
-    if column in _QUOTED_TEXT_COLUMNS:
+    if "," in text or '"' in text or "\n" in text or "\r" in text:
         return '"' + text.replace('"', '""') + '"'
     return text
 
 
 def _format_csv_row(columns: list[str], record: BillRecord) -> str:
-    """Format one CSV row using column-specific quoting rules."""
-    return ",".join(_format_csv_cell(column, record.get(column, "")) for column in columns)
+    """Format one CSV row."""
+    return ",".join(_format_csv_cell(record.get(column, "")) for column in columns)
 
 
 def _decode_value(column: str, value: str | None) -> Any:
@@ -283,7 +288,6 @@ def _decode_value(column: str, value: str | None) -> Any:
         try:
             return json.loads(value)
         except json.JSONDecodeError:
-            if column in _QUOTED_TEXT_COLUMNS:
-                return value[1:-1].replace('""', '"')
+            return value[1:-1].replace('""', '"')
 
     return value
