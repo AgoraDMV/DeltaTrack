@@ -153,8 +153,12 @@ def _itertext_block_spaced(element: ET.Element) -> str:
     tree and inserts a single space before a block-level child when the text so
     far doesn't already end in whitespace, but only when:
 
-    - the preceding sibling is not an ``enum`` (a marker like ``(c)`` attaches
-      to the following text without a space, per _LIST_MARKER_RE's convention), and
+    - the preceding sibling is not a *parenthetical* ``enum`` (a marker like
+      ``(c)`` attaches to the following text without a space, per
+      _LIST_MARKER_RE's convention). Non-parenthetical enums — section/part
+      numbers like ``701.`` or ``1291.``, roman ``I``, bare ``110`` — are not
+      attaching markers, so they DO get a separator (``1291.Military`` ->
+      ``1291. Military``, ``IMilitary`` -> ``I Military``), and
     - the child's own text starts with an alphanumeric (a new word), so we don't
       push punctuation off its anchor (``(1).`` stays ``(1).``, not ``(1). .``).
 
@@ -163,12 +167,12 @@ def _itertext_block_spaced(element: ET.Element) -> str:
     parts: list[str] = []
     if element.text:
         parts.append(element.text)
-    prev_tag = None
+    prev_paren_enum = False
     for child in element:
         child_text = _itertext_block_spaced(child)
         if (
             child.tag in _BLOCK_TAGS
-            and prev_tag != "enum"
+            and not prev_paren_enum
             and parts
             and parts[-1]
             and not parts[-1][-1].isspace()
@@ -178,7 +182,9 @@ def _itertext_block_spaced(element: ET.Element) -> str:
         parts.append(child_text)
         if child.tail:
             parts.append(child.tail)
-        prev_tag = child.tag
+        # A parenthetical enum like "(c)" attaches to the following text; a
+        # number/roman enum like "701." or "I" does not.
+        prev_paren_enum = child.tag == "enum" and child_text.lstrip()[:1] == "("
     return "".join(parts)
 
 
@@ -622,9 +628,15 @@ def _extract_section_text(section: ET.Element) -> str:
         parts.append(extract_text_content(child))
     # Join with a space so adjacent parts keep a word boundary (a bare
     # "".join produced run-together text like "...funds.(b)Whoever..." and
-    # "...2028:Military..."), then re-apply the list-marker normalization so the
-    # space before parenthetical markers like (b) stays stripped, matching the
-    # single-<text> branch and avoiding golden churn on the common case.
+    # "...2028:Military...").
+    #
+    # extract_text_content already applied _LIST_MARKER_RE inside each part, but
+    # the space-join can put a fresh space in front of a marker at a part
+    # boundary (part ends "...funds.", next part starts "(b)Whoever" -> joined
+    # "...funds. (b)Whoever"). Re-applying it here strips that boundary space so
+    # the output matches the single-<text> branch and avoids golden churn. The
+    # second pass is intentional, not redundant: it only touches the new join
+    # boundaries, and _LIST_MARKER_RE is idempotent on the already-clean parts.
     text = _LIST_MARKER_RE.sub("", " ".join(part for part in parts if part)).strip()
     return text
 

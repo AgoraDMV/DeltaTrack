@@ -116,6 +116,32 @@ class TestExtractTextContent:
         el = ET.fromstring("<subsection><text>in subparagraph (1)</text><clause><text>.</text></clause></subsection>")
         assert extract_text_content(el) == "in subparagraph(1)."
 
+    def test_numbered_section_enum_separated_from_header(self):
+        # A number-period enum ("1291.") is a section number, not an attaching
+        # marker, so it gets a space before the header ("1291.Military" mash ->
+        # "1291. Military"). Mirrors the quoted-block payload in 115-hr-880.
+        el = ET.fromstring(
+            "<section><enum>1291.</enum>"
+            "<header>Military and Civilian Partnership</header>"
+            "<text>The Secretary shall.</text></section>"
+        )
+        result = extract_text_content(el)
+        assert "1291. Military and Civilian Partnership" in result
+        assert "1291.Military" not in result
+
+    def test_roman_part_enum_separated_from_header(self):
+        # A bare roman-numeral enum ("I") on a part/title is not an attaching
+        # marker either ("IMilitary" mash -> "I Military"). Also from 115-hr-880.
+        el = ET.fromstring("<part><enum>I</enum><header>Military and Civilian Partnership</header></part>")
+        result = extract_text_content(el)
+        assert result == "I Military and Civilian Partnership"
+        assert "IMilitary" not in result
+
+    def test_bare_number_enum_separated_from_text(self):
+        # A bare-number enum ("110") gets a separator too.
+        el = ET.fromstring("<clause><enum>110</enum><text>Definitions apply.</text></clause>")
+        assert extract_text_content(el) == "110 Definitions apply."
+
 
 class TestExtractSectionText:
     def test_simple_lead_in_only(self):
