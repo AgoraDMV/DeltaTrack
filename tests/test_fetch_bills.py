@@ -406,9 +406,9 @@ class TestCmdDownloadFormats:
         assert (bill_dir / "1_reported-in-house.pdf").exists()
         assert not (bill_dir / "1_reported-in-house.xml").exists()
 
-    def test_parser_format_defaults_to_xml(self):
+    def test_parser_format_defaults_to_pdf(self):
         args = build_parser().parse_args(["download", "118", "hr", "4366"])
-        assert args.format == "xml"
+        assert args.format == "pdf"
 
     def test_parser_accepts_format_both(self):
         args = build_parser().parse_args(["download", "118", "hr", "4366", "--format", "both"])

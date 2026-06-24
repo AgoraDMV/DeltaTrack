@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Compare two bill versions and produce a structured diff."""
 
 import argparse

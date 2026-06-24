@@ -18,15 +18,17 @@ Works on any bill type (HR, S, HJRES, etc.), not just appropriations.
 Generate an HTML report comparing two versions of a bill:
 
 ```bash
-# 1. Install dependencies (run this once, from the project folder)
-uv sync
+# 1. Install dependencies and activate environment (run this once, from the project folder)
+# This runs the init script. The script needs to be run indirectly using source so that the change in 
+# Python environment sticks
+source init
 
 # 2. Download all versions of a bill
 #    Example: HR 4366 from the 118th Congress (2023-2024)
-uv run python fetch_bills.py download 118 hr 4366
+./ fetch_bills download 118 hr 4366
 
 # 3. Generate an HTML report comparing two versions
-uv run python diff_bill.py compare \
+./ diff_bill compare \
   bills/118-hr-4366/1_reported-in-house.xml \
   bills/118-hr-4366/2_engrossed-in-house.xml \
   --format html -o reports/hr4366_v1_vs_v2.html
@@ -44,16 +46,16 @@ CONGRESS_API_KEY=your_key_here
 
 ```bash
 # List available text versions
-uv run python fetch_bills.py versions 118 hr 4366
+./fetch_bills versions 118 hr 4366
 
 # Download all versions of a bill
-uv run python fetch_bills.py download 118 hr 4366
+./fetch_bills download 118 hr 4366
 
 # Download a specific version (1-indexed)
-uv run python fetch_bills.py download 118 hr 4366 --version 2
+./fetch_bills download 118 hr 4366 --version 2
 
 # Download all appropriations bills for a year range
-uv run python fetch_bills.py download-all 2024 2026
+./fetch_bills download-all 2024 2026
 ```
 
 Files are saved to `bills/<congress>-<type>-<number>/`.
@@ -62,22 +64,22 @@ Files are saved to `bills/<congress>-<type>-<number>/`.
 
 ```bash
 # Compare two versions (JSON output)
-uv run python diff_bill.py compare bills/118-hr-4366/1_reported-in-house.xml bills/118-hr-4366/6_enrolled-bill.xml
+./diff_bill compare bills/118-hr-4366/1_reported-in-house.xml bills/118-hr-4366/6_enrolled-bill.xml
 
 # Only sections with dollar amount changes
-uv run python diff_bill.py compare old.xml new.xml --financial
+./diff_bill compare old.xml new.xml --financial
 
 # Filter to a specific section
-uv run python diff_bill.py compare old.xml new.xml --filter "military construction"
+./diff_bill compare old.xml new.xml --filter "military construction"
 
 # Include unchanged sections
-uv run python diff_bill.py compare old.xml new.xml --include-unchanged
+./diff_bill compare old.xml new.xml --include-unchanged
 
 # Save to file
-uv run python diff_bill.py compare old.xml new.xml -o diff.json
+./diff_bill compare old.xml new.xml -o diff.json
 
 # Generate a standalone HTML report
-uv run python diff_bill.py compare old.xml new.xml --format html -o reports/report.html
+./diff_bill compare old.xml new.xml --format html -o reports/report.html
 ```
 
 ### HTML report
@@ -179,29 +181,29 @@ Integration tests use real XML files from `bills/` and skip if not present. To r
 
 ```bash
 source .env  # load API key
-uv run python fetch_bills.py download 118 hr 4366
-uv run python fetch_bills.py download 118 hr 2882
-uv run python fetch_bills.py download 118 hr 8282
-uv run python fetch_bills.py download 118 hr 8752
-uv run python fetch_bills.py download 118 hr 8774
-uv run python fetch_bills.py download 118 hr 4820
-uv run python fetch_bills.py download 117 hr 2471
-uv run python fetch_bills.py download 117 hr 4432
-uv run python fetch_bills.py download 117 hr 4502
-uv run python fetch_bills.py download 116 hr 1865
-uv run python fetch_bills.py download 116 hr 133
-uv run python fetch_bills.py download 115 hr 5895
-uv run python fetch_bills.py download 115 hr 1625
-uv run python fetch_bills.py download 115 hr 244
-uv run python fetch_bills.py download 114 hr 2029
-uv run python fetch_bills.py download 113 hr 83
-uv run python fetch_bills.py download 113 hr 3547
+./fetch_bills download 118 hr 4366
+./fetch_bills download 118 hr 2882
+./fetch_bills download 118 hr 8282
+./fetch_bills download 118 hr 8752
+./fetch_bills download 118 hr 8774
+./fetch_bills download 118 hr 4820
+./fetch_bills download 117 hr 2471
+./fetch_bills download 117 hr 4432
+./fetch_bills download 117 hr 4502
+./fetch_bills download 116 hr 1865
+./fetch_bills download 116 hr 133
+./fetch_bills download 115 hr 5895
+./fetch_bills download 115 hr 1625
+./fetch_bills download 115 hr 244
+./fetch_bills download 114 hr 2029
+./fetch_bills download 113 hr 83
+./fetch_bills download 113 hr 3547
 ```
 
 These fetch XML, which covers the XML-based tests. The PDF comparison tests (`test_pdf_*`) also need each bill's PDF rendering. Add `--format both` to any download to fetch the PDF alongside the XML, for example:
 
 ```bash
-uv run python fetch_bills.py download 118 hr 4366 --format both
+./fetch_bills download 118 hr 4366 --format both
 ```
 
 The validation tests compare extracted line items across Legislative Branch bills (both chambers, multiple fiscal years) against amounts from a curated appropriations spreadsheet. The corpus property tests (`test_corpus_properties.py`) check dollar coverage, path uniqueness, and character coverage across all downloaded bills. See [TESTING.md](TESTING.md) for what each validation layer proves and where the gaps are.
