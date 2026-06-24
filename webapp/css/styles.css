@@ -1,8 +1,8 @@
 /* ----------------------------------------------------------------------
    DeltaTrack — production web app
    Government-tool aesthetic: high contrast, narrow palette, no animation.
-   Diff/renderer rules are carried over verbatim from the prototype so the
-   canonical-JSON renderer (js/renderer.js) styles identically; the layout
+   Diff/renderer rules are carried over verbatim from the now-retired prototype
+   demo so the canonical-JSON renderer (js/renderer.js) styles identically; the layout
    (landing, upload, result) is new.
    ---------------------------------------------------------------------- */
 
