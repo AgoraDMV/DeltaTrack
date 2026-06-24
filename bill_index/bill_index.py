@@ -16,7 +16,7 @@ index = BillIndex(csv_path)
 records: list[dict] = index.bills
 bill_ids: list[str] = [record["id"] for record in records]
 latest_hr_bills = index.fetch_all(119, "hr")
-for senate, bill_type, bill_number, doc_version in map(parse_bill_id, records):
+for senate, bill_type, bill_number, doc_version in map(parse_bill_id, bill_ids):
     ...
 """
 from __future__ import annotations
