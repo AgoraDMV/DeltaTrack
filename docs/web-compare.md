@@ -96,7 +96,7 @@ server/pdf_compare.py            ← thin wrapper (bytes in → HTML out)
 Standalone HTML report           ← opened in new tab by webapp/js/compare.js
 ```
 
-This is the same PDF engine as `render_examples.py` → `render_pdf_diff()` and `prototype/generate_samples.py` — not a reimplementation. The web layer only handles HTTP upload, labels from filenames, and returning HTML.
+This is the same PDF engine as `render_examples.py` → `render_pdf_diff()` — not a reimplementation. The web layer only handles HTTP upload, labels from filenames, and returning HTML.
 
 JSON output (`?output=json`) still exists for tests and tooling; the compare UI uses HTML only.
 

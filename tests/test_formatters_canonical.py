@@ -415,7 +415,7 @@ def test_pdf_round_trip_preserves_view_for_renderer():
 
 
 def _load_schema() -> dict:
-    return json.loads(Path("prototype/sample-diffs/schema.json").read_text())
+    return json.loads(Path("schema/canonical-diff.schema.json").read_text())
 
 
 def test_xml_canonical_validates_against_json_schema():

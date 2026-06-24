@@ -2,8 +2,8 @@
 
 The canonical JSON is the public contract for diff results — pipeline-neutral,
 versioned, semantic-only (no pre-rendered HTML). See
-prototype/sample-diffs/schema.md for the prose spec and schema.json for the
-JSON Schema.
+schema/canonical-diff.md for the prose spec and schema/canonical-diff.schema.json
+for the JSON Schema.
 
 Two producers, one consumer:
 

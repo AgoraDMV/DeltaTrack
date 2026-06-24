@@ -1,7 +1,6 @@
 """Turn two PDF byte blobs into canonical diff JSON or standalone HTML.
 
-This is the in-process wrap of the existing PDF pipeline — the exact sequence
-``prototype/generate_samples.py`` uses for its PDF sample, with the inputs coming
+This is the in-process wrap of the existing PDF pipeline, with the inputs coming
 from uploaded bytes instead of files on disk:
 
     extract_clean_pages()  (parsers.pdf_text)
