@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from bill_tree import BillNode, BillTree, normalize_bill, normalize_division_title
+from shared.version_stems import version_number_from_stem
 
 # --- Financial amount extraction ---
 
@@ -736,10 +737,9 @@ def cmd_compare(args: argparse.Namespace) -> None:
 
     # Extract version numbers from filenames (e.g., "1_reported-in-house.xml" -> 1)
     for key, xml_arg in (("old_version_number", args.old_xml), ("new_version_number", args.new_xml)):
-        stem = Path(xml_arg).stem
-        prefix = stem.split("_", 1)[0]
-        if prefix.isdigit():
-            diff_dict[key] = int(prefix)
+        num = version_number_from_stem(Path(xml_arg).stem)
+        if num is not None:
+            diff_dict[key] = num
 
     if fmt == "html":
         from bill_tree import bill_title

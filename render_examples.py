@@ -27,6 +27,7 @@ from formatters.canonical import xml_diff_to_canonical
 from formatters.diff_html import format_diff_html
 from formatters.text_serializer import serialize_tree, serialize_tree_with_offsets
 from parsers.pdf_text import extract_clean_pages
+from shared.version_stems import label_from_stem, version_number_from_stem
 
 PROJECT_ROOT = Path(__file__).parent
 BILLS = PROJECT_ROOT / "bills"
@@ -57,26 +58,14 @@ EXAMPLES_TO_RENDER: list[ExampleSpec] = [
 ]
 
 
-def _version_number_from_stem(stem: str) -> int | None:
-    """Extract the leading version number from a filename stem, mirroring diff_bill.cmd_compare."""
-    prefix = stem.split("_", 1)[0]
-    return int(prefix) if prefix.isdigit() else None
-
-
-def _label_from_stem(stem: str) -> str:
-    """Extract the human-readable label after the version-number prefix."""
-    parts = stem.split("_", 1)
-    return parts[1] if len(parts) == 2 else stem
-
-
 def render_xml_diff(spec: ExampleSpec) -> Path:
     bill_dir = BILLS / spec.bill_dir
     v1 = normalize_bill(bill_dir / f"{spec.v1_filename_stem}.xml")
     v2 = normalize_bill(bill_dir / f"{spec.v2_filename_stem}.xml")
     diff = diff_bills(v1, v2)
     diff_dict = bill_diff_to_dict(diff, financial=True)
-    v1_num = _version_number_from_stem(spec.v1_filename_stem)
-    v2_num = _version_number_from_stem(spec.v2_filename_stem)
+    v1_num = version_number_from_stem(spec.v1_filename_stem)
+    v2_num = version_number_from_stem(spec.v2_filename_stem)
     if v1_num is not None:
         diff_dict["old_version_number"] = v1_num
     if v2_num is not None:
@@ -109,8 +98,8 @@ def render_pdf_diff(spec: ExampleSpec) -> Path:
             bill_type=spec.bill_type,
             bill_number=spec.bill_number,
             congress=spec.congress,
-            v1_label=_label_from_stem(spec.v1_filename_stem),
-            v2_label=_label_from_stem(spec.v2_filename_stem),
+            v1_label=label_from_stem(spec.v1_filename_stem),
+            v2_label=label_from_stem(spec.v2_filename_stem),
         )
     )
     out = EXAMPLES / f"{spec.bill_type}{spec.bill_number}_pdf_diff.html"

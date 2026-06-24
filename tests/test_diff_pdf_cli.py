@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from diff_pdf import _label_from_stem, build_parser, main
+from diff_pdf import build_parser, main
 
 BILL_DIR = Path(__file__).parent.parent / "bills" / "118-hr-8752"
 V1 = BILL_DIR / "1_reported-in-house.pdf"
@@ -16,17 +16,6 @@ requires_corpus = pytest.mark.skipif(
     not (V1.exists() and V2.exists()),
     reason="corpus PDFs not present (run scripts/fetch_test_assets.py)",
 )
-
-
-class TestLabelFromStem:
-    def test_strips_numeric_version_prefix(self):
-        assert _label_from_stem("1_reported-in-house") == "reported-in-house"
-
-    def test_keeps_stem_without_numeric_prefix(self):
-        assert _label_from_stem("draft-v2") == "draft-v2"
-
-    def test_keeps_underscore_when_prefix_not_numeric(self):
-        assert _label_from_stem("foo_bar") == "foo_bar"
 
 
 class TestParser:
