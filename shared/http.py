@@ -10,6 +10,7 @@ import httpx
 BASE_URL = "https://api.congress.gov/v3"
 LOG_API_REQUESTS = True
 
+
 def request_with_retry(
     client: httpx.Client,
     url: str,
@@ -48,6 +49,7 @@ def request_with_retry(
 
     last_resp.raise_for_status()
     return last_resp
+
 
 def api_get(
     client: httpx.Client,

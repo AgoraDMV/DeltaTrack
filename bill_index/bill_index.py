@@ -30,6 +30,8 @@ def make_bill_id(congress: int | str, bill_type: str, number: int | str) -> str:
 
 
 BillIdentifier = namedtuple("BillIdentifier", ["congress", "bill_type", "number", "version"])
+
+
 def parse_bill_id(slug: str) -> BillIdentifier:
     """Parse `congress-type-number[:version]` into a typed identifier."""
     id_version = slug.split(":")
@@ -40,6 +42,7 @@ def parse_bill_id(slug: str) -> BillIdentifier:
 
     return BillIdentifier(congress=congress, bill_type=bill_type, number=number, version=version)
 
+
 class BillIndex:
     """
     An in-memory + CSV-backed bill metadata index.
@@ -48,6 +51,7 @@ class BillIndex:
     It normalizes on bill slugs of the form congress-bill_type-number as unique identifiers. E.g. 119-hr-1.
     Aside from normalized bill slugs, BillIndex allows arbitrary bill metadata.
     """
+
     def __init__(self, csv_path: str | Path = "bills.csv"):
         self.csv_path = Path(csv_path)
         self._records: list[BillRecord] = []
@@ -74,8 +78,7 @@ class BillIndex:
         return self._bills_by_id[bill_id]
 
     def find_new_and_existing_bills(
-        self,
-        candidates: Iterable[BillRecord]
+        self, candidates: Iterable[BillRecord]
     ) -> Tuple[list[BillRecord], list[BillRecord]]:
         """Splits a list of bill records into records that are or are not in the index based on record slugs/ids."""
         new_records = [record for record in candidates if record["id"] not in self._bills_by_id]

@@ -22,6 +22,7 @@ from shared.http import api_get, request_with_retry
 
 BASE_URL = "https://api.congress.gov/v3"
 
+
 def sanitize_version_name(name: str) -> str:
     """Convert a version type like 'Reported in House' to 'reported-in-house'."""
     if not name:
@@ -55,6 +56,7 @@ def get_api_key() -> str:
             file=sys.stderr,
         )
     return key
+
 
 def fetch_all_committee_bills(
     client: httpx.Client, chamber: str, committee_code: str, *, api_key: str, page_size: int = 250
@@ -145,9 +147,11 @@ def download_bill_version(client: httpx.Client, url: str, timeout: int = 60) -> 
     resp = request_with_retry(client, url, timeout=timeout)
     return resp.content if resp else b""
 
+
 # Backwards-compatible name used by older unit tests/docs.
 def download_version_xml(client: httpx.Client, url: str) -> bytes:
     return download_bill_version(client, url)
+
 
 def get_xml_url(version: dict) -> str | None:
     """Extract the XML format URL from a version's formats list."""
@@ -312,7 +316,6 @@ def cmd_download_all(client: httpx.Client, args: argparse.Namespace, api_key: st
 
         return
 
-
     start_year = args.start_year or 1789
     end_year = args.end_year or datetime.now().year
     if start_year > end_year:
@@ -383,8 +386,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     # download-all: bulk download for a year range
     p_all = subparsers.add_parser("download-all", help="Download all appropriations bill versions for a year range")
-    p_all.add_argument("--start_year", type=int, default = None, help="Start year (e.g. 2024)")
-    p_all.add_argument("--end_year", type=int, default = None, help="End year (e.g. 2026)")
+    p_all.add_argument("--start_year", type=int, default=None, help="Start year (e.g. 2024)")
+    p_all.add_argument("--end_year", type=int, default=None, help="End year (e.g. 2026)")
     p_all.add_argument("--file", type=Path, default=None, help="CSV file path with an 'id' column")
     p_all.add_argument("--output-dir", type=Path, default=Path("bills"), help="Output directory")
     p_all.add_argument(
