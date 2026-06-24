@@ -26,6 +26,11 @@ LEG_BRANCH_FIXTURE = Path("test_data/validation_leg_branch.json")
 
 
 def _leg_branch_summary() -> str:
+    # Fixtures are gitignored and fetch-scripted, so on a clean clone this file
+    # is absent. Degrade like the JURISDICTIONS availability filter below rather
+    # than raising FileNotFoundError.
+    if not LEG_BRANCH_FIXTURE.exists():
+        return "- **Legislative Branch** — not fetched (run `uv run python scripts/build_validation.py --fetch`)."
     data = json.loads(LEG_BRANCH_FIXTURE.read_text())
     accounts = data["accounts"]
     bills = sorted({a["bill"] for a in accounts})

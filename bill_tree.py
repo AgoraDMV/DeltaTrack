@@ -98,16 +98,122 @@ def find_bill_body(root: ET.Element) -> ET.Element:
 
 _LIST_MARKER_RE = re.compile(r" (?=\((?:[0-9]{1,2}|[a-z]{1,4}|[A-Z])\))")
 
+# Block-level (structural) tags whose text is a distinct unit and must be
+# separated from an adjacent sibling's text by a space. Everything not listed
+# here is treated as inline (e.g. external-xref, quote, italic, term,
+# short-title, added-phrase), where text flows through the element with no
+# separator — so "sub<external-xref>chapter 59</external-xref>" stays
+# "subchapter 59" and "(<external-xref>Public Law 95-..." stays "(Public Law".
+_BLOCK_TAGS = frozenset(
+    {
+        "text",
+        "header",
+        "paragraph",
+        "proviso",
+        "subparagraph",
+        "subsection",
+        "section",
+        "clause",
+        "subclause",
+        "quoted-block",
+        "after-quoted-block",
+        "title",
+        "subtitle",
+        "continuation-text",
+        "division",
+        "part",
+        "chapter",
+        "item",
+        "subitem",
+        "list-item",
+        "toc",
+        "toc-entry",
+        "appropriations-major",
+        "appropriations-intermediate",
+        "appropriations-small",
+        "row",
+        "entry",
+        "committee-name",
+        "action",
+        "action-date",
+        "action-desc",
+        "form",
+        "header-in-text",
+    }
+)
+
+# Empty break elements that represent visual whitespace (a line wrap or page
+# break), not part of a word. They carry no character, so multi-line table cells
+# like "$66,464,000<linebreak/>Initial Non-Federal" mash without treating the
+# break as a space. GPO XML does not hyphenate across these, so a space is safe.
+_BREAK_TAGS = frozenset({"linebreak", "pagebreak"})
+
+
+def _itertext_block_spaced(element: ET.Element) -> str:
+    """Flatten an element to text, inserting a space between block-level siblings.
+
+    ElementTree's ``itertext`` concatenates an element's descendants with no
+    separator, so two adjacent block siblings whose source has no whitespace
+    between them run together (``<header>Effective date</header><text>The
+    amendments...</text>`` -> ``Effective dateThe amendments``). This walks the
+    tree and inserts a single space before a block-level child when the text so
+    far doesn't already end in whitespace, but only when:
+
+    - the preceding sibling is not a *parenthetical* ``enum`` (a marker like
+      ``(c)`` attaches to the following text without a space, per
+      _LIST_MARKER_RE's convention). Non-parenthetical enums — section/part
+      numbers like ``701.`` or ``1291.``, roman ``I``, bare ``110`` — are not
+      attaching markers, so they DO get a separator (``1291.Military`` ->
+      ``1291. Military``, ``IMilitary`` -> ``I Military``), and
+    - the child's own text starts with an alphanumeric (a new word), so we don't
+      push punctuation off its anchor (``(1).`` stays ``(1).``, not ``(1). .``).
+
+    Empty break elements (``_BREAK_TAGS``) are emitted as a space.
+
+    The result only ever *adds* spaces; it never removes or reorders text.
+    """
+    parts: list[str] = []
+    if element.text:
+        parts.append(element.text)
+    prev_paren_enum = False
+    for child in element:
+        if child.tag in _BREAK_TAGS:
+            # Emit the break as whitespace; the final split()/join collapses any
+            # resulting double space.
+            parts.append(" ")
+            if child.tail:
+                parts.append(child.tail)
+            prev_paren_enum = False
+            continue
+        child_text = _itertext_block_spaced(child)
+        if (
+            child.tag in _BLOCK_TAGS
+            and not prev_paren_enum
+            and parts
+            and parts[-1]
+            and not parts[-1][-1].isspace()
+            and child_text[:1].isalnum()
+        ):
+            parts.append(" ")
+        parts.append(child_text)
+        if child.tail:
+            parts.append(child.tail)
+        # A parenthetical enum like "(c)" attaches to the following text; a
+        # number/roman enum like "701." or "I" does not.
+        prev_paren_enum = child.tag == "enum" and child_text.lstrip()[:1] == "("
+    return "".join(parts)
+
 
 def extract_text_content(element: ET.Element) -> str:
     """Recursively extract all text content from an XML element.
 
-    Collapses runs of whitespace into single spaces and removes spaces
-    before parenthetical list markers like (1), (A), (iv) so that
-    formatting differences between bill versions don't appear as
-    textual changes.
+    Inserts a space between adjacent block-level siblings (see
+    _itertext_block_spaced), collapses runs of whitespace into single spaces,
+    and removes spaces before parenthetical list markers like (1), (A), (iv) so
+    that formatting differences between bill versions don't appear as textual
+    changes.
     """
-    text = " ".join("".join(element.itertext()).split())
+    text = " ".join(_itertext_block_spaced(element).split())
     return _LIST_MARKER_RE.sub("", text)
 
 
@@ -512,24 +618,42 @@ def _extract_appropriations_text(element: ET.Element) -> str:
 def _extract_section_text(section: ET.Element) -> str:
     """Extract text from a section element.
 
-    If the section has a direct <text> child, use that.
+    If the section is a simple lead-in line (a direct <text> child with no
+    subsections or quoted-block payload), use that text directly.
     Otherwise, extract all text recursively from the section
-    (excluding the enum and header), which captures subsections.
+    (excluding the enum and header), which captures subsections and the
+    <quoted-block> body of "amend ... by adding the following" sections.
     Returns empty string if no text content found.
     """
     text_el = section.find("text")
     has_subsections = section.find("subsection") is not None
-    if text_el is not None and not has_subsections:
+    # A <quoted-block> holds the amendment payload (the text being inserted into
+    # existing law); its subsections are nested inside it, not direct children of
+    # the section, so has_subsections misses them. Without this guard an amendment
+    # section returns only its lead-in line and the payload is silently dropped.
+    has_quoted_block = section.find("quoted-block") is not None
+    if text_el is not None and not has_subsections and not has_quoted_block:
         return extract_text_content(text_el)
 
-    # No direct <text> child, or has both <text> and <subsection> children.
-    # Extract text from everything except enum and header.
+    # No direct <text> child, or the section carries a subsection / quoted-block
+    # payload. Extract text from everything except enum and header.
     parts = []
     for child in section:
         if child.tag in ("enum", "header"):
             continue
         parts.append(extract_text_content(child))
-    text = "".join(parts).strip()
+    # Join with a space so adjacent parts keep a word boundary (a bare
+    # "".join produced run-together text like "...funds.(b)Whoever..." and
+    # "...2028:Military...").
+    #
+    # extract_text_content already applied _LIST_MARKER_RE inside each part, but
+    # the space-join can put a fresh space in front of a marker at a part
+    # boundary (part ends "...funds.", next part starts "(b)Whoever" -> joined
+    # "...funds. (b)Whoever"). Re-applying it here strips that boundary space so
+    # the output matches the single-<text> branch and avoids golden churn. The
+    # second pass is intentional, not redundant: it only touches the new join
+    # boundaries, and _LIST_MARKER_RE is idempotent on the already-clean parts.
+    text = _LIST_MARKER_RE.sub("", " ".join(part for part in parts if part)).strip()
     return text
 
 

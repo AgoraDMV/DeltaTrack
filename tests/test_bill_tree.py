@@ -6,6 +6,7 @@ import pytest
 from bill_tree import (
     BillNode,
     _extract_appropriations_text,
+    _extract_section_text,
     extract_text_content,
     find_bill_body,
     get_header_text,
@@ -83,6 +84,130 @@ class TestExtractTextContent:
     def test_long_parenthetical_spacing_kept(self):
         el = ET.fromstring("<text>the (Comptroller) shall</text>")
         assert extract_text_content(el) == "the (Comptroller) shall"
+
+    def test_block_siblings_separated_by_space(self):
+        # Adjacent block-level siblings with no whitespace between them in the
+        # source must not run together (#17): header + text -> "date The...".
+        el = ET.fromstring(
+            "<subsection><enum>(c)</enum><header>Effective date</header><text>The amendments made.</text></subsection>"
+        )
+        assert extract_text_content(el) == "(c)Effective date The amendments made."
+
+    def test_inline_element_does_not_split_word(self):
+        # Inline elements (external-xref, quote, italic, ...) carry continuation
+        # text; a separator here would break the word ("subchapter").
+        el = ET.fromstring("<text>authorized by sub<external-xref>chapter 59</external-xref> of title 5</text>")
+        assert extract_text_content(el) == "authorized by subchapter 59 of title 5"
+
+    def test_inline_after_open_paren_stays_attached(self):
+        # No space inserted after "(" before an inline citation.
+        el = ET.fromstring("<text>Act of 1978 (<external-xref>Public Law 95-123</external-xref>)</text>")
+        assert extract_text_content(el) == "Act of 1978 (Public Law 95-123)"
+
+    def test_enum_marker_stays_attached_to_following_text(self):
+        # An enum marker attaches to the text that follows it without a space,
+        # matching _LIST_MARKER_RE's convention (no "(1) None").
+        el = ET.fromstring("<paragraph><enum>(1)</enum><text>None of the funds.</text></paragraph>")
+        assert extract_text_content(el) == "(1)None of the funds."
+
+    def test_punctuation_starting_block_not_pushed_off_anchor(self):
+        # A block whose text starts with punctuation does not get a leading
+        # space ("(1)." stays "(1).", not "(1) ." or "(1). .").
+        el = ET.fromstring("<subsection><text>in subparagraph (1)</text><clause><text>.</text></clause></subsection>")
+        assert extract_text_content(el) == "in subparagraph(1)."
+
+    def test_numbered_section_enum_separated_from_header(self):
+        # A number-period enum ("1291.") is a section number, not an attaching
+        # marker, so it gets a space before the header ("1291.Military" mash ->
+        # "1291. Military"). Mirrors the quoted-block payload in 115-hr-880.
+        el = ET.fromstring(
+            "<section><enum>1291.</enum>"
+            "<header>Military and Civilian Partnership</header>"
+            "<text>The Secretary shall.</text></section>"
+        )
+        result = extract_text_content(el)
+        assert "1291. Military and Civilian Partnership" in result
+        assert "1291.Military" not in result
+
+    def test_roman_part_enum_separated_from_header(self):
+        # A bare roman-numeral enum ("I") on a part/title is not an attaching
+        # marker either ("IMilitary" mash -> "I Military"). Also from 115-hr-880.
+        el = ET.fromstring("<part><enum>I</enum><header>Military and Civilian Partnership</header></part>")
+        result = extract_text_content(el)
+        assert result == "I Military and Civilian Partnership"
+        assert "IMilitary" not in result
+
+    def test_bare_number_enum_separated_from_text(self):
+        # A bare-number enum ("110") gets a separator too.
+        el = ET.fromstring("<clause><enum>110</enum><text>Definitions apply.</text></clause>")
+        assert extract_text_content(el) == "110 Definitions apply."
+
+    def test_linebreak_becomes_a_space(self):
+        # Multi-line table cells separate values with an empty <linebreak/> that
+        # carries no character, so without handling the lines mash together
+        # ("$66,464,000Initial Non-Federal"). A linebreak is whitespace.
+        # From the Army Corps project table in 116-hr-133.
+        el = ET.fromstring("<entry>Initial Federal: $66,464,000<linebreak/>Initial Non-Federal: $35,789,000</entry>")
+        result = extract_text_content(el)
+        assert result == "Initial Federal: $66,464,000 Initial Non-Federal: $35,789,000"
+        assert "$66,464,000Initial" not in result
+
+    def test_pagebreak_becomes_a_space(self):
+        # A <pagebreak/> is likewise a visual break, not part of a word.
+        el = ET.fromstring("<text>End of page.<pagebreak/>Next section begins.</text>")
+        assert extract_text_content(el) == "End of page. Next section begins."
+
+
+class TestExtractSectionText:
+    def test_simple_lead_in_only(self):
+        # A plain <text> section with no payload returns just that line.
+        section = ET.fromstring(
+            "<section><enum>1.</enum><header>Short title</header>"
+            "<text>This Act may be cited as the Example Act.</text></section>"
+        )
+        assert _extract_section_text(section) == "This Act may be cited as the Example Act."
+
+    def test_quoted_block_payload_included(self):
+        # "Amend ... by adding the following" sections carry the substantive
+        # text inside <quoted-block>, whose subsections are nested (not direct
+        # children). The lead-in <text> must not short-circuit past it. (#11)
+        section = ET.fromstring(
+            "<section><enum>2.</enum>"
+            "<text>Title XII is amended by adding at the end the following:</text>"
+            "<quoted-block>"
+            "<subsection><enum>(a)</enum><text>$20,000,000 is authorized.</text></subsection>"
+            "<subsection><enum>(b)</enum><text>Rule of construction applies.</text></subsection>"
+            "</quoted-block></section>"
+        )
+        result = _extract_section_text(section)
+        assert "$20,000,000 is authorized." in result
+        assert "Rule of construction applies." in result
+        assert "amended by adding" in result
+
+    def test_sibling_parts_joined_with_space(self):
+        # Adjacent non-marker parts must not run together (#17): the join keeps a
+        # word boundary while still stripping the space before list markers.
+        section = ET.fromstring(
+            "<section><enum>3.</enum>"
+            "<text>available until September 30, 2028:</text>"
+            "<subsection><text>Military Construction, Army, $25,000,000.</text></subsection>"
+            "</section>"
+        )
+        result = _extract_section_text(section)
+        assert "2028: Military Construction" in result
+        assert "2028:Military" not in result
+
+    def test_list_marker_space_still_stripped(self):
+        # The space before a parenthetical list marker stays stripped after the
+        # space-preserving join, so output does not churn for the common case.
+        section = ET.fromstring(
+            "<section><enum>4.</enum>"
+            "<text>None of the funds may be used.</text>"
+            "<subsection><enum>(b)</enum><text>Whoever violates this section.</text></subsection>"
+            "</section>"
+        )
+        result = _extract_section_text(section)
+        assert "used.(b)Whoever" in result
 
 
 class TestGetHeaderText:
