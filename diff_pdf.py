@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Block-level diff for PDF bill versions, parallel to diff_bill.py for XML.
 
 A bill is grouped into anchor-delimited blocks (TITLE / SEC. / account heading)
@@ -21,10 +23,13 @@ similarity (`_text_similarity`) from diff_bill.py.
 
 from __future__ import annotations
 
+import argparse
 import difflib
 import re
+import sys
 from collections import Counter
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
 from diff_bill import _move_candidates, _text_similarity_at_least, match_amounts
@@ -387,3 +392,91 @@ def diff_pdfs(v1_pages: list[Page], v2_pages: list[Page]) -> PdfDiff:
         v1_anchors=tuple(v1_anchors),
         v2_anchors=tuple(v2_anchors),
     )
+
+
+# ---- CLI ---------------------------------------------------------------------
+
+
+def _label_from_stem(stem: str) -> str:
+    """Human-readable label from a filename stem.
+
+    Strips a leading `<n>_` version prefix when present (mirrors
+    render_examples), e.g. "1_reported-in-house" -> "reported-in-house".
+    Otherwise returns the stem unchanged.
+    """
+    parts = stem.split("_", 1)
+    if len(parts) == 2 and parts[0].isdigit():
+        return parts[1]
+    return stem
+
+
+def render_pdf_diff_html(
+    v1_pdf: Path,
+    v2_pdf: Path,
+    *,
+    bill_type: str = "unknown",
+    bill_number: int | str = "",
+    congress: int | str = "",
+    v1_label: str | None = None,
+    v2_label: str | None = None,
+) -> str:
+    """Extract, diff, and render two PDF paths into an HTML diff page.
+
+    Reuses the exact extraction/diff/render calls from
+    render_examples.render_pdf_diff. Metadata is cosmetic for the diff itself;
+    labels default to the (de-prefixed) filename stems.
+    """
+    from formatters.adapters import pdf_diff_to_view
+    from formatters.diff_html import format_diff_html
+    from parsers.pdf_text import extract_clean_pages
+
+    v1_pages = extract_clean_pages(v1_pdf)
+    v2_pages = extract_clean_pages(v2_pdf)
+    diff = diff_pdfs(v1_pages, v2_pages)
+    return format_diff_html(
+        pdf_diff_to_view(
+            diff,
+            bill_type=bill_type,
+            bill_number=bill_number,
+            congress=congress,
+            v1_label=v1_label if v1_label is not None else _label_from_stem(v1_pdf.stem),
+            v2_label=v2_label if v2_label is not None else _label_from_stem(v2_pdf.stem),
+        )
+    )
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Diff two PDF bill versions and produce an HTML diff page.",
+    )
+    parser.add_argument("v1_pdf", type=Path, help="Path to the older PDF")
+    parser.add_argument("v2_pdf", type=Path, help="Path to the newer PDF")
+    parser.add_argument("-o", "--output", type=Path, help="Output HTML file (default: stdout)")
+    parser.add_argument("--bill-type", default="unknown", help="Bill type, e.g. hr, s (cosmetic)")
+    parser.add_argument("--bill-number", default="", help="Bill number (cosmetic)")
+    parser.add_argument("--congress", default="", help="Congress number (cosmetic)")
+    parser.add_argument("--v1-label", help="Label for the older version (default: filename stem)")
+    parser.add_argument("--v2-label", help="Label for the newer version (default: filename stem)")
+    return parser
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = build_parser().parse_args(argv)
+    html = render_pdf_diff_html(
+        args.v1_pdf,
+        args.v2_pdf,
+        bill_type=args.bill_type,
+        bill_number=args.bill_number,
+        congress=args.congress,
+        v1_label=args.v1_label,
+        v2_label=args.v2_label,
+    )
+    if args.output:
+        args.output.write_text(html)
+        print(f"Wrote {args.output}", file=sys.stderr)
+    else:
+        print(html)
+
+
+if __name__ == "__main__":
+    main()
