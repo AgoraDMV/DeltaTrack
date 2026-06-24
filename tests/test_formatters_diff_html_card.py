@@ -31,7 +31,7 @@ def _change(**overrides) -> ChangeView:
 
 def test_basic_card_structure():
     html = _build_card(_change(old_text="old prose", new_text="new prose"), 0)
-    assert html.startswith('<div class="change-card modified" id="change-0">')
+    assert html.startswith('<div class="change-card modified" id="change-0" data-type="modified" data-financial="0">')
     assert html.rstrip().endswith("</div>")
     assert '<span class="badge badge-modified">modified</span>' in html
     assert "<h3>TITLE I &gt; Customs</h3>" in html

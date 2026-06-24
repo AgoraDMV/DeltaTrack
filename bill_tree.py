@@ -29,6 +29,33 @@ class BillTree:
     bill_number: int
     version: str
     nodes: list[BillNode]
+    official_title: str = ""
+
+
+# Chamber designators for report headings (e.g. "hr" → "H.R.").
+_DESIGNATORS = {
+    "hr": "H.R.",
+    "s": "S.",
+    "hjres": "H.J.Res.",
+    "sjres": "S.J.Res.",
+    "hconres": "H.Con.Res.",
+    "sconres": "S.Con.Res.",
+    "hres": "H.Res.",
+    "sres": "S.Res.",
+}
+
+
+def bill_title(tree: BillTree) -> str:
+    """Report heading for an XML bill: "H.R. 4366 — {official title}".
+
+    Mirrors the PDF path's ``_derive_bill_title`` format. Falls back to just the
+    designator when there's no official title, or "" when even the type is unknown.
+    """
+    if not tree.bill_type:
+        return tree.official_title
+    designator = _DESIGNATORS.get(tree.bill_type, tree.bill_type.upper())
+    label = f"{designator} {tree.bill_number}"
+    return f"{label} — {tree.official_title}" if tree.official_title else label
 
 
 def normalize_header(text: str) -> str:
@@ -547,8 +574,13 @@ def walk_body_sections(body: ET.Element) -> list[BillNode]:
     return nodes
 
 
-def _extract_metadata(root: ET.Element, xml_path: Path) -> tuple[int, str, int, str]:
-    """Extract congress, bill_type, bill_number, version from XML root and filename."""
+def _extract_metadata(root: ET.Element, xml_path: Path) -> tuple[int, str, int, str, str]:
+    """Extract congress, bill_type, bill_number, version, official_title.
+
+    The first four come from the XML root and filename; official_title is the
+    long bill description from <official-title> (e.g. "Making appropriations for
+    military construction ... for other purposes."), used for the report heading.
+    """
     congress = 0
     congress_el = root.find(".//congress")
     if congress_el is not None and congress_el.text:
@@ -584,7 +616,12 @@ def _extract_metadata(root: ET.Element, xml_path: Path) -> tuple[int, str, int, 
     if len(parts) == 2:
         version = parts[1]
 
-    return congress, bill_type, bill_number, version
+    official_title = ""
+    title_el = root.find(".//official-title")
+    if title_el is not None:
+        official_title = extract_text_content(title_el).strip()
+
+    return congress, bill_type, bill_number, version, official_title
 
 
 def normalize_bill(xml_path: Path) -> BillTree:
@@ -598,7 +635,7 @@ def normalize_bill(xml_path: Path) -> BillTree:
     tree = ET.parse(xml_path)
     root = tree.getroot()
     body = find_bill_body(root)
-    congress, bill_type, bill_number, version = _extract_metadata(root, xml_path)
+    congress, bill_type, bill_number, version, official_title = _extract_metadata(root, xml_path)
 
     all_nodes: list[BillNode] = []
 
@@ -619,7 +656,7 @@ def normalize_bill(xml_path: Path) -> BillTree:
             for title in div.findall("title"):
                 title_header = get_header_text(title)
                 all_nodes.extend(walk_title(title, title_header, division_label))
-        return BillTree(congress, bill_type, bill_number, version, all_nodes)
+        return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)
 
     # Check for titles directly under body
     titles = body.findall("title")
@@ -628,8 +665,8 @@ def normalize_bill(xml_path: Path) -> BillTree:
         for title in titles:
             title_header = get_header_text(title)
             all_nodes.extend(walk_title(title, title_header, ""))
-        return BillTree(congress, bill_type, bill_number, version, all_nodes)
+        return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)
 
     # Fallback: sections directly under body
     all_nodes = walk_body_sections(body)
-    return BillTree(congress, bill_type, bill_number, version, all_nodes)
+    return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)

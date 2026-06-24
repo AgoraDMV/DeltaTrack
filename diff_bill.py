@@ -742,10 +742,21 @@ def cmd_compare(args: argparse.Namespace) -> None:
             diff_dict[key] = int(prefix)
 
     if fmt == "html":
+        from bill_tree import bill_title
         from formatters.adapters import xml_dict_to_view
+        from formatters.canonical import xml_diff_to_canonical
         from formatters.diff_html import format_diff_html
+        from formatters.text_serializer import serialize_tree, serialize_tree_with_offsets
 
-        output = format_diff_html(xml_dict_to_view(diff_dict))
+        v2_text, sections = serialize_tree_with_offsets(new_tree)
+        full_text = {"v1": serialize_tree(old_tree), "v2": v2_text}
+        canonical = xml_diff_to_canonical(diff_dict, full_text=full_text)
+        output = format_diff_html(
+            xml_dict_to_view(diff_dict),
+            canonical=canonical,
+            title=bill_title(new_tree),
+            sections=sections,
+        )
     else:
         output = json.dumps(diff_dict, indent=2)
 

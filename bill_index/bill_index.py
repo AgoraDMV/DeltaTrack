@@ -19,6 +19,7 @@ latest_hr_bills = index.fetch_all(119, "hr")
 for senate, bill_type, bill_number, doc_version in map(parse_bill_id, bill_ids):
     ...
 """
+
 from __future__ import annotations
 
 import csv
@@ -188,7 +189,6 @@ class BillIndex:
                 bill = {key: _decode_value(key, row.get(key, "")) for key in self._columns}
                 self._records.append(bill)
                 self._bills_by_id[bill["id"]] = bill
-
 
     def save(self) -> None:
         """Persist in-memory records to CSV."""

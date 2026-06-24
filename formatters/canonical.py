@@ -386,6 +386,14 @@ def _move_info_html(canonical_change: dict) -> str:
     return f'<div class="move-info">Moved: {v1_label} &rarr; {v2_label}</div>'
 
 
+def _group_label_from_path(canonical_change: dict) -> str:
+    """Top-of-breadcrumb section label, v2-then-v1, matching the direct adapters'
+    `group_label` so a view round-tripped through the canonical is identical."""
+    path = canonical_change.get("path") or {}
+    parts = path.get("v2") or path.get("v1") or []
+    return parts[0] if parts else ""
+
+
 def _change_view_from_canonical(canonical_change: dict, source: str) -> ChangeView:
     heading_html, nav_label_html, degraded = _heading_and_nav(canonical_change, source)
     return ChangeView(
@@ -399,6 +407,7 @@ def _change_view_from_canonical(canonical_change: dict, source: str) -> ChangeVi
         old_text=canonical_change["text"].get("old") or "",
         new_text=canonical_change["text"].get("new") or "",
         amount_pairs=tuple((p["old"], p["new"]) for p in canonical_change.get("amounts") or ()),
+        group_label=_group_label_from_path(canonical_change),
     )
 
 

@@ -12,11 +12,13 @@ from pathlib import Path
 
 import pytest
 
-from bill_tree import BillNode, BillTree, normalize_bill
-from formatters.text_serializer import serialize_tree
+from bill_tree import BillNode, BillTree, bill_title, normalize_bill
+from formatters.text_serializer import serialize_tree, serialize_tree_with_offsets
 
 
-def _node(*, path: tuple[str, ...] = (), header: str = "", body: str = "", tag: str = "section") -> BillNode:
+def _node(
+    *, path: tuple[str, ...] = (), header: str = "", body: str = "", tag: str = "section", sec: str = ""
+) -> BillNode:
     return BillNode(
         match_path=tuple(p.lower() for p in path),
         display_path=path,
@@ -24,7 +26,7 @@ def _node(*, path: tuple[str, ...] = (), header: str = "", body: str = "", tag: 
         element_id="",
         header_text=header,
         body_text=body,
-        section_number="",
+        section_number=sec,
         division_label="",
     )
 
@@ -124,6 +126,75 @@ def test_section_node_emits_uppercased_run_in_heading():
     assert "sec. 101" not in out
     # Body follows the run-in heading on the same line.
     assert "SEC. 101.  None of the funds" in out
+
+
+# --- serialize_tree_with_offsets (TOC sections) ----------------------------
+
+
+def _toc_tree() -> BillTree:
+    return _tree(
+        [
+            _node(path=("TITLE I", "DEPARTMENT OF DEFENSE"), body="Funds for defense."),
+            _node(
+                path=("TITLE I", "DEPARTMENT OF DEFENSE", "sec. 101"),
+                sec="Sec. 101",
+                body="None of the funds made available...",
+            ),
+        ]
+    )
+
+
+def test_with_offsets_text_is_byte_identical_to_serialize_tree():
+    tree = _toc_tree()
+    text, _ = serialize_tree_with_offsets(tree)
+    assert text == serialize_tree(tree)
+
+
+def test_sections_carry_label_kind_and_offset_on_the_heading_line():
+    text, sections = serialize_tree_with_offsets(_toc_tree())
+    by_label = {s["label"]: s for s in sections}
+
+    assert by_label["TITLE I"]["kind"] == "title"
+    assert by_label["DEPARTMENT OF DEFENSE"]["kind"] == "account"
+    assert by_label["Sec. 101"]["kind"] == "section"
+
+    # Each offset lands exactly on its heading row (the bug we're guarding against
+    # is offsets drifting off the line start).
+    assert text[by_label["TITLE I"]["start"] :].startswith("TITLE I")
+    assert text[by_label["DEPARTMENT OF DEFENSE"]["start"] :].startswith("DEPARTMENT OF DEFENSE")
+    assert text[by_label["Sec. 101"]["start"] :].startswith("SEC. 101.")
+
+
+def test_title_section_gets_account_descriptor():
+    _, sections = serialize_tree_with_offsets(_toc_tree())
+    title = next(s for s in sections if s["kind"] == "title")
+    assert title.get("descriptor") == "DEPARTMENT OF DEFENSE"
+
+
+def test_sections_are_in_document_order():
+    _, sections = serialize_tree_with_offsets(_toc_tree())
+    starts = [s["start"] for s in sections]
+    assert starts == sorted(starts)
+
+
+# --- bill_title heading -----------------------------------------------------
+
+
+def test_bill_title_formats_designator_and_official_title():
+    tree = BillTree(
+        congress=118,
+        bill_type="hr",
+        bill_number=4366,
+        version="reported",
+        nodes=[],
+        official_title="Making appropriations.",
+    )
+    assert bill_title(tree) == "H.R. 4366 — Making appropriations."
+
+
+def test_bill_title_without_official_title_is_just_the_designator():
+    tree = BillTree(congress=118, bill_type="s", bill_number=12, version="reported", nodes=[])
+    assert bill_title(tree) == "S. 12"
 
 
 _HR4366_V1 = Path("bills/118-hr-4366/1_reported-in-house.xml")

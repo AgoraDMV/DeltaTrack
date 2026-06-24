@@ -21,7 +21,7 @@ dev = [
     "pytest-xdist>=3.6",
     "reportlab>=4.5.1",
     "respx>=0.22",
-    "ruff>=0.11",
+    "ruff==0.15.10",  # pinned exactly so local `ruff format` matches CI (format output varies by version)
 ]
 
 [tool.ruff]
