@@ -20,16 +20,23 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      # Each check runs even if an earlier one failed (but not after cancellation),
+      # so one push surfaces every problem at once instead of failing fast on the
+      # first gate. The job still goes red if any step fails.
       - name: Lint
+        if: ${{ !cancelled() }}
         run: uv run ruff check .
 
       - name: Check formatting
+        if: ${{ !cancelled() }}
         run: uv run ruff format --check .
 
       - name: Run tests
+        if: ${{ !cancelled() }}
         run: uv run pytest -m "not slow" -v
 
       - name: Run external-validation suite
+        if: ${{ !cancelled() }}
         # The committee-report validation is @slow but self-contained: it runs against the
         # vendored govinfo sources (committee-report HTML + reported-bill XML), so it can gate
         # CI. The Legislative Branch slow tests need the large enrolled-bill corpus, which is
