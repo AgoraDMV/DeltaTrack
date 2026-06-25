@@ -54,6 +54,11 @@ _MOVE_SIMILARITY_THRESHOLD = 0.6
 # _SIMILARITY_THRESHOLD.
 _PAIR_BODY_THRESHOLD = 0.4
 
+# Label and breadcrumb for the synthesized front-matter anchor (issue #33) — the
+# boilerplate before the first real anchor (calendar number, designator, long
+# title, enacting clause).
+_FRONT_MATTER_LABEL = "Front Matter"
+
 
 @dataclass(frozen=True)
 class PdfHunk:
@@ -167,9 +172,6 @@ def _flatten(pages: list[Page]) -> list[_IndexedLine]:
     return _rejoin_cross_page_hyphens(flat)
 
 
-_FRONT_MATTER_LABEL = "Front Matter"
-
-
 def _front_matter_anchor(lines: tuple[_IndexedLine, ...]) -> Anchor:
     """Synthesize a top-level anchor for the bill's front matter — the preamble
     preceding the first real anchor (Union Calendar number, Congress/session,
@@ -184,6 +186,17 @@ def _front_matter_anchor(lines: tuple[_IndexedLine, ...]) -> Anchor:
     """
     first = lines[0]
     return Anchor(first.page_number, first.line_number or 1, "preamble", _FRONT_MATTER_LABEL)
+
+
+def _with_front_matter(blocks: list[_Block], anchors: list[Anchor]) -> list[Anchor]:
+    """Prepend the front-matter anchor to `anchors` when the first block carries
+    one (issue #33). `_group_into_blocks` already synthesized it for hunk
+    attribution; lifting that same object into the anchor list keeps the section
+    TOC complete without re-deriving it. Returns `anchors` unchanged when there
+    is no front matter (no real anchors, or the document opens on one)."""
+    if blocks and blocks[0].anchor is not None and blocks[0].anchor.kind == "preamble":
+        return [blocks[0].anchor, *anchors]
+    return list(anchors)
 
 
 def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor]) -> list[_Block]:
@@ -417,6 +430,11 @@ def diff_pdfs(v1_pages: list[Page], v2_pages: list[Page]) -> PdfDiff:
 
     v1_blocks = _group_into_blocks(v1_indexed, v1_anchors)
     v2_blocks = _group_into_blocks(v2_indexed, v2_anchors)
+
+    # Surface the front-matter anchor synthesized per-block (issue #33) into the
+    # anchor lists so the full-bill section TOC links to it like any other anchor.
+    v1_anchors = _with_front_matter(v1_blocks, v1_anchors)
+    v2_anchors = _with_front_matter(v2_blocks, v2_anchors)
 
     matcher = difflib.SequenceMatcher(
         a=[_block_key(b) for b in v1_blocks],

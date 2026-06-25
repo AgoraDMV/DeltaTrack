@@ -156,6 +156,17 @@ class TestAnchorLabeling:
         assert pre[0].v1_anchor.text == "Front Matter"
         assert pre[0].v2_anchor and pre[0].v2_anchor.text == "Front Matter"
 
+    def test_front_matter_anchor_surfaced_into_anchor_lists_for_toc(self):
+        # The synthesized front-matter anchor is also prepended to the diff's
+        # anchor lists so the full-bill section TOC can link to it (issue #33).
+        v1 = [_page(1, (1, "[Report No. 118-553]"), (2, "SEC. 101. heading"), (3, "body"))]
+        v2 = [_page(1, (1, "[Report No. 118-560]"), (2, "SEC. 101. heading"), (3, "body"))]
+        diff = diff_pdfs(v1, v2)
+        assert diff.v2_anchors[0].kind == "preamble"
+        assert diff.v2_anchors[0].text == "Front Matter"
+        # The real anchors still follow it, in document order.
+        assert [a.text for a in diff.v2_anchors] == ["Front Matter", "SEC. 101"]
+
 
 class TestNumericClassification:
     def test_dollar_amount_change_populates_amount_pairs(self):

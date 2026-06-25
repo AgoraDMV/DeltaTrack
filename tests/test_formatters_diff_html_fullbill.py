@@ -144,6 +144,18 @@ def test_full_bill_toc_nests_sections_under_titles():
     assert 'id="sec-0"' in html and 'id="sec-1"' in html
 
 
+def test_full_bill_toc_links_front_matter():
+    # The synthesized front-matter entry (issue #33) sits at offset 0, before any
+    # title, so it renders as a top-level jump link to the first display row.
+    sections = [
+        {"label": "Front Matter", "kind": "preamble", "start": 0},
+        {"label": "TITLE I", "kind": "title", "start": 12},
+    ]
+    html = format_diff_html(_view(), _canonical(), sections=sections)
+    assert '<li class="toc-child"><a href="#sec-0">Front Matter</a></li>' in html
+    assert 'id="sec-0"' in html
+
+
 def test_toc_empty_state_when_no_sections():
     html = format_diff_html(_view(), _canonical(), sections=[])
     assert 'class="sidebar-toc"' in html
