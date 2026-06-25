@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from diff_pdf import _Block, _block_key, _IndexedLine, diff_pdfs
+from diff_pdf import _Block, _block_key, _IndexedLine, _rejoin_cross_page_hyphens, diff_pdfs
 from parsers.pdf_anchors import Anchor
 from parsers.pdf_text import Line, Page
 
@@ -102,6 +102,30 @@ class TestPageLineCitations:
         h = diff_pdfs(v1, v2).hunks[0]
         assert h.v1_range == (2, 24, 3, 1)
         assert h.v2_range == (2, 24, 3, 1)
+
+
+class TestCrossPageHyphenRejoin:
+    def test_merges_continuation_into_trailing_hyphen_line(self):
+        # `pro-` (page 1 last line) + lowercase `grams` (page 2 first line)
+        # become one whole word, keeping page 1's coordinates.
+        lines = [
+            _IndexedLine("fund the pro-", 1, 9),
+            _IndexedLine("grams now operating", 2, 1),
+        ]
+        assert _rejoin_cross_page_hyphens(lines) == [_IndexedLine("fund the programs now operating", 1, 9)]
+
+    def test_preserves_uppercase_continuation_compound(self):
+        # A real compound like `Child-Rescue` continues uppercase across the
+        # seam and must not be glued into `ChildRescue`.
+        lines = [_IndexedLine("Operative Child-", 1, 30), _IndexedLine("Rescue Corps", 2, 1)]
+        assert _rejoin_cross_page_hyphens(lines) == lines
+
+    def test_no_spurious_change_when_word_breaks_at_page_seam_in_one_version(self):
+        # v1 splits "exceed" across a page boundary; v2 has it whole. After the
+        # cross-page rejoin both read "not to exceed $5" and no change is emitted.
+        v1 = [_page(1, (1, "SEC. 101. amount not to ex-")), _page(2, (1, "ceed $5"))]
+        v2 = [_page(1, (1, "SEC. 101. amount not to exceed $5"))]
+        assert diff_pdfs(v1, v2).hunks == ()
 
 
 class TestAnchorLabeling:

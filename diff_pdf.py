@@ -118,13 +118,53 @@ class _Block:
         )
 
 
+def _rejoin_cross_page_hyphens(lines: list[_IndexedLine]) -> list[_IndexedLine]:
+    """Stitch a soft-hyphenated word split across a page boundary back together.
+
+    Per-page cleanup (`pdf_text._merge_print_lines`) rejoins soft hyphens within
+    a page, but a word broken across a page seam survives as a trailing `WORD-`
+    on one page's last line and its lowercase continuation on the next page's
+    first line. Merge the continuation into the trailing-hyphen line, dropping
+    its now-empty record. The merged line keeps the first line's page/line
+    coordinates; the continuation was only a word fragment.
+
+    The guard mirrors `_merge_print_lines` (alphanumeric before the hyphen,
+    lowercase continuation) so real compounds like `Child-Rescue`, which
+    continue uppercase, are preserved. Anchors never start lowercase, so a
+    TITLE/SEC heading opening a page is never absorbed.
+    """
+    merged: list[_IndexedLine] = []
+    i = 0
+    while i < len(lines):
+        current = lines[i]
+        nxt = i + 1
+        while (
+            nxt < len(lines)
+            and current.text.endswith("-")
+            and len(current.text) >= 2
+            and current.text[-2].isalnum()
+            and lines[nxt].text[:1].islower()
+        ):
+            current = _IndexedLine(current.text[:-1] + lines[nxt].text, current.page_number, current.line_number)
+            nxt += 1
+        merged.append(current)
+        i = nxt
+    return merged
+
+
 def _flatten(pages: list[Page]) -> list[_IndexedLine]:
-    """Flatten pages into a single ordered list of (text, page, line) records."""
+    """Flatten pages into a single ordered list of (text, page, line) records.
+
+    Cross-page soft hyphens are rejoined on the flattened stream so the diff
+    compares whole words; otherwise a word split at a page seam in one version
+    (`includ-`/`ing`) but whole in the other (`including`) reads as a spurious
+    change (issue #31).
+    """
     flat: list[_IndexedLine] = []
     for page in pages:
         for line in page.lines:
             flat.append(_IndexedLine(line.text, page.page_number, line.line_number))
-    return flat
+    return _rejoin_cross_page_hyphens(flat)
 
 
 def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor]) -> list[_Block]:
