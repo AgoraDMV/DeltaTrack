@@ -21,29 +21,55 @@ def serialize_tree(tree: BillTree) -> str:
     heading-emission rule. Returns just the text for callers that don't need the
     section jump-list.
     """
-    return serialize_tree_with_offsets(tree)[0]
+    return _serialize(tree)[0]
+
+
+def serialize_tree_for_diff(tree: BillTree) -> tuple[str, list[dict], dict[str, tuple[int, int]]]:
+    """Serialize plus a ``{element_id: (start, end)}`` body-span index (#51).
+
+    Each span is the char range of a node's readable body within the returned text,
+    excluding the ``SEC. NN.  `` run-in prefix and any heading lines. The canonical
+    producer uses it to anchor a change's inline highlight structurally (the change
+    carries the node's ``element_id``), instead of substring-searching the now-readable
+    text. Nodes with no ``element_id`` are omitted.
+    """
+    return _serialize(tree)
 
 
 def serialize_tree_with_offsets(tree: BillTree) -> tuple[str, list[dict]]:
     """Serialize a BillTree to plaintext plus a section jump-list (TOC).
 
+    Thin wrapper over :func:`_serialize` returning just the text and section
+    jump-list; see :func:`serialize_tree_for_diff` for the body-span index.
+    """
+    text, sections, _spans = _serialize(tree)
+    return text, sections
+
+
+def _serialize(tree: BillTree) -> tuple[str, list[dict], dict[str, tuple[int, int]]]:
+    """Serialize a BillTree to plaintext, a section jump-list, and a body-span index.
+
     Heading emission rule: when transitioning from one node to the next, diff the
     display_path tuples. Any new trailing segments are emitted as headings (one
-    per line), each separated by a blank line. Body text follows on its own
-    line(s), then a trailing blank line before the next node.
+    per line), each separated by a blank line. The node's readable ``display_text``
+    (falling back to ``body_text``) follows on its own line(s), then a trailing blank
+    line before the next node.
 
-    The second return value mirrors the PDF path's ``_section_nav`` output: a
-    list of ``{"label", "kind", "start", "descriptor"?}`` in document order, where
-    ``start`` is the char offset of the heading line in the returned text. Kinds
-    use the same vocabulary as the PDF anchors — ``title`` / ``section`` /
-    ``account`` — so the renderer's ``_build_toc`` consumes both identically. The
-    offsets are computed from the very same line list the text is joined from, so
-    a TOC entry always lands on an exact full-bill row start.
+    The section jump-list mirrors the PDF path's ``_section_nav`` output: a list of
+    ``{"label", "kind", "start", "descriptor"?}`` in document order, where ``start`` is
+    the char offset of the heading line. Kinds use the PDF anchor vocabulary —
+    ``title`` / ``section`` / ``account`` — so ``_build_toc`` consumes both identically.
+
+    The body-span index maps ``element_id -> (start, end)`` covering each node's body
+    (excluding the ``SEC. NN.  `` run-in prefix), for structural change anchoring (#51).
+    All offsets are computed from the very same line list the text is joined from.
     """
     out: list[str] = []
     # (out-index, label, kind) for each heading-worthy line; offsets resolved
     # after the trailing-blank trim, when the final line list is fixed.
     markers: list[tuple[int, str, str]] = []
+    # (out-index, element_id, prefix_len, body_len) for each body block.
+    body_markers: list[tuple[int, str, int, int]] = []
     prev_path: tuple[str, ...] = ()
     for node in tree.nodes:
         new_path = tuple(node.display_path)
@@ -75,11 +101,18 @@ def serialize_tree_with_offsets(tree: BillTree) -> tuple[str, list[dict]]:
         if node.body_text:
             if out and out[-1] != "":
                 out.append("")
+            display = node.display_text or node.body_text
+            idx = len(out)
             if node.section_number:
-                markers.append((len(out), node.section_number, "section"))
-                out.append(f"{node.section_number.upper()}.  {node.body_text}")
+                markers.append((idx, node.section_number, "section"))
+                prefix = f"{node.section_number.upper()}.  "
+                out.append(f"{prefix}{display}")
+                prefix_len = len(prefix)
             else:
-                out.append(node.body_text)
+                out.append(display)
+                prefix_len = 0
+            if node.element_id:
+                body_markers.append((idx, node.element_id, prefix_len, len(display)))
             out.append("")
         prev_path = heading_path
     # Trim trailing blank lines.
@@ -98,6 +131,13 @@ def serialize_tree_with_offsets(tree: BillTree) -> tuple[str, list[dict]]:
         for idx, label, kind in markers
         if idx < len(out)  # a heading can never be a trimmed trailing blank, but stay safe
     ]
+    # Body spans: the readable body sits at line_starts[idx] + prefix_len and runs
+    # body_len chars (display may span several lines; len() counts the newlines).
+    spans: dict[str, tuple[int, int]] = {}
+    for idx, element_id, prefix_len, body_len in body_markers:
+        if idx < len(out):
+            start = line_starts[idx] + prefix_len
+            spans[element_id] = (start, start + body_len)
     # Descriptor: only for a bare "TITLE I"-style enum (PDF carries these as the
     # title text), labelled with the account heading directly below it, mirroring
     # PDF `_title_descriptor`. XML title labels are now "TITLE I—<header>" (#50),
@@ -112,4 +152,4 @@ def serialize_tree_with_offsets(tree: BillTree) -> tuple[str, list[dict]]:
             and sections[i + 1]["kind"] == "account"
         ):
             entry["descriptor"] = sections[i + 1]["label"]
-    return text, sections
+    return text, sections, spans
