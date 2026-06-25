@@ -789,6 +789,76 @@ def _extract_metadata(root: ET.Element, xml_path: Path) -> tuple[int, str, int, 
     return congress, bill_type, bill_number, version, official_title
 
 
+# GPO injects a fixed enacting clause at the top of the bill body; it is not
+# carried in the XML (no <enacting-clause> element). Hardcoded boilerplate per
+# billres-details.xsl ($enact), suppressed when the body opts out.
+_ENACTING_CLAUSE = (
+    "Be it enacted by the Senate and House of Representatives of the United States of America in Congress assembled,"
+)
+
+# Synthetic match_path root for front-matter nodes. They carry an empty
+# display_path (no heading) but need a stable, distinct match key so each piece
+# pairs with its counterpart across versions (e.g. an official-title edit diffs
+# as exactly that, not as the whole block).
+_FRONT_MATTER = "front matter"
+
+
+def _front_matter_node(key: str, body: str) -> BillNode:
+    return BillNode(
+        match_path=(_FRONT_MATTER, key),
+        display_path=(),
+        tag="front-matter",
+        # Stable synthetic id (same across versions so each piece pairs with its
+        # counterpart, distinct between pieces so pairings stay unique). The XML
+        # form block carries no per-element ids we can reuse.
+        element_id=f"front-matter-{key.replace(' ', '-')}",
+        header_text="",
+        body_text=body,
+        section_number="",
+        division_label="",
+    )
+
+
+def extract_front_matter_nodes(root: ET.Element, body: ET.Element) -> list[BillNode]:
+    """Build front-matter nodes from the <form> block and enacting clause (#48).
+
+    The <form> block (congress, session, legis-num, legis-type "AN ACT", official
+    title) and the GPO enacting clause sit outside <legis-body>, so they were
+    dropped from the full-bill text and the diff. Each piece is its own node so a
+    change diffs precisely. distribution-code renders nothing in GPO and is
+    skipped; sponsor/action lines are out of scope. Returns nodes in render order
+    (empty when there is no <form>, e.g. amendment docs).
+    """
+    form = root.find("form")
+    nodes: list[BillNode] = []
+    if form is None:
+        return nodes
+
+    # Masthead: one line each, mirroring the printed cover.
+    masthead_lines = []
+    for tag in ("congress", "session", "legis-num", "legis-type"):
+        el = form.find(tag)
+        if el is not None:
+            text = extract_text_content(el).strip()
+            if text:
+                masthead_lines.append(text)
+    if masthead_lines:
+        nodes.append(_front_matter_node("masthead", "\n".join(masthead_lines)))
+
+    # Official title (verbatim; casing transforms are out of scope, cf. #53).
+    title_el = form.find("official-title")
+    if title_el is not None:
+        official = extract_text_content(title_el).strip()
+        if official:
+            nodes.append(_front_matter_node("official title", official))
+
+    # Enacting clause: GPO boilerplate, unless the body opts out.
+    if body.get("display-enacting-clause") != "no-display-enacting-clause":
+        nodes.append(_front_matter_node("enacting clause", _ENACTING_CLAUSE))
+
+    return nodes
+
+
 def normalize_bill(xml_path: Path) -> BillTree:
     """Parse a bill XML file into a normalized BillTree.
 
@@ -802,7 +872,8 @@ def normalize_bill(xml_path: Path) -> BillTree:
     body = find_bill_body(root)
     congress, bill_type, bill_number, version, official_title = _extract_metadata(root, xml_path)
 
-    all_nodes: list[BillNode] = []
+    # Front matter (form block + enacting clause) renders above the bill body (#48).
+    all_nodes: list[BillNode] = extract_front_matter_nodes(root, body)
 
     # Check for divisions first
     divisions = body.findall("division")
@@ -833,5 +904,5 @@ def normalize_bill(xml_path: Path) -> BillTree:
         return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)
 
     # Fallback: sections directly under body
-    all_nodes = walk_body_sections(body)
+    all_nodes.extend(walk_body_sections(body))
     return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)

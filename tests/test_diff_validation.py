@@ -125,15 +125,17 @@ class TestControlledDiff:
     def test_summary_baseline(self, hr4366_v1_v2_diff):
         """Regression baseline for summary counts.
 
-        Current values (2026-04-15): added=7, modified=16, unchanged=148, moved=1.
-        Recorded as a baseline; a change here flags a parser/matching regression
-        to investigate.
+        Current values: added=7, modified=17, unchanged=150, moved=1. Front matter
+        (#48) adds three nodes: the masthead is modified ("A BILL" -> "AN ACT" on
+        passing the chamber) and the official title + enacting clause are unchanged,
+        so modified 16->17 and unchanged 148->150. A change here flags a
+        parser/matching regression to investigate.
         """
         s = hr4366_v1_v2_diff.summary
         assert s["added"] == 7
         assert s["removed"] == 0
-        assert s["modified"] == 16
-        assert s["unchanged"] == 148
+        assert s["modified"] == 17
+        assert s["unchanged"] == 150
         assert s["moved"] == 1
 
     # -- Financial validation --
