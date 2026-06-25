@@ -546,6 +546,73 @@ def test_xml_search_state_advances_so_repeated_phrases_dont_collide():
     assert s2["v2"]["start"] == 11  # the second "shared"
 
 
+def test_xml_full_text_span_resolved_structurally_by_element_id():
+    """With full_text_spans, the change is anchored by its element_id, not by
+    searching the (now readable) full_text for the normalized change text."""
+    change = {
+        "change_type": "modified",
+        "display_path_old": ["A"],
+        "display_path_new": ["A"],
+        "old_text": "(a)The old",  # normalized form, NOT present verbatim in readable full_text
+        "new_text": "(a)The new",
+        "section_number": "",
+        "element_id_old": "E1",
+        "element_id_new": "E1",
+    }
+    full_text = {"v1": "SEC. 1.  (a) The old", "v2": "SEC. 1.  (a) The new"}
+    full_text_spans = {"v1": {"E1": (9, 20)}, "v2": {"E1": (9, 20)}}
+    canonical = xml_diff_to_canonical(
+        _xml_diff_dict(changes=[change]), full_text=full_text, full_text_spans=full_text_spans
+    )
+    span = canonical["changes"][0]["full_text_span"]
+    assert span["v1"] == {"start": 9, "end": 20}
+    assert span["v2"] == {"start": 9, "end": 20}
+
+
+def test_xml_full_text_spans_never_serialized_and_schema_valid():
+    """full_text_spans is a build-time anchor input only — it must not leak into the
+    canonical JSON, and the result must still validate against the schema."""
+    jsonschema = pytest.importorskip("jsonschema")
+    change = {
+        "change_type": "modified",
+        "display_path_old": ["A"],
+        "display_path_new": ["A"],
+        "old_text": "x",
+        "new_text": "y",
+        "section_number": "",
+        "element_id_old": "E1",
+        "element_id_new": "E1",
+    }
+    canonical = xml_diff_to_canonical(
+        _xml_diff_dict(changes=[change]),
+        full_text={"v1": "x here", "v2": "y here"},
+        full_text_spans={"v1": {"E1": (0, 1)}, "v2": {"E1": (0, 1)}},
+    )
+    assert "full_text_spans" not in canonical
+    jsonschema.validate(canonical, _load_schema())
+
+
+def test_xml_full_text_span_null_when_id_absent_and_search_misses():
+    """Degenerate fallback: an empty/absent element_id falls back to substring search,
+    which misses because the target is normalized while full_text is readable -> null."""
+    change = {
+        "change_type": "modified",
+        "display_path_old": ["A"],
+        "display_path_new": ["A"],
+        "old_text": "(a)The body",
+        "new_text": "(a)The body",
+        "section_number": "",
+        "element_id_old": "",
+        "element_id_new": "",
+    }
+    full_text = {"v1": "SEC. 1.  (a) The body", "v2": "SEC. 1.  (a) The body"}
+    full_text_spans = {"v1": {}, "v2": {}}
+    canonical = xml_diff_to_canonical(
+        _xml_diff_dict(changes=[change]), full_text=full_text, full_text_spans=full_text_spans
+    )
+    assert canonical["changes"][0]["full_text_span"] == {"v1": None, "v2": None}
+
+
 def test_pdf_full_text_span_uses_line_offsets():
     hunk = PdfHunk(
         change_type="modified",
