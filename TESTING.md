@@ -18,7 +18,7 @@ no key and no internet connection.
 
 ## How accuracy is checked
 
-Accuracy is checked in four ways. Each one answers a different question, and
+Accuracy is checked in five ways. Each one answers a different question, and
 each has limits worth being honest about. There is no single accuracy
 percentage that would be truthful across all of appropriations, so we describe
 what each layer does and does not establish.
@@ -203,6 +203,25 @@ The first run extracts each PDF and caches the result to
 instead of re-reading the PDF, so re-running the same tests is near-instant. The
 cache is keyed by file modification time, so editing or replacing a PDF
 re-extracts it automatically.
+
+## Comparing the two pipelines by eye
+
+The automated checks above don't diff the two pipelines against *each other*. To
+eyeball the PDF-derived and XML-derived reports for the same two versions side by
+side — to catch parity gaps in breadcrumbs, section grouping, financial callouts,
+or change counts — serve them together:
+
+```bash
+uv run python scripts/serve_compare.py 118-hr-8752
+uv run python scripts/serve_compare.py 118-hr-8752 --v1 1_reported-in-house --v2 2_engrossed-in-house
+uv run python scripts/serve_compare.py path/to/bill-dir --port 8765 --no-browser
+```
+
+With no `--v1`/`--v2` it picks the two lowest-numbered versions that have both a
+`.pdf` and an `.xml`, so the bill must be fetched with `--format both` (the
+vendored `bills/` corpus is XML-only). Rendered HTML goes to a temp dir, nothing
+committed. The panes reflect the current checkout, so run it on the branch whose
+diff output you're inspecting. This is a manual debugging aid, not a test.
 
 ## Measuring coverage
 
