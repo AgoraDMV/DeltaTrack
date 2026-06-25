@@ -20,6 +20,12 @@ from bill_tree import (
 )
 
 
+def _content(tree):
+    """Content nodes only, dropping the front-matter prefix (#48) so structure
+    assertions stay focused on the bill body."""
+    return [n for n in tree.nodes if n.tag != "front-matter"]
+
+
 class TestTitleLabel:
     """Title enum handling (#50): TITLE I—<header> for display, header-only for match."""
 
@@ -1014,11 +1020,12 @@ class TestNormalizeBill:
         assert tree.bill_type == "hr"
         assert tree.bill_number == 4366
         assert tree.version == "enrolled-bill"
-        assert len(tree.nodes) == 2
-        assert tree.nodes[0].match_path == ("department of defense", "military construction, army")
-        assert tree.nodes[0].display_path[0] == "Division A: Military Construction"
-        assert tree.nodes[1].match_path == ("agriculture programs", "farm loans")
-        assert tree.nodes[1].display_path[0] == "Division B: Agriculture"
+        content = _content(tree)
+        assert len(content) == 2
+        assert content[0].match_path == ("department of defense", "military construction, army")
+        assert content[0].display_path[0] == "Division A: Military Construction"
+        assert content[1].match_path == ("agriculture programs", "farm loans")
+        assert content[1].display_path[0] == "Division B: Agriculture"
 
     def test_no_divisions_with_titles(self, tmp_path):
         """Bill without divisions: walks titles directly from body."""
@@ -1046,10 +1053,11 @@ class TestNormalizeBill:
         tree = normalize_bill(xml_path)
         assert tree.congress == 118
         assert tree.version == "reported-in-house"
-        assert len(tree.nodes) == 1
-        assert tree.nodes[0].match_path == ("department of defense", "military construction, army")
+        content = _content(tree)
+        assert len(content) == 1
+        assert content[0].match_path == ("department of defense", "military construction, army")
         # display_path keeps the title's enum (#50); match_path stays header-only.
-        assert tree.nodes[0].display_path == ("TITLE I—DEPARTMENT OF DEFENSE", "Military construction, army")
+        assert content[0].display_path == ("TITLE I—DEPARTMENT OF DEFENSE", "Military construction, army")
 
     def test_official_title_parsed_from_form(self, tmp_path):
         """The long <official-title> is captured for the report heading."""
@@ -1096,8 +1104,9 @@ class TestNormalizeBill:
         tree = normalize_bill(xml_path)
         assert tree.bill_type == "hr"
         assert tree.bill_number == 2882
-        assert len(tree.nodes) == 1
-        assert tree.nodes[0].match_path == ("sec. 1",)
+        content = _content(tree)
+        assert len(content) == 1
+        assert content[0].match_path == ("sec. 1",)
 
     def test_version_from_filename(self, tmp_path):
         xml = (
@@ -1155,16 +1164,17 @@ class TestNormalizeBill:
         xml_path.write_text(xml)
 
         tree = normalize_bill(xml_path)
-        assert len(tree.nodes) == 3
+        content = _content(tree)
+        assert len(content) == 3
         # Preamble sections come first
-        assert tree.nodes[0].tag == "section"
-        assert tree.nodes[0].match_path == ("sec. 1",)
-        assert tree.nodes[0].division_label == ""
-        assert tree.nodes[1].tag == "section"
-        assert tree.nodes[1].match_path == ("sec. 2",)
+        assert content[0].tag == "section"
+        assert content[0].match_path == ("sec. 1",)
+        assert content[0].division_label == ""
+        assert content[1].tag == "section"
+        assert content[1].match_path == ("sec. 2",)
         # Division node follows
-        assert tree.nodes[2].match_path == ("department of defense", "military construction, army")
-        assert tree.nodes[2].division_label.startswith("Division A")
+        assert content[2].match_path == ("department of defense", "military construction, army")
+        assert content[2].division_label.startswith("Division A")
 
     def test_titles_with_sibling_sections(self, tmp_path):
         """Preamble sections alongside titles should be captured."""
@@ -1195,10 +1205,96 @@ class TestNormalizeBill:
         xml_path.write_text(xml)
 
         tree = normalize_bill(xml_path)
-        assert len(tree.nodes) == 2
-        assert tree.nodes[0].tag == "section"
-        assert tree.nodes[0].match_path == ("sec. 1",)
-        assert tree.nodes[1].match_path == ("department of defense", "military construction, army")
+        content = _content(tree)
+        assert len(content) == 2
+        assert content[0].tag == "section"
+        assert content[0].match_path == ("sec. 1",)
+        assert content[1].match_path == ("department of defense", "military construction, army")
+
+
+class TestFrontMatter:
+    """Front matter from <form> + enacting clause (#48)."""
+
+    def _bill(self, tmp_path, *, enacting_attr="", legis_type="AN ACT", official=True):
+        title_line = (
+            "<official-title>Making appropriations, and for other purposes.</official-title>" if official else ""
+        )
+        xml = (
+            '<bill bill-stage="Reported-in-House">'
+            "<form>"
+            '<distribution-code display="yes">I</distribution-code>'
+            "<congress>118th CONGRESS</congress>"
+            "<session>2d Session</session>"
+            "<legis-num>H. R. 8752</legis-num>"
+            f"<legis-type>{legis_type}</legis-type>"
+            f"{title_line}"
+            "</form>"
+            f'<legis-body style="appropriations"{enacting_attr}>'
+            '<title id="T1"><enum>I</enum><header>DEPARTMENTAL MANAGEMENT</header>'
+            '<appropriations-intermediate id="AI1"><header>Operations</header>'
+            "<text>For necessary expenses, $5,000,000.</text></appropriations-intermediate></title>"
+            "</legis-body></bill>"
+        )
+        path = tmp_path / "1_reported-in-house.xml"
+        path.write_text(xml)
+        return normalize_bill(path)
+
+    def test_front_matter_nodes_in_render_order(self, tmp_path):
+        tree = self._bill(tmp_path)
+        fm = [n for n in tree.nodes if n.tag == "front-matter"]
+        keys = [n.match_path for n in fm]
+        assert keys == [
+            ("front matter", "masthead"),
+            ("front matter", "official title"),
+            ("front matter", "enacting clause"),
+        ]
+        # Front matter renders before any body content.
+        assert tree.nodes[: len(fm)] == fm
+
+    def test_front_matter_has_empty_display_path(self, tmp_path):
+        """Empty display_path -> the serializer emits the body with no heading."""
+        tree = self._bill(tmp_path)
+        for n in tree.nodes:
+            if n.tag == "front-matter":
+                assert n.display_path == ()
+
+    def test_masthead_includes_congress_session_number_and_act(self, tmp_path):
+        tree = self._bill(tmp_path)
+        masthead = next(n for n in tree.nodes if n.match_path == ("front matter", "masthead"))
+        assert masthead.body_text == "118th CONGRESS\n2d Session\nH. R. 8752\nAN ACT"
+
+    def test_distribution_code_dropped(self, tmp_path):
+        """GPO renders <distribution-code> as nothing; it must not lead the masthead."""
+        tree = self._bill(tmp_path)
+        masthead = next(n for n in tree.nodes if n.match_path == ("front matter", "masthead"))
+        # The distribution code ("I") is dropped: the masthead starts with the congress.
+        assert masthead.body_text.splitlines()[0] == "118th CONGRESS"
+
+    def test_official_title_is_its_own_node(self, tmp_path):
+        tree = self._bill(tmp_path)
+        title = next(n for n in tree.nodes if n.match_path == ("front matter", "official title"))
+        assert title.body_text == "Making appropriations, and for other purposes."
+
+    def test_enacting_clause_synthesized(self, tmp_path):
+        tree = self._bill(tmp_path)
+        enacting = next(n for n in tree.nodes if n.match_path == ("front matter", "enacting clause"))
+        assert enacting.body_text.startswith("Be it enacted by the Senate and House")
+
+    def test_enacting_clause_suppressed_by_attribute(self, tmp_path):
+        tree = self._bill(tmp_path, enacting_attr=' display-enacting-clause="no-display-enacting-clause"')
+        keys = [n.match_path for n in tree.nodes if n.tag == "front-matter"]
+        assert ("front matter", "enacting clause") not in keys
+
+    def test_no_form_yields_no_front_matter(self, tmp_path):
+        xml = (
+            '<bill bill-stage="Reported-in-House"><legis-body style="OLC">'
+            '<section id="S1"><enum>1.</enum><text>Text.</text></section>'
+            "</legis-body></bill>"
+        )
+        path = tmp_path / "1_reported-in-house.xml"
+        path.write_text(xml)
+        tree = normalize_bill(path)
+        assert not [n for n in tree.nodes if n.tag == "front-matter"]
 
 
 @pytest.mark.slow
@@ -1210,7 +1306,7 @@ class TestNormalizeBillIntegration:
         assert hr4366_v1.bill_type == "hr"
         assert hr4366_v1.bill_number == 4366
         assert hr4366_v1.version == "reported-in-house"
-        assert len(hr4366_v1.nodes) == 165
+        assert len(_content(hr4366_v1)) == 165
 
     def test_reported_in_house_has_expected_paths(self, hr4366_v1):
         match_paths = [n.match_path for n in hr4366_v1.nodes]
@@ -1220,7 +1316,7 @@ class TestNormalizeBillIntegration:
 
     def test_enrolled_bill_node_count(self, hr4366_v6):
         assert hr4366_v6.congress == 118
-        assert len(hr4366_v6.nodes) == 1095
+        assert len(_content(hr4366_v6)) == 1095
 
     def test_enrolled_no_empty_body_text(self, hr4366_v6):
         empty = [n for n in hr4366_v6.nodes if not n.body_text]
