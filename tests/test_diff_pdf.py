@@ -137,13 +137,24 @@ class TestAnchorLabeling:
         assert h.v2_anchor == Anchor(4, 1, "section", "SEC. 101")
 
     def test_unresolvable_anchor_returns_none_for_preamble_block(self):
-        # No SEC. / TITLE / account anywhere — entire content is the
-        # preamble, with anchor=None.
+        # No SEC. / TITLE / account anywhere — entire content is genuinely
+        # unstructured (not front matter), so the block stays anchor=None.
         v1 = [_page(47, (18, "old typographic edit"))]
         v2 = [_page(47, (18, "new typographic edit"))]
         h = diff_pdfs(v1, v2).hunks[0]
         assert h.v1_anchor is None
         assert h.v2_anchor is None
+
+    def test_front_matter_before_first_anchor_gets_preamble_anchor(self):
+        # Boilerplate preceding the first real anchor (here a report number)
+        # resolves to a synthesized "Front Matter" anchor instead of degrading
+        # to anchor-unresolved (issue #33).
+        v1 = [_page(1, (1, "[Report No. 118-553]"), (2, "SEC. 101. heading"), (3, "body"))]
+        v2 = [_page(1, (1, "[Report No. 118-560]"), (2, "SEC. 101. heading"), (3, "body"))]
+        pre = [h for h in diff_pdfs(v1, v2).hunks if h.v1_anchor and h.v1_anchor.kind == "preamble"]
+        assert len(pre) == 1
+        assert pre[0].v1_anchor.text == "Front Matter"
+        assert pre[0].v2_anchor and pre[0].v2_anchor.text == "Front Matter"
 
 
 class TestNumericClassification:

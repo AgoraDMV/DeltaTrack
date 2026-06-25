@@ -167,11 +167,34 @@ def _flatten(pages: list[Page]) -> list[_IndexedLine]:
     return _rejoin_cross_page_hyphens(flat)
 
 
+_FRONT_MATTER_LABEL = "Front Matter"
+
+
+def _front_matter_anchor(lines: tuple[_IndexedLine, ...]) -> Anchor:
+    """Synthesize a top-level anchor for the bill's front matter — the preamble
+    preceding the first real anchor (Union Calendar number, Congress/session,
+    `A BILL`, the enacting clause).
+
+    Every GPO bill carries this boilerplate before TITLE I, so without an anchor
+    its hunks resolved nothing on either side and rendered as a degraded "anchor
+    unresolved" card — making every PDF report open on what looks like a parser
+    failure (issue #33). A synthesized "Front Matter" anchor gives those hunks a
+    clean, navigable breadcrumb instead. Coordinates are the block's first line
+    (line number coerced to 1 when that line is unnumbered, e.g. a cover page).
+    """
+    first = lines[0]
+    return Anchor(first.page_number, first.line_number or 1, "preamble", _FRONT_MATTER_LABEL)
+
+
 def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor]) -> list[_Block]:
     """Group lines into anchor-delimited blocks.
 
-    Lines preceding the first anchor become a preamble block (anchor=None).
-    Each subsequent anchor starts a new block that runs until the next anchor.
+    Lines preceding the first real anchor become a front-matter block, tagged
+    with a synthesized "preamble" anchor so the bill's boilerplate resolves to a
+    "Front Matter" breadcrumb rather than degrading (issue #33). A document with
+    no real anchors at all stays a single anchor=None block — it's genuinely
+    unstructured, not front matter. Each subsequent anchor starts a new block
+    that runs until the next anchor.
     """
     if not indexed_lines:
         return []
@@ -200,7 +223,8 @@ def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor])
         return [_Block(None, tuple(indexed_lines))]
 
     if anchor_positions[0] > 0:
-        blocks.append(_Block(None, tuple(indexed_lines[: anchor_positions[0]])))
+        preamble_lines = tuple(indexed_lines[: anchor_positions[0]])
+        blocks.append(_Block(_front_matter_anchor(preamble_lines), preamble_lines))
 
     for j, pos in enumerate(anchor_positions):
         end = anchor_positions[j + 1] if j + 1 < len(anchor_positions) else len(indexed_lines)

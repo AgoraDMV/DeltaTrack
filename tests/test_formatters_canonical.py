@@ -310,6 +310,25 @@ def test_pdf_degraded_hunk_marks_anchor_resolution_and_nulls_paths():
     assert c["location"]["v1"]["start_page"] == 2
 
 
+def test_pdf_front_matter_anchor_resolves_to_front_matter_path():
+    # A synthesized preamble anchor (issue #33) resolves cleanly rather than
+    # degrading: anchor_resolution is "resolved" and the path is "Front Matter".
+    front_matter = Anchor(page_number=1, line_number=1, kind="preamble", text="Front Matter")
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=front_matter,
+        v2_anchor=front_matter,
+        v1_range=(1, 1, 2, 5),
+        v2_range=(1, 1, 2, 3),
+        v1_text="Union Calendar No. 456",
+        v2_text="Union Calendar No. 460",
+    )
+    diff = PdfDiff(hunks=(hunk,), v1_anchors=(front_matter,), v2_anchors=(front_matter,))
+    c = pdf_diff_to_canonical(diff, **_pdf_meta())["changes"][0]
+    assert c["anchor_resolution"] == "resolved"
+    assert c["path"] == {"v1": ["Front Matter"], "v2": ["Front Matter"]}
+
+
 def test_pdf_renumbered_move_emits_kind_and_labels():
     hunk = PdfHunk(
         change_type="moved",
