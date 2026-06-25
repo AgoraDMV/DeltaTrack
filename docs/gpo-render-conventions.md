@@ -19,7 +19,10 @@ Every bill in our corpus names its renderer in the XML prolog:
 
 This is the legacy **bill DTD** chain (not USLM). `billres.xsl` is a thin wrapper
 that pulls in `billres-details.xsl` (~24.8k lines), the element-by-element render
-templates. `table.xsl` handles tables; `bills.css` carries styling.
+templates. `table.xsl` handles tables (included at `billres-details.xsl:710`). The
+styling that renders is an inline `<style>` block from `defineDocumentStyle`
+(`billres-details.xsl:768`–1689); the bundled `bills.css` is a separate copy the
+chain never links (see [How casing works](#how-casing-works-two-layers)).
 
 - **It is XSLT 2.0.** Python `lxml`/libxslt is 1.0 only and cannot run it; running
   it needs Saxon (server-side only — never ship a JVM to the staffer path).
@@ -32,9 +35,10 @@ templates. `table.xsl` handles tables; `bills.css` carries styling.
 
 Vendored under `reference/gpo-bill-render/` (gitignored; public domain, 17 U.S.C.
 §105). Source: <https://www.govinfo.gov/bulkdata/BILLS/resources/>. Fetch the full
-render chain (`billres.xsl`, `billres-details.xsl`, `table.xsl`, `bills.css`, the
-DTDs, and image assets) so it stays render-complete. When GPO updates the
-stylesheet, re-fetch and re-verify this doc — **citations below quote literal
+bundle (`billres.xsl`, `billres-details.xsl`, `table.xsl`, the DTDs, and image
+assets, plus `bills.css` as a non-linked reference copy) so it stays complete.
+When GPO updates the stylesheet, re-fetch and re-verify this doc — **citations
+below quote literal
 snippets precisely so you can re-locate each rule by `grep` even if line numbers
 shift.** Citations are `name (line) — "quote"`.
 
@@ -46,11 +50,13 @@ Casing is applied **twice** and you must read both to get the right answer:
    text via `translate()` / `capitalizeReplacement` before it hits the DOM.
 2. **CSS** — `text-transform` / `font-variant` on the element's class.
 
-The **inline `<style>` block in `billres-details.xsl` overrides `bills.css`**
-where they disagree (it loads later). Reading `bills.css` alone gives wrong
-answers for several classes (see Gotchas). For our HTML output we can reproduce
-GPO faithfully by applying the same CSS classes (`font-variant: small-caps` etc.)
-rather than string-uppercasing.
+The CSS that renders is the **inline `<style>` block** from `defineDocumentStyle`
+(`billres-details.xsl:767`; it spans 768–1689), the only stylesheet in the output.
+**`bills.css` is never linked** by the chain (`billres.xsl` → `billres-details.xsl`
+→ `table.xsl`); it's an externalized copy of the same classes that has **drifted**
+from the inline block for several of them, so reading it gives wrong answers (see
+Gotchas). For our HTML output we can reproduce GPO faithfully by applying the same
+CSS classes (`font-variant: small-caps` etc.) rather than string-uppercasing.
 
 ---
 
@@ -96,12 +102,12 @@ casing table below.
 
 | Level | Wrapper word | Sep. | Enum class / casing | Header casing | XSL |
 |---|---|---|---|---|---|
-| `<title>` | `TITLE ` | `—` | small-caps (`lbexTitleLevelTrad`) | UPPERCASE (`translate`) | `displayEnumTitle` (5540) — `"TITLE "` (5548) |
+| `<title>` | `TITLE ` | `—` | small-caps (`lbexTitleLevelTrad`) | UPPERCASE (`translate`) | `displayEnumTitle` (5540) — `"TITLE "` (5582, approp branch) |
 | `<subtitle>` | `subtitle ` | `—` | capitalize | title-case | enum 5707 |
 | `<division>` | `DIVISION ` | `—` | uppercase | UPPERCASE | enum 18856 |
 | `<part>` | `Part ` | `—` | small-caps | small-caps | enum 5790 |
 | `<chapter>` | `chapter ` | `—` | uppercase | uppercase | enum 6016 |
-| `<section>` | `Sec. ` | space | small-caps (`lbexInitialCapTrad`) | UPPERCASE | `displayEnumSection` (5319) — `"Sec. "` |
+| `<section>` | `Sec. ` | space | small-caps (`lbexInitialCapTrad`) | UPPERCASE | `displayEnumSection` (5127; trad/approp branch 5319) — `"Sec. "` |
 
 Output shape for a title: `TITLE I—AGRICULTURAL PROGRAMS` (no spaces flanking the
 em-dash; both on one centered line via `BigHeads`, `billres-details.xsl:9337`).
@@ -113,8 +119,12 @@ em-dash; both on one centered line via `BigHeads`, `billres-details.xsl:9337`).
 
 ## Casing rules (#53)
 
-Per-level — **not a blanket uppercase.** Authoritative source: `convertToNeededCase`
-(`billres-details.xsl:8279`) plus the inline CSS at `billres-details.xsl:1361`.
+Per-level, **not a blanket uppercase.** Authority depends on level:
+`convertToNeededCase` (`billres-details.xsl:8279`) governs `appropriations-major` /
+`-intermediate` / `-small`; `displayHeaderTitle` (7292) and `displayHeaderSection`
+(6913) uppercase `<title>` / `<section>` headers (via `translate(., $lower, $upper)`
+or an uppercase class like `lbexAllcapnormal`). CSS is the inline block
+(`defineDocumentStyle`, 768–1689; approp header classes at 1361+).
 
 | Level | XSLT transform | CSS | Visual result |
 |---|---|---|---|
@@ -158,14 +168,15 @@ small-caps glyphs to actual uppercase. So:
 ## Inline spacing & lists (#51)
 
 - **One ASCII space after every `<enum>`** when the next sibling is `<text>` or
-  `<header>`. `displayEnum` (`billres-details.xsl:5069`):
+  `<header>`. `displayEnum` (rule at `billres-details.xsl:5070`):
   ```
   <xsl:when test="local-name(following-sibling::*[1]) = 'text' or local-name(following-sibling::*[1]) = 'header'">
       <xsl:text> </xsl:text>
   ```
   This is authoritative — `(a)The` is a real defect; it should be `(a) The`.
 - **Each structural level is its own block on its own line**, indented by a fixed
-  ladder (`bills.css:513`+, all `text-indent:2em` hanging):
+  ladder (inline block `billres-details.xsl:837`+, mirrored in `bills.css:513`+; all
+  `text-indent:2em` hanging):
 
   | Level | `margin-left` |
   |---|---|
@@ -182,8 +193,12 @@ small-caps glyphs to actual uppercase. So:
 - **`<linebreak>` / `<pagebreak>` are no-ops** in the renderer — they apply children
   (usually empty) and emit nothing. `billres-details.xsl:18461` / `:18464`:
   ```
-  <xsl:template match="linebreak"><xsl:apply-templates/></xsl:template>
-  <xsl:template match="pagebreak"><xsl:apply-templates/></xsl:template>
+  <xsl:template match="linebreak">
+      <xsl:apply-templates/>
+  </xsl:template>
+  <xsl:template match="pagebreak">
+      <xsl:apply-templates/>
+  </xsl:template>
   ```
   Our "treat as whitespace" handling is consistent — no change needed.
 - **Exception:** elements with `@display-inline='yes-display-inline'` render inline
@@ -217,10 +232,12 @@ covering a quoted block inside a cased header.
 
 ## Gotchas (verified surprises)
 
-1. **`bills.css` lies about three approp classes** — the inline XSLT style wins:
-   `lbexHeaderAppropSmall` is `uppercase` in `bills.css` but **`lowercase`** inline;
-   `lbexHeaderAppropIntermediate` has no transform in `bills.css` but **`capitalize`**
-   inline. Always read the inline block (`billres-details.xsl:1361`+).
+1. **`bills.css` disagrees with the inline (rendering) block on two approp header
+   classes, and `bills.css` doesn't render** — so the inline block is authoritative:
+   `lbexHeaderAppropSmall` is `uppercase` in `bills.css` but **`lowercase`** inline
+   (1381); `lbexHeaderAppropIntermediate` has no transform in `bills.css` but
+   **`capitalize`** inline (1370). `lbexHeaderAppropMajor` agrees (both `uppercase`).
+   Always read the inline block (`defineDocumentStyle`, 768–1689).
 2. **"Sec." vs "SEC." is small-caps, not real caps** — see #53 rationale. The same
    applies to the title wrapper word.
 3. **`appropriations-small` is lowercased then small-capped** — XSLT forces
@@ -229,8 +246,12 @@ covering a quoted block inside a cased header.
    stylesheet's, not the XML's.
 5. **`subtitle` wrapper is lowercase `subtitle `** + `capitalize` CSS — "SUBTITLE"
    in a published bill is the CSS transform, not a hardcoded string.
-6. **`<part>` / `<section>` header classes have `capitalize` explicitly commented
-   out** — they rely on `small-caps` over whatever case the XML provides.
+6. **`capitalize` is commented out only in `bills.css`; the inline block keeps it
+   active.** Inline `lbexPartlevelTrad` (1172) and `lbexSectionTitleTrad` (1127) are
+   `small-caps` **plus `text-transform: capitalize`**, so the live render title-cases
+   these; it does **not** fall back to bare small-caps over the raw XML.
+   (`lbexPartlevelTrad` is the part *enum* class, `displayEnumPart` 5822, not a header
+   class.)
 
 ---
 
