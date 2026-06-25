@@ -23,7 +23,7 @@ from bill_tree import bill_title, normalize_bill
 from diff_bill import bill_diff_to_dict, diff_bills
 from formatters.canonical import view_from_canonical, xml_diff_to_canonical
 from formatters.diff_html import format_diff_html
-from formatters.text_serializer import serialize_tree, serialize_tree_with_offsets
+from formatters.text_serializer import build_xml_full_text
 from server.pdf_compare import compare_pdfs_html
 from shared.version_stems import label_from_stem, version_number_from_stem
 
@@ -69,9 +69,8 @@ def render_xml_diff(spec: ExampleSpec) -> Path:
     # Carry the serialized full text so the report offers the full-bill view.
     # XML full_text is gutterless paragraph flow (no PDF line-number column); the
     # v2 walk also yields the section TOC offsets.
-    v2_text, sections = serialize_tree_with_offsets(v2)
-    full_text = {"v1": serialize_tree(v1), "v2": v2_text}
-    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text)
+    full_text, full_text_spans, sections = build_xml_full_text(v1, v2)
+    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text, full_text_spans=full_text_spans)
     html = format_diff_html(
         view_from_canonical(canonical),
         canonical=canonical,

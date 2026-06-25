@@ -41,7 +41,7 @@ from diff_bill import bill_diff_to_dict, diff_bills  # noqa: E402
 from diff_pdf import render_pdf_diff_html  # noqa: E402
 from formatters.canonical import view_from_canonical, xml_diff_to_canonical  # noqa: E402
 from formatters.diff_html import format_diff_html  # noqa: E402
-from formatters.text_serializer import serialize_tree, serialize_tree_with_offsets  # noqa: E402
+from formatters.text_serializer import build_xml_full_text  # noqa: E402
 from shared.version_stems import label_from_stem, version_number_from_stem  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -89,9 +89,8 @@ def _render_xml_diff_html(v1_path: Path, v2_path: Path) -> str:
         num = version_number_from_stem(stem)
         if num is not None:
             diff_dict[key] = num
-    v2_text, sections = serialize_tree_with_offsets(v2)
-    full_text = {"v1": serialize_tree(v1), "v2": v2_text}
-    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text)
+    full_text, full_text_spans, sections = build_xml_full_text(v1, v2)
+    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text, full_text_spans=full_text_spans)
     return format_diff_html(
         view_from_canonical(canonical), canonical=canonical, title=bill_title(v2), sections=sections
     )

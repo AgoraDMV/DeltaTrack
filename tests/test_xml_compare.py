@@ -74,3 +74,27 @@ def test_compare_xml_html_gutterless_fullbill():
     assert "toc-group" in html
     assert 'id="sec-0"' in html
     assert "Making appropriations" in html  # official-title in the heading
+
+
+@pytest.mark.slow
+def test_xml_changes_resolve_spans_structurally_on_real_bill():
+    """#51: with readable full_text, every change must still anchor inline via its
+    element_id (the normalized change text no longer appears verbatim to search for).
+    Asserts ids are universally present rather than trusting the degenerate fallback."""
+    start = BILL_DIR / "1_reported-in-house.xml"
+    end = BILL_DIR / "2_engrossed-in-house.xml"
+    if not start.exists() or not end.exists():
+        pytest.skip("sample bill XMLs not present (bills/118-hr-4366/)")
+
+    from server.xml_compare import compare_xml
+
+    canonical = compare_xml(start.read_bytes(), end.read_bytes(), start_label="v1", end_label="v2")
+    unresolved = []
+    for c in canonical["changes"]:
+        span = c.get("full_text_span") or {}
+        # A change should anchor on at least the side(s) it exists on.
+        if c["text"]["new"] is not None and not (span.get("v2")):
+            unresolved.append(c["id"])
+        if c["change_type"] == "removed" and c["text"]["old"] is not None and not span.get("v1"):
+            unresolved.append(c["id"])
+    assert unresolved == []

@@ -36,6 +36,19 @@ def serialize_tree_for_diff(tree: BillTree) -> tuple[str, list[dict], dict[str, 
     return _serialize(tree)
 
 
+def build_xml_full_text(old_tree: BillTree, new_tree: BillTree) -> tuple[dict[str, str], dict[str, dict], list[dict]]:
+    """Build the inputs the XML pipeline feeds to ``xml_diff_to_canonical`` (#51).
+
+    Returns ``(full_text, full_text_spans, sections)`` where ``full_text`` is the
+    readable per-side text, ``full_text_spans`` is the per-side ``{element_id:
+    (start, end)}`` index for structural change anchoring, and ``sections`` is the v2
+    TOC jump-list. Centralizes the idiom shared by the CLI, examples, and servers.
+    """
+    v1_text, _v1_sections, v1_spans = serialize_tree_for_diff(old_tree)
+    v2_text, v2_sections, v2_spans = serialize_tree_for_diff(new_tree)
+    return {"v1": v1_text, "v2": v2_text}, {"v1": v1_spans, "v2": v2_spans}, v2_sections
+
+
 def serialize_tree_with_offsets(tree: BillTree) -> tuple[str, list[dict]]:
     """Serialize a BillTree to plaintext plus a section jump-list (TOC).
 

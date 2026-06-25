@@ -26,7 +26,7 @@ from bill_tree import bill_title, normalize_bill
 from diff_bill import bill_diff_to_dict, diff_bills, filter_diff
 from formatters.canonical import view_from_canonical, xml_diff_to_canonical
 from formatters.diff_html import format_diff_html
-from formatters.text_serializer import serialize_tree, serialize_tree_with_offsets
+from formatters.text_serializer import build_xml_full_text
 
 
 def _build(
@@ -57,10 +57,9 @@ def _build(
     diff_dict["old_version"] = start_label
     diff_dict["new_version"] = end_label
 
-    # One walk of v2 produces both its full text and the TOC offsets into it.
-    v2_text, sections = serialize_tree_with_offsets(new_tree)
-    full_text = {"v1": serialize_tree(old_tree), "v2": v2_text}
-    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text)
+    # Readable full text + per-side element_id spans + the v2 TOC offsets.
+    full_text, full_text_spans, sections = build_xml_full_text(old_tree, new_tree)
+    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text, full_text_spans=full_text_spans)
     return canonical, sections, bill_title(new_tree)
 
 
