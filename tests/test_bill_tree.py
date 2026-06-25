@@ -8,6 +8,7 @@ from bill_tree import (
     _extract_appropriations_text,
     _extract_section_text,
     build_title_label,
+    extract_display_text,
     extract_text_content,
     find_bill_body,
     get_header_text,
@@ -51,6 +52,98 @@ class TestTitleLabel:
 
     def test_match_header_passes_through_non_title(self):
         assert title_match_header("GENERAL PROVISIONS") == "GENERAL PROVISIONS"
+
+
+_SEC105_XML = """
+<section id="S105"><enum>105.</enum>
+<subsection display-inline="yes-display-inline" id="a"><enum>(a)</enum>
+<text display-inline="yes-display-inline">The Under Secretary shall brief the Committees
+on subsection (a) matters during the preceding quarter.</text></subsection>
+<subsection id="b"><enum>(b)</enum>
+<text>For each such program, the briefing described in subsection (a) shall include—</text>
+<paragraph id="b1"><enum>(1)</enum><text>a description of the purpose of the program;</text></paragraph>
+<paragraph id="b2"><enum>(2)</enum><text>the total number of units to be acquired;</text></paragraph>
+<paragraph id="b3"><enum>(3)</enum><text>the Acquisition Review Board status, including—</text>
+<subparagraph id="b3A"><enum>(A)</enum><text>the current acquisition phase;</text></subparagraph>
+</paragraph></subsection></section>
+"""
+
+_SEC102_XML = (
+    '<section id="S102"><enum>102.</enum>'
+    '<text display-inline="yes-display-inline">Not later than 30 days after the last day '
+    "of each month, the Chief Financial Officer shall submit a report.</text></section>"
+)
+
+
+class TestExtractDisplayText:
+    """Readable multi-line rendering for the full-bill view (#51): space after
+    every enum, list items on their own lines indented by structural level."""
+
+    def test_inline_only_section_is_single_line(self):
+        el = ET.fromstring(_SEC102_XML)
+        out = extract_display_text(el)
+        assert "\n" not in out
+        assert out.startswith("Not later than 30 days")
+
+    def test_space_after_parenthetical_enum(self):
+        el = ET.fromstring(_SEC105_XML)
+        out = extract_display_text(el)
+        assert "(a) The Under Secretary" in out
+        assert "(b) For each such program" in out
+        assert "(1) a description" in out
+
+    def test_in_text_cross_reference_keeps_its_space(self):
+        el = ET.fromstring(_SEC105_XML)
+        out = extract_display_text(el)
+        # An in-text "subsection (a)" reference is display text, not a list marker.
+        assert "subsection (a)" in out
+
+    def test_list_items_on_their_own_lines(self):
+        el = ET.fromstring(_SEC105_XML)
+        lines = extract_display_text(el).split("\n")
+        starts = [ln.strip()[:4] for ln in lines]
+        assert any(s.startswith("(b)") for s in starts)
+        assert any(s.startswith("(1)") for s in starts)
+        assert any(s.startswith("(2)") for s in starts)
+        assert any(s.startswith("(3)") for s in starts)
+        assert any(s.startswith("(A)") for s in starts)
+
+    def test_run_in_subsection_shares_first_line(self):
+        # (a) is display-inline, so it is NOT on its own line; (b) is.
+        el = ET.fromstring(_SEC105_XML)
+        first = extract_display_text(el).split("\n")[0]
+        assert first.startswith("(a) ")
+
+    def test_indent_ladder_by_structural_level(self):
+        el = ET.fromstring(_SEC105_XML)
+        by_marker = {}
+        for ln in extract_display_text(el).split("\n"):
+            m = ln.strip()[:4]
+            indent = len(ln) - len(ln.lstrip(" "))
+            if m.startswith("(b)"):
+                by_marker["b"] = indent
+            elif m.startswith("(1)"):
+                by_marker["1"] = indent
+            elif m.startswith("(A)"):
+                by_marker["A"] = indent
+        # subsection rank 0, paragraph rank 1 (4sp), subparagraph rank 2 (8sp).
+        assert by_marker["b"] == 0
+        assert by_marker["1"] == 4
+        assert by_marker["A"] == 8
+
+
+_HR8752_V1 = Path("bills/118-hr-8752/1_reported-in-house.xml")
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not _HR8752_V1.exists(), reason="bill corpus not present (fetch_bills.py)")
+def test_real_bill_body_nodes_have_display_text():
+    """Guards the serializer's ``display_text or body_text`` fallback from silently
+    masking a walker bug: every content node parsed from a real bill must carry a
+    non-empty display_text (front matter is exempt — its body is already readable)."""
+    tree = normalize_bill(_HR8752_V1)
+    empty = [n for n in tree.nodes if n.tag != "front-matter" and n.body_text and not n.display_text]
+    assert empty == []
 
 
 class TestNormalizeHeader:

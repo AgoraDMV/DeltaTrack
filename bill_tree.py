@@ -18,6 +18,10 @@ class BillNode:
     body_text: str
     section_number: str
     division_label: str
+    # Readable multi-line rendering of body_text for the full-bill view (#51).
+    # body_text stays collapsed for diff matching; display_text adds enum spacing and
+    # list line breaks. Empty for nodes built without it (callers fall back to body_text).
+    display_text: str = ""
 
 
 @dataclass(frozen=True)
@@ -217,6 +221,99 @@ def extract_text_content(element: ET.Element) -> str:
     return _LIST_MARKER_RE.sub("", text)
 
 
+# Display indentation ladder (#51): each structural level is its own block on its
+# own line, indented one step per level (GPO renders these as fixed hanging indents).
+# Keyed on the structural tag itself, NOT recursion depth, so non-structural wrappers
+# (text, proviso, quoted-block) don't inflate the indent. Tags absent from the ladder
+# (appropriations-*, etc.) fall to rank 0 — they're emitted as separate sibling nodes
+# with their own body block, so they never need deep indentation here.
+_DISPLAY_RANK = {
+    "subsection": 0,
+    "paragraph": 1,
+    "subparagraph": 2,
+    "clause": 3,
+    "subclause": 4,
+    "item": 5,
+    "subitem": 6,
+}
+_DISPLAY_INDENT = "    "
+
+
+def _starts_display_line(child: ET.Element) -> bool:
+    """Whether a child begins a new display line: an enumerated *structural level*
+    (subsection/paragraph/clause…) that is not flagged ``display-inline`` (those render
+    inline for continuation runs, per GPO). Content blocks like ``<text>``/``<header>``
+    are the body of a level, not a new level, so they stay on the current line."""
+    return child.tag in _DISPLAY_RANK and child.get("display-inline") != "yes-display-inline"
+
+
+def _walk_display(element: ET.Element, rank: int, blocks: list[list], *, skip_header_enum: bool = False) -> None:
+    """Accumulate readable text into ``blocks`` (a list of ``[rank, parts]``).
+
+    Mirrors :func:`_itertext_block_spaced`'s inline/block distinction, but instead of
+    collapsing spacing for matching it produces human-readable output: one ASCII space
+    after every ``<enum>`` (GPO ``displayEnum``), and each structural level on its own
+    line at ``_DISPLAY_INDENT * rank``. Inline elements (the complement of
+    ``_BLOCK_TAGS``) and ``display-inline`` blocks flow into the current line.
+
+    ``skip_header_enum`` drops the element's own ``<enum>``/``<header>`` (the section
+    number and heading are rendered separately) — applied only at the top level.
+    """
+    cur = blocks[-1][1]
+    if element.text:
+        cur.append(element.text)
+    for child in element:
+        if skip_header_enum and child.tag in ("enum", "header"):
+            continue
+        if child.tag in _BREAK_TAGS:
+            cur.append(" ")
+            if child.tail:
+                cur.append(child.tail)
+            continue
+        if _starts_display_line(child):
+            child_rank = _DISPLAY_RANK.get(child.tag, rank)
+            blocks.append([child_rank, []])
+            _walk_display(child, child_rank, blocks)
+            # The block child's siblings/tail resume at the parent's rank in a fresh
+            # line; empty lines are dropped at join time.
+            blocks.append([rank, []])
+            cur = blocks[-1][1]
+            if child.tail:
+                cur.append(child.tail)
+        else:
+            # Inline element (incl. <enum> and display-inline blocks): render in place.
+            # A content block (text/header/proviso, …) is separated from its preceding
+            # sibling by a space so adjacent blocks don't run together; the final
+            # whitespace collapse dedupes any double space.
+            if child.tag in _BLOCK_TAGS:
+                cur.append(" ")
+            _walk_display(child, rank, blocks)
+            cur = blocks[-1][1]
+            if child.tag == "enum":
+                cur.append(" ")  # GPO: one space after every enum
+            if child.tail:
+                cur.append(child.tail)
+
+
+def extract_display_text(element: ET.Element) -> str:
+    """Readable multi-line rendering of an element's body for the full-bill view (#51).
+
+    Unlike :func:`extract_text_content` (which collapses spacing for diff matching),
+    this keeps a space after each list marker and breaks structural levels onto their
+    own indented lines, so ``(a)The...include—(1)a description`` reads as the published
+    bill does. The element's own ``<enum>``/``<header>`` are dropped (rendered
+    separately). Whitespace within a line is collapsed to single spaces.
+    """
+    blocks: list[list] = [[0, []]]
+    _walk_display(element, 0, blocks, skip_header_enum=True)
+    lines = []
+    for rank, parts in blocks:
+        collapsed = " ".join("".join(parts).split())
+        if collapsed:
+            lines.append(_DISPLAY_INDENT * rank + collapsed)
+    return "\n".join(lines)
+
+
 def get_header_text(element: ET.Element) -> str:
     """Get the header text from an element."""
     header = element.find("header")
@@ -352,6 +449,7 @@ def _process_appro_element(
         prev_name = current_major
 
         body_text = _extract_appropriations_text(child)
+        display_text = extract_display_text(child)
         if body_text:
             match_path, display_path = _build_paths(
                 title_header,
@@ -368,6 +466,7 @@ def _process_appro_element(
                     element_id=child.attrib.get("id", ""),
                     header_text=current_major or "",
                     body_text=body_text,
+                    display_text=display_text,
                     section_number="",
                     division_label=division_label,
                 )
@@ -385,6 +484,7 @@ def _process_appro_element(
             effective_header = header
 
         body_text = _extract_appropriations_text(child)
+        display_text = extract_display_text(child)
         if body_text:
             match_path, display_path = _build_paths(
                 title_header,
@@ -401,6 +501,7 @@ def _process_appro_element(
                     element_id=child.attrib.get("id", ""),
                     header_text=header,
                     body_text=body_text,
+                    display_text=display_text,
                     section_number="",
                     division_label=division_label,
                 )
@@ -417,6 +518,7 @@ def _process_appro_element(
             effective_header = header
 
         body_text = _extract_appropriations_text(child)
+        display_text = extract_display_text(child)
         if body_text:
             match_path, display_path = _build_paths(
                 title_header,
@@ -433,6 +535,7 @@ def _process_appro_element(
                     element_id=child.attrib.get("id", ""),
                     header_text=header or "",
                     body_text=body_text,
+                    display_text=display_text,
                     section_number="",
                     division_label=division_label,
                 )
@@ -483,6 +586,7 @@ def _process_section_element(
                     element_id=section.attrib.get("id", ""),
                     header_text=get_header_text(section),
                     body_text=extract_text_content(text_el),
+                    display_text=extract_display_text(text_el),
                     section_number=section_num,
                     division_label=division_label,
                 )
@@ -505,6 +609,7 @@ def _process_section_element(
                 )
     else:
         body_text = _extract_section_text(section)
+        display_text = extract_display_text(section)
         if body_text:
             sec_label = section_num.lower() if section_num else ""
             match_path, display_path = _build_paths(
@@ -522,6 +627,7 @@ def _process_section_element(
                     element_id=section.attrib.get("id", ""),
                     header_text=get_header_text(section),
                     body_text=body_text,
+                    display_text=display_text,
                     section_number=section_num,
                     division_label=division_label,
                 )
@@ -711,6 +817,7 @@ def walk_body_sections(body: ET.Element) -> list[BillNode]:
             continue
 
         body_text = _extract_section_text(child)
+        display_text = extract_display_text(child)
         if not body_text:
             continue
 
@@ -731,6 +838,7 @@ def walk_body_sections(body: ET.Element) -> list[BillNode]:
                 element_id=child.attrib.get("id", ""),
                 header_text=get_header_text(child),
                 body_text=body_text,
+                display_text=display_text,
                 section_number=section_num,
                 division_label="",
             )
