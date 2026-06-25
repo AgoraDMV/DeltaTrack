@@ -25,10 +25,15 @@ class TestExtractAmounts:
         text = "None of the funds may be used for any purpose other than authorized."
         assert extract_amounts(text) == ()
 
-    def test_zero_amount_filtered(self):
+    def test_zero_amount_included(self):
+        """$0 is real budget data (e.g. a rescinded/zeroed line), so it is kept (#60).
+
+        Previously filtered; an unchanged $0 produces no diff noise (multiset
+        equality), so the only effect of keeping it is surfacing $0 when it changes.
+        """
         text = "appropriation estimated at $0: Provided further, $5,000,000 for operations."
         result = extract_amounts(text)
-        assert result == (5000000,)
+        assert result == (0, 5000000)
 
     def test_two_amounts_in_order(self):
         text = (
@@ -352,9 +357,10 @@ class TestAmountSanityChecks:
         assert count == 567
 
     def test_all_amounts_in_valid_range(self, hr4366_v6):
+        # Lower bound is 0: $0 is kept as real budget data (#60).
         for node in hr4366_v6.nodes:
             for amount in extract_amounts(node.body_text):
-                assert 1 <= amount <= 999_999_999_999, f"Amount ${amount:,} out of range at {node.match_path}"
+                assert 0 <= amount <= 999_999_999_999, f"Amount ${amount:,} out of range at {node.match_path}"
 
     def test_no_node_exceeds_max_amounts(self, hr4366_v6):
         for node in hr4366_v6.nodes:
@@ -449,11 +455,41 @@ class TestMatchAmounts:
         assert pairs == [(5000000, None)]
 
     def test_replace_block_multiple_amounts(self):
-        """Amounts in a rewritten clause pair positionally within the block."""
+        """Equal amount counts in a rewritten clause pair positionally within the block."""
         old = "For A, $1,000,000 and $2,000,000 for purposes."
         new = "For A, $3,000,000 and $4,000,000 for purposes."
         pairs = match_amounts(old, new)
         assert pairs == [(1000000, 3000000), (2000000, 4000000)]
+
+    def test_replace_block_unequal_counts_not_fabricated(self):
+        """Unequal amount counts in a replace block must not fabricate positional pairs (#60).
+
+        old [$100, $200] vs new [$150, $999-inserted, $250]: positional pairing would
+        emit ($200 -> $999), a plausible-but-wrong delta. With unequal counts we have no
+        trustworthy correspondence, so each amount is reported as an explicit add/remove.
+        """
+        old = "alpha $100 beta $200 gamma"
+        new = "delta $150 epsilon $999 zeta $250 omega"
+        pairs = match_amounts(old, new)
+        # No fabricated (old, new) pair: every entry is a pure removal or addition.
+        assert (200, 999) not in pairs
+        assert all(o is None or n is None for o, n in pairs)
+        assert sorted(p for p in pairs if p[0] is not None) == [(100, None), (200, None)]
+        assert sorted(p for p in pairs if p[1] is not None) == [(None, 150), (None, 250), (None, 999)]
+
+    def test_zeroing_pairs_old_to_zero(self):
+        """A line zeroed to $0 surfaces as ($X -> $0), not as a bare removal (#60)."""
+        old = "For construction, $5,000,000, to remain available until expended."
+        new = "For construction, $0, to remain available until expended."
+        pairs = match_amounts(old, new)
+        assert pairs == [(5000000, 0)]
+
+    def test_new_appropriation_from_zero(self):
+        """A line going $0 -> $X surfaces as ($0 -> $X) (#60)."""
+        old = "For construction, $0, to remain available until expended."
+        new = "For construction, $7,500,000, to remain available until expended."
+        pairs = match_amounts(old, new)
+        assert pairs == [(0, 7500000)]
 
     def test_no_amounts_either_side(self):
         """No dollar amounts in either text returns empty list."""
@@ -467,9 +503,9 @@ class TestMatchAmounts:
         pairs = match_amounts(old, new)
         assert pairs == [(5000000, 5000000)]
 
-    def test_zero_amounts_filtered(self):
-        """$0 amounts are excluded from pairing."""
+    def test_unchanged_zero_pairs_to_itself(self):
+        """$0 is kept (#60); an unchanged $0 pairs to itself, like any unchanged amount."""
         old = "appropriation estimated at $0: Provided, $5,000,000 for ops."
         new = "appropriation estimated at $0: Provided, $7,000,000 for ops."
         pairs = match_amounts(old, new)
-        assert pairs == [(5000000, 7000000)]
+        assert pairs == [(0, 0), (5000000, 7000000)]

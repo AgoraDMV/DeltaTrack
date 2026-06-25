@@ -151,6 +151,28 @@ def test_xml_amounts_filtered_to_real_changes():
     assert canonical["changes"][0]["amounts"] == [{"old": 1000, "new": 1500}]
 
 
+def test_xml_zeroing_surfaces_as_real_amount_change():
+    """A line zeroed to $0 is a real change and must reach canonical output (#60).
+
+    Guards the end-to-end "visible, not silent" guarantee: ($5,000 -> $0) survives
+    the real-change filter (is-not-None, not truthiness), while an unchanged ($0 -> $0)
+    is correctly dropped.
+    """
+    change = {
+        "change_type": "modified",
+        "display_path_old": ["X"],
+        "display_path_new": ["X"],
+        "old_text": "a",
+        "new_text": "b",
+        "section_number": "",
+        "financial": {
+            "paired_amounts": [(5000, 0), (0, 0), (0, 7500)],
+        },
+    }
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[change]))
+    assert canonical["changes"][0]["amounts"] == [{"old": 5000, "new": 0}, {"old": 0, "new": 7500}]
+
+
 def test_xml_unchanged_changes_are_dropped():
     changes = [
         {

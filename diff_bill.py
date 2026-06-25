@@ -26,15 +26,16 @@ _AMENDMENT_RE = re.compile(r"\((?:increased|reduced|decreased) by\s+\$[\d,]+\)")
 def extract_amounts(text: str) -> tuple[int, ...]:
     """Find all dollar amounts in text.
 
-    Returns tuple of integer values in document order. Filters $0 amounts.
-    Strips floor amendment annotations like (increased by $X) before scanning.
+    Returns tuple of integer values in document order. $0 is kept: it is real
+    budget data (e.g. a rescinded or zeroed line), and an unchanged $0 produces
+    no diff noise (multiset equality), so keeping it only surfaces $0 when it
+    actually changes (#60). Strips floor amendment annotations like
+    (increased by $X) before scanning.
     """
     text = _AMENDMENT_RE.sub("", text)
     results = []
     for match in _DOLLAR_RE.finditer(text):
         value = int(match.group().replace("$", "").replace(",", ""))
-        if value == 0:
-            continue
         results.append(value)
     return tuple(results)
 
@@ -42,15 +43,14 @@ def extract_amounts(text: str) -> tuple[int, ...]:
 def _extract_word_amounts(words: list[str]) -> list[tuple[int, int]]:
     """Find dollar amounts in a word list, returning (word_index, value) pairs.
 
-    Filters $0 amounts. Assumes amendment annotations already stripped.
+    Keeps $0 (see extract_amounts, #60). Assumes amendment annotations already stripped.
     """
     results = []
     for i, word in enumerate(words):
         m = _DOLLAR_RE.search(word)
         if m:
             value = int(m.group().replace("$", "").replace(",", ""))
-            if value != 0:
-                results.append((i, value))
+            results.append((i, value))
     return results
 
 
@@ -103,12 +103,21 @@ def match_amounts(
             for _, nv in new_in_range:
                 pairs.append((None, nv))
         elif op == "replace":
-            # Pair positionally within the replace block
-            max_len = max(len(old_in_range), len(new_in_range))
-            for k in range(max_len):
-                ov = old_in_range[k][1] if k < len(old_in_range) else None
-                nv = new_in_range[k][1] if k < len(new_in_range) else None
-                pairs.append((ov, nv))
+            # Positional pairing is only trustworthy when both sides hold the same
+            # number of amounts (a clean value swap). When counts differ, an amount
+            # was inserted or removed inside the block and position no longer tracks
+            # meaning, so pairing positionally fabricates a plausible-but-wrong delta
+            # (e.g. old [$100,$200] vs new [$150,<inserted>,$250] mispairs $200->$250).
+            # We have no trustworthy correspondence, so report each amount as an
+            # explicit add/remove rather than guess (#60).
+            if len(old_in_range) == len(new_in_range):
+                for (_, ov), (_, nv) in zip(old_in_range, new_in_range):
+                    pairs.append((ov, nv))
+            else:
+                for _, ov in old_in_range:
+                    pairs.append((ov, None))
+                for _, nv in new_in_range:
+                    pairs.append((None, nv))
 
     return pairs
 
