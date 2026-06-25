@@ -6,7 +6,7 @@ reliably carries and the diff layer attaches to hunks as a "where am I" label.
 
 from __future__ import annotations
 
-from parsers.pdf_anchors import Anchor, _scan_anchors_in_page
+from parsers.pdf_anchors import Anchor, _scan_anchors_in_page, breadcrumb_for
 
 
 class TestTitleAnchor:
@@ -96,6 +96,15 @@ class TestPageChromeIgnored:
         anchors = _scan_anchors_in_page(20, text)
         # The SEC. anchor is found; •HR/VerDate lines yield nothing.
         assert anchors == [Anchor(20, 5, "section", "SEC. 200")]
+
+
+class TestBreadcrumb:
+    def test_preamble_anchor_is_top_level_front_matter(self):
+        # A synthesized front-matter anchor (issue #33) is top-level like TITLE:
+        # its breadcrumb is just itself, with no parent walk-back.
+        preamble = Anchor(1, 1, "preamble", "Front Matter")
+        section = Anchor(2, 5, "section", "SEC. 101")
+        assert breadcrumb_for(preamble, (preamble, section)) == ("Front Matter",)
 
 
 class TestAnchorOrderingWithinPage:

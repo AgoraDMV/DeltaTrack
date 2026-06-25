@@ -197,15 +197,21 @@ def _section_nav(pdf_diff: PdfDiff, new_pages: list[Page]) -> list[dict]:
     the sidebar can link to it. `pdf_full_text_print`'s offsets are keyed by the
     same (page, merged-line) coordinates the anchors use; unresolved anchors are
     skipped. TITLE anchors carry a `descriptor` (the heading below them) so the
-    bare "TITLE I" can be labelled.
+    bare "TITLE I" can be labelled. The synthesized front-matter anchor (issue
+    #33) has no printed line number to resolve against, so it maps to offset 0 —
+    the front matter always sits at the very top of the text.
     """
     _, offsets = pdf_full_text_print(new_pages)
     sections: list[dict] = []
     for a in pdf_diff.v2_anchors:
-        rng = offsets.get((a.page_number, a.line_number))
-        if rng is None:
-            continue
-        entry = {"label": a.text, "kind": a.kind, "start": rng[0]}
+        if a.kind == "preamble":
+            start = 0
+        else:
+            rng = offsets.get((a.page_number, a.line_number))
+            if rng is None:
+                continue
+            start = rng[0]
+        entry = {"label": a.text, "kind": a.kind, "start": start}
         if a.kind == "title":
             entry["descriptor"] = _title_descriptor(new_pages, a)
         sections.append(entry)

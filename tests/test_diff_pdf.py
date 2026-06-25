@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from diff_pdf import _Block, _block_key, _IndexedLine, diff_pdfs
+from diff_pdf import _Block, _block_key, _IndexedLine, _rejoin_cross_page_hyphens, diff_pdfs
 from parsers.pdf_anchors import Anchor
 from parsers.pdf_text import Line, Page
 
@@ -104,6 +104,30 @@ class TestPageLineCitations:
         assert h.v2_range == (2, 24, 3, 1)
 
 
+class TestCrossPageHyphenRejoin:
+    def test_merges_continuation_into_trailing_hyphen_line(self):
+        # `pro-` (page 1 last line) + lowercase `grams` (page 2 first line)
+        # become one whole word, keeping page 1's coordinates.
+        lines = [
+            _IndexedLine("fund the pro-", 1, 9),
+            _IndexedLine("grams now operating", 2, 1),
+        ]
+        assert _rejoin_cross_page_hyphens(lines) == [_IndexedLine("fund the programs now operating", 1, 9)]
+
+    def test_preserves_uppercase_continuation_compound(self):
+        # A real compound like `Child-Rescue` continues uppercase across the
+        # seam and must not be glued into `ChildRescue`.
+        lines = [_IndexedLine("Operative Child-", 1, 30), _IndexedLine("Rescue Corps", 2, 1)]
+        assert _rejoin_cross_page_hyphens(lines) == lines
+
+    def test_no_spurious_change_when_word_breaks_at_page_seam_in_one_version(self):
+        # v1 splits "exceed" across a page boundary; v2 has it whole. After the
+        # cross-page rejoin both read "not to exceed $5" and no change is emitted.
+        v1 = [_page(1, (1, "SEC. 101. amount not to ex-")), _page(2, (1, "ceed $5"))]
+        v2 = [_page(1, (1, "SEC. 101. amount not to exceed $5"))]
+        assert diff_pdfs(v1, v2).hunks == ()
+
+
 class TestAnchorLabeling:
     def test_section_anchor_attached_to_block(self):
         v1 = [_page(4, (1, "SEC. 101. body text"), (2, "old body line"))]
@@ -113,13 +137,35 @@ class TestAnchorLabeling:
         assert h.v2_anchor == Anchor(4, 1, "section", "SEC. 101")
 
     def test_unresolvable_anchor_returns_none_for_preamble_block(self):
-        # No SEC. / TITLE / account anywhere — entire content is the
-        # preamble, with anchor=None.
+        # No SEC. / TITLE / account anywhere — entire content is genuinely
+        # unstructured (not front matter), so the block stays anchor=None.
         v1 = [_page(47, (18, "old typographic edit"))]
         v2 = [_page(47, (18, "new typographic edit"))]
         h = diff_pdfs(v1, v2).hunks[0]
         assert h.v1_anchor is None
         assert h.v2_anchor is None
+
+    def test_front_matter_before_first_anchor_gets_preamble_anchor(self):
+        # Boilerplate preceding the first real anchor (here a report number)
+        # resolves to a synthesized "Front Matter" anchor instead of degrading
+        # to anchor-unresolved (issue #33).
+        v1 = [_page(1, (1, "[Report No. 118-553]"), (2, "SEC. 101. heading"), (3, "body"))]
+        v2 = [_page(1, (1, "[Report No. 118-560]"), (2, "SEC. 101. heading"), (3, "body"))]
+        pre = [h for h in diff_pdfs(v1, v2).hunks if h.v1_anchor and h.v1_anchor.kind == "preamble"]
+        assert len(pre) == 1
+        assert pre[0].v1_anchor.text == "Front Matter"
+        assert pre[0].v2_anchor and pre[0].v2_anchor.text == "Front Matter"
+
+    def test_front_matter_anchor_surfaced_into_anchor_lists_for_toc(self):
+        # The synthesized front-matter anchor is also prepended to the diff's
+        # anchor lists so the full-bill section TOC can link to it (issue #33).
+        v1 = [_page(1, (1, "[Report No. 118-553]"), (2, "SEC. 101. heading"), (3, "body"))]
+        v2 = [_page(1, (1, "[Report No. 118-560]"), (2, "SEC. 101. heading"), (3, "body"))]
+        diff = diff_pdfs(v1, v2)
+        assert diff.v2_anchors[0].kind == "preamble"
+        assert diff.v2_anchors[0].text == "Front Matter"
+        # The real anchors still follow it, in document order.
+        assert [a.text for a in diff.v2_anchors] == ["Front Matter", "SEC. 101"]
 
 
 class TestNumericClassification:

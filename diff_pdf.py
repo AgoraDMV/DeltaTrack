@@ -54,6 +54,11 @@ _MOVE_SIMILARITY_THRESHOLD = 0.6
 # _SIMILARITY_THRESHOLD.
 _PAIR_BODY_THRESHOLD = 0.4
 
+# Label and breadcrumb for the synthesized front-matter anchor (issue #33) — the
+# boilerplate before the first real anchor (calendar number, designator, long
+# title, enacting clause).
+_FRONT_MATTER_LABEL = "Front Matter"
+
 
 @dataclass(frozen=True)
 class PdfHunk:
@@ -118,20 +123,91 @@ class _Block:
         )
 
 
+def _rejoin_cross_page_hyphens(lines: list[_IndexedLine]) -> list[_IndexedLine]:
+    """Stitch a soft-hyphenated word split across a page boundary back together.
+
+    Per-page cleanup (`pdf_text._merge_print_lines`) rejoins soft hyphens within
+    a page, but a word broken across a page seam survives as a trailing `WORD-`
+    on one page's last line and its lowercase continuation on the next page's
+    first line. Merge the continuation into the trailing-hyphen line, dropping
+    its now-empty record. The merged line keeps the first line's page/line
+    coordinates; the continuation was only a word fragment.
+
+    The guard mirrors `_merge_print_lines` (alphanumeric before the hyphen,
+    lowercase continuation) so real compounds like `Child-Rescue`, which
+    continue uppercase, are preserved. Anchors never start lowercase, so a
+    TITLE/SEC heading opening a page is never absorbed.
+    """
+    merged: list[_IndexedLine] = []
+    i = 0
+    while i < len(lines):
+        current = lines[i]
+        nxt = i + 1
+        while (
+            nxt < len(lines)
+            and current.text.endswith("-")
+            and len(current.text) >= 2
+            and current.text[-2].isalnum()
+            and lines[nxt].text[:1].islower()
+        ):
+            current = _IndexedLine(current.text[:-1] + lines[nxt].text, current.page_number, current.line_number)
+            nxt += 1
+        merged.append(current)
+        i = nxt
+    return merged
+
+
 def _flatten(pages: list[Page]) -> list[_IndexedLine]:
-    """Flatten pages into a single ordered list of (text, page, line) records."""
+    """Flatten pages into a single ordered list of (text, page, line) records.
+
+    Cross-page soft hyphens are rejoined on the flattened stream so the diff
+    compares whole words; otherwise a word split at a page seam in one version
+    (`includ-`/`ing`) but whole in the other (`including`) reads as a spurious
+    change (issue #31).
+    """
     flat: list[_IndexedLine] = []
     for page in pages:
         for line in page.lines:
             flat.append(_IndexedLine(line.text, page.page_number, line.line_number))
-    return flat
+    return _rejoin_cross_page_hyphens(flat)
+
+
+def _front_matter_anchor(lines: tuple[_IndexedLine, ...]) -> Anchor:
+    """Synthesize a top-level anchor for the bill's front matter — the preamble
+    preceding the first real anchor (Union Calendar number, Congress/session,
+    `A BILL`, the enacting clause).
+
+    Every GPO bill carries this boilerplate before TITLE I, so without an anchor
+    its hunks resolved nothing on either side and rendered as a degraded "anchor
+    unresolved" card — making every PDF report open on what looks like a parser
+    failure (issue #33). A synthesized "Front Matter" anchor gives those hunks a
+    clean, navigable breadcrumb instead. Coordinates are the block's first line
+    (line number coerced to 1 when that line is unnumbered, e.g. a cover page).
+    """
+    first = lines[0]
+    return Anchor(first.page_number, first.line_number or 1, "preamble", _FRONT_MATTER_LABEL)
+
+
+def _with_front_matter(blocks: list[_Block], anchors: list[Anchor]) -> list[Anchor]:
+    """Prepend the front-matter anchor to `anchors` when the first block carries
+    one (issue #33). `_group_into_blocks` already synthesized it for hunk
+    attribution; lifting that same object into the anchor list keeps the section
+    TOC complete without re-deriving it. Returns `anchors` unchanged when there
+    is no front matter (no real anchors, or the document opens on one)."""
+    if blocks and blocks[0].anchor is not None and blocks[0].anchor.kind == "preamble":
+        return [blocks[0].anchor, *anchors]
+    return list(anchors)
 
 
 def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor]) -> list[_Block]:
     """Group lines into anchor-delimited blocks.
 
-    Lines preceding the first anchor become a preamble block (anchor=None).
-    Each subsequent anchor starts a new block that runs until the next anchor.
+    Lines preceding the first real anchor become a front-matter block, tagged
+    with a synthesized "preamble" anchor so the bill's boilerplate resolves to a
+    "Front Matter" breadcrumb rather than degrading (issue #33). A document with
+    no real anchors at all stays a single anchor=None block — it's genuinely
+    unstructured, not front matter. Each subsequent anchor starts a new block
+    that runs until the next anchor.
     """
     if not indexed_lines:
         return []
@@ -160,7 +236,8 @@ def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor])
         return [_Block(None, tuple(indexed_lines))]
 
     if anchor_positions[0] > 0:
-        blocks.append(_Block(None, tuple(indexed_lines[: anchor_positions[0]])))
+        preamble_lines = tuple(indexed_lines[: anchor_positions[0]])
+        blocks.append(_Block(_front_matter_anchor(preamble_lines), preamble_lines))
 
     for j, pos in enumerate(anchor_positions):
         end = anchor_positions[j + 1] if j + 1 < len(anchor_positions) else len(indexed_lines)
@@ -353,6 +430,11 @@ def diff_pdfs(v1_pages: list[Page], v2_pages: list[Page]) -> PdfDiff:
 
     v1_blocks = _group_into_blocks(v1_indexed, v1_anchors)
     v2_blocks = _group_into_blocks(v2_indexed, v2_anchors)
+
+    # Surface the front-matter anchor synthesized per-block (issue #33) into the
+    # anchor lists so the full-bill section TOC links to it like any other anchor.
+    v1_anchors = _with_front_matter(v1_blocks, v1_anchors)
+    v2_anchors = _with_front_matter(v2_blocks, v2_anchors)
 
     matcher = difflib.SequenceMatcher(
         a=[_block_key(b) for b in v1_blocks],

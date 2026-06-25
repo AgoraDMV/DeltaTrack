@@ -17,7 +17,7 @@ from typing import Literal
 
 from parsers.pdf_text import Page, parse_lines, strip_page_chrome
 
-AnchorKind = Literal["title", "section", "account"]
+AnchorKind = Literal["title", "section", "account", "preamble"]
 
 
 @dataclass(frozen=True)
@@ -110,6 +110,8 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
     """Walk back through `all_anchors` from `anchor` to assemble a parent chain.
 
     For a TITLE anchor: returns just `("TITLE I",)`.
+    For a PREAMBLE (front-matter) anchor: returns just `("Front Matter",)` —
+    it's top-level, preceding the first TITLE.
     For a SECTION anchor: returns `("TITLE IV", "SEC. 406")` if a preceding
     TITLE exists, else just `("SEC. 406",)`.
     For an ACCOUNT anchor: returns `("TITLE I", "OPERATIONS AND SUPPORT")` if
@@ -119,7 +121,7 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
     captured by anchor extraction; once that lands the chain becomes three
     levels deep without changing this function's contract.
     """
-    if anchor.kind == "title":
+    if anchor.kind in ("title", "preamble"):
         return (anchor.text,)
     # Find anchor's index by identity
     try:
