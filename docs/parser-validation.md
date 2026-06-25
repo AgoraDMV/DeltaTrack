@@ -35,7 +35,11 @@ bill XML; we check that our parser reads it correctly, by comparing the parser's
 
 ## Two independent ground-truth sources
 
-- **Legislative Branch** — 414 line items across 7 enrolled bills (113-hr-3547, 113-hr-83, 114-hr-2029, 115-hr-1625, 115-hr-244, 115-hr-5895, 116-hr-1865), chambers: house, senate. Source: an independently maintained appropriations spreadsheet. Validated *structurally* (`TestLegBranchValidation`): each curated account names a `match_path`, and the parser must produce a node there with the expected amount.
+- **Legislative Branch** — 414 line items across 7 enrolled bills (113-hr-3547, 113-hr-83, 
+  114-hr-2029, 115-hr-1625, 115-hr-244, 115-hr-5895, 116-hr-1865), chambers: house, senate. 
+  Source: an independently maintained appropriations spreadsheet. Validated *structurally* 
+  (`TestLegBranchValidation`): each curated account names a `match_path`, and the parser must
+  produce a node there with the expected amount.
 - **12 other jurisdictions** — committee-recommended amounts parsed from the
   Senate Appropriations **committee reports** (govinfo `CRPT-…`), compared to what the parser
   extracts from each reported bill. The report is written by committee staff for a different
