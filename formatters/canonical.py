@@ -112,6 +112,7 @@ def _search_span(
         if full_text_spans is not None and element_id:
             located = (full_text_spans.get(side) or {}).get(element_id)
             if located is not None:
+                state[side] = located[1]  # keep the search fallback monotonic past this span
                 return {"start": located[0], "end": located[1]}
         text = full_text[side]
         start = text.find(target, state.get(side, 0))
