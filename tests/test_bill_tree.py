@@ -7,15 +7,44 @@ from bill_tree import (
     BillNode,
     _extract_appropriations_text,
     _extract_section_text,
+    build_title_label,
     extract_text_content,
     find_bill_body,
     get_header_text,
     normalize_bill,
     normalize_division_title,
     normalize_header,
+    title_match_header,
     walk_body_sections,
     walk_title,
 )
+
+
+class TestTitleLabel:
+    """Title enum handling (#50): TITLE I—<header> for display, header-only for match."""
+
+    def test_label_with_enum_and_header(self):
+        title = ET.fromstring("<title><enum>I</enum><header>DEPARTMENTAL MANAGEMENT</header></title>")
+        assert build_title_label(title) == "TITLE I—DEPARTMENTAL MANAGEMENT"
+
+    def test_label_headerless_division_title(self):
+        """Division bills carry bare title enums; the label is just TITLE <enum>."""
+        title = ET.fromstring("<title><enum>I</enum></title>")
+        assert build_title_label(title) == "TITLE I"
+
+    def test_label_enumless_falls_back_to_header(self):
+        title = ET.fromstring("<title><header>GENERAL PROVISIONS</header></title>")
+        assert build_title_label(title) == "GENERAL PROVISIONS"
+
+    def test_match_header_recovers_plain_header(self):
+        assert title_match_header("TITLE I—DEPARTMENTAL MANAGEMENT") == "DEPARTMENTAL MANAGEMENT"
+
+    def test_match_header_bare_enum_is_empty(self):
+        """A bare TITLE enum contributes no match segment (preserves division-bill keys)."""
+        assert title_match_header("TITLE I") == ""
+
+    def test_match_header_passes_through_non_title(self):
+        assert title_match_header("GENERAL PROVISIONS") == "GENERAL PROVISIONS"
 
 
 class TestNormalizeHeader:
@@ -1019,7 +1048,8 @@ class TestNormalizeBill:
         assert tree.version == "reported-in-house"
         assert len(tree.nodes) == 1
         assert tree.nodes[0].match_path == ("department of defense", "military construction, army")
-        assert tree.nodes[0].display_path == ("DEPARTMENT OF DEFENSE", "Military construction, army")
+        # display_path keeps the title's enum (#50); match_path stays header-only.
+        assert tree.nodes[0].display_path == ("TITLE I—DEPARTMENT OF DEFENSE", "Military construction, army")
 
     def test_official_title_parsed_from_form(self, tmp_path):
         """The long <official-title> is captured for the report heading."""

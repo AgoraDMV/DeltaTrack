@@ -100,12 +100,14 @@ def serialize_tree_with_offsets(tree: BillTree) -> tuple[str, list[dict]]:
     ]
     # Descriptor: only for a bare "TITLE I"-style enum (PDF carries these as the
     # title text), labelled with the account heading directly below it, mirroring
-    # PDF `_title_descriptor`. XML title segments are already the descriptive
-    # header, so they need no descriptor.
+    # PDF `_title_descriptor`. XML title labels are now "TITLE I—<header>" (#50),
+    # which already carry the descriptive header inline — the em-dash distinguishes
+    # them from a bare PDF enum, so they get no (duplicate) descriptor.
     for i, entry in enumerate(sections):
         if (
             entry["kind"] == "title"
             and entry["label"].upper().startswith("TITLE ")
+            and "—" not in entry["label"]
             and i + 1 < len(sections)
             and sections[i + 1]["kind"] == "account"
         ):
