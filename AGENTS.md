@@ -9,6 +9,7 @@ uv sync                          # Install dependencies
 uv run pytest -m "not slow"     # Fast tests only (~1s)
 uv run pytest                    # All tests (needs bills/ XML files)
 uv run pytest tests/test_diff_bill.py::TestMatchNodesIntegration  # Single test
+uv run python scripts/serve_compare.py 118-hr-8752  # PDF vs XML diff side by side (see TESTING.md)
 ```
 
 ## Key architecture concepts
