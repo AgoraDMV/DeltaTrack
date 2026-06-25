@@ -171,6 +171,20 @@ def test_title_section_gets_account_descriptor():
     assert title.get("descriptor") == "DEPARTMENT OF DEFENSE"
 
 
+def test_combined_title_label_gets_no_duplicate_descriptor():
+    """An XML "TITLE I—<header>" label already carries the header, so it must not
+    also pull the next account in as a descriptor (the em-dash guard, #50)."""
+    nodes = [
+        _node(path=("TITLE I—DEPARTMENTAL MANAGEMENT", "Office of the Secretary"), body="x"),
+    ]
+    text, sections = serialize_tree_with_offsets(_tree(nodes))
+    title = next(s for s in sections if s["kind"] == "title")
+    assert title["label"] == "TITLE I—DEPARTMENTAL MANAGEMENT"
+    assert "descriptor" not in title
+    # The title line still appears in the full-bill text.
+    assert "TITLE I—DEPARTMENTAL MANAGEMENT" in text
+
+
 def test_sections_are_in_document_order():
     _, sections = serialize_tree_with_offsets(_toc_tree())
     starts = [s["start"] for s in sections]

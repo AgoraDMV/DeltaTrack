@@ -225,6 +225,41 @@ def get_header_text(element: ET.Element) -> str:
     return ""
 
 
+def build_title_label(title: ET.Element) -> str:
+    """Build a <title>'s path/heading label, including its enum (#50).
+
+    GPO renders titles as ``TITLE <enum>—<header>`` (displayEnumTitle). The enum is
+    real bill content carried in ``<enum>`` (e.g. ``<enum>I</enum>``); reading only
+    ``<header>`` drops ``TITLE I`` from the full-bill text and the breadcrumb. Titles
+    are the only level that lost their enum — divisions and sections already keep
+    theirs. Header casing is left as-is here; uppercasing is #53's scope.
+    """
+    header = get_header_text(title)
+    enum_el = title.find("enum")
+    enum = enum_el.text.strip() if enum_el is not None and enum_el.text else ""
+    if not enum:
+        return header
+    return f"TITLE {enum}—{header}" if header else f"TITLE {enum}"
+
+
+_TITLE_LABEL_RE = re.compile(r"^TITLE\s+[^\s—]+(?:—(.*))?$")
+
+
+def title_match_header(title_label: str) -> str:
+    """Recover the plain header from a title display label, for matching (#50).
+
+    Inverse of :func:`build_title_label`. Labels are ``TITLE <enum>—<header>`` or a
+    bare ``TITLE <enum>`` (headerless, e.g. division bills). Match keys use the
+    header alone — the enum is display chrome — so a bare label yields ``""`` and
+    contributes no match segment, preserving the existing (major, intermediate)
+    keys for division bills. A non-title string (no enum) passes through unchanged.
+    """
+    m = _TITLE_LABEL_RE.match(title_label)
+    if m:
+        return m.group(1) or ""
+    return title_label
+
+
 _PARENTHETICAL_RE = re.compile(r"^\(.*\)$")
 
 _CONGRESS_WORDS = {
@@ -254,7 +289,7 @@ _LEGIS_NUM_RE = re.compile(r"([A-Z])\.\s*(?:[A-Z]*\.?\s*)?(\d+)")
 
 
 def _build_paths(
-    title_header: str,
+    title_display: str,
     division_label: str,
     major: str | None,
     intermediate: str | None,
@@ -264,6 +299,10 @@ def _build_paths(
 
     match_path: normalized, no division. Used for cross-version matching.
     display_path: original case, includes division. Used for human display.
+
+    ``title_display`` is the title label with its enum ("TITLE I—<header>", #50).
+    Display keeps the full label; matching keys on the header alone (the enum is
+    display chrome) so cross-version keys are unchanged from before this change.
     """
     match_parts: list[str] = []
     display_parts: list[str] = []
@@ -271,9 +310,11 @@ def _build_paths(
     if division_label:
         display_parts.append(division_label)
 
-    if title_header:
-        match_parts.append(normalize_header(title_header))
-        display_parts.append(title_header)
+    if title_display:
+        title_match = title_match_header(title_display)
+        if title_match:
+            match_parts.append(normalize_header(title_match))
+        display_parts.append(title_display)
 
     if major:
         match_parts.append(normalize_header(major))
@@ -778,7 +819,7 @@ def normalize_bill(xml_path: Path) -> BillTree:
                 division_label = f"Division {div_enum_text}"
 
             for title in div.findall("title"):
-                title_header = get_header_text(title)
+                title_header = build_title_label(title)
                 all_nodes.extend(walk_title(title, title_header, division_label))
         return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)
 
@@ -787,7 +828,7 @@ def normalize_bill(xml_path: Path) -> BillTree:
     if titles:
         all_nodes.extend(walk_body_sections(body))
         for title in titles:
-            title_header = get_header_text(title)
+            title_header = build_title_label(title)
             all_nodes.extend(walk_title(title, title_header, ""))
         return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)
 
