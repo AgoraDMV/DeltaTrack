@@ -18,6 +18,7 @@ dev = [
     "pre-commit>=4.0",
     "pytest>=8.0",
     "pytest-cov>=6.0",
+    "pytest-playwright>=0.5",
     "pytest-xdist>=3.6",
     "reportlab>=4.5.1",
     "respx>=0.22",
@@ -40,6 +41,7 @@ testpaths = ["tests"]
 pythonpath = ["."]
 markers = [
     "slow: tests that require real bill XML files (deselect with '-m not slow')",
+    "browser: end-to-end tests that drive a real browser via Playwright (run with '-m browser'; need 'playwright install chromium')",
 ]
 
 [tool.coverage.run]

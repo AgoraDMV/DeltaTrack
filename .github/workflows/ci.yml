@@ -33,7 +33,17 @@ jobs:
 
       - name: Run tests
         if: ${{ !cancelled() }}
-        run: uv run pytest -m "not slow" -v
+        run: uv run pytest -m "not slow and not browser" -v
+
+      - name: Install Playwright browser
+        if: ${{ !cancelled() }}
+        # Chromium only; --with-deps pulls the OS libraries the browser needs on
+        # the Ubuntu runner. ~hundreds of MB but cached between runs by the image.
+        run: uv run playwright install --with-deps chromium
+
+      - name: Run browser tests
+        if: ${{ !cancelled() }}
+        run: uv run pytest -m browser -v
 
       - name: Run external-validation suite
         if: ${{ !cancelled() }}
