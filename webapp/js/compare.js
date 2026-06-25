@@ -149,32 +149,6 @@
     $('upload-success').hidden = true;
   }
 
-  // --- Example mode (no upload, no server call) ----------------------------
-  // Landing page links here with ?example=1 to show a bundled report.
-
-  async function loadExample() {
-    setLoading(true);
-    clearMessages();
-    const tab = openReportTab();
-    if (!tab) {
-      showError('Pop-up blocked. Allow pop-ups for this site to view the sample report.');
-      setLoading(false);
-      return;
-    }
-    try {
-      const res = await fetch('sample/example.html');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const html = await res.text();
-      writeReportTab(tab, html);
-      showSuccess('Sample report opened in a new tab.');
-    } catch (err) {
-      if (tab) tab.close();
-      showError(`Couldn't load the sample report: ${String(err.message || err)}`);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   // --- Format toggle -------------------------------------------------------
   // Switching type clears any chosen files (a PDF is invalid under XML and vice
   // versa) and re-points the native file picker's accept filter + the note.
@@ -205,6 +179,4 @@
   applyFormat();
   updateButton();
   $('compare-btn').addEventListener('click', onCompare);
-
-  if (new URLSearchParams(location.search).has('example')) loadExample();
 })();
