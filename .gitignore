@@ -31,3 +31,6 @@ test_data/*
 # Persistent PDF extraction cache (developer test-loop speedup; see tests/pdf_corpus.py)
 test_data/extract_cache/
 *.csv
+# Vendored GPO render chain (public domain, ~2.2MB incl. binary JPGs) — local reference only.
+# Mined into docs/gpo-render-conventions.md; re-fetch from govinfo bulkdata when needed. See DeltaTrack#40.
+reference/
