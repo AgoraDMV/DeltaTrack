@@ -424,8 +424,46 @@ def _group_label_from_path(canonical_change: dict) -> str:
     return parts[0] if parts else ""
 
 
-def _change_view_from_canonical(canonical_change: dict, source: str) -> ChangeView:
+def _card_texts(canonical_change: dict, source: str, full_text: dict | None) -> tuple[str, str]:
+    """Card old/new text, preferring the readable full_text slice over collapsed body.
+
+    The per-change ``text`` is the node's match-normalized ``body_text`` (`(a)The`),
+    which reads as a bug next to the full-bill view's readable form (#76). When the
+    change resolves a ``full_text_span`` (built by #51, anchored by element_id), the
+    full-bill view slices the readable text out of the same ``full_text``; we slice the
+    identical span here so the card and full-bill view cannot disagree.
+
+    XML only: the PDF producer also emits spans, but PDF ``full_text`` carries
+    line-number gutters that must not be sliced into a card. Falls back to the collapsed
+    ``text`` whenever ``full_text`` is absent or the side's span is null (node without an
+    XML id, bodyless node, quoted-block payload) — identical to the prior behavior.
+    """
+    text = canonical_change["text"]
+    span_obj = canonical_change.get("full_text_span") or {}
+
+    def _slice(side: str) -> str | None:
+        ft = (full_text or {}).get(side)
+        s = span_obj.get(side)
+        if source == "xml" and ft is not None and s is not None:
+            return ft[s["start"] : s["end"]]
+        return None
+
+    readable_old, readable_new = _slice("v1"), _slice("v2")
+    # Both-or-neither for two-sided changes: a readable side paired with a collapsed
+    # fallback side would produce a spurious `(a) The`/`(a)The` whitespace diff.
+    if canonical_change["change_type"] in ("modified", "moved") and not (
+        readable_old is not None and readable_new is not None
+    ):
+        readable_old = readable_new = None
+
+    old_text = readable_old if readable_old is not None else (text.get("old") or "")
+    new_text = readable_new if readable_new is not None else (text.get("new") or "")
+    return old_text, new_text
+
+
+def _change_view_from_canonical(canonical_change: dict, source: str, full_text: dict | None) -> ChangeView:
     heading_html, nav_label_html, degraded = _heading_and_nav(canonical_change, source)
+    old_text, new_text = _card_texts(canonical_change, source, full_text)
     return ChangeView(
         change_type=canonical_change["change_type"],
         heading_html=heading_html,
@@ -434,8 +472,8 @@ def _change_view_from_canonical(canonical_change: dict, source: str) -> ChangeVi
         citation_html=_citation_html(canonical_change),
         degraded=degraded,
         move_info_html=_move_info_html(canonical_change),
-        old_text=canonical_change["text"].get("old") or "",
-        new_text=canonical_change["text"].get("new") or "",
+        old_text=old_text,
+        new_text=new_text,
         amount_pairs=tuple((p["old"], p["new"]) for p in canonical_change.get("amounts") or ()),
         group_label=_group_label_from_path(canonical_change),
     )
@@ -443,6 +481,7 @@ def _change_view_from_canonical(canonical_change: dict, source: str) -> ChangeVi
 
 def view_from_canonical(canonical: dict) -> DiffView:
     source = canonical["versions"]["v1"]["source"]
+    full_text = canonical.get("full_text")
     return DiffView(
         bill_type=canonical["bill"]["type"],
         bill_number=canonical["bill"]["number"],
@@ -452,5 +491,5 @@ def view_from_canonical(canonical: dict) -> DiffView:
         v1_version_number=canonical["versions"]["v1"]["version_number"],
         v2_version_number=canonical["versions"]["v2"]["version_number"],
         summary=dict(canonical.get("summary") or {}),
-        changes=tuple(_change_view_from_canonical(c, source) for c in canonical.get("changes") or ()),
+        changes=tuple(_change_view_from_canonical(c, source, full_text) for c in canonical.get("changes") or ()),
     )

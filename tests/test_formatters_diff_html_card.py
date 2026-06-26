@@ -44,6 +44,14 @@ def test_section_number_renders_as_separate_span():
     assert html.count("101") == 1
 
 
+def test_readable_card_body_shows_spaced_enum_not_run_on():
+    """#76: when the view carries readable text, the card body reads `(a) The …`,
+    not the collapsed match form `(a)The`."""
+    html = _build_card(_change(old_text="(a) The old", new_text="(a) The new"), 0)
+    assert "(a) The" in html
+    assert "(a)The" not in html
+
+
 def test_section_number_html_escaped():
     html = _build_card(_change(section_number="<script>alert(1)</script>", old_text="a", new_text="b"), 0)
     assert "<script>" not in html

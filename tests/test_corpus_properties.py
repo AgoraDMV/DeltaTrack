@@ -164,6 +164,11 @@ _KNOWN_DUPLICATE_COUNTS: dict[str, int] = {
     "118-s-4942/1_reported-in-senate.xml": 2,  # Labor-HHS: VETS employment-and-training lines
     "118-s-4927/1_reported-in-senate.xml": 4,  # Energy-Water: Corps of Engineers heading repeats
     "118-s-2321/1_reported-in-senate.xml": 1,  # CJS FY2024 (out-of-corpus guard): NASA pair
+    # 119-hr-1 (reconciliation): two genuinely-distinct Sec. 10012 in the reported version
+    # (Alien SNAP eligibility + Emergency food assistance), one renumbered to 10013 later.
+    # Real source duplicate, not a parser error; exposes the matcher's reliance on body
+    # similarity over header (tracked in DeltaTrack#8). Gitignored, so CI skips it.
+    "119-hr-1/1_reported-in-house.xml": 1,
 }
 
 
