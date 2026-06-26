@@ -1085,9 +1085,10 @@ mark.find-hit--current { background: var(--gold); color: #fff; }
 .toc { list-style: none; }
 .toc-group { margin-bottom: 2px; }
 .toc-group > summary { cursor: pointer; padding: 6px 8px; border-radius: var(--radius);
-  font-size: 13px; font-weight: 600; color: var(--foreground); list-style: none; }
+  font-size: 13px; font-weight: 600; color: var(--foreground); list-style: none;
+  display: flex; align-items: baseline; gap: 4px; }
 .toc-group > summary::-webkit-details-marker { display: none; }
-.toc-group > summary::before { content: "\\25b8"; color: var(--muted-foreground); font-size: 10px; margin-right: 4px; }
+.toc-group > summary::before { content: "\\25b8"; color: var(--muted-foreground); font-size: 10px; flex: 0 0 auto; }
 .toc-group[open] > summary::before { content: "\\25be"; }
 .toc-group > summary:hover { background: var(--secondary); }
 .toc-group > summary a { color: inherit; text-decoration: none; }
