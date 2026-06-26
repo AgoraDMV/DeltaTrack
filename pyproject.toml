@@ -15,6 +15,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "jsonschema>=4.21",  # canonical-diff schema validation tests; importorskip silently skips without it
     "pre-commit>=4.0",
     "pytest>=8.0",
     "pytest-cov>=6.0",
