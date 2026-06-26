@@ -220,7 +220,10 @@ def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor])
         if key not in line_index:
             line_index[key] = i
 
-    anchor_positions: list[int] = []
+    # Keep each surviving anchor paired with its resolved position. Collecting
+    # positions alone and indexing `anchors[j]` would misalign once any anchor
+    # is skipped, labeling every later block with the wrong heading (issue #16).
+    anchor_at: list[tuple[Anchor, int]] = []
     for a in anchors:
         pos = line_index.get((a.page_number, a.line_number))
         if pos is None:
@@ -228,20 +231,21 @@ def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor])
             # skip — its text is already part of an earlier line and will end
             # up in the previous block.
             continue
-        anchor_positions.append(pos)
+        anchor_at.append((a, pos))
 
     blocks: list[_Block] = []
-    if not anchor_positions:
+    if not anchor_at:
         # No anchors at all — entire document is preamble.
         return [_Block(None, tuple(indexed_lines))]
 
-    if anchor_positions[0] > 0:
-        preamble_lines = tuple(indexed_lines[: anchor_positions[0]])
+    first_pos = anchor_at[0][1]
+    if first_pos > 0:
+        preamble_lines = tuple(indexed_lines[:first_pos])
         blocks.append(_Block(_front_matter_anchor(preamble_lines), preamble_lines))
 
-    for j, pos in enumerate(anchor_positions):
-        end = anchor_positions[j + 1] if j + 1 < len(anchor_positions) else len(indexed_lines)
-        blocks.append(_Block(anchors[j], tuple(indexed_lines[pos:end])))
+    for j, (anchor, pos) in enumerate(anchor_at):
+        end = anchor_at[j + 1][1] if j + 1 < len(anchor_at) else len(indexed_lines)
+        blocks.append(_Block(anchor, tuple(indexed_lines[pos:end])))
 
     return blocks
 
