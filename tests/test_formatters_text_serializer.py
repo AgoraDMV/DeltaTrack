@@ -13,21 +13,33 @@ from pathlib import Path
 import pytest
 
 from bill_tree import BillNode, BillTree, bill_title, normalize_bill
-from formatters.text_serializer import serialize_tree, serialize_tree_with_offsets
+from formatters.text_serializer import (
+    serialize_tree,
+    serialize_tree_for_diff,
+    serialize_tree_with_offsets,
+)
 
 
 def _node(
-    *, path: tuple[str, ...] = (), header: str = "", body: str = "", tag: str = "section", sec: str = ""
+    *,
+    path: tuple[str, ...] = (),
+    header: str = "",
+    body: str = "",
+    tag: str = "section",
+    sec: str = "",
+    eid: str = "",
+    display: str = "",
 ) -> BillNode:
     return BillNode(
         match_path=tuple(p.lower() for p in path),
         display_path=path,
         tag=tag,
-        element_id="",
+        element_id=eid,
         header_text=header,
         body_text=body,
         section_number=sec,
         division_label="",
+        display_text=display,
     )
 
 
@@ -126,6 +138,63 @@ def test_section_node_emits_uppercased_run_in_heading():
     assert "sec. 101" not in out
     # Body follows the run-in heading on the same line.
     assert "SEC. 101.  None of the funds" in out
+
+
+# --- serialize_tree renders display_text -----------------------------------
+
+
+def test_serialize_renders_display_text_when_present():
+    """The full-bill text uses the readable display_text, not the collapsed body."""
+    node = _node(path=("Sec. 1",), sec="Sec. 1", body="(a)The x;(1)y", display="(a) The x;\n    (1) y")
+    out = serialize_tree(_tree([node]))
+    assert "(a) The x;" in out
+    assert "    (1) y" in out
+    assert "(a)The" not in out
+
+
+def test_serialize_falls_back_to_body_when_no_display():
+    node = _node(path=("Sec. 1",), sec="Sec. 1", body="plain body")
+    out = serialize_tree(_tree([node]))
+    assert "SEC. 1.  plain body" in out
+
+
+# --- serialize_tree_for_diff (element_id spans) ----------------------------
+
+
+def test_for_diff_spans_point_at_readable_body():
+    node = _node(path=("Sec. 1",), sec="Sec. 1", body="(a)The x", display="(a) The x", eid="S1")
+    text, _sections, spans = serialize_tree_for_diff(_tree([node]))
+    assert "S1" in spans
+    start, end = spans["S1"]
+    # Span covers the readable body only — not the "SEC. 1.  " run-in prefix.
+    assert text[start:end] == "(a) The x"
+
+
+def test_for_diff_span_covers_multiline_body():
+    node = _node(path=("Sec. 1",), sec="Sec. 1", body="(a)x;(1)y", display="(a) x;\n    (1) y", eid="S1")
+    text, _sections, spans = serialize_tree_for_diff(_tree([node]))
+    start, end = spans["S1"]
+    assert text[start:end] == "(a) x;\n    (1) y"
+
+
+def test_for_diff_omits_nodes_without_element_id():
+    node = _node(path=("Sec. 1",), sec="Sec. 1", body="x", display="x")  # eid="" by default
+    _text, _sections, spans = serialize_tree_for_diff(_tree([node]))
+    assert spans == {}
+
+
+def test_for_diff_non_section_node_span_is_whole_body():
+    node = _node(path=(), body="enacting clause text", display="enacting clause text", eid="E1")
+    text, _sections, spans = serialize_tree_for_diff(_tree([node]))
+    start, end = spans["E1"]
+    assert text[start:end] == "enacting clause text"
+
+
+def test_for_diff_text_matches_serialize_tree():
+    tree = _toc_tree()
+    text, sections, _spans = serialize_tree_for_diff(tree)
+    assert text == serialize_tree(tree)
+    assert [s["label"] for s in sections] == [s["label"] for s in serialize_tree_with_offsets(tree)[1]]
 
 
 # --- serialize_tree_with_offsets (TOC sections) ----------------------------

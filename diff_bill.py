@@ -754,11 +754,10 @@ def cmd_compare(args: argparse.Namespace) -> None:
         from bill_tree import bill_title
         from formatters.canonical import view_from_canonical, xml_diff_to_canonical
         from formatters.diff_html import format_diff_html
-        from formatters.text_serializer import serialize_tree, serialize_tree_with_offsets
+        from formatters.text_serializer import build_xml_full_text
 
-        v2_text, sections = serialize_tree_with_offsets(new_tree)
-        full_text = {"v1": serialize_tree(old_tree), "v2": v2_text}
-        canonical = xml_diff_to_canonical(diff_dict, full_text=full_text)
+        full_text, full_text_spans, sections = build_xml_full_text(old_tree, new_tree)
+        canonical = xml_diff_to_canonical(diff_dict, full_text=full_text, full_text_spans=full_text_spans)
         output = format_diff_html(
             view_from_canonical(canonical),
             canonical=canonical,

@@ -55,6 +55,7 @@ def _xml_change_to_canonical(
     change: dict,
     index: int,
     full_text: dict | None,
+    full_text_spans: dict | None,
     search_state: dict,
 ) -> dict:
     change_type = change.get("change_type", "modified")
@@ -62,6 +63,8 @@ def _xml_change_to_canonical(
     path_new = change.get("display_path_new")
     text_old = change.get("old_text")
     text_new = change.get("new_text")
+    id_old = change.get("element_id_old")
+    id_new = change.get("element_id_new")
     return {
         "id": _make_id(index),
         "change_type": change_type,
@@ -75,24 +78,42 @@ def _xml_change_to_canonical(
         "text": {"old": text_old, "new": text_new},
         "amounts": _real_amount_pairs((change.get("financial") or {}).get("paired_amounts", ())),
         "move": _xml_move(change) if change_type == "moved" else None,
-        "full_text_span": _search_span(full_text, text_old, text_new, search_state),
+        "full_text_span": _search_span(full_text, full_text_spans, text_old, text_new, id_old, id_new, search_state),
     }
 
 
-def _search_span(full_text: dict | None, text_old: str | None, text_new: str | None, state: dict) -> dict | None:
-    """Locate a change's text inside full_text by substring search.
+def _search_span(
+    full_text: dict | None,
+    full_text_spans: dict | None,
+    text_old: str | None,
+    text_new: str | None,
+    id_old: str | None,
+    id_new: str | None,
+    state: dict,
+) -> dict | None:
+    """Locate a change's text inside full_text.
 
-    state holds per-side hint offsets so successive searches don't backtrack
-    -- diff results are emitted in document order, so each next change should
-    appear at-or-after the last one. This avoids the same common phrase
-    matching the wrong occurrence.
+    Primary path (#51): when ``full_text_spans`` is given, anchor structurally by the
+    change's ``element_id`` (each XML change maps 1:1 to a node, whose body is one
+    contiguous slice of the readable full_text). This is exact — no occurrence ambiguity.
+
+    Fallback: substring search, with ``state`` holding per-side hint offsets so
+    document-order searches don't backtrack onto an earlier identical phrase. Note this
+    fallback is degenerate once full_text is readable — the change text stays normalized
+    (``(a)The``) while full_text reads ``(a) The``, so the find usually misses and the
+    span is null. Correctness rests on element_ids being present (verified on the corpus).
     """
     if full_text is None:
         return None
 
-    def _find(side: str, target: str | None) -> dict | None:
+    def _find(side: str, target: str | None, element_id: str | None) -> dict | None:
         if not target:
             return None
+        if full_text_spans is not None and element_id:
+            located = (full_text_spans.get(side) or {}).get(element_id)
+            if located is not None:
+                state[side] = located[1]  # keep the search fallback monotonic past this span
+                return {"start": located[0], "end": located[1]}
         text = full_text[side]
         start = text.find(target, state.get(side, 0))
         if start < 0:
@@ -104,7 +125,7 @@ def _search_span(full_text: dict | None, text_old: str | None, text_new: str | N
         state[side] = end
         return {"start": start, "end": end}
 
-    return {"v1": _find("v1", text_old), "v2": _find("v2", text_new)}
+    return {"v1": _find("v1", text_old, id_old), "v2": _find("v2", text_new, id_new)}
 
 
 def _xml_move(change: dict) -> dict:
@@ -116,7 +137,9 @@ def _xml_move(change: dict) -> dict:
     }
 
 
-def xml_diff_to_canonical(diff_dict: dict, *, full_text: dict | None = None) -> dict:
+def xml_diff_to_canonical(
+    diff_dict: dict, *, full_text: dict | None = None, full_text_spans: dict | None = None
+) -> dict:
     """Convert a bill-diff dict (from bill_diff_to_dict) into canonical JSON.
 
     Drops `unchanged` entries: bill_diff_to_dict emits a card per matched node,
@@ -125,6 +148,11 @@ def xml_diff_to_canonical(diff_dict: dict, *, full_text: dict | None = None) -> 
     `full_text`, when provided, must be a dict with string keys "v1" and "v2"
     holding the complete serialized bill text per side. The canonical JSON
     surfaces it at the top level for full-document rendering.
+
+    `full_text_spans`, when provided, is a build-time anchor input mapping
+    `{"v1"|"v2": {element_id: (start, end)}}` into `full_text`; it lets each change's
+    inline highlight resolve structurally by element_id (#51). It is NEVER serialized
+    into the returned JSON.
     """
     diffed = [c for c in (diff_dict.get("changes") or []) if c.get("change_type") != "unchanged"]
     normalized_full_text = _normalize_full_text(full_text)
@@ -151,7 +179,10 @@ def xml_diff_to_canonical(diff_dict: dict, *, full_text: dict | None = None) -> 
         },
         "summary": dict(diff_dict.get("summary") or {}),
         "full_text": normalized_full_text,
-        "changes": [_xml_change_to_canonical(c, i, normalized_full_text, search_state) for i, c in enumerate(diffed)],
+        "changes": [
+            _xml_change_to_canonical(c, i, normalized_full_text, full_text_spans, search_state)
+            for i, c in enumerate(diffed)
+        ],
     }
 
 
