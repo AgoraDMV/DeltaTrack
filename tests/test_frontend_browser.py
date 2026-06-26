@@ -80,6 +80,73 @@ def chromium():
         pytest.skip(f"Chromium unavailable (run 'playwright install chromium'): {exc}")
 
 
+def _render_report_with_toc() -> str:
+    """A standalone page pairing the report's real stylesheet with a real TOC group.
+
+    Pulls the renderer's embedded `<style>` from an actual rendered report (so the
+    test tracks current CSS, not a committed artifact) and drops in the real
+    `_build_toc` markup for one single-line title — making `.toc-group > summary`
+    exactly one text line when laid out correctly. Built directly rather than
+    through the full report so the full-bill gating (`full_text.v2`) isn't needed.
+    """
+    import re
+
+    from diff_pdf import PdfDiff
+    from formatters.canonical import pdf_diff_to_canonical, view_from_canonical
+    from formatters.diff_html import _build_toc, format_diff_html
+
+    canonical = pdf_diff_to_canonical(PdfDiff(hunks=()), bill_type="hr", bill_number=8752, congress=118)
+    full_report = format_diff_html(view_from_canonical(canonical))
+    style = re.search(r"<style>.*?</style>", full_report, re.DOTALL).group(0)
+    toc = _build_toc([{"kind": "title", "label": "Title I"}])  # short, no descriptor → one line
+    return (
+        f"<!DOCTYPE html><html><head><meta charset='utf-8'>{style}</head>"
+        f"<body><div class='sidebar'>{toc}</div></body></html>"
+    )
+
+
+def test_toc_group_caret_sits_on_header_line(chromium, tmp_path):
+    """The full-bill TOC caret and its header share one line, not stacked (#52).
+
+    Regression guard for the `.toc-group > summary` layout. With the pre-fix
+    `display: list-item`, the `::before` caret took its own line and pushed the
+    header down by ~one line-height; the flex fix keeps the header on the
+    caret's row. We assert the header text begins within one line-height of the
+    summary's top (i.e. on the first line), which fails on the stacked layout.
+    """
+    report = tmp_path / "toc_report.html"
+    report.write_text(_render_report_with_toc(), encoding="utf-8")
+
+    page = chromium.new_page(viewport={"width": 1280, "height": 900})
+    page.goto(report.as_uri(), wait_until="domcontentloaded")
+
+    metrics = page.evaluate(
+        """() => {
+            const sum = document.querySelector('.toc-group > summary');
+            if (!sum) return null;
+            const box = sum.getBoundingClientRect();
+            // Range over the summary's own content (the <a>), excluding ::before,
+            // gives where the header text actually starts.
+            const r = document.createRange();
+            r.selectNodeContents(sum);
+            const textTop = r.getBoundingClientRect().top;
+            const cs = getComputedStyle(sum);
+            let lh = parseFloat(cs.lineHeight);
+            if (Number.isNaN(lh)) lh = parseFloat(cs.fontSize) * 1.2;
+            return {offset: textTop - box.top, lineHeight: lh};
+        }"""
+    )
+    page.close()
+
+    assert metrics is not None, "no .toc-group > summary rendered"
+    # On the stacked (buggy) layout the header starts a full line below the
+    # caret; on the fixed layout it starts at the summary's top padding.
+    assert metrics["offset"] < metrics["lineHeight"], (
+        f"TOC header starts {metrics['offset']:.1f}px below the summary top "
+        f"(>= one line-height {metrics['lineHeight']:.1f}px): caret and header are stacked"
+    )
+
+
 def test_sample_report_opens_in_new_tab(live_url, chromium):
     """Clicking "View a sample report" opens the report in a new tab (#41).
 
