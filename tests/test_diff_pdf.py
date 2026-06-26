@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from diff_pdf import _Block, _block_key, _IndexedLine, _rejoin_cross_page_hyphens, diff_pdfs
+from diff_pdf import (
+    _Block,
+    _block_key,
+    _group_into_blocks,
+    _IndexedLine,
+    _rejoin_cross_page_hyphens,
+    diff_pdfs,
+)
 from parsers.pdf_anchors import Anchor
 from parsers.pdf_text import Line, Page
 
@@ -35,6 +42,28 @@ class TestBlockKey:
         block_a = _block(anchor, (1, 1, long_prefix + "X"))
         block_b = _block(anchor, (1, 1, long_prefix + "Y"))
         assert _block_key(block_a) == _block_key(block_b)
+
+
+class TestGroupIntoBlocks:
+    def test_skipped_anchor_does_not_misalign_later_blocks(self):
+        # The middle anchor's line (1, 2) was rejoined during cleanup and is
+        # absent from indexed_lines, so it resolves to None and is skipped.
+        # The surviving anchors must stay paired with their own lines — not
+        # shift onto a neighbour's heading (issue #16).
+        indexed = [
+            _IndexedLine("SEC. 1 alpha", 1, 1),
+            _IndexedLine("SEC. 3 gamma", 1, 3),
+        ]
+        anchors = [
+            Anchor(1, 1, "section", "SEC. 1"),
+            Anchor(1, 2, "section", "SEC. 2"),  # skipped — no matching line
+            Anchor(1, 3, "section", "SEC. 3"),
+        ]
+        blocks = _group_into_blocks(indexed, anchors)
+        labels = [b.anchor.text for b in blocks]
+        assert labels == ["SEC. 1", "SEC. 3"]
+        # SEC. 3's block must carry SEC. 3's line, not SEC. 1's.
+        assert blocks[1].indexed_lines[0].text == "SEC. 3 gamma"
 
 
 class TestNoChanges:
