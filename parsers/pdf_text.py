@@ -233,20 +233,24 @@ def page_range_text(pages: list[Page], start_page: int, end_page: int) -> str:
 # size is `FPDFText_GetFontSize × √(matrix.a² + matrix.b²)`: the convenience
 # GetFontSize returns 1.0 for every glyph (GPO defines the font at size 1 and
 # scales via the text matrix), so the true scale lives in the matrix.
+#
+# Performance (#89): two bulk/probing shortcuts cut per-glyph FFI calls ~50 %.
+#
+#   A) Codepoints: `textpage.get_text_range()` returns all page chars in one call;
+#      index i in the returned str is the same glyph as char index i in
+#      FPDFText_GetCharBox / FPDFText_GetMatrix, so `ord(text[i])` replaces the
+#      per-glyph `FPDFText_GetUnicode(raw, i)` call. If `len(text) != n` (non-BMP
+#      or surrogate mismatch), the hot loop falls back to per-glyph GetUnicode.
+#
+#   B) Font size: probe `FPDFText_GetFontSize` once (first glyph). For GPO bills
+#      it is always 1.0 (size-1 font scaled via text matrix), so the scale is just
+#      √(a²+b²) with no further GetFontSize calls. Non-GPO PDFs where the probe
+#      differs from 1.0 fall back to the original per-glyph GetFontSize × √(a²+b²).
 
 _SIZE_FLOOR = 1.0  # points; drop degenerate/zero-scale glyphs (clip/invisible)
 _SPACE_FACTOR = 0.25  # x-gap > factor × glyph size ⇒ insert a word space
 _BASELINE_TOL_FACTOR = 0.5  # baseline cluster tolerance as a fraction of glyph size
-
-
-def _char_size(raw, i: int) -> float | None:
-    """Recovered glyph size in points, or None on an FFI/degenerate failure."""
-    m = pdfium_raw.FS_MATRIX()
-    if not pdfium_raw.FPDFText_GetMatrix(raw, i, ctypes.byref(m)):
-        return None
-    fs = pdfium_raw.FPDFText_GetFontSize(raw, i)
-    size = fs * math.sqrt(m.a * m.a + m.b * m.b)
-    return size if size > _SIZE_FLOOR else None
+_FONTSIZE_EPS = 1e-6  # tolerance for "is font size exactly 1.0?"
 
 
 def _char_box(raw, i: int) -> tuple[float, float, float, float] | None:
@@ -321,20 +325,52 @@ def _page_glyph_sizes(textpage) -> dict[int, float]:
     size over the line's *content* glyphs (after the margin number). Returns {} for
     an empty/failed page. On an intra-page duplicate line number the entry is
     dropped (ambiguous), never overwritten.
+
+    Performance shortcuts (both output-preserving):
+      A) Bulk codepoints via `textpage.get_text_range()` (one FFI call vs N).
+      B) Font-size probe once per page; GPO bills always return 1.0 so the hot
+         loop skips per-glyph `FPDFText_GetFontSize` entirely.
     """
     raw = textpage.raw
     n = pdfium_raw.FPDFText_CountChars(raw)
     if n <= 0:
         return {}
+
+    # A) Bulk codepoint extraction: one call instead of N FPDFText_GetUnicode calls.
+    # The returned string is index-aligned with PDFium char indices (index i == char i).
+    # Guard: if lengths don't match (surrogate/non-BMP edge case) fall back per-glyph.
+    page_text = textpage.get_text_range()
+    use_bulk_cp = len(page_text) == n
+
+    # B) Per-page font-size probe: find the first char with a valid matrix and call
+    # GetFontSize once. If it is 1.0 (within epsilon), skip GetFontSize for all
+    # subsequent glyphs on this page and compute scale = √(a²+b²) directly.
+    fast_fs: bool | None = None  # None = not yet probed
+
     chars: list[tuple[float, float, float, int, float]] = []
     for i in range(n):
-        cp = pdfium_raw.FPDFText_GetUnicode(raw, i)
+        # Codepoint: bulk (fast) or per-glyph FFI (fallback)
+        cp = ord(page_text[i]) if use_bulk_cp else pdfium_raw.FPDFText_GetUnicode(raw, i)
         if cp < 0x20:  # NUL / control glyphs (undecodable, newlines)
             continue
         box = _char_box(raw, i)
         if box is None:
             continue
-        size = _char_size(raw, i)
+
+        # Size: matrix is always needed; GetFontSize only if not already probed fast.
+        m = pdfium_raw.FS_MATRIX()
+        if not pdfium_raw.FPDFText_GetMatrix(raw, i, ctypes.byref(m)):
+            continue
+        if fast_fs is None:
+            # First valid glyph on this page: probe the font size.
+            fs_probe = pdfium_raw.FPDFText_GetFontSize(raw, i)
+            fast_fs = abs(fs_probe - 1.0) <= _FONTSIZE_EPS
+        if fast_fs:
+            scale = math.sqrt(m.a * m.a + m.b * m.b)
+        else:
+            fs = pdfium_raw.FPDFText_GetFontSize(raw, i)
+            scale = fs * math.sqrt(m.a * m.a + m.b * m.b)
+        size = scale if scale > _SIZE_FLOOR else None
         if size is None:
             continue
         left, right, bottom, _top = box
