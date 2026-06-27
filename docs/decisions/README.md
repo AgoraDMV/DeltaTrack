@@ -49,3 +49,4 @@ relitigated.
 | [0007](0007-single-renderer.md) | Render every diff with one renderer, whatever source pipeline produced it |
 | [0008](0008-deterministic-engine.md) | Deterministic Diff Engine |
 | [0009](0009-validation-ground-truth.md) | Validate the parser against independently-authored committee reports |
+| [0010](0010-pdf-pipeline-pre-publication.md) | Support a PDF pipeline for pre-publication bills; prefer XML once published |
