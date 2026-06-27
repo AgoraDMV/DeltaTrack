@@ -1,6 +1,6 @@
 # 4. Fetch bill discovery and text from govinfo bulk data, not the Congress.gov API
 
-- Status: Accepted as a decision; not yet implemented (tracked in issue #10)
+- Status: Accepted
 - Date: 2026-06-27
 
 ## Context
@@ -106,5 +106,6 @@ accident. Both are tracked under issue #10.
   alternative source but covers only enacted bills, which loses the in-progress
   versions that are the whole point of a diff. It is the wrong source here.
 
-Prototype lives on the `worktree-govinfo-prototype` branch (`fetch_govinfo.py`,
-`discover.py`, `parity_check.py`). Migration tracked in issue #10.
+This decision is accepted but not yet implemented. The prototype lives on the
+`worktree-govinfo-prototype` branch (`fetch_govinfo.py`, `discover.py`,
+`parity_check.py`); the migration is tracked in issue #10.
