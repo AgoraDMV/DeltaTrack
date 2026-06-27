@@ -18,11 +18,15 @@ removes it in place rather than from the bottom.
 
 from __future__ import annotations
 
+import ctypes
+import math
 import re
-from dataclasses import dataclass
+import statistics
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pypdfium2 as pdfium
+import pypdfium2.raw as pdfium_raw
 
 _NUMBERED_LINE = re.compile(r"^(\d{1,2}) (.*)$")
 _SOFT_HYPHEN_BREAK = re.compile(r"(\w)-\n([a-z])")
@@ -221,15 +225,167 @@ def page_range_text(pages: list[Page], start_page: int, end_page: int) -> str:
     return rejoin_soft_hyphens(joined)
 
 
+# --- Glyph-size sidecar (#89) ---------------------------------------------------
+#
+# A per-page pass over raw PDFium chars that recovers each printed line's glyph
+# size, keyed by the GPO margin line number so it joins to the string pipeline's
+# Lines without depending on PDFium's (scrambled) reading order. The recovered
+# size is `FPDFText_GetFontSize × √(matrix.a² + matrix.b²)`: the convenience
+# GetFontSize returns 1.0 for every glyph (GPO defines the font at size 1 and
+# scales via the text matrix), so the true scale lives in the matrix.
+
+_SIZE_FLOOR = 1.0  # points; drop degenerate/zero-scale glyphs (clip/invisible)
+_SPACE_FACTOR = 0.25  # x-gap > factor × glyph size ⇒ insert a word space
+_BASELINE_TOL_FACTOR = 0.5  # cluster tolerance as a fraction of the median line pitch
+
+
+def _char_size(raw, i: int) -> float | None:
+    """Recovered glyph size in points, or None on an FFI/degenerate failure."""
+    m = pdfium_raw.FS_MATRIX()
+    if not pdfium_raw.FPDFText_GetMatrix(raw, i, ctypes.byref(m)):
+        return None
+    fs = pdfium_raw.FPDFText_GetFontSize(raw, i)
+    size = fs * math.sqrt(m.a * m.a + m.b * m.b)
+    return size if size > _SIZE_FLOOR else None
+
+
+def _char_box(raw, i: int) -> tuple[float, float, float, float] | None:
+    """(left, right, bottom, top) for char i, or None on FFI failure."""
+    left = ctypes.c_double()
+    right = ctypes.c_double()
+    bottom = ctypes.c_double()
+    top = ctypes.c_double()
+    if not pdfium_raw.FPDFText_GetCharBox(
+        raw, i, ctypes.byref(left), ctypes.byref(right), ctypes.byref(bottom), ctypes.byref(top)
+    ):
+        return None
+    return (left.value, right.value, bottom.value, top.value)
+
+
+def _cluster_baselines(chars: list[tuple[float, float, float, int, float]]) -> list[list]:
+    """Group chars into visual lines by baseline (char-box bottom).
+
+    Clusters on bottom, not top/mid, because the baseline is shared across font
+    sizes on one printed line, while the small margin digit and cap/ascender
+    variation shift top/mid. Tolerance is half the median inter-line pitch so
+    adjacent printed lines never merge. `chars` is (bottom, left, right, cp, size).
+    """
+    if not chars:
+        return []
+    by_bottom = sorted(chars, key=lambda c: -c[0])
+    distinct = sorted({round(c[0], 1) for c in chars}, reverse=True)
+    gaps = [a - b for a, b in zip(distinct, distinct[1:]) if a - b > 0.5]
+    pitch = statistics.median(gaps) if gaps else 12.0
+    tol = _BASELINE_TOL_FACTOR * pitch
+    clusters: list[list] = []
+    current: list = []
+    anchor: float | None = None
+    for c in by_bottom:
+        if anchor is None or abs(c[0] - anchor) <= tol:
+            current.append(c)
+            anchor = c[0] if anchor is None else anchor
+        else:
+            clusters.append(current)
+            current = [c]
+            anchor = c[0]
+    if current:
+        clusters.append(current)
+    return clusters
+
+
+def _line_text(cluster: list[tuple[float, float, float, int, float]]) -> str:
+    """Reconstruct a visual line's text, inserting a space where the x-gap to the
+    next glyph exceeds SPACE_FACTOR × its size. Raw PDFium chars carry no space
+    glyph between the margin number and the body (the gap is positional), so this
+    reconstruction is what lets `_NUMBERED_LINE` see the margin number."""
+    items = sorted(cluster, key=lambda c: c[1])  # by left x
+    out: list[str] = []
+    prev_right: float | None = None
+    for _bottom, left, right, cp, size in items:
+        if prev_right is not None and left - prev_right > _SPACE_FACTOR * size:
+            out.append(" ")
+        out.append(chr(cp))
+        prev_right = right
+    return re.sub(r" +", " ", "".join(out)).strip()
+
+
+def _page_glyph_sizes(textpage) -> dict[int, float]:
+    """Map GPO margin line number → representative recovered glyph size for one page.
+
+    Walks raw chars, clusters into visual lines by baseline, reconstructs each
+    line's text, reads its margin number via `_NUMBERED_LINE`, and takes the median
+    size over the line's *content* glyphs (after the margin number). Returns {} for
+    an empty/failed page. On an intra-page duplicate line number the entry is
+    dropped (ambiguous), never overwritten.
+    """
+    raw = textpage.raw
+    n = pdfium_raw.FPDFText_CountChars(raw)
+    if n <= 0:
+        return {}
+    chars: list[tuple[float, float, float, int, float]] = []
+    for i in range(n):
+        cp = pdfium_raw.FPDFText_GetUnicode(raw, i)
+        if cp < 0x20:  # NUL / control glyphs (undecodable, newlines)
+            continue
+        box = _char_box(raw, i)
+        if box is None:
+            continue
+        size = _char_size(raw, i)
+        if size is None:
+            continue
+        left, right, bottom, _top = box
+        chars.append((bottom, left, right, cp, size))
+    if not chars:
+        return {}
+    sizes: dict[int, float] = {}
+    ambiguous: set[int] = set()
+    for cluster in _cluster_baselines(chars):
+        # Drop far-smaller outlier glyphs: a printed line is one uniform size, so a
+        # glyph well below the line's median is gutter/watermark noise (e.g. a 5pt
+        # `$` floated into the left gutter) that would corrupt the margin-number
+        # parse or the median. Median-of-all is robust to the few noise glyphs.
+        line_med = statistics.median([c[4] for c in cluster])
+        kept = [c for c in cluster if c[4] >= 0.6 * line_med]
+        if not kept:
+            continue
+        text = _line_text(kept)
+        m = _NUMBERED_LINE.match(text)
+        if not m:
+            continue
+        line_number = int(m.group(1))
+        content = m.group(2)
+        # content glyph sizes: the chars after the margin number, by x order
+        n_margin = len(m.group(1))
+        content_sizes = [c[4] for c in sorted(kept, key=lambda c: c[1])][n_margin:]
+        content_sizes = content_sizes[: len(content.replace(" ", ""))] or content_sizes
+        if not content_sizes:
+            continue
+        if line_number in sizes or line_number in ambiguous:
+            ambiguous.add(line_number)
+            sizes.pop(line_number, None)
+            continue
+        sizes[line_number] = round(statistics.median(content_sizes), 1)
+    return sizes
+
+
 def extract_clean_pages(pdf_path: Path) -> list[Page]:
     pdf = pdfium.PdfDocument(str(pdf_path))
     try:
         pages: list[Page] = []
         for i in range(len(pdf)):
-            raw = pdf[i].get_textpage().get_text_range()
+            textpage = pdf[i].get_textpage()
+            try:
+                raw = textpage.get_text_range()
+                line_sizes = _page_glyph_sizes(textpage)
+            finally:
+                textpage.close()
             chrome_stripped = strip_page_chrome(normalize_raw(raw))
             print_lines = _parse_print_lines(chrome_stripped)
             merged, ranges = _merge_print_lines(print_lines)
+            merged = [
+                ln if ln.line_number is None else replace(ln, glyph_size=line_sizes.get(ln.line_number))
+                for ln in merged
+            ]
             pages.append(Page(i + 1, tuple(merged), tuple(print_lines), tuple(ranges)))
         return pages
     finally:
