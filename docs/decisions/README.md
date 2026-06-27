@@ -44,3 +44,5 @@ relitigated.
 | [0002](0002-pdfium-single-engine.md) | Use pypdfium2 (PDFium) as the single PDF text engine |
 | [0003](0003-pdfjs-client-side-viability.md) | Client-side PDF.js extraction is viable for published bills |
 | [0004](0004-govinfo-bulk-data.md) | Fetch discovery and text from govinfo bulk data, not the Congress.gov API |
+| [0005](0005-deltatrack-billtrax-boundary.md) | Keep DeltaTrack a contained two-version tool; put analysis in BillTrax |
+| [0006](0006-canonical-diff-contract.md) | Make a versioned JSON document the contract between the diff engine and its consumers |
