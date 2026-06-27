@@ -61,6 +61,11 @@ _WATERMARK_AND_BELOW = re.compile(r"\n?\S+ on DSK\S*PROD with .*\Z", re.DOTALL)
 class Line:
     line_number: int | None  # 1-based source PDF line number; None if unnumbered
     text: str  # cleaned line content (line-number prefix stripped)
+    # Representative recovered glyph size (points) for this line, or None when no
+    # size could be attached (unnumbered line, or the geometry sidecar found no
+    # match for this line number). Filled post-merge by extract_clean_pages; the
+    # string pipeline leaves it None. Used for size-based heading segmentation (#89).
+    glyph_size: float | None = None
 
 
 @dataclass(frozen=True)
