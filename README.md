@@ -169,6 +169,10 @@ Four modules:
 - **`diff_bill.py`** - Compares two `BillTree`s. Uses division-aware matching for omnibus bills (resolves cross-division path collisions by normalized division title). Detects false matches via text similarity, reconciles moved sections, and extracts dollar amounts (stripping floor amendment annotations before comparison, flagging their presence separately).
 - **`formatters/diff_html.py`** - Generates standalone HTML reports from diff output (via adapters that feed both XML and PDF diffs through one renderer) with sidebar navigation, financial summary table, and word-level inline diffs.
 
+## Design decisions
+
+The reasoning behind non-obvious architectural choices (why a structured money diff, why a single PDF engine, why govinfo bulk data) lives in [docs/decisions/](docs/decisions/).
+
 ## Testing
 
 ```bash
