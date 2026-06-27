@@ -165,20 +165,31 @@ small-caps glyphs to actual uppercase. So:
 
 ---
 
-## PDF consequence: small-caps levels extract at a smaller glyph size (#49/#54/#56)
+## PDF consequence: heading levels extract at a smaller glyph size (#49/#54/#56/#89)
 
-The casing layers above have a measurable side effect in the **PDF** path that we use as
-a structural signal. Because GPO sets `appropriations-intermediate` and
-`appropriations-small` headers in `font-variant: small-caps` (casing table; gotcha 1),
-their glyphs render at ~x-height and PDFium extracts them at ~0.8x the body/full-caps
-size. The full-caps levels (`appropriations-major`, `<title>`/`<section>` headers) stay
-at the body size. Measured on the corpus working stages: **body ≈ 14.0pt, small-caps
-heading band ≈ 11.2pt** (ratio ≈ 0.8); the band-line count tracks XML
-`intermediate+small` within ~15%.
+There is a **measured, empirical** size signal in the **PDF** path that we use to segment
+headings: body prose extracts at one size and the appropriations heading levels (agency +
+account) at a distinct smaller band. Measured on the corpus working stages: **body ≈
+14.0pt, heading band ≈ 11.2pt** (ratio ≈ 0.8); the band-line count tracks XML
+`intermediate+small` within ~15%, and `extract_anchors` (`parsers/pdf_anchors.py`) keys
+account detection off it (#89).
+
+> **Correction (#89): the mechanism is GPO's PDF typesetting, NOT the CSS small-caps
+> cascade — and CSS `em` values must never seed thresholds.** An earlier version of this
+> note attributed the smaller size to `font-variant: small-caps` rendering at x-height.
+> The GPO HTML source refutes that: in `bills.css`, `appropriations-major` is uppercase
+> **1.15em**, `appropriations-intermediate` (agency) is small-caps **1.15em** (*larger*
+> than body), and `appropriations-small` (account) is uppercase **0.8em** (and *not*
+> small-caps). Those `em` values predict agency > body > account, but we **measure** agency
+> ≈ account ≈ 11.2 < body 14.0. The published PDF is typeset by GPO's separate
+> photocomposition system, whose point sizes do not track the HTML renderer's `em` values
+> (the `lbex*` class names mirror typesetting locators, not sizes). So: trust the measured
+> PDF sizes, derive the band **per document** from measurement, and never port CSS `em`
+> values into thresholds.
 
 This lets PDF heading segmentation recover the hierarchy XML carries explicitly:
 - `size == body AND uppercase` → `appropriations-major` (or a title/section header).
-- `size < body` (the small-caps band) → `intermediate` / `small`. Split the two by
+- `size < body` (the heading band) → `intermediate` / `small`. Split the two by
   position: the leaf (`small`/account) is immediately followed by body prose; the parent
   (`intermediate`/agency) is followed by another same-size heading.
 - `size == body AND has lowercase` → body prose.
@@ -186,7 +197,7 @@ This lets PDF heading segmentation recover the hierarchy XML carries explicitly:
 The true glyph size is **not** `FPDFText_GetFontSize` (returns 1.0 — GPO defines the font
 at size 1 and scales via the text matrix); recover it from `FPDFText_GetMatrix`.
 
-**Universal across stages, but base size varies.** The small-caps ratio holds at every
+**Universal across stages, but base size varies.** The body↔heading ratio holds at every
 stage; only the absolute sizes shift. Working stages: body 14pt, band 11.2pt. Enrolled
 bills are re-typeset smaller: body 10pt, band 8pt — still ~0.8. So the threshold must be
 derived per-document (and, for heterogeneous files, per-region), never hardcoded.

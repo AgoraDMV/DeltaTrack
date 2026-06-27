@@ -162,6 +162,8 @@ A bill goes through several versions as it moves through the legislative process
 
 ## Architecture
 
+The shared data model the whole project rests on — the bill hierarchy, the glossary, and how the XML and PDF paths reconstruct it — is documented in [docs/bill-structure.md](docs/bill-structure.md). Start there.
+
 Four modules:
 
 - **`fetch_bills.py`** - Downloads bill XML and PDF from Congress.gov API v3 (`--format xml|pdf|both`, default `xml`). CLI commands: `versions`, `download`, `download-all`.

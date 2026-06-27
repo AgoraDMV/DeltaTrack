@@ -18,11 +18,15 @@ removes it in place rather than from the bottom.
 
 from __future__ import annotations
 
+import ctypes
+import math
 import re
-from dataclasses import dataclass
+import statistics
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pypdfium2 as pdfium
+import pypdfium2.raw as pdfium_raw
 
 _NUMBERED_LINE = re.compile(r"^(\d{1,2}) (.*)$")
 _SOFT_HYPHEN_BREAK = re.compile(r"(\w)-\n([a-z])")
@@ -47,11 +51,12 @@ _HYPHEN_BREAK = re.compile(r"￾(\d{1,2}) ")
 # that must NOT be stripped.
 _GLUED_CHROME = re.compile(r"￾(?:VerDate\b|\S* on DSK)[^\n]*")
 # Page chrome. The page-number header is `5 \n` (digit + optional trailing space).
-# The running `•HR … RH` header floats to the top of PDFium's reading order. The
+# The running `•HR … RH` (House) / `•S … RS` (Senate) header floats to the top of
+# PDFium's reading order. The
 # `VerDate …` print line and the `name on DSK…PROD with …` watermark sit at the
 # bottom; either may be the anchor depending on the page, so both are stripped.
 _PAGE_HEADER_NUMBER = re.compile(r"\A\d+ *\n")
-_RUNNING_HEADER = re.compile(r"^•HR\b.*\n", re.MULTILINE)
+_RUNNING_HEADER = re.compile(r"^•(?:HR|S)\b.*\n", re.MULTILINE)
 _VERDATE_AND_BELOW = re.compile(r"\n?VerDate\b.*\Z", re.DOTALL)
 _WATERMARK_AND_BELOW = re.compile(r"\n?\S+ on DSK\S*PROD with .*\Z", re.DOTALL)
 
@@ -60,6 +65,11 @@ _WATERMARK_AND_BELOW = re.compile(r"\n?\S+ on DSK\S*PROD with .*\Z", re.DOTALL)
 class Line:
     line_number: int | None  # 1-based source PDF line number; None if unnumbered
     text: str  # cleaned line content (line-number prefix stripped)
+    # Representative recovered glyph size (points) for this line, or None when no
+    # size could be attached (unnumbered line, or the geometry sidecar found no
+    # match for this line number). Filled post-merge by extract_clean_pages; the
+    # string pipeline leaves it None. Used for size-based heading segmentation (#89).
+    glyph_size: float | None = None
 
 
 @dataclass(frozen=True)
@@ -215,15 +225,219 @@ def page_range_text(pages: list[Page], start_page: int, end_page: int) -> str:
     return rejoin_soft_hyphens(joined)
 
 
+# --- Glyph-size sidecar (#89) ---------------------------------------------------
+#
+# A per-page pass over raw PDFium chars that recovers each printed line's glyph
+# size, keyed by the GPO margin line number so it joins to the string pipeline's
+# Lines without depending on PDFium's (scrambled) reading order. The recovered
+# size is `FPDFText_GetFontSize × √(matrix.a² + matrix.b²)`: the convenience
+# GetFontSize returns 1.0 for every glyph (GPO defines the font at size 1 and
+# scales via the text matrix), so the true scale lives in the matrix.
+#
+# Performance (#89): two bulk/probing shortcuts cut per-glyph FFI calls ~50 %.
+#
+#   A) Codepoints: `textpage.get_text_range()` returns all page chars in one call;
+#      index i in the returned str is the same glyph as char index i in
+#      FPDFText_GetCharBox / FPDFText_GetMatrix, so `ord(text[i])` replaces the
+#      per-glyph `FPDFText_GetUnicode(raw, i)` call. If `len(text) != n` (non-BMP
+#      or surrogate mismatch), the hot loop falls back to per-glyph GetUnicode.
+#
+#   B) Font size: SAMPLE `FPDFText_GetFontSize` on the first glyph only, then
+#      apply that verdict to the whole page. This assumes GPO's page-uniform
+#      size-1 font (every glyph returns 1.0; the scale lives in the matrix), so
+#      the scale is just √(a²+b²) with no further GetFontSize calls. It is a
+#      sample, NOT a per-page proof: a hypothetical mixed-size page whose first
+#      glyph reads 1.0 would mis-size the rest — never seen in GPO output, but the
+#      reason the sampled value is rechecked per page rather than assumed once per
+#      doc. When the sample differs from 1.0 the whole page falls back to the
+#      original per-glyph GetFontSize × √(a²+b²).
+
+_SIZE_FLOOR = 1.0  # points; drop degenerate/zero-scale glyphs (clip/invisible)
+_SPACE_FACTOR = 0.25  # x-gap > factor × glyph size ⇒ insert a word space
+_BASELINE_TOL_FACTOR = 0.5  # baseline cluster tolerance as a fraction of glyph size
+_FONTSIZE_EPS = 1e-6  # tolerance for "is font size exactly 1.0?"
+
+
+def _char_box(raw, i: int) -> tuple[float, float, float, float] | None:
+    """(left, right, bottom, top) for char i, or None on FFI failure."""
+    left = ctypes.c_double()
+    right = ctypes.c_double()
+    bottom = ctypes.c_double()
+    top = ctypes.c_double()
+    if not pdfium_raw.FPDFText_GetCharBox(
+        raw, i, ctypes.byref(left), ctypes.byref(right), ctypes.byref(bottom), ctypes.byref(top)
+    ):
+        return None
+    return (left.value, right.value, bottom.value, top.value)
+
+
+def _cluster_baselines(chars: list[tuple[float, float, float, int, float]]) -> list[list]:
+    """Group chars into visual lines by baseline (char-box bottom).
+
+    Clusters on bottom, not top/mid, because the baseline is shared across font
+    sizes on one printed line, while the small margin digit and cap/ascender
+    variation shift top/mid. `chars` is (bottom, left, right, cp, size).
+
+    Tolerance is derived from glyph SIZE, not inter-line pitch: a line's
+    descenders sit ~0.2x-size below the baseline while real line spacing is
+    ~1.5-1.8x-size, so a threshold between the two keeps a line whole (descenders
+    included) without merging the next line. Deriving it from a gap median is
+    wrong — that median mixes the descender-drop and line-pitch populations and
+    lands on the small one, shattering each line into fragments.
+    """
+    if not chars:
+        return []
+    by_bottom = sorted(chars, key=lambda c: -c[0])
+    median_size = statistics.median([c[4] for c in chars])
+    tol = _BASELINE_TOL_FACTOR * median_size
+    clusters: list[list] = []
+    current: list = []
+    anchor: float | None = None
+    for c in by_bottom:
+        if anchor is None or abs(c[0] - anchor) <= tol:
+            current.append(c)
+            anchor = c[0] if anchor is None else anchor
+        else:
+            clusters.append(current)
+            current = [c]
+            anchor = c[0]
+    if current:
+        clusters.append(current)
+    return clusters
+
+
+def _line_text(cluster: list[tuple[float, float, float, int, float]]) -> str:
+    """Reconstruct a visual line's text, inserting a space where the x-gap to the
+    next glyph exceeds SPACE_FACTOR × its size. Raw PDFium chars carry no space
+    glyph between the margin number and the body (the gap is positional), so this
+    reconstruction is what lets `_NUMBERED_LINE` see the margin number."""
+    items = sorted(cluster, key=lambda c: c[1])  # by left x
+    out: list[str] = []
+    prev_right: float | None = None
+    for _bottom, left, right, cp, size in items:
+        if prev_right is not None and left - prev_right > _SPACE_FACTOR * size:
+            out.append(" ")
+        out.append(chr(cp))
+        prev_right = right
+    return re.sub(r" +", " ", "".join(out)).strip()
+
+
+def _page_glyph_sizes(textpage, page_text: str) -> dict[int, float]:
+    """Map GPO margin line number → representative recovered glyph size for one page.
+
+    Walks raw chars, clusters into visual lines by baseline, reconstructs each
+    line's text, reads its margin number via `_NUMBERED_LINE`, and takes the median
+    size over the line's *content* glyphs (after the margin number). Returns {} for
+    an empty/failed page. On an intra-page duplicate line number the entry is
+    dropped (ambiguous), never overwritten.
+
+    `page_text` is the caller's `textpage.get_text_range()` result, passed in so the
+    page text is extracted once and shared with the string pipeline rather than
+    re-decoded here.
+
+    Performance shortcuts (both output-preserving):
+      A) Bulk codepoints from `page_text` (`ord(page_text[i])`) instead of N
+         per-glyph `FPDFText_GetUnicode` calls.
+      B) Font size sampled on the first glyph and applied page-wide (GPO's font is
+         uniformly size-1); the hot loop then skips per-glyph `FPDFText_GetFontSize`.
+    """
+    raw = textpage.raw
+    n = pdfium_raw.FPDFText_CountChars(raw)
+    if n <= 0:
+        return {}
+
+    # A) Bulk codepoints: index i in page_text is the same glyph as char index i.
+    # Guard: if lengths don't match (surrogate/non-BMP edge case) fall back per-glyph.
+    use_bulk_cp = len(page_text) == n
+
+    # B) Font-size sample: on the first char with a valid matrix, call GetFontSize
+    # once. If it is 1.0 (within epsilon), take the fast scale = √(a²+b²) for every
+    # glyph on this page; otherwise fall back to per-glyph GetFontSize × √(a²+b²).
+    # A sample, not a page-wide proof — see the module comment (B).
+    fast_fs: bool | None = None  # None = not yet sampled
+
+    chars: list[tuple[float, float, float, int, float]] = []
+    for i in range(n):
+        # Codepoint: bulk (fast) or per-glyph FFI (fallback)
+        cp = ord(page_text[i]) if use_bulk_cp else pdfium_raw.FPDFText_GetUnicode(raw, i)
+        if cp < 0x20:  # NUL / control glyphs (undecodable, newlines)
+            continue
+        box = _char_box(raw, i)
+        if box is None:
+            continue
+
+        # Size: matrix is always needed; GetFontSize only if not already sampled fast.
+        mat = pdfium_raw.FS_MATRIX()
+        if not pdfium_raw.FPDFText_GetMatrix(raw, i, ctypes.byref(mat)):
+            continue
+        if fast_fs is None:
+            # First valid glyph on this page: sample the font size.
+            fs_probe = pdfium_raw.FPDFText_GetFontSize(raw, i)
+            fast_fs = abs(fs_probe - 1.0) <= _FONTSIZE_EPS
+        scale = math.sqrt(mat.a * mat.a + mat.b * mat.b)
+        if not fast_fs:
+            scale *= pdfium_raw.FPDFText_GetFontSize(raw, i)
+        size = scale if scale > _SIZE_FLOOR else None
+        if size is None:
+            continue
+        left, right, bottom, _top = box
+        chars.append((bottom, left, right, cp, size))
+    if not chars:
+        return {}
+    sizes: dict[int, float] = {}
+    ambiguous: set[int] = set()
+    for cluster in _cluster_baselines(chars):
+        # Drop far-smaller outlier glyphs: a printed line is one uniform size, so a
+        # glyph well below the line's median is gutter/watermark noise (e.g. a 5pt
+        # `$` floated into the left gutter) that would corrupt the margin-number
+        # parse or the median. Median-of-all is robust to the few noise glyphs.
+        line_med = statistics.median([c[4] for c in cluster])
+        kept = [c for c in cluster if c[4] >= 0.6 * line_med]
+        if not kept:
+            continue
+        text = _line_text(kept)
+        m = _NUMBERED_LINE.match(text)
+        if not m:
+            continue
+        line_number = int(m.group(1))
+        content = m.group(2)
+        # content glyph sizes: the chars after the margin number, by x order
+        n_margin = len(m.group(1))
+        content_sizes = [c[4] for c in sorted(kept, key=lambda c: c[1])][n_margin:]
+        content_sizes = content_sizes[: len(content.replace(" ", ""))] or content_sizes
+        if not content_sizes:
+            continue
+        if line_number in sizes or line_number in ambiguous:
+            ambiguous.add(line_number)
+            sizes.pop(line_number, None)
+            continue
+        sizes[line_number] = round(statistics.median(content_sizes), 1)
+    return sizes
+
+
 def extract_clean_pages(pdf_path: Path) -> list[Page]:
     pdf = pdfium.PdfDocument(str(pdf_path))
     try:
         pages: list[Page] = []
         for i in range(len(pdf)):
-            raw = pdf[i].get_textpage().get_text_range()
+            # pypdfium2 tracks each pdf[i] page as a child held until pdf.close();
+            # close it (and the textpage) per iteration so handles don't accumulate
+            # across a 1000+ page bill.
+            page_obj = pdf[i]
+            textpage = page_obj.get_textpage()
+            try:
+                raw = textpage.get_text_range()
+                line_sizes = _page_glyph_sizes(textpage, raw)
+            finally:
+                textpage.close()
+                page_obj.close()
             chrome_stripped = strip_page_chrome(normalize_raw(raw))
             print_lines = _parse_print_lines(chrome_stripped)
             merged, ranges = _merge_print_lines(print_lines)
+            merged = [
+                ln if ln.line_number is None else replace(ln, glyph_size=line_sizes.get(ln.line_number))
+                for ln in merged
+            ]
             pages.append(Page(i + 1, tuple(merged), tuple(print_lines), tuple(ranges)))
         return pages
     finally:

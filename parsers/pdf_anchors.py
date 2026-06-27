@@ -12,6 +12,7 @@ line numbers.
 from __future__ import annotations
 
 import re
+import statistics
 from dataclasses import dataclass
 from typing import Literal
 
@@ -28,9 +29,38 @@ class Anchor:
     text: str  # canonical form, e.g. "TITLE I", "SEC. 406", "OPERATIONS AND SUPPORT"
 
 
+@dataclass(frozen=True)
+class SizeBands:
+    """Per-document glyph-size bands derived from one bill's extracted Lines (#89).
+
+    `body` is the prose size; the heading band [heading_lo, heading_hi] is the
+    distinct cluster of (small-caps) heading sizes below it. Compared with a
+    tolerance (`_SIZE_EPS`); the band is required to sit more than 2·eps below
+    body so the windows are provably disjoint.
+    """
+
+    body: float
+    heading_lo: float
+    heading_hi: float
+
+
+# Size comparison tolerance (points). Per-line medians wobble ~0.1pt; eps must
+# exceed that rounding granularity. Body↔heading separation must exceed 2·eps.
+_SIZE_EPS = 0.3
+# A document needs at least this fraction of its numbered lines to carry an
+# attached glyph size before we trust size-based detection; below it we fall back
+# to the legacy text trigger (a partial join would silently drop headings).
+_COVERAGE_MIN = 0.85
+
+
 _TITLE_PATTERN = re.compile(r"^TITLE\s+([IVXLC]+)\b.*$")
 _SECTION_PATTERN = re.compile(r"^(SEC(?:TION)?\.?\s+\d+)\b")
 _FOR_NECESSARY_EXPENSES = re.compile(r"^For necessary expenses of\b", re.IGNORECASE)
+# A run-in subsection header ("(B) Current visas revoked.—") renders small-caps,
+# so it lands in the heading band, but it is NOT an account: it opens with a
+# parenthesized enumerator, which appropriations account headings never do. Used
+# to reject these false accounts on general (non-appropriations) bills.
+_ENUM_PREFIX = re.compile(r"^\([0-9A-Za-z]{1,4}\)\s")
 
 
 def _is_uppercase_heading(content: str) -> bool:
@@ -52,26 +82,92 @@ def _is_uppercase_heading(content: str) -> bool:
     return has_letter
 
 
+def _has_lowercase(text: str) -> bool:
+    return any("a" <= ch <= "z" for ch in text)
+
+
+def _is_parenthetical(text: str) -> bool:
+    """A line wholly enclosed in parentheses, e.g. `(INCLUDING TRANSFER OF FUNDS)`.
+
+    These GPO appropriation qualifiers render in the heading band but are riders,
+    not account names. They must not be emitted as accounts, and must be treated
+    as transparent in the account look-ahead so the real account heading they
+    follow is still seen as immediately preceding body prose.
+    """
+    t = text.strip()
+    return t.startswith("(") and t.endswith(")")
+
+
+def _sized_lines(pages: list[Page]):
+    for page in pages:
+        for line in page.lines:
+            if line.line_number is not None and line.glyph_size is not None:
+                yield line
+
+
+def derive_size_bands(pages: list[Page]) -> SizeBands | None:
+    """Derive the per-document body/heading glyph-size bands, or None.
+
+    Returns None (→ legacy text-trigger fallback) when the signal isn't a clean
+    body+single-heading-band split: no sized prose lines, no sub-body heading
+    cluster, more than one strong heading cluster (trimodal, e.g. reconciliation
+    bills), or a body↔heading gap within 2·eps.
+    """
+    body_sizes = [ln.glyph_size for ln in _sized_lines(pages) if _has_lowercase(ln.text)]
+    if not body_sizes:
+        return None
+    # body = the most common prose size; on a tie take the LARGER (body is the
+    # dominant, larger cluster in GPO bills — picking a smaller tied size would
+    # exclude real sub-body headings and silently force the legacy fallback).
+    body = max(statistics.multimode(round(s, 1) for s in body_sizes))
+
+    head_sizes = sorted(
+        round(ln.glyph_size, 1)
+        for ln in _sized_lines(pages)
+        if _is_uppercase_heading(ln.text) and ln.glyph_size < body - _SIZE_EPS
+    )
+    if not head_sizes:
+        return None
+
+    # Cluster the sub-body heading sizes; split where a gap exceeds 2·eps.
+    clusters: list[list[float]] = [[head_sizes[0]]]
+    for s in head_sizes[1:]:
+        if s - clusters[-1][-1] > 2 * _SIZE_EPS:
+            clusters.append([s])
+        else:
+            clusters[-1].append(s)
+    dominant = max(clusters, key=len)
+    # More than one *strong* cluster (≥30% of the dominant) ⇒ trimodal ⇒ bail.
+    if any(c is not dominant and len(c) >= 0.3 * len(dominant) for c in clusters):
+        return None
+
+    heading_lo, heading_hi = dominant[0], dominant[-1]
+    if body - heading_hi <= 2 * _SIZE_EPS:
+        return None
+    return SizeBands(body, heading_lo, heading_hi)
+
+
 def _scan_anchors_in_page(page_number: int, raw_text: str) -> list[Anchor]:
     """Scan one page's raw chrome-stripped, line-numbered text for anchors.
 
-    Test-only entry point that takes a raw `<n> content` string per line.
-    Production path uses `extract_anchors(pages)` which reads `Page.lines`.
+    Test-only entry point that takes a raw `<n> content` string per line. Runs the
+    full `extract_anchors` pipeline on the single page so account detection (size
+    path, or legacy fallback when the synthetic page carries no glyph sizes) is
+    exercised. Production path uses `extract_anchors(pages)`.
     """
-
     page = Page(page_number, parse_lines(strip_page_chrome(raw_text)))
-    return _anchors_from_page(page)
+    return extract_anchors([page])
 
 
 def _anchors_from_page(page: Page) -> list[Anchor]:
-    """Scan a Page's lines for anchors, returning them in line order.
+    """TITLE and SEC anchors for one page (per-page; no cross-line context needed).
 
-    Account headings are detected by walking backward from each `For necessary
-    expenses of` trigger up to 3 lines and taking the nearest uppercase
-    heading.
+    Account anchors are emitted separately by `extract_anchors`, which needs the
+    flattened document line stream for size-band classification and page-seam
+    look-ahead.
     """
     anchors: list[Anchor] = []
-    for idx, line in enumerate(page.lines):
+    for line in page.lines:
         if line.line_number is None:
             continue
         title_match = _TITLE_PATTERN.match(line.text)
@@ -82,28 +178,158 @@ def _anchors_from_page(page: Page) -> list[Anchor]:
         if section_match:
             canonical = re.sub(r"\s+", " ", section_match.group(1))
             anchors.append(Anchor(page.page_number, line.line_number, "section", canonical))
+    return anchors
+
+
+def _coverage(pages: list[Page]) -> float:
+    numbered = [ln for page in pages for ln in page.lines if ln.line_number is not None]
+    if not numbered:
+        return 0.0
+    return sum(1 for ln in numbered if ln.glyph_size is not None) / len(numbered)
+
+
+def _flatten(pages: list[Page]) -> list[tuple[int, "Line"]]:  # noqa: F821 - Line via pdf_text
+    return [(page.page_number, ln) for page in pages for ln in page.lines]
+
+
+def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
+    """Size-based account detection over the flattened document line stream.
+
+    An account is a heading-band, uppercase line whose next meaningful line is
+    body prose (or end-of-document). A band heading followed by another heading is
+    an agency parent (skipped — deferred to #54). The look-ahead skips blank lines
+    and parenthetical qualifiers; an unattached (size-less) next line counts as
+    body (conservative — skipping toward the next heading would wrongly drop a
+    leaf). Run-in subsection headers (`(a) …`) and parenthetical qualifiers are
+    never accounts. The anchor keeps the heading's own page/line, never the
+    look-ahead target's.
+
+    Body must be confirmed positively (at body size) rather than "anything that
+    isn't a heading": a wrapped run-in header continuation can sit in the heading
+    band and be followed by another (enum-prefixed) run-in header — neither body
+    nor a recognized heading — and must not be emitted.
+    """
+    flat = _flatten(pages)
+    n = len(flat)
+
+    def in_band(size: float | None) -> bool:
+        return size is not None and bands.heading_lo - _SIZE_EPS <= size <= bands.heading_hi + _SIZE_EPS
+
+    def is_account_candidate(line) -> bool:
+        return (
+            line.line_number is not None
+            and in_band(line.glyph_size)
+            and _is_uppercase_heading(line.text)
+            and not _ENUM_PREFIX.match(line.text)
+            and not _is_parenthetical(line.text)
+        )
+
+    def continues_section_catchline(idx: int) -> bool:
+        """True when flat[idx] is the wrapped continuation of a `SEC.` catchline.
+
+        A long section catchline ("SEC. 5. ACTIONS TO PROMOTE FREEDOM OF THE PRESS
+        / AND ASSEMBLY IN HAITI.") prints in the small-caps heading band and wraps
+        onto a line that, read alone, is an uppercase heading in-band followed by
+        body — a false `account`. It is not a header; it belongs to the SEC. line.
+        Walk back over the wrapped run (contiguous in-band uppercase headings,
+        blanks/parentheticals skipped): if it originates at a SEC. catchline, this
+        line is a continuation and emits no anchor. The SEC. line itself is never a
+        candidate (`_is_uppercase_heading` rejects SEC. headings), so only the
+        continuation reaches here. Tree-independent; the structural cases are #54.
+
+        Load-bearing invariant: the walk only reaches a SEC. through a contiguous
+        run of in-band uppercase headings — any body line stops it (returns False).
+        This relies on GPO appropriations sections carrying body prose right after
+        the SEC. number ("SEC. 101. (a) The Secretary…"), so a real account heading
+        is always separated from a preceding SEC. by that body and never reaches the
+        SEC. The pathological `SEC. / AGENCY / ACCOUNT` with NO body between would
+        false-skip the account, but that needs a catchline-style SEC. directly
+        abutting an agency heading, which does not occur in the corpus (catchline
+        wraps appear only in authorization bills, which have no accounts). Telling
+        the two apart needs the leveled tree — deferred to #54. Period-based
+        disambiguation does NOT work: appropriations SEC. terminal periods track
+        abbreviation wrap points ("…''U.S."), not catchline completion.
+        """
+        for j in range(idx - 1, -1, -1):
+            prev = flat[j][1]
+            if not prev.text.strip() or _is_parenthetical(prev.text):
+                continue
+            if _SECTION_PATTERN.match(prev.text):
+                return True
+            if is_account_candidate(prev):
+                continue  # an earlier wrapped line of the same catchline
+            return False
+        return False
+
+    def is_body(line) -> bool:
+        if not line.text.strip():
+            return False
+        if line.glyph_size is None:  # unattached non-blank line ⇒ treat as body
+            return True
+        return abs(line.glyph_size - bands.body) <= _SIZE_EPS
+
+    anchors: list[Anchor] = []
+    for idx in range(n):
+        page_number, line = flat[idx]
+        if not is_account_candidate(line):
             continue
-        if _FOR_NECESSARY_EXPENSES.match(line.text):
+        if continues_section_catchline(idx):
+            continue
+        # Next meaningful line, skipping blanks and parenthetical qualifiers.
+        nxt = None
+        for j in range(idx + 1, n):
+            cand = flat[j][1]
+            if not cand.text.strip() or _is_parenthetical(cand.text):
+                continue
+            nxt = cand
+            break
+        if nxt is None or is_body(nxt):
+            anchors.append(Anchor(page_number, line.line_number, "account", line.text.strip()))
+    return anchors
+
+
+def _account_anchors_legacy(pages: list[Page]) -> list[Anchor]:
+    """Legacy fallback: per page, walk back ≤3 line positions from a `For necessary
+    expenses of` trigger to the nearest uppercase heading (parenthetical qualifiers
+    skipped). Used when size bands aren't derivable or attachment coverage is too
+    low. Per-page and 3-position to match the pre-#89 behavior exactly."""
+    anchors: list[Anchor] = []
+    for page in pages:
+        lines = page.lines
+        for idx, line in enumerate(lines):
+            if line.line_number is None or not _FOR_NECESSARY_EXPENSES.match(line.text):
+                continue
             for back in range(idx - 1, max(idx - 4, -1), -1):
-                back_line = page.lines[back]
-                if back_line.line_number is None:
+                bline = lines[back]
+                if bline.line_number is None or _is_parenthetical(bline.text):
                     continue
-                if _is_uppercase_heading(back_line.text):
-                    candidate = Anchor(page.page_number, back_line.line_number, "account", back_line.text.strip())
+                if _is_uppercase_heading(bline.text):
+                    candidate = Anchor(page.page_number, bline.line_number, "account", bline.text.strip())
                     if candidate not in anchors:
                         anchors.append(candidate)
                     break
-
-    anchors.sort(key=lambda a: a.line_number)
     return anchors
 
 
 def extract_anchors(pages: list[Page]) -> list[Anchor]:
-    """Extract all anchors from a list of cleaned Pages, in document order."""
-    all_anchors: list[Anchor] = []
+    """Extract all anchors (title/section/account) in document order.
+
+    TITLE/SEC are detected per page. Accounts use size-band + position
+    classification when the document yields clean bands and adequate glyph-size
+    attachment coverage; otherwise they fall back to the legacy text trigger.
+    """
+    anchors: list[Anchor] = []
     for page in pages:
-        all_anchors.extend(_anchors_from_page(page))
-    return all_anchors
+        anchors.extend(_anchors_from_page(page))
+
+    bands = derive_size_bands(pages)
+    if bands is not None and _coverage(pages) >= _COVERAGE_MIN:
+        anchors.extend(_account_anchors_by_size(pages, bands))
+    else:
+        anchors.extend(_account_anchors_legacy(pages))
+
+    anchors.sort(key=lambda a: (a.page_number, a.line_number))
+    return anchors
 
 
 def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor]) -> tuple[str, ...]:
@@ -123,7 +349,9 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
     """
     if anchor.kind in ("title", "preamble"):
         return (anchor.text,)
-    # Find anchor's index by identity
+    # Resolve by value-equality .index(); relies on anchors being unique per
+    # (page, line) — the size path emits one per line and the legacy path dedups,
+    # so no two value-equal anchors exist. Keep that invariant if emitting more.
     try:
         idx = list(all_anchors).index(anchor)
     except ValueError:

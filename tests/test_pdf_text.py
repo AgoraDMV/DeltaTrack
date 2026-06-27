@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
+import pytest
+
 from parsers.pdf_text import (
     Line,
     Page,
     _merge_print_lines,
+    _page_glyph_sizes,
     _parse_print_lines,
+    extract_clean_pages,
     normalize_glyphs,
     normalize_raw,
     page_range_text,
@@ -15,6 +21,8 @@ from parsers.pdf_text import (
     rejoin_soft_hyphens,
     strip_page_chrome,
 )
+
+_HR8752_V1 = Path(__file__).resolve().parent.parent / "bills" / "118-hr-8752" / "1_reported-in-house.pdf"
 
 
 def _print_page(page_number: int, chrome_stripped: str) -> Page:
@@ -125,6 +133,11 @@ class TestStripPageChrome:
         # PDFium floats the running header to the top, after the page number.
         assert strip_page_chrome("•HR 4366 RH\n1 BODY") == "1 BODY"
 
+    def test_strips_running_senate_header_line(self):
+        # Senate prints carry a •S####RS running header/footer in the body column;
+        # unstripped it pollutes the glyph-size sidecar (DeltaTrack#89).
+        assert strip_page_chrome("•S 4795 RS\n1 BODY") == "1 BODY"
+
     def test_strips_verdate_footer_and_watermark_below(self):
         raw = "23 reasons therefor.\nVerDate Sep 11 2014 00:17 Jkt\nSSpencer on DSK PROD with BILLS"
         assert strip_page_chrome(raw) == "23 reasons therefor."
@@ -137,6 +150,65 @@ class TestStripPageChrome:
 
     def test_keeps_body_without_chrome_unchanged(self):
         assert strip_page_chrome("1 BODY\n2 MORE") == "1 BODY\n2 MORE"
+
+
+class TestPageGlyphSizes:
+    """The glyph-size measurement sidecar (#89). Assertions are RELATIVE/structural,
+    predicted from the #89 evidence, not hardcoded point sizes."""
+
+    def _page3_sizes(self):
+        if not _HR8752_V1.exists():
+            pytest.skip("HR 8752 v1 PDF not present")
+        import pypdfium2 as pdfium
+
+        pdf = pdfium.PdfDocument(str(_HR8752_V1))
+        try:
+            tp = pdf[2].get_textpage()  # page 3 (0-based): MANAGEMENT DIRECTORATE ... FPS
+            try:
+                return _page_glyph_sizes(tp, tp.get_text_range())
+            finally:
+                tp.close()
+        finally:
+            pdf.close()
+
+    def test_heading_extracts_smaller_than_body(self):
+        sizes = self._page3_sizes()
+        # line 12 FEDERAL PROTECTIVE SERVICE (heading) vs line 13 body prose
+        assert sizes[12] < sizes[13]
+        # line 1 MANAGEMENT DIRECTORATE (heading) vs line 3 "For necessary expenses" body
+        assert sizes[1] < sizes[3]
+
+    def test_distribution_is_bimodal(self):
+        sizes = self._page3_sizes()
+        rounded = sorted({round(s, 1) for s in sizes.values()})
+        # at least two distinct size clusters (body + heading band)
+        assert len(rounded) >= 2
+        # body (most common) is the larger cluster; a smaller heading cluster exists
+        from collections import Counter
+
+        body = Counter(round(s, 1) for s in sizes.values()).most_common(1)[0][0]
+        assert any(s < body - 0.5 for s in rounded)
+
+    def test_margin_numbers_join_to_real_lines(self):
+        # The join is correct only if sidecar line numbers match the string
+        # pipeline's. Numbers found must be a superset of the merged-line numbers.
+        if not _HR8752_V1.exists():
+            pytest.skip("HR 8752 v1 PDF not present")
+        pages = extract_clean_pages(_HR8752_V1)
+        p3 = pages[2]
+        merged_numbers = {ln.line_number for ln in p3.lines if ln.line_number is not None}
+        sizes = self._page3_sizes()
+        missing = merged_numbers - set(sizes)
+        assert not missing, f"merged lines with no size: {missing}"
+
+    def test_sizes_attached_to_lines_after_extract(self):
+        if not _HR8752_V1.exists():
+            pytest.skip("HR 8752 v1 PDF not present")
+        pages = extract_clean_pages(_HR8752_V1)
+        p3 = pages[2]
+        by_num = {ln.line_number: ln for ln in p3.lines}
+        assert by_num[12].glyph_size is not None
+        assert by_num[12].glyph_size < by_num[13].glyph_size
 
 
 class TestPageRangeText:

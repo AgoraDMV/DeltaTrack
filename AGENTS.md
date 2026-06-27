@@ -14,6 +14,7 @@ uv run python scripts/serve_compare.py 118-hr-8752  # PDF vs XML diff side by si
 
 ## Key architecture concepts
 
+- The shared bill data model (the two-tree hierarchy, the glossary, why the XML encodes nesting positionally, and the PDF↔XML parity goal) lives in [docs/bill-structure.md](docs/bill-structure.md). Read it before working on heading/anchor/account detection or DeltaTrack#54.
 - Bill XML has structural containers nested inside titles: `subtitle`, `part`, `chapter`, `subchapter`. These are handled by `_walk_structural_children()` in `bill_tree.py`, which recurses through them to reach sections and appropriations elements.
 - `_process_section_element()` is the shared helper for section handling, called from both the main title walk and structural containers.
 - `BillNode.division_label` stores the division context (e.g., "Division A: Military Construction"). `normalize_division_title()` strips the letter prefix for matching.
