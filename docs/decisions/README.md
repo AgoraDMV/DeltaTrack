@@ -46,4 +46,5 @@ relitigated.
 | [0004](0004-govinfo-bulk-data.md) | Fetch discovery and text from govinfo bulk data, not the Congress.gov API |
 | [0005](0005-deltatrack-billtrax-boundary.md) | Keep DeltaTrack a contained two-version tool; put analysis in BillTrax |
 | [0006](0006-canonical-diff-contract.md) | Make a versioned JSON document the contract between the diff engine and its consumers |
-| [0007](0007-single-renderer.md) | Render every diff with one renderer, whatever pipeline produced it |
+| [0007](0007-single-renderer.md) | Render every diff with one renderer, whatever source pipeline produced it |
+| [0008](0008-deterministic-engine.md) | Deterministic Diff Engine |
