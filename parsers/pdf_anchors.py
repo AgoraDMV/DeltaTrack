@@ -236,6 +236,19 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
         line is a continuation and emits no anchor. The SEC. line itself is never a
         candidate (`_is_uppercase_heading` rejects SEC. headings), so only the
         continuation reaches here. Tree-independent; the structural cases are #54.
+
+        Load-bearing invariant: the walk only reaches a SEC. through a contiguous
+        run of in-band uppercase headings — any body line stops it (returns False).
+        This relies on GPO appropriations sections carrying body prose right after
+        the SEC. number ("SEC. 101. (a) The Secretary…"), so a real account heading
+        is always separated from a preceding SEC. by that body and never reaches the
+        SEC. The pathological `SEC. / AGENCY / ACCOUNT` with NO body between would
+        false-skip the account, but that needs a catchline-style SEC. directly
+        abutting an agency heading, which does not occur in the corpus (catchline
+        wraps appear only in authorization bills, which have no accounts). Telling
+        the two apart needs the leveled tree — deferred to #54. Period-based
+        disambiguation does NOT work: appropriations SEC. terminal periods track
+        abbreviation wrap points ("…''U.S."), not catchline completion.
         """
         for j in range(idx - 1, -1, -1):
             prev = flat[j][1]

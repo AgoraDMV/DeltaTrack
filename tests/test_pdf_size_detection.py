@@ -10,6 +10,8 @@ legacy trigger — only the size path can satisfy these.
 
 from __future__ import annotations
 
+import pytest
+
 from parsers.pdf_anchors import SizeBands, derive_size_bands, extract_anchors
 from parsers.pdf_text import Line, Page
 
@@ -164,6 +166,46 @@ class TestSizePositionClassification:
         rows += [(n, f"more body prose line {n}", BODY) for n in range(6, 16)]
         names = {a.text for a in _accounts(extract_anchors([_page(1, rows)]))}
         assert "AND ASSEMBLY IN HAITI." not in names
+        assert "OPERATIONS AND SUPPORT" in names
+
+    def test_real_heading_after_section_with_body_still_emitted(self):
+        # The mechanism that keeps the catchline guard safe (#89): a body line
+        # between a SEC. and a later heading STOPS the walk-back, so a real account
+        # after a section's body is never mistaken for a catchline continuation.
+        # This is the realistic GPO layout — appropriations SECs carry body prose
+        # ("SEC. 101. (a) The Secretary...") — so the false-skip cannot reach them.
+        rows = [
+            (1, "SEC. 5. ACTIONS TO PROMOTE FREEDOM OF THE PRESS", HEAD),
+            (2, "AND ASSEMBLY IN HAITI.", HEAD),  # catchline continuation (suppressed)
+            (3, "body prose of the section runs here now", BODY),
+            (4, "OPERATIONS AND SUPPORT", HEAD),  # real account, separated by body
+            (5, "the account body prose follows here", BODY),
+        ]
+        rows += [(n, f"more body prose line {n}", BODY) for n in range(6, 16)]
+        names = {a.text for a in _accounts(extract_anchors([_page(1, rows)]))}
+        assert "AND ASSEMBLY IN HAITI." not in names
+        assert "OPERATIONS AND SUPPORT" in names
+
+    @pytest.mark.xfail(
+        reason="Known #89 residual deferred to #54: a SEC. catchline directly "
+        "abutting an agency heading with NO body between false-skips the account. "
+        "Needs the leveled tree to disambiguate; does not occur in the corpus "
+        "(catchline wraps appear only in account-free authorization bills). This "
+        "xfail makes the limitation visible and flips to pass when #54 closes it.",
+        strict=True,
+    )
+    def test_account_directly_after_section_catchline_no_body(self):
+        # Pathological, currently-unhandled: SEC. catchline / AGENCY / ACCOUNT / body
+        # with no body separating the SEC. from the account chain. The walk-back
+        # reaches the SEC. through the AGENCY heading and wrongly suppresses ACCOUNT.
+        rows = [
+            (1, "SEC. 5. A CATCHLINE WITHOUT A TRAILING SECTION", HEAD),
+            (2, "MANAGEMENT DIRECTORATE", HEAD),  # agency heading (no body before it)
+            (3, "OPERATIONS AND SUPPORT", HEAD),  # real account, wrongly skipped today
+            (4, "the account body prose follows here", BODY),
+        ]
+        rows += [(n, f"more body prose line {n}", BODY) for n in range(5, 15)]
+        names = {a.text for a in _accounts(extract_anchors([_page(1, rows)]))}
         assert "OPERATIONS AND SUPPORT" in names
 
     def test_multiline_section_catchline_continuation_not_account(self):
