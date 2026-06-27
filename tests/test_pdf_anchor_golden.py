@@ -105,6 +105,87 @@ class TestNonAppropsGeneralization:
         assert [a.text for a in anchors if a.kind == "account"] == []
 
 
+class TestSectionCatchlineContinuation:
+    """Real-bill repro for the #89 catchline merge: a wrapped SEC. catchline line
+    rendered in the heading band must not surface as a false `account`."""
+
+    # (pdf, the false-account text the wrapped catchline used to emit)
+    REPROS = {
+        ROOT / "bills" / "117-hr-2471" / "1_introduced-in-house.pdf": "AND ASSEMBLY IN HAITI.",
+        ROOT / "bills" / "118-hr-2882" / "1_introduced-in-house.pdf": "TRUST FUND.",
+    }
+
+    @pytest.mark.parametrize("pdf", sorted(REPROS), ids=lambda p: p.parent.name)
+    def test_no_catchline_continuation_account(self, pdf: Path):
+        if not pdf.exists():
+            pytest.skip(f"{pdf.parent.name} PDF not present")
+        assert self.REPROS[pdf] not in _account_names(pdf)
+
+
+class TestCorpusAccountPrecision:
+    """Corpus-wide floor on size-detected account vocabulary precision/recall (#89).
+
+    Complements the exact golden snapshots (which pin three bills) with a tolerant
+    net over the appropriations corpus, so a future change can't silently flood
+    false accounts or drop real ones without tripping a gate. The floors sit below
+    today's measured values (see scripts/heading_precision.py for the live numbers).
+
+    Why precision is well under 1.0 even when correct — the residual misses are
+    KNOWN and accepted, deferred to #54, NOT bugs to chase here:
+      - Provision-group headers (ADMINISTRATIVE PROVISIONS, GENERAL PROVISIONS,
+        SPENDING REDUCTION ACCOUNT) — real block headers mislabeled `account`.
+      - Wrapped agency-name fragments (e.g. "FAMILY HOUSING CONSTRUCTION, AIR
+        FORCE" wrapping onto a line read as "FORCE") — correct labeling needs the
+        leveled tree.
+      - Real account names whose GPO casing/wording normalizes differently than the
+        XML header (counted as a vocab miss though the anchor is right).
+    The SEC.-catchline-continuation class is NOT among the accepted residue — it is
+    fixed (see TestSectionCatchlineContinuation); a regression there would lower
+    these numbers, but the targeted test catches it first.
+    """
+
+    # Appropriations bills with a paired XML; (bill id, pdf rel path, xml rel path).
+    BILLS = [
+        ("114-hr-2029", "bills/114-hr-2029", None),
+        ("115-hr-5895", "bills/115-hr-5895", None),
+        ("117-hr-4432", "bills/117-hr-4432", None),
+        ("117-hr-4502", "bills/117-hr-4502", None),
+        ("118-hr-4366", "bills/118-hr-4366", None),
+        ("118-hr-4820", "bills/118-hr-4820", None),
+        ("118-hr-8752", "bills/118-hr-8752", None),
+        ("118-hr-8774", "bills/118-hr-8774", None),
+        ("118-s-4795", "test_data/BILLS-118s4795rs.pdf", "bills/118-s-4795/1_reported-in-senate.xml"),
+    ]
+    # Set below the lowest measured value (118-hr-4820: vrec 0.64 / vprec 0.46) with
+    # margin for per-line median wobble; these are regression floors, not targets.
+    RECALL_FLOOR = 0.60
+    PRECISION_FLOOR = 0.45
+
+    @staticmethod
+    def _pair(spec) -> tuple[Path, Path] | None:
+        _id, p, x = spec
+        if x is not None:
+            pdf, xml = ROOT / p, ROOT / x
+            return (pdf, xml) if pdf.exists() and xml.exists() else None
+        d = ROOT / p
+        for pdf in sorted(d.glob("*.pdf")):
+            xml = pdf.with_suffix(".xml")
+            if xml.exists():
+                return pdf, xml
+        return None
+
+    @pytest.mark.parametrize("spec", BILLS, ids=[b[0] for b in BILLS])
+    def test_account_vocab_floors(self, spec):
+        pair = self._pair(spec)
+        if pair is None:
+            pytest.skip(f"{spec[0]} pdf/xml pair not present")
+        from scripts.heading_precision import measure
+
+        m = measure(*pair)
+        assert m["vocab_recall"] >= self.RECALL_FLOOR, f"{spec[0]} recall {m['vocab_recall']:.3f}"
+        assert m["vocab_precision"] >= self.PRECISION_FLOOR, f"{spec[0]} precision {m['vocab_precision']:.3f}"
+
+
 class TestPrecisionHarnessOracle:
     """Validate the harness computation (it is the oracle the swap is judged by)."""
 

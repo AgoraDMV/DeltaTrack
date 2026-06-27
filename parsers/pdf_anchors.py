@@ -224,6 +224,30 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
             and not _is_parenthetical(line.text)
         )
 
+    def continues_section_catchline(idx: int) -> bool:
+        """True when flat[idx] is the wrapped continuation of a `SEC.` catchline.
+
+        A long section catchline ("SEC. 5. ACTIONS TO PROMOTE FREEDOM OF THE PRESS
+        / AND ASSEMBLY IN HAITI.") prints in the small-caps heading band and wraps
+        onto a line that, read alone, is an uppercase heading in-band followed by
+        body — a false `account`. It is not a header; it belongs to the SEC. line.
+        Walk back over the wrapped run (contiguous in-band uppercase headings,
+        blanks/parentheticals skipped): if it originates at a SEC. catchline, this
+        line is a continuation and emits no anchor. The SEC. line itself is never a
+        candidate (`_is_uppercase_heading` rejects SEC. headings), so only the
+        continuation reaches here. Tree-independent; the structural cases are #54.
+        """
+        for j in range(idx - 1, -1, -1):
+            prev = flat[j][1]
+            if not prev.text.strip() or _is_parenthetical(prev.text):
+                continue
+            if _SECTION_PATTERN.match(prev.text):
+                return True
+            if is_account_candidate(prev):
+                continue  # an earlier wrapped line of the same catchline
+            return False
+        return False
+
     def is_body(line) -> bool:
         if not line.text.strip():
             return False
@@ -235,6 +259,8 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
     for idx in range(n):
         page_number, line = flat[idx]
         if not is_account_candidate(line):
+            continue
+        if continues_section_catchline(idx):
             continue
         # Next meaningful line, skipping blanks and parenthetical qualifiers.
         nxt = None

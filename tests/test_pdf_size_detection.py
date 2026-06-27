@@ -149,6 +149,37 @@ class TestSizePositionClassification:
         assert "OPERATIONS AND SUPPORT" in names
         assert "(INCLUDING TRANSFER OF FUNDS)" not in names
 
+    def test_section_catchline_continuation_not_account(self):
+        # A long SEC. catchline wraps onto a heading-band line that, alone, reads as
+        # an uppercase heading followed by body — a false account (#89, repro bills
+        # 117-hr-2471 / 118-hr-2882). The continuation belongs to the SEC. line and
+        # must emit no anchor; the surrounding real account still must.
+        rows = [
+            (1, "SEC. 5. ACTIONS TO PROMOTE FREEDOM OF THE PRESS", HEAD),
+            (2, "AND ASSEMBLY IN HAITI.", HEAD),
+            (3, "body prose of the section follows here", BODY),
+            (4, "OPERATIONS AND SUPPORT", HEAD),
+            (5, "the real account body prose runs here", BODY),
+        ]
+        rows += [(n, f"more body prose line {n}", BODY) for n in range(6, 16)]
+        names = {a.text for a in _accounts(extract_anchors([_page(1, rows)]))}
+        assert "AND ASSEMBLY IN HAITI." not in names
+        assert "OPERATIONS AND SUPPORT" in names
+
+    def test_multiline_section_catchline_continuation_not_account(self):
+        # A catchline wrapping onto two heading-band lines: both continuations must
+        # be suppressed, not just the one adjacent to the SEC. line.
+        rows = [
+            (1, "SEC. 7. A VERY LONG SECTION TITLE THAT WRAPS", HEAD),
+            (2, "ACROSS SEVERAL PRINTED HEADING LINES", HEAD),
+            (3, "AND KEEPS GOING TO A THIRD LINE.", HEAD),
+            (4, "the section body prose begins here now", BODY),
+        ]
+        rows += [(n, f"more body prose line {n}", BODY) for n in range(5, 15)]
+        names = {a.text for a in _accounts(extract_anchors([_page(1, rows)]))}
+        assert "ACROSS SEVERAL PRINTED HEADING LINES" not in names
+        assert "AND KEEPS GOING TO A THIRD LINE." not in names
+
     def test_unattached_next_line_treated_as_body(self):
         # A band heading whose following line has no size (join miss) is emitted
         # conservatively as an account (skipping toward the next heading would
