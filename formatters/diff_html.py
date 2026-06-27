@@ -674,16 +674,20 @@ _LLM_PROMPTS = (
 
 
 def _export_button_html(canonical: dict | None) -> str:
-    """The Export button that opens the download/prompts modal. PDF path only."""
+    """The Export button that opens the download/prompts modal. Rendered whenever
+    the canonical carries full-bill text (`_has_full_bill`), so it appears for any
+    pipeline that supplies it — XML and PDF alike, not PDF-only."""
     if not _has_full_bill(canonical):
         return ""
     return '<button id="export-open" class="export-btn" type="button">Export and Share</button>'
 
 
 def _nav_controls_html(canonical: dict | None) -> str:
-    """Prev / counter / Next change navigation. PDF path only (same gate as the
-    view toggle and export). JS wires the buttons, the counter, and the active
-    target set per view; see the navigation block in `_JS`."""
+    """Prev / counter / Next change navigation. Gated on full-bill text
+    (`_has_full_bill`), the same gate as the view toggle and export, so it appears
+    for any pipeline that supplies full text — XML and PDF alike. JS wires the
+    buttons, the counter, and the active target set per view; see the navigation
+    block in `_JS`."""
     if not _has_full_bill(canonical):
         return ""
     return (
@@ -697,8 +701,9 @@ def _nav_controls_html(canonical: dict | None) -> str:
 
 def _find_bar_html(canonical: dict | None) -> str:
     """In-page find: highlights matches in the active view and steps through them
-    (Ctrl+F style). PDF path only. JS wires the input, counter, and stepping; see
-    the find block in `_JS`."""
+    (Ctrl+F style). Gated on full-bill text (`_has_full_bill`), so it appears for
+    any pipeline that supplies full text — XML and PDF alike. JS wires the input,
+    counter, and stepping; see the find block in `_JS`."""
     if not _has_full_bill(canonical):
         return ""
     return (
