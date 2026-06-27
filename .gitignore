@@ -28,8 +28,10 @@ bills/118-s-*/*
 bills/118-hr-8752/*
 !bills/118-hr-8752/1_reported-in-house.pdf
 !bills/118-hr-8752/1_reported-in-house.xml
-# v2 (engrossed) PDF too, so the diff-recall suite (13 cross-version cases) gates CI.
+# v2 (engrossed) PDF + XML too, so the diff-recall suite (13 cross-version cases)
+# and the render-examples smoke test (XML v1<->v2 diff) gate CI.
 !bills/118-hr-8752/2_engrossed-in-house.pdf
+!bills/118-hr-8752/2_engrossed-in-house.xml
 !bills/118-hr-8282/
 bills/118-hr-8282/*
 !bills/118-hr-8282/1_introduced-in-house.pdf

@@ -16,8 +16,19 @@ import render_examples
 
 
 def _has_corpus() -> bool:
-    bill_dir = render_examples.BILLS / render_examples.EXAMPLES_TO_RENDER[0].bill_dir
-    return bill_dir.exists() and any(bill_dir.glob("*.xml"))
+    # Require every file the example actually renders (both XML versions and both
+    # PDFs), not just "any .xml": a partial corpus must skip cleanly, not error
+    # mid-render. A loose `glob("*.xml")` check let a vendored-but-incomplete bill
+    # dir trip render_xml_diff on a missing v2 XML.
+    spec = render_examples.EXAMPLES_TO_RENDER[0]
+    bill_dir = render_examples.BILLS / spec.bill_dir
+    required = [
+        bill_dir / f"{spec.v1_filename_stem}.xml",
+        bill_dir / f"{spec.v2_filename_stem}.xml",
+        bill_dir / f"{spec.v1_filename_stem}.pdf",
+        bill_dir / f"{spec.v2_filename_stem}.pdf",
+    ]
+    return all(p.exists() for p in required)
 
 
 @pytest.mark.skipif(not _has_corpus(), reason="bills corpus not present")
