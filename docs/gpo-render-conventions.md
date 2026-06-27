@@ -165,6 +165,41 @@ small-caps glyphs to actual uppercase. So:
 
 ---
 
+## PDF consequence: small-caps levels extract at a smaller glyph size (#49/#54/#56)
+
+The casing layers above have a measurable side effect in the **PDF** path that we use as
+a structural signal. Because GPO sets `appropriations-intermediate` and
+`appropriations-small` headers in `font-variant: small-caps` (casing table; gotcha 1),
+their glyphs render at ~x-height and PDFium extracts them at ~0.8x the body/full-caps
+size. The full-caps levels (`appropriations-major`, `<title>`/`<section>` headers) stay
+at the body size. Measured on the corpus working stages: **body ≈ 14.0pt, small-caps
+heading band ≈ 11.2pt** (ratio ≈ 0.8); the band-line count tracks XML
+`intermediate+small` within ~15%.
+
+This lets PDF heading segmentation recover the hierarchy XML carries explicitly:
+- `size == body AND uppercase` → `appropriations-major` (or a title/section header).
+- `size < body` (the small-caps band) → `intermediate` / `small`. Split the two by
+  position: the leaf (`small`/account) is immediately followed by body prose; the parent
+  (`intermediate`/agency) is followed by another same-size heading.
+- `size == body AND has lowercase` → body prose.
+
+The true glyph size is **not** `FPDFText_GetFontSize` (returns 1.0 — GPO defines the font
+at size 1 and scales via the text matrix); recover it from `FPDFText_GetMatrix`.
+
+**Universal across stages, but base size varies.** The small-caps ratio holds at every
+stage; only the absolute sizes shift. Working stages: body 14pt, band 11.2pt. Enrolled
+bills are re-typeset smaller: body 10pt, band 8pt — still ~0.8. So the threshold must be
+derived per-document (and, for heterogeneous files, per-region), never hardcoded.
+
+**Heterogeneous later stages need region-aware derivation.** Enrolled bills bundle a
+large explanatory statement, and engrossed-amendment versions consolidate many divisions,
+so a single global size split is muddied by extra matter at the heading size. The signal
+is present; isolating it there requires the production extractor's chrome-strip + line
+merge (`parsers/pdf_text`), not a global histogram. See
+`plans/pdf-heading-segmentation-spike.md` for the investigation behind this signal.
+
+---
+
 ## Inline spacing & lists (#51)
 
 - **One ASCII space after every `<enum>`** when the next sibling is `<text>` or
