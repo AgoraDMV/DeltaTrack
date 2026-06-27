@@ -165,7 +165,7 @@ class TestPageGlyphSizes:
         try:
             tp = pdf[2].get_textpage()  # page 3 (0-based): MANAGEMENT DIRECTORATE ... FPS
             try:
-                return _page_glyph_sizes(tp)
+                return _page_glyph_sizes(tp, tp.get_text_range())
             finally:
                 tp.close()
         finally:

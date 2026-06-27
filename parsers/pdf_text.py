@@ -242,10 +242,15 @@ def page_range_text(pages: list[Page], start_page: int, end_page: int) -> str:
 #      per-glyph `FPDFText_GetUnicode(raw, i)` call. If `len(text) != n` (non-BMP
 #      or surrogate mismatch), the hot loop falls back to per-glyph GetUnicode.
 #
-#   B) Font size: probe `FPDFText_GetFontSize` once (first glyph). For GPO bills
-#      it is always 1.0 (size-1 font scaled via text matrix), so the scale is just
-#      √(a²+b²) with no further GetFontSize calls. Non-GPO PDFs where the probe
-#      differs from 1.0 fall back to the original per-glyph GetFontSize × √(a²+b²).
+#   B) Font size: SAMPLE `FPDFText_GetFontSize` on the first glyph only, then
+#      apply that verdict to the whole page. This assumes GPO's page-uniform
+#      size-1 font (every glyph returns 1.0; the scale lives in the matrix), so
+#      the scale is just √(a²+b²) with no further GetFontSize calls. It is a
+#      sample, NOT a per-page proof: a hypothetical mixed-size page whose first
+#      glyph reads 1.0 would mis-size the rest — never seen in GPO output, but the
+#      reason the sampled value is rechecked per page rather than assumed once per
+#      doc. When the sample differs from 1.0 the whole page falls back to the
+#      original per-glyph GetFontSize × √(a²+b²).
 
 _SIZE_FLOOR = 1.0  # points; drop degenerate/zero-scale glyphs (clip/invisible)
 _SPACE_FACTOR = 0.25  # x-gap > factor × glyph size ⇒ insert a word space
@@ -317,7 +322,7 @@ def _line_text(cluster: list[tuple[float, float, float, int, float]]) -> str:
     return re.sub(r" +", " ", "".join(out)).strip()
 
 
-def _page_glyph_sizes(textpage) -> dict[int, float]:
+def _page_glyph_sizes(textpage, page_text: str) -> dict[int, float]:
     """Map GPO margin line number → representative recovered glyph size for one page.
 
     Walks raw chars, clusters into visual lines by baseline, reconstructs each
@@ -326,26 +331,30 @@ def _page_glyph_sizes(textpage) -> dict[int, float]:
     an empty/failed page. On an intra-page duplicate line number the entry is
     dropped (ambiguous), never overwritten.
 
+    `page_text` is the caller's `textpage.get_text_range()` result, passed in so the
+    page text is extracted once and shared with the string pipeline rather than
+    re-decoded here.
+
     Performance shortcuts (both output-preserving):
-      A) Bulk codepoints via `textpage.get_text_range()` (one FFI call vs N).
-      B) Font-size probe once per page; GPO bills always return 1.0 so the hot
-         loop skips per-glyph `FPDFText_GetFontSize` entirely.
+      A) Bulk codepoints from `page_text` (`ord(page_text[i])`) instead of N
+         per-glyph `FPDFText_GetUnicode` calls.
+      B) Font size sampled on the first glyph and applied page-wide (GPO's font is
+         uniformly size-1); the hot loop then skips per-glyph `FPDFText_GetFontSize`.
     """
     raw = textpage.raw
     n = pdfium_raw.FPDFText_CountChars(raw)
     if n <= 0:
         return {}
 
-    # A) Bulk codepoint extraction: one call instead of N FPDFText_GetUnicode calls.
-    # The returned string is index-aligned with PDFium char indices (index i == char i).
+    # A) Bulk codepoints: index i in page_text is the same glyph as char index i.
     # Guard: if lengths don't match (surrogate/non-BMP edge case) fall back per-glyph.
-    page_text = textpage.get_text_range()
     use_bulk_cp = len(page_text) == n
 
-    # B) Per-page font-size probe: find the first char with a valid matrix and call
-    # GetFontSize once. If it is 1.0 (within epsilon), skip GetFontSize for all
-    # subsequent glyphs on this page and compute scale = √(a²+b²) directly.
-    fast_fs: bool | None = None  # None = not yet probed
+    # B) Font-size sample: on the first char with a valid matrix, call GetFontSize
+    # once. If it is 1.0 (within epsilon), take the fast scale = √(a²+b²) for every
+    # glyph on this page; otherwise fall back to per-glyph GetFontSize × √(a²+b²).
+    # A sample, not a page-wide proof — see the module comment (B).
+    fast_fs: bool | None = None  # None = not yet sampled
 
     chars: list[tuple[float, float, float, int, float]] = []
     for i in range(n):
@@ -357,19 +366,17 @@ def _page_glyph_sizes(textpage) -> dict[int, float]:
         if box is None:
             continue
 
-        # Size: matrix is always needed; GetFontSize only if not already probed fast.
-        m = pdfium_raw.FS_MATRIX()
-        if not pdfium_raw.FPDFText_GetMatrix(raw, i, ctypes.byref(m)):
+        # Size: matrix is always needed; GetFontSize only if not already sampled fast.
+        mat = pdfium_raw.FS_MATRIX()
+        if not pdfium_raw.FPDFText_GetMatrix(raw, i, ctypes.byref(mat)):
             continue
         if fast_fs is None:
-            # First valid glyph on this page: probe the font size.
+            # First valid glyph on this page: sample the font size.
             fs_probe = pdfium_raw.FPDFText_GetFontSize(raw, i)
             fast_fs = abs(fs_probe - 1.0) <= _FONTSIZE_EPS
-        if fast_fs:
-            scale = math.sqrt(m.a * m.a + m.b * m.b)
-        else:
-            fs = pdfium_raw.FPDFText_GetFontSize(raw, i)
-            scale = fs * math.sqrt(m.a * m.a + m.b * m.b)
+        scale = math.sqrt(mat.a * mat.a + mat.b * mat.b)
+        if not fast_fs:
+            scale *= pdfium_raw.FPDFText_GetFontSize(raw, i)
         size = scale if scale > _SIZE_FLOOR else None
         if size is None:
             continue
@@ -420,7 +427,7 @@ def extract_clean_pages(pdf_path: Path) -> list[Page]:
             textpage = page_obj.get_textpage()
             try:
                 raw = textpage.get_text_range()
-                line_sizes = _page_glyph_sizes(textpage)
+                line_sizes = _page_glyph_sizes(textpage, raw)
             finally:
                 textpage.close()
                 page_obj.close()
