@@ -236,7 +236,7 @@ def page_range_text(pages: list[Page], start_page: int, end_page: int) -> str:
 
 _SIZE_FLOOR = 1.0  # points; drop degenerate/zero-scale glyphs (clip/invisible)
 _SPACE_FACTOR = 0.25  # x-gap > factor × glyph size ⇒ insert a word space
-_BASELINE_TOL_FACTOR = 0.5  # cluster tolerance as a fraction of the median line pitch
+_BASELINE_TOL_FACTOR = 0.5  # baseline cluster tolerance as a fraction of glyph size
 
 
 def _char_size(raw, i: int) -> float | None:
@@ -267,16 +267,20 @@ def _cluster_baselines(chars: list[tuple[float, float, float, int, float]]) -> l
 
     Clusters on bottom, not top/mid, because the baseline is shared across font
     sizes on one printed line, while the small margin digit and cap/ascender
-    variation shift top/mid. Tolerance is half the median inter-line pitch so
-    adjacent printed lines never merge. `chars` is (bottom, left, right, cp, size).
+    variation shift top/mid. `chars` is (bottom, left, right, cp, size).
+
+    Tolerance is derived from glyph SIZE, not inter-line pitch: a line's
+    descenders sit ~0.2x-size below the baseline while real line spacing is
+    ~1.5-1.8x-size, so a threshold between the two keeps a line whole (descenders
+    included) without merging the next line. Deriving it from a gap median is
+    wrong — that median mixes the descender-drop and line-pitch populations and
+    lands on the small one, shattering each line into fragments.
     """
     if not chars:
         return []
     by_bottom = sorted(chars, key=lambda c: -c[0])
-    distinct = sorted({round(c[0], 1) for c in chars}, reverse=True)
-    gaps = [a - b for a, b in zip(distinct, distinct[1:]) if a - b > 0.5]
-    pitch = statistics.median(gaps) if gaps else 12.0
-    tol = _BASELINE_TOL_FACTOR * pitch
+    median_size = statistics.median([c[4] for c in chars])
+    tol = _BASELINE_TOL_FACTOR * median_size
     clusters: list[list] = []
     current: list = []
     anchor: float | None = None
@@ -373,12 +377,17 @@ def extract_clean_pages(pdf_path: Path) -> list[Page]:
     try:
         pages: list[Page] = []
         for i in range(len(pdf)):
-            textpage = pdf[i].get_textpage()
+            # pypdfium2 tracks each pdf[i] page as a child held until pdf.close();
+            # close it (and the textpage) per iteration so handles don't accumulate
+            # across a 1000+ page bill.
+            page_obj = pdf[i]
+            textpage = page_obj.get_textpage()
             try:
                 raw = textpage.get_text_range()
                 line_sizes = _page_glyph_sizes(textpage)
             finally:
                 textpage.close()
+                page_obj.close()
             chrome_stripped = strip_page_chrome(normalize_raw(raw))
             print_lines = _parse_print_lines(chrome_stripped)
             merged, ranges = _merge_print_lines(print_lines)

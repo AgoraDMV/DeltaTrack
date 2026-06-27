@@ -86,6 +86,18 @@ def _has_lowercase(text: str) -> bool:
     return any("a" <= ch <= "z" for ch in text)
 
 
+def _is_parenthetical(text: str) -> bool:
+    """A line wholly enclosed in parentheses, e.g. `(INCLUDING TRANSFER OF FUNDS)`.
+
+    These GPO appropriation qualifiers render in the heading band but are riders,
+    not account names. They must not be emitted as accounts, and must be treated
+    as transparent in the account look-ahead so the real account heading they
+    follow is still seen as immediately preceding body prose.
+    """
+    t = text.strip()
+    return t.startswith("(") and t.endswith(")")
+
+
 def _sized_lines(pages: list[Page]):
     for page in pages:
         for line in page.lines:
@@ -104,8 +116,10 @@ def derive_size_bands(pages: list[Page]) -> SizeBands | None:
     body_sizes = [ln.glyph_size for ln in _sized_lines(pages) if _has_lowercase(ln.text)]
     if not body_sizes:
         return None
-    # body = the most common prose size; smallest on a tie (deterministic).
-    body = min(statistics.multimode(round(s, 1) for s in body_sizes))
+    # body = the most common prose size; on a tie take the LARGER (body is the
+    # dominant, larger cluster in GPO bills — picking a smaller tied size would
+    # exclude real sub-body headings and silently force the legacy fallback).
+    body = max(statistics.multimode(round(s, 1) for s in body_sizes))
 
     head_sizes = sorted(
         round(ln.glyph_size, 1)
@@ -182,69 +196,79 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
     """Size-based account detection over the flattened document line stream.
 
     An account is a heading-band, uppercase line whose next meaningful line is
-    body prose. A band heading followed by another band heading is an agency
-    parent (skipped — deferred to #54). The look-ahead skips blank/None lines; an
-    unattached (size-less) next line counts as body (conservative: skipping toward
-    the next heading would wrongly drop a leaf). The anchor keeps the heading's own
-    page/line, never the look-ahead target's.
+    body prose (or end-of-document). A band heading followed by another heading is
+    an agency parent (skipped — deferred to #54). The look-ahead skips blank lines
+    and parenthetical qualifiers; an unattached (size-less) next line counts as
+    body (conservative — skipping toward the next heading would wrongly drop a
+    leaf). Run-in subsection headers (`(a) …`) and parenthetical qualifiers are
+    never accounts. The anchor keeps the heading's own page/line, never the
+    look-ahead target's.
+
+    Body must be confirmed positively (at body size) rather than "anything that
+    isn't a heading": a wrapped run-in header continuation can sit in the heading
+    band and be followed by another (enum-prefixed) run-in header — neither body
+    nor a recognized heading — and must not be emitted.
     """
     flat = _flatten(pages)
+    n = len(flat)
 
     def in_band(size: float | None) -> bool:
         return size is not None and bands.heading_lo - _SIZE_EPS <= size <= bands.heading_hi + _SIZE_EPS
 
+    def is_account_candidate(line) -> bool:
+        return (
+            line.line_number is not None
+            and in_band(line.glyph_size)
+            and _is_uppercase_heading(line.text)
+            and not _ENUM_PREFIX.match(line.text)
+            and not _is_parenthetical(line.text)
+        )
+
     def is_body(line) -> bool:
-        # Unattached non-blank line ⇒ treat as body. Otherwise body = at body size.
         if not line.text.strip():
             return False
-        if line.glyph_size is None:
+        if line.glyph_size is None:  # unattached non-blank line ⇒ treat as body
             return True
         return abs(line.glyph_size - bands.body) <= _SIZE_EPS
 
     anchors: list[Anchor] = []
-    for idx, (page_number, line) in enumerate(flat):
-        if line.line_number is None or not in_band(line.glyph_size):
+    for idx in range(n):
+        page_number, line = flat[idx]
+        if not is_account_candidate(line):
             continue
-        if not _is_uppercase_heading(line.text):
-            continue
-        if _ENUM_PREFIX.match(line.text):  # run-in subsection header, not an account
-            continue
-        # Look ahead for the next meaningful (non-blank, numbered-or-unattached) line.
+        # Next meaningful line, skipping blanks and parenthetical qualifiers.
         nxt = None
-        for _pg, cand in flat[idx + 1 :]:
-            if cand.text.strip() == "":
+        for j in range(idx + 1, n):
+            cand = flat[j][1]
+            if not cand.text.strip() or _is_parenthetical(cand.text):
                 continue
             nxt = cand
             break
-        # Leaf account = followed by body prose, or end-of-document. A following
-        # band heading means this is an agency parent → skip.
         if nxt is None or is_body(nxt):
             anchors.append(Anchor(page_number, line.line_number, "account", line.text.strip()))
     return anchors
 
 
 def _account_anchors_legacy(pages: list[Page]) -> list[Anchor]:
-    """Legacy fallback: walk back ≤3 numbered lines from a `For necessary expenses
-    of` trigger to the nearest uppercase heading. Used when size bands aren't
-    derivable or attachment coverage is too low."""
-    flat = [(pg, ln) for pg, ln in _flatten(pages)]
+    """Legacy fallback: per page, walk back ≤3 line positions from a `For necessary
+    expenses of` trigger to the nearest uppercase heading (parenthetical qualifiers
+    skipped). Used when size bands aren't derivable or attachment coverage is too
+    low. Per-page and 3-position to match the pre-#89 behavior exactly."""
     anchors: list[Anchor] = []
-    for idx, (page_number, line) in enumerate(flat):
-        if line.line_number is None or not _FOR_NECESSARY_EXPENSES.match(line.text):
-            continue
-        seen = 0
-        for back in range(idx - 1, -1, -1):
-            bpg, bline = flat[back]
-            if bline.line_number is None:
+    for page in pages:
+        lines = page.lines
+        for idx, line in enumerate(lines):
+            if line.line_number is None or not _FOR_NECESSARY_EXPENSES.match(line.text):
                 continue
-            seen += 1
-            if _is_uppercase_heading(bline.text):
-                candidate = Anchor(bpg, bline.line_number, "account", bline.text.strip())
-                if candidate not in anchors:
-                    anchors.append(candidate)
-                break
-            if seen >= 3:
-                break
+            for back in range(idx - 1, max(idx - 4, -1), -1):
+                bline = lines[back]
+                if bline.line_number is None or _is_parenthetical(bline.text):
+                    continue
+                if _is_uppercase_heading(bline.text):
+                    candidate = Anchor(page.page_number, bline.line_number, "account", bline.text.strip())
+                    if candidate not in anchors:
+                        anchors.append(candidate)
+                    break
     return anchors
 
 
@@ -286,7 +310,9 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
     """
     if anchor.kind in ("title", "preamble"):
         return (anchor.text,)
-    # Find anchor's index by identity
+    # Resolve by value-equality .index(); relies on anchors being unique per
+    # (page, line) — the size path emits one per line and the legacy path dedups,
+    # so no two value-equal anchors exist. Keep that invariant if emitting more.
     try:
         idx = list(all_anchors).index(anchor)
     except ValueError:

@@ -132,6 +132,23 @@ class TestSizePositionClassification:
         ]
         assert any(a.text == "OPERATIONS AND SUPPORT" for a in _accounts(extract_anchors(pages)))
 
+    def test_parenthetical_qualifier_not_account_and_transparent(self):
+        # account / (qualifier) / body: the qualifier is a rider, not an account,
+        # and must not block the real account (which precedes it) from emission.
+        pages = [
+            _page(
+                1,
+                [
+                    (1, "OPERATIONS AND SUPPORT", HEAD),
+                    (2, "(INCLUDING TRANSFER OF FUNDS)", HEAD),
+                    (3, "the body prose runs here now", BODY),
+                ],
+            )
+        ]
+        names = {a.text for a in _accounts(extract_anchors(pages))}
+        assert "OPERATIONS AND SUPPORT" in names
+        assert "(INCLUDING TRANSFER OF FUNDS)" not in names
+
     def test_unattached_next_line_treated_as_body(self):
         # A band heading whose following line has no size (join miss) is emitted
         # conservatively as an account (skipping toward the next heading would

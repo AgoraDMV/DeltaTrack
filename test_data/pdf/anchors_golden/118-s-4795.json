@@ -67,15 +67,15 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFERS OF FUNDS)",
+  "SALARIES AND EXPENSES",
   10,
-  7
+  6
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "SCIENTIFIC AND TECHNICAL RESEARCH AND SERVICES",
   13,
-  9
+  8
  ],
  [
   "account",
@@ -91,9 +91,9 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "OPERATIONS, RESEARCH, AND FACILITIES",
   16,
-  4
+  3
  ],
  [
   "account",
@@ -151,9 +151,9 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "GENERAL PROVISIONS—DEPARTMENT OF COMMERCE",
   22,
-  13
+  12
  ],
  [
   "section",
@@ -247,15 +247,15 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "JUSTICE INFORMATION SHARING TECHNOLOGY",
   29,
-  14
+  13
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "EXECUTIVE OFFICE FOR IMMIGRATION REVIEW",
   30,
-  6
+  5
  ],
  [
   "account",
@@ -271,9 +271,9 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "SALARIES AND EXPENSES, GENERAL LEGAL ACTIVITIES",
   31,
-  11
+  10
  ],
  [
   "account",
@@ -307,9 +307,9 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "SERVICE",
   37,
-  11
+  10
  ],
  [
   "account",
@@ -337,9 +337,9 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "SALARIES AND EXPENSES",
   39,
-  19
+  18
  ],
  [
   "account",
@@ -373,9 +373,9 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "SALARIES AND EXPENSES",
   44,
-  17
+  16
  ],
  [
   "account",
@@ -397,9 +397,9 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFERS OF FUNDS)",
+  "PROSECUTION PROGRAMS",
   48,
-  10
+  9
  ],
  [
   "account",
@@ -409,9 +409,9 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "STATE AND LOCAL LAW ENFORCEMENT ASSISTANCE",
   58,
-  2
+  1
  ],
  [
   "account",
@@ -421,21 +421,21 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "PUBLIC SAFETY OFFICER BENEFITS",
   74,
-  12
+  11
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "COMMUNITY ORIENTED POLICING SERVICES PROGRAMS",
   75,
-  10
+  9
  ],
  [
   "account",
-  "(INCLUDING TRANSFERS OF FUNDS)",
+  "GENERAL PROVISIONS—DEPARTMENT OF JUSTICE",
   79,
-  9
+  8
  ],
  [
   "section",
@@ -643,9 +643,9 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFERS OF FUNDS)",
+  "ADMINISTRATIVE PROVISIONS",
   95,
-  7
+  6
  ],
  [
   "account",
@@ -685,9 +685,9 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "ADMINISTRATIVE PROVISIONS",
   102,
-  9
+  8
  ],
  [
   "title",
@@ -739,9 +739,9 @@
  ],
  [
   "account",
-  "(INCLUDING TRANSFER OF FUNDS)",
+  "TRADE ENFORCEMENT TRUST FUND",
   109,
-  20
+  19
  ],
  [
   "account",
@@ -754,12 +754,6 @@
   "TITLE V",
   111,
   1
- ],
- [
-  "account",
-  "(INCLUDING TRANSFERS AND RESCISSIONS OF FUNDS)",
-  111,
-  3
  ],
  [
   "section",
@@ -880,12 +874,6 @@
   "SEC. 520",
   122,
   8
- ],
- [
-  "account",
-  "(RESCISSIONS)",
-  123,
-  1
  ],
  [
   "section",
