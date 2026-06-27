@@ -77,6 +77,29 @@ class TestSizeDetectionEndToEnd:
         assert "FEDERAL PROTECTIVE SERVICE" in (new - legacy)
 
 
+class TestNonAppropsGeneralization:
+    """The whole point of the change: size detection works on general legislation
+    that has no 'For necessary expenses' language. Pinned so a future change can't
+    silently break the generalization claim."""
+
+    def test_sections_detected(self):
+        # new-true-positive (red-first claim): the universal SEC level is found.
+        pdf = FIXTURES["118-hr-8282"]
+        if not pdf.exists():
+            pytest.skip("HR 8282 PDF not present")
+        anchors = extract_anchors(extract_clean_pages(pdf))
+        assert any(a.kind == "section" for a in anchors)
+
+    def test_zero_false_accounts(self):
+        # precision-characterization: a non-appropriations bill has no accounts, so
+        # size detection (incl. the run-in-enumerator reject) must emit none.
+        pdf = FIXTURES["118-hr-8282"]
+        if not pdf.exists():
+            pytest.skip("HR 8282 PDF not present")
+        anchors = extract_anchors(extract_clean_pages(pdf))
+        assert [a.text for a in anchors if a.kind == "account"] == []
+
+
 class TestPrecisionHarnessOracle:
     """Validate the harness computation (it is the oracle the swap is judged by)."""
 
