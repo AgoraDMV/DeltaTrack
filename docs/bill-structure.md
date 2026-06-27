@@ -142,14 +142,48 @@ flat-node-with-path, so the parent/child + rollup vision below requires evolving
 
 Closing the gap (DeltaTrack#54 and beyond — applies to both pipelines):
 
-1. Assign each heading a **level** from its size band (major/intermediate/small),
-   not a single `account` flag.
+1. Assign each heading a **level**, not a single `account` flag — but the signal is
+   weaker than "read the level off the size band" implies: glyph size splits only
+   body-vs-heading, not the three account levels (see *What the PDF signal can and
+   cannot recover* below).
 2. Build a real **tree** by reading order + level (the XML reconstruction, applied
    to glyph sizes).
 3. **Nest sections under their header parent**, so `SPENDING REDUCTION ACCOUNT` owns
    `SEC. 513`.
 4. **Roll amounts up**: account → bureau → department → title. Block-level changes
    then assign and aggregate money along the same parent/child edges.
+
+### What the PDF signal can and cannot recover (DeltaTrack#54 finding)
+
+Re-checked against the corpus 2026-06-27. Glyph size yields **two** bands, not
+three: a body band (~14pt) and a single heading band (~11.2pt small-caps) that holds
+*both* `appropriations-intermediate` and `-small`. Casing does **not** rescue the
+split — an agency header that is title-case in the XML `header`
+(`Management directorate`) extracts **ALL-CAPS** in heading position
+(`MANAGEMENT DIRECTORATE`); small-caps flattens to caps in PDF text, so it is
+lexically indistinguishable from an all-caps account header. `Line` carries no
+x-position, so indentation/centering is not a usable signal either.
+
+What that leaves recoverable from PDF-only input, keyed on *what follows* a
+heading-band line:
+
+| Heading form (XML tag) | What follows it in the PDF | PDF-recoverable? |
+|---|---|---|
+| Major (department), `appropriations-major` | body-size + uppercase, sits above the band | Yes, with a dedicated detector |
+| Intermediate **carry-over** (one agency over ≥2 accounts) | another heading-band line | **Yes** — today silently dropped |
+| Intermediate **grouping header** (`ADMINISTRATIVE PROVISIONS`) | a `SEC.` line | **Yes** — today mislabeled `account`; the `SEC.` is detectable |
+| Intermediate **prose-leading** (agency → "For necessary expenses…") | appropriation prose | **No** — identical to an account by size, case, and position |
+| Account, `appropriations-small` | appropriation prose | Yes |
+
+The unrecoverable row is not an edge case: prose-leading intermediates are the
+**majority** of the agency level in many bills (H.R. 8774 Defense: 59 of 67;
+H.R. 5895 Energy-Water: 37 of 44). Only H.R. 8752 and S. 2625 in the working corpus
+have none, which is why H.R. 8752 alone can look like full agency recovery. So on
+PDF-only input the agency level is recoverable only in its carry-over and
+grouping-header forms; the prose-leading form is not separable from an account by any
+signal currently extracted. On the XML side all three levels are present in the path
+tuples (`display_path` / `match_path`), even though they are dropped as standalone
+nodes.
 
 ## Why not USLM?
 
