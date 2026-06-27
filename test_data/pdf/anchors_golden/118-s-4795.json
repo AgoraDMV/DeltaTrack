@@ -1,0 +1,668 @@
+[
+ [
+  "title",
+  "TITLE I",
+  2,
+  1
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  7,
+  7
+ ],
+ [
+  "account",
+  "MINORITY BUSINESS DEVELOPMENT",
+  7,
+  18
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFERS OF FUNDS)",
+  10,
+  7
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  13,
+  9
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  16,
+  4
+ ],
+ [
+  "account",
+  "FISHERIES DISASTER ASSISTANCE",
+  20,
+  8
+ ],
+ [
+  "account",
+  "OFFICE OF INSPECTOR GENERAL",
+  22,
+  8
+ ],
+ [
+  "section",
+  "SEC. 101",
+  22,
+  14
+ ],
+ [
+  "section",
+  "SEC. 102",
+  22,
+  24
+ ],
+ [
+  "section",
+  "SEC. 103",
+  23,
+  6
+ ],
+ [
+  "section",
+  "SEC. 104",
+  23,
+  22
+ ],
+ [
+  "section",
+  "SEC. 105",
+  24,
+  10
+ ],
+ [
+  "section",
+  "SEC. 106",
+  25,
+  3
+ ],
+ [
+  "section",
+  "SEC. 107",
+  25,
+  7
+ ],
+ [
+  "section",
+  "SEC. 108",
+  25,
+  19
+ ],
+ [
+  "section",
+  "SEC. 109",
+  26,
+  4
+ ],
+ [
+  "section",
+  "SEC. 110",
+  26,
+  21
+ ],
+ [
+  "section",
+  "SEC. 111",
+  27,
+  8
+ ],
+ [
+  "section",
+  "SEC. 112",
+  27,
+  17
+ ],
+ [
+  "section",
+  "SEC. 113",
+  28,
+  1
+ ],
+ [
+  "title",
+  "TITLE II",
+  29,
+  1
+ ],
+ [
+  "account",
+  "OFFICE OF INSPECTOR GENERAL",
+  30,
+  19
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  31,
+  2
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES, UNITED STATES ATTORNEYS",
+  34,
+  20
+ ],
+ [
+  "account",
+  "UNITED STATES TRUSTEE SYSTEM FUND",
+  35,
+  5
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  37,
+  11
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  38,
+  9
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  41,
+  4
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  42,
+  6
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  43,
+  14
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  44,
+  17
+ ],
+ [
+  "section",
+  "SEC. 201",
+  79,
+  10
+ ],
+ [
+  "section",
+  "SEC. 202",
+  79,
+  16
+ ],
+ [
+  "section",
+  "SEC. 203",
+  79,
+  23
+ ],
+ [
+  "section",
+  "SEC. 204",
+  80,
+  1
+ ],
+ [
+  "section",
+  "SEC. 205",
+  80,
+  9
+ ],
+ [
+  "section",
+  "SEC. 206",
+  81,
+  1
+ ],
+ [
+  "section",
+  "SEC. 207",
+  81,
+  10
+ ],
+ [
+  "section",
+  "SEC. 208",
+  81,
+  19
+ ],
+ [
+  "section",
+  "SEC. 209",
+  82,
+  5
+ ],
+ [
+  "section",
+  "SEC. 210",
+  82,
+  12
+ ],
+ [
+  "section",
+  "SEC. 211",
+  82,
+  19
+ ],
+ [
+  "section",
+  "SEC. 212",
+  83,
+  1
+ ],
+ [
+  "section",
+  "SEC. 213",
+  84,
+  1
+ ],
+ [
+  "section",
+  "SEC. 214",
+  84,
+  18
+ ],
+ [
+  "section",
+  "SEC. 215",
+  84,
+  23
+ ],
+ [
+  "section",
+  "SEC. 216",
+  85,
+  8
+ ],
+ [
+  "section",
+  "SEC. 217",
+  86,
+  4
+ ],
+ [
+  "section",
+  "SEC. 218",
+  86,
+  10
+ ],
+ [
+  "section",
+  "SEC. 219",
+  86,
+  19
+ ],
+ [
+  "section",
+  "SEC. 220",
+  87,
+  1
+ ],
+ [
+  "section",
+  "SEC. 221",
+  87,
+  6
+ ],
+ [
+  "section",
+  "SEC. 222",
+  87,
+  9
+ ],
+ [
+  "title",
+  "TITLE III",
+  88,
+  1
+ ],
+ [
+  "account",
+  "OFFICE OF SCIENCE AND TECHNOLOGY POLICY",
+  88,
+  3
+ ],
+ [
+  "account",
+  "NATIONAL SPACE COUNCIL",
+  88,
+  13
+ ],
+ [
+  "account",
+  "OFFICE OF INSPECTOR GENERAL",
+  95,
+  1
+ ],
+ [
+  "account",
+  "OFFICE OF INSPECTOR GENERAL",
+  102,
+  3
+ ],
+ [
+  "title",
+  "TITLE IV",
+  104,
+  1
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  104,
+  4
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  105,
+  2
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  106,
+  9
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  109,
+  2
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  109,
+  9
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  110,
+  5
+ ],
+ [
+  "title",
+  "TITLE V",
+  111,
+  1
+ ],
+ [
+  "section",
+  "SEC. 501",
+  111,
+  4
+ ],
+ [
+  "section",
+  "SEC. 502",
+  111,
+  7
+ ],
+ [
+  "section",
+  "SEC. 503",
+  111,
+  10
+ ],
+ [
+  "section",
+  "SEC. 504",
+  111,
+  18
+ ],
+ [
+  "section",
+  "SEC. 505",
+  111,
+  24
+ ],
+ [
+  "section",
+  "SEC. 506",
+  112,
+  24
+ ],
+ [
+  "section",
+  "SEC. 507",
+  113,
+  18
+ ],
+ [
+  "section",
+  "SEC. 508",
+  114,
+  15
+ ],
+ [
+  "section",
+  "SEC. 509",
+  115,
+  6
+ ],
+ [
+  "section",
+  "SEC. 510",
+  115,
+  13
+ ],
+ [
+  "section",
+  "SEC. 511",
+  116,
+  3
+ ],
+ [
+  "section",
+  "SEC. 512",
+  116,
+  9
+ ],
+ [
+  "section",
+  "SEC. 513",
+  116,
+  14
+ ],
+ [
+  "section",
+  "SEC. 514",
+  118,
+  7
+ ],
+ [
+  "section",
+  "SEC. 515",
+  120,
+  5
+ ],
+ [
+  "section",
+  "SEC. 516",
+  120,
+  9
+ ],
+ [
+  "section",
+  "SEC. 517",
+  120,
+  18
+ ],
+ [
+  "section",
+  "SEC. 518",
+  121,
+  3
+ ],
+ [
+  "section",
+  "SEC. 519",
+  122,
+  1
+ ],
+ [
+  "section",
+  "SEC. 520",
+  122,
+  8
+ ],
+ [
+  "section",
+  "SEC. 521",
+  123,
+  2
+ ],
+ [
+  "section",
+  "SEC. 522",
+  125,
+  23
+ ],
+ [
+  "section",
+  "SEC. 523",
+  126,
+  3
+ ],
+ [
+  "section",
+  "SEC. 524",
+  126,
+  21
+ ],
+ [
+  "section",
+  "SEC. 525",
+  127,
+  18
+ ],
+ [
+  "section",
+  "SEC. 526",
+  127,
+  22
+ ],
+ [
+  "section",
+  "SEC. 527",
+  129,
+  4
+ ],
+ [
+  "section",
+  "SEC. 528",
+  129,
+  13
+ ],
+ [
+  "section",
+  "SEC. 529",
+  130,
+  1
+ ],
+ [
+  "section",
+  "SEC. 530",
+  130,
+  8
+ ],
+ [
+  "section",
+  "SEC. 531",
+  130,
+  13
+ ],
+ [
+  "section",
+  "SEC. 532",
+  131,
+  6
+ ],
+ [
+  "section",
+  "SEC. 533",
+  131,
+  13
+ ],
+ [
+  "section",
+  "SEC. 534",
+  132,
+  3
+ ],
+ [
+  "section",
+  "SEC. 535",
+  134,
+  8
+ ],
+ [
+  "section",
+  "SEC. 536",
+  134,
+  18
+ ],
+ [
+  "section",
+  "SEC. 537",
+  135,
+  5
+ ],
+ [
+  "section",
+  "SEC. 538",
+  135,
+  9
+ ],
+ [
+  "section",
+  "SEC. 539",
+  135,
+  19
+ ],
+ [
+  "section",
+  "SEC. 540",
+  136,
+  15
+ ],
+ [
+  "section",
+  "SEC. 541",
+  137,
+  8
+ ],
+ [
+  "section",
+  "SEC. 542",
+  140,
+  12
+ ],
+ [
+  "section",
+  "SEC. 543",
+  141,
+  10
+ ],
+ [
+  "section",
+  "SEC. 544",
+  141,
+  17
+ ]
+]
