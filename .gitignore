@@ -20,6 +20,17 @@ bills/*
 !bills/118-s-*/
 bills/118-s-*/*
 !bills/118-s-*/1_reported-in-senate.xml
+# Vendored public-domain (17 U.S.C. 105) PDF fixtures for the glyph-size
+# heading-segmentation tests (#89), so they gate CI without fetching: an approps
+# House bill (PDF+XML, the FEDERAL PROTECTIVE SERVICE / account-detection case and
+# the harness oracle) and a non-approps House bill (PDF, the generalization case).
+!bills/118-hr-8752/
+bills/118-hr-8752/*
+!bills/118-hr-8752/1_reported-in-house.pdf
+!bills/118-hr-8752/1_reported-in-house.xml
+!bills/118-hr-8282/
+bills/118-hr-8282/*
+!bills/118-hr-8282/1_introduced-in-house.pdf
 reports/*
 !reports/.gitkeep
 plans/
