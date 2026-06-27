@@ -1,6 +1,6 @@
 # 3. Client-side PDF.js extraction is viable for published bills
 
-- Status: Accepted (records a spike finding from 2026-05-08)
+- Status: Accepted
 - Date: 2026-06-27
 
 ## Context

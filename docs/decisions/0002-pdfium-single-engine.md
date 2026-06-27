@@ -1,7 +1,7 @@
 # 2. Use pypdfium2 (PDFium) as the single PDF text engine
 
 - Status: Accepted
-- Date: 2026-06-27 (records the migration shipped in PRs #38 / #40)
+- Date: 2026-06-27
 
 ## Context
 
@@ -35,7 +35,8 @@ unchanged.
 Before removing pdfplumber, we verified pypdfium2 against it on the full corpus:
 99.93% numbered-line parity, with the diffs that *did* differ being improvements,
 not regressions. pypdfium2 recovers the heading line numbers pdfplumber
-dislocates, and it stops leaking watermark/footer text into bodies.
+dislocates, and it stops leaking watermark/footer text into bodies. The migration
+shipped in PRs #38 and #40.
 
 ## Consequences
 
