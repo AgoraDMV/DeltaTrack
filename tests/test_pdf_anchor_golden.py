@@ -43,6 +43,40 @@ def test_anchors_match_golden(name: str):
     assert _current_anchors(pdf_path) == golden
 
 
+def _account_names(pdf_path: Path) -> set[str]:
+    anchors = extract_anchors(extract_clean_pages(pdf_path))
+    return {a.text for a in anchors if a.kind == "account"}
+
+
+def _legacy_account_names(name: str) -> set[str]:
+    # Frozen pre-swap baseline (never regenerated), so the set-delta stays
+    # meaningful after the full golden is regenerated post-swap.
+    return set(json.loads((GOLDEN_DIR / f"{name}.legacy-accounts.json").read_text()))
+
+
+class TestSizeDetectionEndToEnd:
+    """The canonical #85/#89 proof: the size path catches FEDERAL PROTECTIVE
+    SERVICE, which the legacy 'For necessary expenses' walk misses, with no
+    regression to the accounts the legacy path already caught."""
+
+    def test_fps_account_now_detected(self):
+        pdf = FIXTURES["118-hr-8752"]
+        if not pdf.exists():
+            pytest.skip("HR 8752 PDF not present")
+        assert "FEDERAL PROTECTIVE SERVICE" in _account_names(pdf)
+
+    def test_no_account_regressions_vs_legacy_baseline(self):
+        pdf = FIXTURES["118-hr-8752"]
+        if not pdf.exists():
+            pytest.skip("HR 8752 PDF not present")
+        new = _account_names(pdf)
+        legacy = _legacy_account_names("118-hr-8752")
+        # Every account the legacy path found is still found (zero removals).
+        assert legacy - new == set()
+        # The intended addition includes FPS.
+        assert "FEDERAL PROTECTIVE SERVICE" in (new - legacy)
+
+
 class TestPrecisionHarnessOracle:
     """Validate the harness computation (it is the oracle the swap is judged by)."""
 

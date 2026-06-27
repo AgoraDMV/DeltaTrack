@@ -7,6 +7,24 @@
  ],
  [
   "account",
+  "OPERATIONS AND ADMINISTRATION",
+  2,
+  4
+ ],
+ [
+  "account",
+  "OPERATIONS AND ADMINISTRATION",
+  4,
+  9
+ ],
+ [
+  "account",
+  "ECONOMIC DEVELOPMENT ASSISTANCE PROGRAMS",
+  6,
+  4
+ ],
+ [
+  "account",
   "SALARIES AND EXPENSES",
   7,
   7
@@ -16,6 +34,36 @@
   "MINORITY BUSINESS DEVELOPMENT",
   7,
   18
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  8,
+  2
+ ],
+ [
+  "account",
+  "CURRENT SURVEYS AND PROGRAMS",
+  8,
+  8
+ ],
+ [
+  "account",
+  "PERIODIC CENSUSES AND PROGRAMS",
+  8,
+  14
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  9,
+  3
+ ],
+ [
+  "account",
+  "FACILITIES MANAGEMENT AND CONSTRUCTION",
+  9,
+  23
  ],
  [
   "account",
@@ -31,9 +79,33 @@
  ],
  [
   "account",
+  "INDUSTRIAL TECHNOLOGY SERVICES",
+  14,
+  1
+ ],
+ [
+  "account",
+  "CONSTRUCTION OF RESEARCH FACILITIES",
+  14,
+  8
+ ],
+ [
+  "account",
   "(INCLUDING TRANSFER OF FUNDS)",
   16,
   4
+ ],
+ [
+  "account",
+  "PROCUREMENT, ACQUISITION AND CONSTRUCTION",
+  18,
+  3
+ ],
+ [
+  "account",
+  "PACIFIC COASTAL SALMON RECOVERY",
+  19,
+  11
  ],
  [
   "account",
@@ -43,9 +115,45 @@
  ],
  [
   "account",
+  "FISHERMEN’S CONTINGENCY FUND",
+  20,
+  14
+ ],
+ [
+  "account",
+  "FISHERIES FINANCE PROGRAM ACCOUNT",
+  20,
+  19
+ ],
+ [
+  "account",
+  "RECREATIONAL QUOTA ENTITY FUND",
+  21,
+  1
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES",
+  21,
+  12
+ ],
+ [
+  "account",
+  "RENOVATION AND MODERNIZATION",
+  22,
+  5
+ ],
+ [
+  "account",
   "OFFICE OF INSPECTOR GENERAL",
   22,
   8
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  22,
+  13
  ],
  [
   "section",
@@ -133,6 +241,24 @@
  ],
  [
   "account",
+  "SALARIES AND EXPENSES",
+  29,
+  5
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  29,
+  14
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  30,
+  6
+ ],
+ [
+  "account",
   "OFFICE OF INSPECTOR GENERAL",
   30,
   19
@@ -142,6 +268,18 @@
   "SALARIES AND EXPENSES",
   31,
   2
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  31,
+  11
+ ],
+ [
+  "account",
+  "SALARIES AND EXPENSES, ANTITRUST DIVISION",
+  33,
+  19
  ],
  [
   "account",
@@ -157,9 +295,27 @@
  ],
  [
   "account",
+  "SETTLEMENT COMMISSION",
+  36,
+  12
+ ],
+ [
+  "account",
+  "FEES AND EXPENSES OF WITNESSES",
+  36,
+  17
+ ],
+ [
+  "account",
   "(INCLUDING TRANSFER OF FUNDS)",
   37,
   11
+ ],
+ [
+  "account",
+  "ASSETS FORFEITURE FUND",
+  38,
+  3
  ],
  [
   "account",
@@ -169,9 +325,39 @@
  ],
  [
   "account",
+  "CONSTRUCTION",
+  38,
+  20
+ ],
+ [
+  "account",
+  "FEDERAL PRISONER DETENTION",
+  39,
+  1
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  39,
+  19
+ ],
+ [
+  "account",
+  "ORGANIZED CRIME DRUG ENFORCEMENT TASK FORCES",
+  40,
+  12
+ ],
+ [
+  "account",
   "SALARIES AND EXPENSES",
   41,
   4
+ ],
+ [
+  "account",
+  "CONSTRUCTION",
+  41,
+  20
  ],
  [
   "account",
@@ -190,6 +376,66 @@
   "(INCLUDING TRANSFER OF FUNDS)",
   44,
   17
+ ],
+ [
+  "account",
+  "BUILDINGS AND FACILITIES",
+  46,
+  12
+ ],
+ [
+  "account",
+  "FEDERAL PRISON INDUSTRIES, INCORPORATED",
+  47,
+  6
+ ],
+ [
+  "account",
+  "PRISON INDUSTRIES, INCORPORATED",
+  47,
+  16
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFERS OF FUNDS)",
+  48,
+  10
+ ],
+ [
+  "account",
+  "RESEARCH, EVALUATION AND STATISTICS",
+  56,
+  10
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  58,
+  2
+ ],
+ [
+  "account",
+  "JUVENILE JUSTICE PROGRAMS",
+  71,
+  10
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  74,
+  12
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  75,
+  10
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFERS OF FUNDS)",
+  79,
+  9
  ],
  [
   "section",
@@ -343,15 +589,105 @@
  ],
  [
   "account",
+  "SCIENCE",
+  89,
+  2
+ ],
+ [
+  "account",
+  "AERONAUTICS",
+  89,
+  16
+ ],
+ [
+  "account",
+  "SPACE TECHNOLOGY",
+  90,
+  5
+ ],
+ [
+  "account",
+  "EXPLORATION",
+  90,
+  19
+ ],
+ [
+  "account",
+  "SPACE OPERATIONS",
+  91,
+  13
+ ],
+ [
+  "account",
+  "MATHEMATICS ENGAGEMENT",
+  92,
+  4
+ ],
+ [
+  "account",
+  "SAFETY, SECURITY AND MISSION SERVICES",
+  92,
+  20
+ ],
+ [
+  "account",
+  "RESTORATION",
+  94,
+  6
+ ],
+ [
+  "account",
   "OFFICE OF INSPECTOR GENERAL",
   95,
   1
  ],
  [
   "account",
+  "(INCLUDING TRANSFERS OF FUNDS)",
+  95,
+  7
+ ],
+ [
+  "account",
+  "RESEARCH AND RELATED ACTIVITIES",
+  99,
+  7
+ ],
+ [
+  "account",
+  "CONSTRUCTION",
+  100,
+  9
+ ],
+ [
+  "account",
+  "STEM EDUCATION",
+  100,
+  16
+ ],
+ [
+  "account",
+  "AGENCY OPERATIONS AND AWARD MANAGEMENT",
+  101,
+  1
+ ],
+ [
+  "account",
+  "OFFICE OF THE NATIONAL SCIENCE BOARD",
+  101,
+  17
+ ],
+ [
+  "account",
   "OFFICE OF INSPECTOR GENERAL",
   102,
   3
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  102,
+  9
  ],
  [
   "title",
@@ -379,6 +715,18 @@
  ],
  [
   "account",
+  "PAYMENT TO THE LEGAL SERVICES CORPORATION",
+  106,
+  17
+ ],
+ [
+  "account",
+  "CORPORATION",
+  107,
+  16
+ ],
+ [
+  "account",
   "SALARIES AND EXPENSES",
   109,
   2
@@ -391,6 +739,12 @@
  ],
  [
   "account",
+  "(INCLUDING TRANSFER OF FUNDS)",
+  109,
+  20
+ ],
+ [
+  "account",
   "SALARIES AND EXPENSES",
   110,
   5
@@ -400,6 +754,12 @@
   "TITLE V",
   111,
   1
+ ],
+ [
+  "account",
+  "(INCLUDING TRANSFERS AND RESCISSIONS OF FUNDS)",
+  111,
+  3
  ],
  [
   "section",
@@ -520,6 +880,12 @@
   "SEC. 520",
   122,
   8
+ ],
+ [
+  "account",
+  "(RESCISSIONS)",
+  123,
+  1
  ],
  [
   "section",
