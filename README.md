@@ -6,6 +6,18 @@ Works on any bill type (HR, S, HJRES, etc.), not just appropriations.
 
 **See it in action:** [Committee vs. Floor](https://agoradmv.github.io/DeltaTrack/hr4366_committee_vs_floor.html) | [House vs. Senate](https://agoradmv.github.io/DeltaTrack/hr4366_house_vs_senate.html) (example reports for HR 4366, 118th Congress)
 
+## Why not a generic differ?
+
+A generic XML or PDF differ reports which document nodes or lines of text changed.
+That output is mostly formatting noise (renumbered lines, page headers, reflow)
+and has no sense of a bill's structure. DeltaTrack parses each version into the
+bill's own sections and diffs those, so on any bill type you see what actually
+changed (added, removed, modified, and moved sections) without the noise, even
+when no dollar amounts move. For appropriations bills it adds a structured money
+model on top, producing an account-level table of paired old → new amounts. See
+[docs/decisions/0001-structured-money-diff.md](docs/decisions/0001-structured-money-diff.md)
+for the rationale and a reproducible comparison.
+
 ## Prerequisites
 
 - **Python 3.12+** - Download from https://www.python.org/downloads/ if you don't have it. To check, open a terminal (Terminal on Mac, Command Prompt on Windows) and type `python3 --version`.
