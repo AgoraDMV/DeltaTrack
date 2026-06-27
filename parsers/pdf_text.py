@@ -47,11 +47,12 @@ _HYPHEN_BREAK = re.compile(r"￾(\d{1,2}) ")
 # that must NOT be stripped.
 _GLUED_CHROME = re.compile(r"￾(?:VerDate\b|\S* on DSK)[^\n]*")
 # Page chrome. The page-number header is `5 \n` (digit + optional trailing space).
-# The running `•HR … RH` header floats to the top of PDFium's reading order. The
+# The running `•HR … RH` (House) / `•S … RS` (Senate) header floats to the top of
+# PDFium's reading order. The
 # `VerDate …` print line and the `name on DSK…PROD with …` watermark sit at the
 # bottom; either may be the anchor depending on the page, so both are stripped.
 _PAGE_HEADER_NUMBER = re.compile(r"\A\d+ *\n")
-_RUNNING_HEADER = re.compile(r"^•HR\b.*\n", re.MULTILINE)
+_RUNNING_HEADER = re.compile(r"^•(?:HR|S)\b.*\n", re.MULTILINE)
 _VERDATE_AND_BELOW = re.compile(r"\n?VerDate\b.*\Z", re.DOTALL)
 _WATERMARK_AND_BELOW = re.compile(r"\n?\S+ on DSK\S*PROD with .*\Z", re.DOTALL)
 

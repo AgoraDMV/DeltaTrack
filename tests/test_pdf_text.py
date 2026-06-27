@@ -125,6 +125,11 @@ class TestStripPageChrome:
         # PDFium floats the running header to the top, after the page number.
         assert strip_page_chrome("•HR 4366 RH\n1 BODY") == "1 BODY"
 
+    def test_strips_running_senate_header_line(self):
+        # Senate prints carry a •S####RS running header/footer in the body column;
+        # unstripped it pollutes the glyph-size sidecar (DeltaTrack#89).
+        assert strip_page_chrome("•S 4795 RS\n1 BODY") == "1 BODY"
+
     def test_strips_verdate_footer_and_watermark_below(self):
         raw = "23 reasons therefor.\nVerDate Sep 11 2014 00:17 Jkt\nSSpencer on DSK PROD with BILLS"
         assert strip_page_chrome(raw) == "23 reasons therefor."
