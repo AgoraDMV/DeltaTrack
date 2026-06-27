@@ -49,9 +49,12 @@ See the README for the full list of bills used by the test suite.
 
 ### Branch workflow
 
-1. Create a branch from `main` for your work
+`develop` is the integration branch; `main` is the protected release branch. Day-to-day
+work targets `develop`, not `main`.
+
+1. Create a branch from `develop` for your work
 2. Make your changes in small, focused commits
-3. Push your branch and open a pull request
+3. Push your branch and open a pull request against `develop`
 
 ### Code style
 
@@ -82,7 +85,7 @@ uv run pytest -k "test_my_function"      # Tests matching a name
 
 1. Make sure the fast tests pass: `uv run pytest -m "not slow"`
 2. Make sure linting passes: `uv run ruff check .`
-3. Open a pull request against `main`
+3. Open a pull request against `develop`
 4. Describe what you changed and why
 5. CI will run tests and linting automatically
 
