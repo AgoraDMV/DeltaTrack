@@ -66,6 +66,159 @@ class TestGroupIntoBlocks:
         assert blocks[1].indexed_lines[0].text == "SEC. 3 gamma"
 
 
+class TestHeadingBleed:
+    """Issue #56: an anchor-delimited block body must not bleed its own heading
+    (start) or the next section's uncaptured heading (end). Uses the existing
+    _is_uppercase_heading recognition — no glyph size."""
+
+    def test_account_block_drops_its_own_leading_heading(self):
+        indexed = [
+            _IndexedLine("OPERATIONS AND SUPPORT", 1, 1),
+            _IndexedLine("For necessary expenses of operations, $5,000.", 1, 2),
+        ]
+        anchors = [Anchor(1, 1, "account", "OPERATIONS AND SUPPORT")]
+        block = _group_into_blocks(indexed, anchors)[0]
+        assert block.text == "For necessary expenses of operations, $5,000."
+        assert block.page_range == (1, 2, 1, 2)
+
+    def test_account_block_drops_trailing_uncaptured_heading(self):
+        # The next section's heading bled into the tail because it was never
+        # captured as an anchor (no "For necessary expenses" beneath it here).
+        indexed = [
+            _IndexedLine("OPERATIONS AND SUPPORT", 1, 1),
+            _IndexedLine("For necessary expenses of operations, $5,000.", 1, 2),
+            _IndexedLine("PROCUREMENT", 1, 3),
+        ]
+        anchors = [Anchor(1, 1, "account", "OPERATIONS AND SUPPORT")]
+        block = _group_into_blocks(indexed, anchors)[0]
+        assert block.text == "For necessary expenses of operations, $5,000."
+        assert block.page_range == (1, 2, 1, 2)
+
+    def test_both_bleeds_stripped_and_range_lands_on_prose(self):
+        indexed = [
+            _IndexedLine("OPERATIONS AND SUPPORT", 2, 14),
+            _IndexedLine("For necessary expenses of operations, $5,000,", 2, 15),
+            _IndexedLine("to remain available until expended.", 2, 16),
+            _IndexedLine("PROCUREMENT", 2, 17),
+        ]
+        anchors = [Anchor(2, 14, "account", "OPERATIONS AND SUPPORT")]
+        block = _group_into_blocks(indexed, anchors)[0]
+        assert "OPERATIONS AND SUPPORT" not in block.text
+        assert "PROCUREMENT" not in block.text
+        assert block.text.startswith("For necessary expenses")
+        # Coordinates bound the prose, not the stripped headings.
+        assert block.page_range == (2, 15, 2, 16)
+
+    def test_multiline_leading_heading_fully_stripped(self):
+        # Wrapped heading + an all-caps parenthetical both precede the prose.
+        indexed = [
+            _IndexedLine("OPERATIONS, RESEARCH, AND", 1, 1),
+            _IndexedLine("FACILITIES", 1, 2),
+            _IndexedLine("(INCLUDING TRANSFER OF FUNDS)", 1, 3),
+            _IndexedLine("For necessary expenses of the program, $5,000.", 1, 4),
+        ]
+        anchors = [Anchor(1, 1, "account", "OPERATIONS, RESEARCH, AND FACILITIES")]
+        block = _group_into_blocks(indexed, anchors)[0]
+        assert block.text == "For necessary expenses of the program, $5,000."
+        assert block.page_range == (1, 4, 1, 4)
+
+    def test_all_caps_total_line_with_amount_is_preserved(self):
+        # A "TOTAL, ..., $X" recap is all-caps but carries money — it must NOT be
+        # stripped as a heading, or the amount silently vanishes from the diff.
+        indexed = [
+            _IndexedLine("OPERATIONS AND SUPPORT", 1, 1),
+            _IndexedLine("For necessary expenses of operations, $5,000.", 1, 2),
+            _IndexedLine("TOTAL, OPERATIONS AND SUPPORT, $5,000.", 1, 3),
+        ]
+        anchors = [Anchor(1, 1, "account", "OPERATIONS AND SUPPORT")]
+        block = _group_into_blocks(indexed, anchors)[0]
+        assert "TOTAL, OPERATIONS AND SUPPORT, $5,000." in block.text
+        assert block.page_range == (1, 2, 1, 3)
+
+    def test_blank_between_heading_and_body_is_consumed(self):
+        # A blank line after the heading must not strand the block start on an
+        # unnumbered line (which would null the full-text span). The strip
+        # consumes it so the body begins on the numbered prose line.
+        indexed = [
+            _IndexedLine("OPERATIONS AND SUPPORT", 1, 1),
+            _IndexedLine("", 1, None),
+            _IndexedLine("For necessary expenses of operations, $5,000.", 1, 3),
+        ]
+        anchors = [Anchor(1, 1, "account", "OPERATIONS AND SUPPORT")]
+        block = _group_into_blocks(indexed, anchors)[0]
+        assert block.text == "For necessary expenses of operations, $5,000."
+        # Range start is the numbered prose line, not the unnumbered blank (-1).
+        assert block.page_range == (1, 3, 1, 3)
+
+    def test_interior_all_caps_line_is_preserved(self):
+        # Only leading/trailing runs are stripped; an all-caps line in the middle
+        # of the prose is real content and stays.
+        indexed = [
+            _IndexedLine("OPERATIONS AND SUPPORT", 1, 1),
+            _IndexedLine("For necessary expenses, including the following:", 1, 2),
+            _IndexedLine("PROVIDED FURTHER", 1, 3),
+            _IndexedLine("that the funds remain available.", 1, 4),
+        ]
+        anchors = [Anchor(1, 1, "account", "OPERATIONS AND SUPPORT")]
+        block = _group_into_blocks(indexed, anchors)[0]
+        assert "PROVIDED FURTHER" in block.text
+        assert block.page_range == (1, 2, 1, 4)
+
+    def test_degenerate_all_heading_block_kept_intact(self):
+        # A block that is nothing but heading lines has no prose to show;
+        # stripping it to empty would drop its coordinates, so it's left as-is.
+        indexed = [
+            _IndexedLine("GENERAL PROVISIONS", 1, 1),
+            _IndexedLine("DEPARTMENT OF DEFENSE", 1, 2),
+        ]
+        anchors = [Anchor(1, 1, "account", "GENERAL PROVISIONS")]
+        block = _group_into_blocks(indexed, anchors)[0]
+        assert block.indexed_lines == tuple(indexed)
+        assert block.page_range == (1, 1, 1, 2)
+
+    def test_title_block_drops_title_line_and_bled_major_header(self):
+        # A title block opens with its own bare "TITLE I—..." line (which
+        # _is_uppercase_heading rejects) followed by the appropriations-major
+        # header bleeding beneath it. Both must clear so the body is prose (#56;
+        # #49 separately folds the major header into the title label).
+        indexed = [
+            _IndexedLine("TITLE I—DEPARTMENTAL MANAGEMENT", 1, 1),
+            _IndexedLine("DEPARTMENTAL MANAGEMENT, OPERATIONS", 1, 2),
+            _IndexedLine("For necessary expenses of the Department, $5,000.", 1, 3),
+        ]
+        anchors = [Anchor(1, 1, "title", "TITLE I")]
+        block = _group_into_blocks(indexed, anchors)[0]
+        assert block.text == "For necessary expenses of the Department, $5,000."
+        assert block.page_range == (1, 3, 1, 3)
+
+    def test_section_anchor_line_with_inline_body_is_preserved(self):
+        # No-regression: a SEC. anchor line carries inline body, so it must NOT
+        # be dropped (unlike an account heading). _is_uppercase_heading rejects
+        # SEC. lines, and section is not a title kind.
+        indexed = [
+            _IndexedLine("SEC. 101. None of the funds may be used", 1, 1),
+            _IndexedLine("for the purpose described.", 1, 2),
+        ]
+        anchors = [Anchor(1, 1, "section", "SEC. 101")]
+        block = _group_into_blocks(indexed, anchors)[0]
+        assert block.text == "SEC. 101. None of the funds may be used\nfor the purpose described."
+        assert block.page_range == (1, 1, 1, 2)
+
+    def test_preamble_block_is_not_stripped(self):
+        # The strip is scoped to anchored account/section/title blocks. A
+        # preamble block keeps its lines so an all-caps cover line ("A BILL")
+        # is never dropped.
+        indexed = [
+            _IndexedLine("A BILL", 1, 1),
+            _IndexedLine("To make appropriations, and for other purposes.", 1, 2),
+            _IndexedLine("SEC. 101. body", 1, 3),
+        ]
+        anchors = [Anchor(1, 3, "section", "SEC. 101")]
+        preamble = _group_into_blocks(indexed, anchors)[0]
+        assert preamble.anchor is not None and preamble.anchor.kind == "preamble"
+        assert "A BILL" in preamble.text
+
+
 class TestNoChanges:
     def test_identical_single_page(self):
         v1 = [_page(1, (1, "SEC. 101. alpha"), (2, "beta body"))]
@@ -131,6 +284,32 @@ class TestPageLineCitations:
         h = diff_pdfs(v1, v2).hunks[0]
         assert h.v1_range == (2, 24, 3, 1)
         assert h.v2_range == (2, 24, 3, 1)
+
+    def test_account_card_range_excludes_its_heading_line(self):
+        # Companion to the SEC. test above: an account card's range starts at the
+        # first prose line, not the bled-in heading (#56). The breadcrumb anchor
+        # still carries the heading, so no navigation is lost.
+        v1 = [
+            _page(
+                2,
+                (14, "OPERATIONS AND SUPPORT"),
+                (15, "For necessary expenses of operations, $5,000."),
+                (16, "and for related activities."),
+            )
+        ]
+        v2 = [
+            _page(
+                2,
+                (14, "OPERATIONS AND SUPPORT"),
+                (15, "For necessary expenses of operations, $6,000."),
+                (16, "and for related activities."),
+            )
+        ]
+        h = diff_pdfs(v1, v2).hunks[0]
+        assert h.v1_range == (2, 15, 2, 16)
+        assert h.v2_range == (2, 15, 2, 16)
+        assert "OPERATIONS AND SUPPORT" not in h.v1_text
+        assert h.v1_anchor and h.v1_anchor.text == "OPERATIONS AND SUPPORT"
 
 
 class TestCrossPageHyphenRejoin:
@@ -254,6 +433,50 @@ class TestReconcileMoves:
         assert len(moved) == 1
         assert moved[0].v1_anchor and moved[0].v1_anchor.text == "SEC. 414"
         assert moved[0].v2_anchor and moved[0].v2_anchor.text == "SEC. 413"
+
+
+class TestAccountHeadingRename:
+    """Stripping the heading from the body (#56) can equalize two account blocks
+    that differ only by a renamed heading. The rename must still surface — a
+    captured-account rename with an unchanged body would otherwise vanish."""
+
+    def test_rename_with_identical_body_emits_moved_hunk(self):
+        v1 = [_page(1, (1, "OPERATIONS AND SUPPORT"), (2, "For necessary expenses of operations, $5,000."))]
+        v2 = [_page(1, (1, "OPERATIONS AND SUPPORT, DEFENSE"), (2, "For necessary expenses of operations, $5,000."))]
+        hunks = diff_pdfs(v1, v2).hunks
+        assert len(hunks) == 1
+        h = hunks[0]
+        assert h.change_type == "moved"
+        assert h.v1_anchor and h.v1_anchor.text == "OPERATIONS AND SUPPORT"
+        assert h.v2_anchor and h.v2_anchor.text == "OPERATIONS AND SUPPORT, DEFENSE"
+
+    def test_duplicate_headed_accounts_still_pair_as_modified(self):
+        # Two accounts share the heading "SALARIES AND EXPENSES"; only the first
+        # changes. After stripping the shared heading the body preview still
+        # disambiguates them, so the changed one pairs as modified (not split
+        # into added + removed).
+        v1 = [
+            _page(
+                1,
+                (1, "SALARIES AND EXPENSES"),
+                (2, "For necessary expenses of agency A, $1,000."),
+                (3, "SALARIES AND EXPENSES"),
+                (4, "For necessary expenses of agency B, $2,000."),
+            )
+        ]
+        v2 = [
+            _page(
+                1,
+                (1, "SALARIES AND EXPENSES"),
+                (2, "For necessary expenses of agency A, $1,500."),
+                (3, "SALARIES AND EXPENSES"),
+                (4, "For necessary expenses of agency B, $2,000."),
+            )
+        ]
+        hunks = diff_pdfs(v1, v2).hunks
+        assert len(hunks) == 1
+        assert hunks[0].change_type == "modified"
+        assert hunks[0].amount_pairs == ((1000, 1500),)
 
 
 class TestPdfDiffSummary:

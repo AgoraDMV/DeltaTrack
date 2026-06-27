@@ -65,7 +65,7 @@ representation expenses.
 
 **Type:** modified — financial annotations added
 
-**V1 location:** p.3 L1 – p.3 L6
+**V1 location:** p.3 L3 – p.3 L6
 
 
 **V1 text:**
@@ -73,7 +73,7 @@ representation expenses.
 For  necessary  expenses  of  the  Management  Directorate  for  operations  and  support,  $1,637,290,000:  Provided, That not to exceed $2,000 shall be for official reception and representation expenses.
 ```
 
-**V2 location:** p.3 L3 – p.3 L11
+**V2 location:** p.3 L5 – p.3 L11
 
 **V2 text:**
 ```
@@ -89,6 +89,11 @@ For  necessary  expenses  of  the  Management  Directorate  for  operations  and
 **Extraction notes:**
 - Block spans page boundary in v2 (annotations chain across multiple lines)
 - pdfplumber may insert soft-hyphen breaks ("Direc-\ntorate", "(re-\nduced") that need rejoining
+- **Location points at the changed body line** (v1 L3, v2 L5), not the `MANAGEMENT
+  DIRECTORATE` / `OPERATIONS AND SUPPORT` heading lines above it (v1 L1–L2, v2 L3–L4).
+  An earlier annotation started at the heading and only resolved because the previous
+  account's block bled its tail over these headings; #56 trims that bleed, so the
+  location now names the body where the annotations actually change.
 
 ---
 

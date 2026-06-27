@@ -32,8 +32,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from diff_bill import _move_candidates, _text_similarity_at_least, match_amounts
-from parsers.pdf_anchors import Anchor, extract_anchors
+from diff_bill import _move_candidates, _text_similarity_at_least, extract_amounts, match_amounts
+from parsers.pdf_anchors import Anchor, _is_uppercase_heading, extract_anchors
 from parsers.pdf_text import Page
 from shared.version_stems import label_from_stem
 
@@ -199,6 +199,50 @@ def _with_front_matter(blocks: list[_Block], anchors: list[Anchor]) -> list[Anch
     return list(anchors)
 
 
+def _is_strippable_heading_line(text: str) -> bool:
+    """A leading/trailing line safe to drop from a block body as heading chrome
+    (issue #56). True for a blank line (so the body lands on a numbered prose
+    line, keeping the full-text span resolvable) or a pure uppercase heading
+    that carries no dollar amount. Uppercase-ness — not glyph size — identifies
+    account/agency headings; the amount guard keeps an all-caps "TOTAL, ..., $X"
+    recap line so a money change is never silently dropped. _is_uppercase_heading
+    rejects SEC./TITLE lines, so their inline-body anchor lines survive (the bare
+    title line is dropped separately, by anchor kind)."""
+    if not text.strip():
+        return True
+    return _is_uppercase_heading(text) and not extract_amounts(text)
+
+
+def _strip_heading_lines(lines: tuple[_IndexedLine, ...], anchor: Anchor | None) -> tuple[_IndexedLine, ...]:
+    """Trim heading chrome that bleeds into an anchor-delimited block body (#56).
+
+    Drops leading and trailing runs of blank / uppercase-heading lines: the
+    block's own account heading (start-bleed) and the next section's uncaptured
+    heading swept into the tail (end-bleed). A title block opens with its own
+    bare "TITLE I—..." line, which carries no inline body (unlike a SEC. line)
+    but is rejected by _is_uppercase_heading, so it is dropped here by kind. If
+    trimming would empty the block, the lines are returned unchanged so a
+    heading-only block keeps its page/line coordinates.
+
+    The (anchor, pos) pairing that guards issue #16 is resolved against the full
+    indexed_lines before this runs, so trimming the slice never disturbs it;
+    page_range then bounds the prose body instead of the heading.
+    """
+    start, end = 0, len(lines)
+    # A title block's own bare heading line carries no inline body — drop it so
+    # the body doesn't repeat the breadcrumb. Only the leading line, only for a
+    # title anchor: SEC. headings carry inline body and must be preserved.
+    if anchor is not None and anchor.kind == "title" and start < end:
+        start += 1
+    while start < end and _is_strippable_heading_line(lines[start].text):
+        start += 1
+    while end > start and _is_strippable_heading_line(lines[end - 1].text):
+        end -= 1
+    if start >= end:
+        return lines
+    return lines[start:end]
+
+
 def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor]) -> list[_Block]:
     """Group lines into anchor-delimited blocks.
 
@@ -245,7 +289,7 @@ def _group_into_blocks(indexed_lines: list[_IndexedLine], anchors: list[Anchor])
 
     for j, (anchor, pos) in enumerate(anchor_at):
         end = anchor_at[j + 1][1] if j + 1 < len(anchor_at) else len(indexed_lines)
-        blocks.append(_Block(anchor, tuple(indexed_lines[pos:end])))
+        blocks.append(_Block(anchor, _strip_heading_lines(tuple(indexed_lines[pos:end]), anchor)))
 
     return blocks
 
@@ -414,6 +458,12 @@ def _emit_pair(v1_b: _Block, v2_b: _Block, sink: list[PdfHunk]) -> None:
     `_reconcile_moves` can later pair them with the right counterparts.
     """
     if v1_b.text == v2_b.text:
+        # Stripping headings from the body (#56) can equalize two blocks that
+        # differ only by a renamed anchor (an account renamed with otherwise
+        # identical prose). With the heading gone from the body, that rename
+        # would vanish; surface it as a moved/renamed hunk instead.
+        if v1_b.anchor and v2_b.anchor and v1_b.anchor.text != v2_b.anchor.text:
+            sink.append(_hunk_for_paired_blocks(v1_b, v2_b, similarity=1.0))
         return
     # Gate at the lower (split) threshold: when sim >= 0.4 the exact ratio is
     # needed downstream for the 0.6 moved/modified split in _hunk_for_paired_blocks.
