@@ -431,6 +431,11 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
     The major / department level (DeltaTrack#105) is not yet captured; once it lands
     the chain deepens (TITLE > major > agency > account) without changing this
     function's contract.
+
+    Breadcrumb DEPTH is detection-path dependent: agency/grouping parents exist only
+    on the size path, so a low-coverage/no-band bill (legacy fallback) yields a
+    shallower chain for the same logical account. Consumers must not assume an agency
+    segment is always present.
     """
     if anchor.kind in ("title", "preamble"):
         return (anchor.text,)

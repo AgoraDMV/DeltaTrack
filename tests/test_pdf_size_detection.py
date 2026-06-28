@@ -406,6 +406,52 @@ class TestCarryoverAgencies:
             "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
         )
 
+    def test_second_agency_overrides_first(self):
+        # Two distinct agencies under one title, each with its own account: the
+        # account under agency B must resolve to B, not bleed agency A. Pins the
+        # `nearest agency only` discrimination (the carry-over feature's core).
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "MANAGEMENT DIRECTORATE", HEAD),  # agency A
+            (3, "OPERATIONS AND SUPPORT", HEAD),  # account under A
+            (4, "the body prose for account A here", BODY),
+            (5, "FEDERAL EMERGENCY MANAGEMENT AGENCY", HEAD),  # agency B
+            (6, "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS", HEAD),  # account under B
+            (7, "the body prose for account B here", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        assert {a.text for a in _by_kind(anchors, "agency")} == {
+            "MANAGEMENT DIRECTORATE",
+            "FEDERAL EMERGENCY MANAGEMENT AGENCY",
+        }
+        acct_a = next(a for a in anchors if a.kind == "account" and a.text == "OPERATIONS AND SUPPORT")
+        acct_b = next(a for a in anchors if a.kind == "account" and a.text.startswith("PROCUREMENT"))
+        assert breadcrumb_for(acct_a, anchors) == ("TITLE I", "MANAGEMENT DIRECTORATE", "OPERATIONS AND SUPPORT")
+        assert breadcrumb_for(acct_b, anchors) == (
+            "TITLE I",
+            "FEDERAL EMERGENCY MANAGEMENT AGENCY",
+            "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+        )
+
+    def test_agency_run_at_page_seam_takes_run_first_line(self):
+        # The agency run ends page 1; its leaf account opens page 2. The agency
+        # anchor must take the run's FIRST line on page 1 (found via the flattened
+        # cross-page stream), mirroring test_account_at_page_seam for accounts.
+        pages = [
+            _page(1, [(20, "MANAGEMENT DIRECTORATE", HEAD)]),
+            _page(
+                2,
+                [
+                    (1, "OPERATIONS AND SUPPORT", HEAD),
+                    (2, "the body prose runs here now", BODY),
+                ],
+            ),
+        ]
+        anchors = extract_anchors(pages)
+        agency = next(a for a in anchors if a.kind == "agency")
+        assert agency.text == "MANAGEMENT DIRECTORATE"
+        assert agency.page_number == 1 and agency.line_number == 20
+
     def test_account_without_agency_keeps_two_level_breadcrumb(self):
         # Regression guard: an account directly under a TITLE (no preceding agency
         # heading run) keeps the 2-level chain and emits no agency.

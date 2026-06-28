@@ -43,6 +43,28 @@ def test_anchors_match_golden(name: str):
     assert _current_anchors(pdf_path) == golden
 
 
+# Kinds that existed before #104 added `agency`. The frozen `.pre-agency-anchors`
+# baseline (never regenerated) pins these so a FUTURE slice's golden regeneration
+# can't silently launder a change to an originally-detected anchor: the full
+# golden is self-referential after regeneration, and the agency floors filter to
+# kind=="agency", so without this guard a corrupted section/title/account on s-4795
+# would be invisible. Generalizes the `legacy-accounts.json` set-delta pattern.
+_PRE_AGENCY_KINDS = frozenset({"title", "section", "account", "grouping", "preamble"})
+
+
+@pytest.mark.parametrize("name", sorted(FIXTURES))
+def test_agency_addition_is_purely_additive(name: str):
+    pdf_path = FIXTURES[name]
+    baseline_path = GOLDEN_DIR / f"{name}.pre-agency-anchors.json"
+    if not pdf_path.exists():
+        pytest.skip(f"{name} PDF not present")
+    if not baseline_path.exists():
+        pytest.skip(f"{name} pre-agency baseline not present")
+    frozen = json.loads(baseline_path.read_text())
+    live_non_agency = [a for a in _current_anchors(pdf_path) if a[0] in _PRE_AGENCY_KINDS]
+    assert live_non_agency == frozen
+
+
 def _account_names(pdf_path: Path) -> set[str]:
     anchors = extract_anchors(extract_clean_pages(pdf_path))
     return {a.text for a in anchors if a.kind == "account"}
@@ -172,6 +194,9 @@ class TestCarryoverAgenciesEndToEnd:
         # Exact-set parity on the clean bill: every XML agency recovered, none
         # spurious. The central acceptance gate for #104; must pass BEFORE the anchor
         # golden is regenerated so the regeneration can't bake in garbage.
+        # NB: the oracle (_xml_agency_vocab) is a CASING-dependent snapshot — it
+        # treats Title-case path segments as agencies and ALL-CAPS as majors. A new
+        # fixture's casing must be eyeballed before trusting this `==`.
         pdf = FIXTURES["118-hr-8752"]
         xml = ROOT / "bills" / "118-hr-8752" / "1_reported-in-house.xml"
         if not pdf.exists():
@@ -205,14 +230,17 @@ class TestCarryoverAgencyVocabFloors:
         them) and the 1 prose-leading agency (slice D).
 
     The dangling-conjunction guard removes the worst mis-joins (runs joining into a
-    phrase ending in 'and'/'of'/…), lifting precision from ~0.80 to ~0.87 — so the
-    precision floor below is set to REQUIRE that guard. Floors sit under the
-    measured values with margin for per-line median wobble; they are regression
-    floors, not targets.
+    phrase ending in 'and'/'of'/…), lifting precision from ~0.80 to ~0.865 — so the
+    precision floor below is set to REQUIRE that guard (0.80 without it fails 0.82).
+    Floors sit under the measured values (recall 0.889, precision 0.865) with margin
+    for per-line median wobble; they are regression floors, not targets.
     """
 
     AGENCY_RECALL_FLOOR = 0.85
     AGENCY_PRECISION_FLOOR = 0.82
+    # Sanity floor on the oracle/emission sizes so a future bill_tree refactor that
+    # silently shrank either vocabulary can't make the ratio assertions vacuous.
+    MIN_VOCAB = 30
 
     def test_s4795_agency_vocab_floors(self):
         pdf = ROOT / "test_data" / "BILLS-118s4795rs.pdf"
@@ -221,9 +249,11 @@ class TestCarryoverAgencyVocabFloors:
             pytest.skip("118-s-4795 pdf/xml pair not present")
         xa = _xml_agency_vocab(xml)
         pa = _pdf_agency_vocab(pdf)
+        assert len(xa) >= self.MIN_VOCAB, f"XML agency oracle shrank to {len(xa)}"
+        assert len(pa) >= self.MIN_VOCAB, f"PDF agency emission shrank to {len(pa)}"
         hit = pa & xa
-        recall = len(hit) / len(xa) if xa else 0.0
-        precision = len(hit) / len(pa) if pa else 0.0
+        recall = len(hit) / len(xa)
+        precision = len(hit) / len(pa)
         assert recall >= self.AGENCY_RECALL_FLOOR, f"agency recall {recall:.3f}"
         assert precision >= self.AGENCY_PRECISION_FLOOR, f"agency precision {precision:.3f}"
 
