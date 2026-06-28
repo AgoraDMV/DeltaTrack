@@ -2,6 +2,20 @@
 
 Thanks for your interest in contributing! This project compares versions of U.S. appropriations bills to make the legislative process more transparent. Contributions of all kinds are welcome: bug fixes, new features, documentation improvements, and bug reports.
 
+New to the codebase or to congressional bills? Two things are worth reading first:
+
+- **[docs/bill-structure.md](docs/bill-structure.md)** -- the data model the whole project rests on: what a division, account, or section is, and how the XML and PDF paths reconstruct the bill's hierarchy. Read this before touching parsing or diff code.
+- **[docs/decisions/](docs/decisions/)** -- short records of the non-obvious choices and why they were made.
+
+## Community
+
+DeltaTrack is built by the DeltaTrack/BillTrax team at [Civic Tech DC](https://luma.com/civic-tech-dc). The work focuses on diffing draft versions of bills for congressional staffers, across two repos: **BillTrax** (online) and **DeltaTrack** (local). The fastest way to get oriented and find people to pair with:
+
+- **Join the Slack** -- the [`#congressional-tech` channel](https://civictechdc.slack.com/archives/C0AT13U25V2) in the Civic Tech DC workspace. Day-to-day questions and coordination happen here.
+- **Come to the biweekly meetup** -- in person, via [Civic Tech DC on Luma](https://luma.com/civic-tech-dc). The single best way to get started: come, say hello, and pick up a first issue with someone alongside you.
+
+You don't need either to send a pull request, but both make the on-ramp much shorter.
+
 ## Getting started
 
 ### Prerequisites
@@ -13,7 +27,7 @@ Thanks for your interest in contributing! This project compares versions of U.S.
 ### Setup
 
 ```bash
-# Clone your fork
+# Fork the repo on GitHub, then clone your fork
 git clone https://github.com/YOUR_USERNAME/DeltaTrack.git
 cd DeltaTrack
 
@@ -24,7 +38,7 @@ uv sync
 uv run pre-commit install
 
 # Run the fast test suite to verify everything works
-uv run pytest -m "not slow"
+uv run pytest -m "not slow and not browser"
 ```
 
 ### Optional: download bill XML for full test suite
@@ -32,18 +46,39 @@ uv run pytest -m "not slow"
 The fast tests use inline XML and mocked data. Integration tests need real bill XML files:
 
 ```bash
-# Get a free API key at https://api.congress.gov/sign-up/
-echo "CONGRESS_API_KEY=your_key_here" > .env
-source .env
+# An API key is optional: the tool falls back to a rate-limited demo key
+# (~30 requests/hour). For heavier use, get a free key at
+# https://api.congress.gov/sign-up/ and put it in .env. fetch_bills.py loads
+# .env automatically, so no `source` is needed.
+cp .env.example .env   # then edit .env and paste your key
 
 # Download the primary test bill
 uv run python fetch_bills.py download 118 hr 4366
 
-# Run all tests (including integration tests against real XML)
+# Run the suite; tests whose bill isn't downloaded yet skip automatically
 uv run pytest
 ```
 
 See the README for the full list of bills used by the test suite.
+
+## Finding work to do
+
+Work is tracked in [GitHub Issues](https://github.com/AgoraDMV/DeltaTrack/issues) and on the [project board](https://github.com/orgs/AgoraDMV/projects/1). An issue moves across the board left to right:
+
+| Column | Meaning |
+|--------|---------|
+| **Backlog** | Captured, but not yet groomed or ready to start. |
+| **Ready** | Groomed and safe to pick up -- **start here**. |
+| **In progress** | Someone is actively working it. |
+| **In review** | A pull request is open and awaiting review. |
+| **Done** | Merged and complete. (Pull requests land on `develop`; `main` is the protected release branch.) |
+
+To pick up work:
+
+1. Choose an issue from **Ready**, or one labeled [`good first issue`](https://github.com/AgoraDMV/DeltaTrack/labels/good%20first%20issue) if you're new.
+2. **Claim it** so two people don't start the same thing: comment on the issue to call it. If you have write access, also assign yourself and move the card to **In progress**; otherwise a maintainer will. We're a small team and work mostly async between syncs, so visible ownership matters.
+
+Not sure whether an issue is a good fit? Ask in a comment or at the regular sync (see [Community](#community)).
 
 ## Making changes
 
@@ -68,26 +103,55 @@ uv run ruff format .         # Format
 
 ### Testing
 
-Tests are split into two groups:
+Tests are split into groups by speed and dependencies:
 
-- **Fast tests** (`pytest -m "not slow"`) -- unit tests using inline XML and mocked data. These run in under a second and don't need any bill files. CI runs these on every PR.
-- **Slow tests** (`pytest`) -- integration tests against real bill XML files. These need downloaded bills in `bills/` and take a couple of minutes.
+- **Fast tests** (`uv run pytest -m "not slow and not browser"`) -- unit tests on inline XML and mocked data; no bill files needed.
+- **Browser tests** (`uv run pytest -m browser`) -- Playwright/Chromium front-end tests. One-time setup: `uv run playwright install chromium`.
+- **Slow tests** (`uv run pytest -m slow`) -- integration and external-validation tests against real bill files in `bills/`.
 
-When adding new code, write tests for it. Test files live in `tests/`. If your tests need real XML files, mark them with `@pytest.mark.slow`. Shared test helpers are in `tests/conftest.py`.
+When adding code, write tests for it. Test files live in `tests/`; mark tests that need real XML files with `@pytest.mark.slow` and front-end tests with `@pytest.mark.browser`. Shared helpers are in `tests/conftest.py`. [TESTING.md](TESTING.md) is the home for the full command catalog and what each validation layer proves.
+
+### What CI checks
+
+Every pull request runs these gates (defined in `.github/workflows/ci.yml`). Run them locally before pushing to avoid a surprise red CI:
 
 ```bash
-uv run pytest -m "not slow"              # Fast tests only
-uv run pytest tests/test_diff_bill.py -v  # One test file
-uv run pytest -k "test_my_function"      # Tests matching a name
+uv run ruff check .                          # 1. Lint
+uv run ruff format --check .                 # 2. Formatting (run `ruff format .` to fix)
+uv run pytest -m "not slow and not browser"  # 3. Fast tests
+uv run pytest -m browser                     # 4. Browser tests (needs `playwright install chromium`)
+uv run pytest -m slow \
+  tests/test_committee_report.py \
+  tests/test_validate_extraction.py::test_report_amounts_recalled \
+  tests/test_validate_extraction.py::test_fixture_is_senate_reported_bill  # 5. External validation
 ```
+
+The pre-commit hooks cover gates 1 and 2 on each commit, but `ruff format --check` still fails CI if you committed without them. Gate 5 runs against vendored committee-report sources, so it needs no downloads or API key.
 
 ## Submitting a pull request
 
-1. Make sure the fast tests pass: `uv run pytest -m "not slow"`
-2. Make sure linting passes: `uv run ruff check .`
-3. Open a pull request against `develop`
-4. Describe what you changed and why
-5. CI will run tests and linting automatically
+1. Run the CI gates locally (above) and make sure they pass.
+2. Open a pull request against `develop`.
+3. In the description, link the issue it addresses ("Closes #123") and say what changed and why.
+4. For a behavior change, note how you verified it -- not just "tests pass," but what you ran or eyeballed (see [Reviewing a pull request](#reviewing-a-pull-request)).
+
+A maintainer reviews and merges. CI must be green.
+
+## Reviewing a pull request
+
+Review is how a small team shares context and catches the bugs tests miss. New teammates are encouraged to review early -- it's one of the fastest ways to learn the codebase.
+
+What to look at, roughly in priority order:
+
+- **Correctness of the diff itself.** This is the product. Passing tests are necessary, not sufficient: a diff can be green and still wrong. For any change that affects diff output, **run the tool on a real bill and eyeball the report** rather than trusting the suite alone. `scripts/serve_compare.py` gives a side-by-side view (see [TESTING.md](TESTING.md)).
+- **The risk hotspots**, where a bug does the most damage:
+  - **Parser accuracy** (`bill_tree.py`, `parsers/`) -- does the bill's structure come through intact? A missing or mis-nested section corrupts everything downstream. See [docs/parser-validation.md](docs/parser-validation.md).
+  - **Financial diff** (`diff_bill.py` and its financial filtering) -- dollar amounts and their changes must be exact.
+  - **The canonical schema contract** (`formatters/canonical.py`) -- both pipelines and the renderer depend on it, so a breaking change there ripples everywhere.
+- **Tests for the change.** New behavior should come with a test that would fail without the fix.
+- **Docs and decisions.** A non-obvious choice belongs in a code comment or a [decision record](docs/decisions/); a user-facing change belongs in the README.
+
+Leave specific comments, then approve or request changes. A maintainer does the actual merge.
 
 ## Reporting bugs
 
@@ -99,4 +163,4 @@ Open an issue with:
 
 ## Questions?
 
-Open an issue or start a discussion. There are no dumb questions.
+Open an issue, ask in [Slack](https://civictechdc.slack.com/archives/C0AT13U25V2), or bring it to the [meetup](https://luma.com/civic-tech-dc). There are no dumb questions. See [Community](#community) for how to join.
