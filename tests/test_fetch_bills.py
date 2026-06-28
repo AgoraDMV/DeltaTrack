@@ -11,6 +11,7 @@ from fetch_bills import (
     api_get,
     build_parser,
     cmd_download,
+    cmd_download_all,
     congress_for_year,
     download_version_xml,
     fetch_all_committee_bills,
@@ -415,3 +416,17 @@ class TestCmdDownloadFormats:
     def test_parser_accepts_format_both(self):
         args = build_parser().parse_args(["download", "118", "hr", "4366", "--format", "both"])
         assert args.format == "both"
+
+
+class TestCmdDownloadAllYearRange:
+    def test_start_year_without_end_year_uses_current_year(self, monkeypatch):
+        """Regression: with only --start_year, end_year is resolved via
+        datetime.datetime.now() (the bare datetime.now() raised AttributeError
+        because the module, not the class, is imported). Committee fetch is
+        stubbed empty so the year-resolution path runs offline."""
+        import fetch_bills
+
+        monkeypatch.setattr(fetch_bills, "fetch_all_committee_bills", lambda *a, **k: [])
+        args = build_parser().parse_args(["download-all", "--start_year", "2024"])
+        with httpx.Client() as client:
+            cmd_download_all(client, args, TEST_API_KEY)  # must not raise
