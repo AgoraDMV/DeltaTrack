@@ -178,7 +178,7 @@ The reasoning behind non-obvious architectural choices (why a structured money d
 ## Testing
 
 ```bash
-uv run pytest -m "not slow"                     # Fast unit tests (~1s, no XML files needed)
+uv run pytest -m "not slow and not browser"     # Fast unit tests (~1s, no XML files needed)
 uv run pytest                                    # All tests (needs bills/ XML files)
 uv run pytest tests/test_bill_tree.py            # Normalization tests
 uv run pytest tests/test_diff_bill.py            # Diff/matching tests
@@ -189,7 +189,7 @@ uv run pytest tests/test_corpus_properties.py    # Corpus-wide property tests
 uv run pytest tests/test_validate_extraction.py  # External validation tests
 ```
 
-Tests that require real bill XML files are marked `@pytest.mark.slow`. The fast suite (`-m "not slow"`) runs entirely on inline XML and mocked data, needs no downloads, and finishes quickly. CI runs it automatically on every PR. The slow suite adds corpus-wide property checks, cross-version diff validation, and external ground-truth validation against real bills.
+Tests that require real bill XML files are marked `@pytest.mark.slow`. The fast suite (`-m "not slow and not browser"`) runs entirely on inline XML and mocked data, needs no downloads, and finishes quickly. CI runs it automatically on every PR. The slow suite adds corpus-wide property checks, cross-version diff validation, and external ground-truth validation against real bills.
 
 The diff engine is fully deterministic: no LLM and no API key. The only API key (`CONGRESS_API_KEY`) is used by `fetch_bills.py` to download bills, not by the diff itself.
 
