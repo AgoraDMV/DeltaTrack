@@ -54,6 +54,25 @@ The tool works without an API key using a free demo key (limited to 30 requests 
 CONGRESS_API_KEY=your_key_here
 ```
 
+## Command reference
+
+The product commands are wrapper scripts in the project root; run them after `source init`. `download` and `download-all` default to **XML** — pass `--format pdf` or `--format both` for PDFs.
+
+| Command | What it does |
+|---------|--------------|
+| `./fetch_bills versions <congress> <type> <number>` | List a bill's available text versions |
+| `./fetch_bills download <congress> <type> <number>` | Download a bill's versions (XML by default; `--format pdf\|both`, `--version N`) |
+| `./fetch_bills download-all --start_year <Y> --end_year <Y>` | Download all appropriations bills in a year range (or `--file <csv>` for a specific set) |
+| `./diff_bill compare <old.xml> <new.xml>` | Diff two XML versions (HTML by default; `--format json`, `--financial`, `--filter`, `-o`) |
+| `./diff_pdf <old.pdf> <new.pdf> -o <out.html>` | Diff two PDF versions into the same HTML report |
+| `./fetch_bill_archives` | Bulk-build a bill-metadata index from govinfo archives — **see the warning below** |
+
+Environment setup is `source init` (installs dependencies and activates the virtualenv). Use `source` so the environment change sticks; it is not a runnable command.
+
+> **`fetch_bill_archives` is an advanced bulk tool.** Run with no arguments it immediately downloads every GovInfo BILLSTATUS archive for congresses 112–119 (hundreds of MB) with no prompt, extracts them, and writes a `bills/bills.csv` metadata index. The congress range is hardcoded and there are no CLI flags yet (tracked in [#10](https://github.com/AgoraDMV/DeltaTrack/issues/10)). Reach for it only when you specifically need a bulk bill index.
+
+To run the web comparison app locally: `uvicorn server.app:app --reload --port 8077` (see [docs/web-compare.md](docs/web-compare.md)).
+
 ## Downloading Bills
 
 ```bash
