@@ -317,7 +317,7 @@ def cmd_download_all(client: httpx.Client, args: argparse.Namespace, api_key: st
         return
 
     start_year = args.start_year or 1789
-    end_year = args.end_year or datetime.now().year
+    end_year = args.end_year or datetime.datetime.now().year
     if start_year > end_year:
         print(f"start_year ({start_year}) must be <= end_year ({end_year}).", file=sys.stderr)
         sys.exit(1)
