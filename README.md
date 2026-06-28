@@ -37,10 +37,10 @@ source init
 
 # 2. Download all versions of a bill
 #    Example: HR 4366 from the 118th Congress (2023-2024)
-./ fetch_bills download 118 hr 4366
+./fetch_bills download 118 hr 4366
 
 # 3. Generate an HTML report comparing two versions
-./ diff_bill compare \
+./diff_bill compare \
   bills/118-hr-4366/1_reported-in-house.xml \
   bills/118-hr-4366/2_engrossed-in-house.xml \
   --format html -o reports/hr4366_v1_vs_v2.html
@@ -189,7 +189,7 @@ uv run pytest tests/test_corpus_properties.py    # Corpus-wide property tests
 uv run pytest tests/test_validate_extraction.py  # External validation tests
 ```
 
-Tests that require real bill XML files are marked `@pytest.mark.slow`. The fast suite (`-m "not slow and not browser"`) runs entirely on inline XML and mocked data, needs no downloads, and finishes quickly. CI runs it automatically on every PR. The slow suite adds corpus-wide property checks, cross-version diff validation, and external ground-truth validation against real bills.
+Tests that require real bill XML files are marked `@pytest.mark.slow`. The fast suite (`-m "not slow and not browser"`) runs entirely on inline XML and mocked data, needs no downloads, and finishes quickly. Every pull request also runs the full CI gate set (lint, formatting, the fast and browser tests, and an external-validation subset) -- see [What CI checks](CONTRIBUTING.md#what-ci-checks). The slow suite adds corpus-wide property checks, cross-version diff validation, and external ground-truth validation against real bills.
 
 The diff engine is fully deterministic: no LLM and no API key. The only API key (`CONGRESS_API_KEY`) is used by `fetch_bills.py` to download bills, not by the diff itself.
 
@@ -198,7 +198,7 @@ See [TESTING.md](TESTING.md) for how the test suite is organized, how diff accur
 Integration tests use real XML files from `bills/` and skip if not present. To run the full suite including validation tests, download the required bills:
 
 ```bash
-source .env  # load API key
+# fetch_bills reads CONGRESS_API_KEY from .env automatically; no need to source it.
 ./fetch_bills download 118 hr 4366
 ./fetch_bills download 118 hr 2882
 ./fetch_bills download 118 hr 8282
@@ -225,3 +225,7 @@ These fetch XML, which covers the XML-based tests. The PDF comparison tests (`te
 ```
 
 The validation tests compare extracted line items across Legislative Branch bills (both chambers, multiple fiscal years) against amounts from a curated appropriations spreadsheet. The corpus property tests (`test_corpus_properties.py`) check dollar coverage, path uniqueness, and character coverage across all downloaded bills. See [TESTING.md](TESTING.md) for what each validation layer proves and where the gaps are.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to set up a dev environment, find and claim work on the project board, run the CI gates locally, and open a pull request. New contributors and reviewers both have a path there.
