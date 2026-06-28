@@ -16,10 +16,19 @@ uv run python scripts/serve_compare.py 118-hr-8752  # PDF vs XML diff side by si
 
 This repo follows the workflow in [CONTRIBUTING.md](CONTRIBUTING.md). The load-bearing parts for an agent:
 
-- **Pick work from the `Ready` column** of the project board. Before starting, assign the issue to whoever is doing the work and move its card to **In progress**.
+- **Pick work from the `Ready` column** of the project board — `Ready` means groomed and safe to start. Pick a discrete issue, not an epic.
+- **Own it and keep status current.** Before starting, **assign yourself** and move the card to **In progress**. Don't work an issue you aren't assigned to without claiming it first. Opening the PR moves it to **In review** automatically; keep the Status honest as you go so the board reflects reality.
 - **Branch from `develop`** (never `main`), commit in small focused steps, and open the PR against `develop`. A maintainer merges; do not merge yourself.
 - **Link the issue in the PR** body with `Closes #<n>` so the issue and its board card resolve on merge.
 - **Before pushing, run the CI gates locally** (lint, `ruff format --check`, fast, browser, external-validation) -- see CONTRIBUTING's "What CI checks." `ruff check` is not covered by the pre-commit format hook, so run it explicitly.
+
+### Filing and grooming issues
+
+- **File with a template** (bug / feature / task). Keep *reporting* lean — for a bug, a way to reproduce is the highest-value thing. Don't pre-scope or pre-size; that's the grooming step.
+- **Grooming makes an issue pickup-ready** (the `Backlog → Ready` move): add acceptance criteria, scope, where-to-start, and set **Priority**. See CONTRIBUTING's "Grooming an issue for pickup."
+- **Priority and Effort are org-level issue fields**, not labels: Priority = Urgent / High / Medium / Low (single source of truth — don't reintroduce priority labels); Effort = High / Medium / Low, optional and not a current focus.
+- **Watch for security-sensitive work.** Anything touching the public/deployed surface (e.g. `server/`, `/api/compare`) gets the `security` label and a hard look — that's the one outward-facing, abusable part of the project.
+- **Epics** carry the `epic` label and are decomposed into native **sub-issues**; the parent's progress bar is its status. Pick up the sub-issues, not the epic. An epic stays open until all its sub-issues close, then a maintainer closes it by hand (the parent does not auto-close). Epics live on the Roadmap view and are filtered off the working board.
 
 ## Key architecture concepts
 
