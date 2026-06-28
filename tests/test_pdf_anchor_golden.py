@@ -43,6 +43,28 @@ def test_anchors_match_golden(name: str):
     assert _current_anchors(pdf_path) == golden
 
 
+# Kinds that existed before #104 added `agency`. The frozen `.pre-agency-anchors`
+# baseline (never regenerated) pins these so a FUTURE slice's golden regeneration
+# can't silently launder a change to an originally-detected anchor: the full
+# golden is self-referential after regeneration, and the agency floors filter to
+# kind=="agency", so without this guard a corrupted section/title/account on s-4795
+# would be invisible. Generalizes the `legacy-accounts.json` set-delta pattern.
+_PRE_AGENCY_KINDS = frozenset({"title", "section", "account", "grouping", "preamble"})
+
+
+@pytest.mark.parametrize("name", sorted(FIXTURES))
+def test_agency_addition_is_purely_additive(name: str):
+    pdf_path = FIXTURES[name]
+    baseline_path = GOLDEN_DIR / f"{name}.pre-agency-anchors.json"
+    if not pdf_path.exists():
+        pytest.skip(f"{name} PDF not present")
+    if not baseline_path.exists():
+        pytest.skip(f"{name} pre-agency baseline not present")
+    frozen = json.loads(baseline_path.read_text())
+    live_non_agency = [a for a in _current_anchors(pdf_path) if a[0] in _PRE_AGENCY_KINDS]
+    assert live_non_agency == frozen
+
+
 def _account_names(pdf_path: Path) -> set[str]:
     anchors = extract_anchors(extract_clean_pages(pdf_path))
     return {a.text for a in anchors if a.kind == "account"}
@@ -120,6 +142,120 @@ class TestSectionCatchlineContinuation:
         if not pdf.exists():
             pytest.skip(f"{pdf.parent.name} PDF not present")
         assert self.REPROS[pdf] not in _account_names(pdf)
+
+
+def _xml_agency_vocab(xml_path: Path) -> set[str]:
+    """The XML's agency-level vocabulary (normalized), derived from the structure.
+
+    The XML rarely carries agencies as standalone ``appropriations-intermediate``
+    nodes; mostly they live as an intermediate segment of an account's
+    ``display_path``. The level above the leaf is NOT positional (the department
+    may be its own segment, e.g. ``TITLE II > DEPARTMENT OF JUSTICE > Office of
+    inspector general > ...``, or folded into the title, e.g. ``TITLE I—DEPARTMENT
+    OF COMMERCE > Bureau of the census > ...``), so position can't separate the
+    major from the agency. Casing can: GPO renders the major ALL-CAPS and the
+    agency in Title-case. So the agency vocab = every Title-cased path segment
+    between the title prefix and the leaf, plus any standalone intermediate node.
+    Derived, never hardcoded, so it can't drift against a regenerated golden.
+    """
+    from bill_tree import normalize_bill, normalize_header
+
+    tree = normalize_bill(xml_path)
+    vocab: set[str] = set()
+    for n in tree.nodes:
+        if n.tag == "appropriations-small":
+            for seg in n.display_path[1:-1]:  # exclude the title prefix and the leaf
+                if any("a" <= ch <= "z" for ch in seg):  # Title-case => agency, not an ALL-CAPS major
+                    vocab.add(normalize_header(seg))
+        elif n.tag == "appropriations-intermediate" and n.header_text:
+            vocab.add(normalize_header(n.header_text))
+    return vocab
+
+
+def _pdf_agency_vocab(pdf_path: Path) -> set[str]:
+    from bill_tree import normalize_header
+
+    anchors = extract_anchors(extract_clean_pages(pdf_path))
+    return {normalize_header(a.text) for a in anchors if a.kind == "agency"}
+
+
+class TestCarryoverAgenciesEndToEnd:
+    """Slice B of #54 (DeltaTrack#104): the size path recovers the XML agency level.
+
+    The PDF size path emits the carry-over agency (kind ``agency``), rejoining
+    names that wrap across heading lines (e.g. ``OFFICE OF THE SECRETARY AND
+    EXECUTIVE`` + ``MANAGEMENT``). H.R. 8752 is the CLEAN case — single-line account
+    names, unambiguous agency wraps — so it gets exact-set parity. The harder
+    behavior (wrapped account names, header-only and prose-leading agencies) is
+    gated tolerantly on the Senate CJS bill in TestCarryoverAgencyVocabFloors.
+    """
+
+    def test_pdf_agencies_match_xml_path_segments(self):
+        # Exact-set parity on the clean bill: every XML agency recovered, none
+        # spurious. The central acceptance gate for #104; must pass BEFORE the anchor
+        # golden is regenerated so the regeneration can't bake in garbage.
+        # NB: the oracle (_xml_agency_vocab) is a CASING-dependent snapshot — it
+        # treats Title-case path segments as agencies and ALL-CAPS as majors. A new
+        # fixture's casing must be eyeballed before trusting this `==`.
+        pdf = FIXTURES["118-hr-8752"]
+        xml = ROOT / "bills" / "118-hr-8752" / "1_reported-in-house.xml"
+        if not pdf.exists():
+            pytest.skip("HR 8752 PDF not present")
+        assert _pdf_agency_vocab(pdf) == _xml_agency_vocab(xml)
+
+    def test_zero_false_agencies_on_non_approps(self):
+        # Generalization guard (fresh-eyes C5): a non-appropriations bill has no
+        # agency level, so the carry-over rule must emit zero agency anchors.
+        pdf = FIXTURES["118-hr-8282"]
+        if not pdf.exists():
+            pytest.skip("HR 8282 PDF not present")
+        anchors = extract_anchors(extract_clean_pages(pdf))
+        assert [a.text for a in anchors if a.kind == "agency"] == []
+
+
+class TestCarryoverAgencyVocabFloors:
+    """Tolerant agency-vocab floor on the HARD bill (Senate CJS, 118-s-4795).
+
+    Unlike H.R. 8752, s-4795 has variable path depth, account names that wrap
+    across heading lines, header-only intermediate agencies, and a prose-leading
+    agency. JOIN recovers the recoverable agencies but CANNOT segment a wrapped
+    account name from an agency — that is the #54/#108 leveled tree, out of slice
+    B's scope. So this is a floor with KNOWN, documented residue, not exact parity:
+
+      - False positives that remain are wrapped account-name fragments and a
+        provision header (e.g. 'salaries and expenses, foreign claims', 'major
+        research equipment and facilities', 'administrative provision—legal
+        services') — indistinguishable from agencies without the tree (#108).
+      - Misses are the 3 header-only intermediate agencies (no leaf account beneath
+        them) and the 1 prose-leading agency (slice D).
+
+    The dangling-conjunction guard removes the worst mis-joins (runs joining into a
+    phrase ending in 'and'/'of'/…), lifting precision from ~0.80 to ~0.865 — so the
+    precision floor below is set to REQUIRE that guard (0.80 without it fails 0.82).
+    Floors sit under the measured values (recall 0.889, precision 0.865) with margin
+    for per-line median wobble; they are regression floors, not targets.
+    """
+
+    AGENCY_RECALL_FLOOR = 0.85
+    AGENCY_PRECISION_FLOOR = 0.82
+    # Sanity floor on the oracle/emission sizes so a future bill_tree refactor that
+    # silently shrank either vocabulary can't make the ratio assertions vacuous.
+    MIN_VOCAB = 30
+
+    def test_s4795_agency_vocab_floors(self):
+        pdf = ROOT / "test_data" / "BILLS-118s4795rs.pdf"
+        xml = ROOT / "bills" / "118-s-4795" / "1_reported-in-senate.xml"
+        if not pdf.exists() or not xml.exists():
+            pytest.skip("118-s-4795 pdf/xml pair not present")
+        xa = _xml_agency_vocab(xml)
+        pa = _pdf_agency_vocab(pdf)
+        assert len(xa) >= self.MIN_VOCAB, f"XML agency oracle shrank to {len(xa)}"
+        assert len(pa) >= self.MIN_VOCAB, f"PDF agency emission shrank to {len(pa)}"
+        hit = pa & xa
+        recall = len(hit) / len(xa)
+        precision = len(hit) / len(pa)
+        assert recall >= self.AGENCY_RECALL_FLOOR, f"agency recall {recall:.3f}"
+        assert precision >= self.AGENCY_PRECISION_FLOOR, f"agency precision {precision:.3f}"
 
 
 class TestCorpusAccountPrecision:

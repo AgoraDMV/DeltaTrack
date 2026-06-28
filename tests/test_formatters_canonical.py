@@ -241,6 +241,33 @@ def _pdf_meta() -> dict:
     return dict(bill_type="hr", bill_number=4366, congress=118, v1_label="Reported", v2_label="Engrossed")
 
 
+# Agency-level anchors for the #104 carry-over agency breadcrumb (slice B).
+AGENCY = Anchor(page_number=1, line_number=5, kind="agency", text="MANAGEMENT DIRECTORATE")
+ACCOUNT = Anchor(page_number=1, line_number=6, kind="account", text="OPERATIONS AND SUPPORT")
+
+
+def test_pdf_agency_breadcrumb_flows_into_canonical_path_without_schema_change():
+    # #104 deepens the PDF breadcrumb to TITLE > agency > account. The canonical
+    # path is an arbitrary-depth array already, so the deeper chain flows through
+    # pdf_diff_to_canonical with NO converter change and NO schema_version bump
+    # (decision: the bump in the issue is phantom work; PathArray is open-ended).
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=ACCOUNT,
+        v2_anchor=ACCOUNT,
+        v1_range=(1, 6, 1, 9),
+        v2_range=(1, 6, 1, 9),
+        v1_text="old",
+        v2_text="new",
+    )
+    anchors = (TITLE_I, AGENCY, ACCOUNT)
+    diff = PdfDiff(hunks=(hunk,), v1_anchors=anchors, v2_anchors=anchors)
+    canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
+    c = canonical["changes"][0]
+    assert c["path"]["v2"] == ["TITLE I", "MANAGEMENT DIRECTORATE", "OPERATIONS AND SUPPORT"]
+    assert canonical["schema_version"] == SCHEMA_VERSION  # unchanged (still 1.2)
+
+
 def test_pdf_envelope_marks_source_pdf_and_version_number_null():
     diff = PdfDiff(hunks=(), v1_anchors=(), v2_anchors=())
     canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
