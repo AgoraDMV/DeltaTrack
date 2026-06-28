@@ -18,7 +18,7 @@ from typing import Literal
 
 from parsers.pdf_text import Page, parse_lines, strip_page_chrome
 
-AnchorKind = Literal["title", "section", "account", "preamble"]
+AnchorKind = Literal["title", "section", "account", "grouping", "preamble"]
 
 
 @dataclass(frozen=True)
@@ -26,7 +26,10 @@ class Anchor:
     page_number: int  # 1-based
     line_number: int  # 1-based, from the source PDF's printed line numbers
     kind: AnchorKind
-    text: str  # canonical form, e.g. "TITLE I", "SEC. 406", "OPERATIONS AND SUPPORT"
+    # canonical form, e.g. "TITLE I", "SEC. 406", "OPERATIONS AND SUPPORT", or a
+    # grouping header like "ADMINISTRATIVE PROVISIONS" (a header-only intermediate
+    # node owning a run of SEC. sections — DeltaTrack#103).
+    text: str
 
 
 @dataclass(frozen=True)
@@ -193,16 +196,22 @@ def _flatten(pages: list[Page]) -> list[tuple[int, "Line"]]:  # noqa: F821 - Lin
 
 
 def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
-    """Size-based account detection over the flattened document line stream.
+    """Size-based account / grouping-header detection over the flattened line stream.
 
-    An account is a heading-band, uppercase line whose next meaningful line is
-    body prose (or end-of-document). A band heading followed by another heading is
-    an agency parent (skipped — deferred to #54). The look-ahead skips blank lines
-    and parenthetical qualifiers; an unattached (size-less) next line counts as
-    body (conservative — skipping toward the next heading would wrongly drop a
-    leaf). Run-in subsection headers (`(a) …`) and parenthetical qualifiers are
-    never accounts. The anchor keeps the heading's own page/line, never the
-    look-ahead target's.
+    A heading-band, uppercase line is classified by its next meaningful line:
+      - a `SEC.` section line ⇒ a **grouping header** (`ADMINISTRATIVE PROVISIONS`,
+        `GENERAL PROVISIONS`) — a header-only intermediate node owning a run of
+        `SEC.` sections, not an account (DeltaTrack#103). In appropriations bills
+        the SEC. line carries body prose ("SEC. 101. (a) The Secretary…") and so
+        renders at body size, which is why the look-ahead used to read it as
+        "followed by body" and mislabel the header `account`.
+      - body prose (or end-of-document) ⇒ an `account` leaf.
+      - another heading ⇒ an agency parent (skipped — deferred to #104).
+    The look-ahead skips blank lines and parenthetical qualifiers; an unattached
+    (size-less) next line counts as body (conservative — skipping toward the next
+    heading would wrongly drop a leaf). Run-in subsection headers (`(a) …`) and
+    parenthetical qualifiers are never accounts. The anchor keeps the heading's own
+    page/line, never the look-ahead target's.
 
     Body must be confirmed positively (at body size) rather than "anything that
     isn't a heading": a wrapped run-in header continuation can sit in the heading
@@ -283,7 +292,9 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
                 continue
             nxt = cand
             break
-        if nxt is None or is_body(nxt):
+        if nxt is not None and _SECTION_PATTERN.match(nxt.text.strip()):
+            anchors.append(Anchor(page_number, line.line_number, "grouping", line.text.strip()))
+        elif nxt is None or is_body(nxt):
             anchors.append(Anchor(page_number, line.line_number, "account", line.text.strip()))
     return anchors
 
@@ -338,14 +349,17 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
     For a TITLE anchor: returns just `("TITLE I",)`.
     For a PREAMBLE (front-matter) anchor: returns just `("Front Matter",)` —
     it's top-level, preceding the first TITLE.
-    For a SECTION anchor: returns `("TITLE IV", "SEC. 406")` if a preceding
-    TITLE exists, else just `("SEC. 406",)`.
-    For an ACCOUNT anchor: returns `("TITLE I", "OPERATIONS AND SUPPORT")` if
-    a preceding TITLE exists, else just `("OPERATIONS AND SUPPORT",)`.
+    For an ACCOUNT or GROUPING anchor: returns `("TITLE I", "OPERATIONS AND
+    SUPPORT")` if a preceding TITLE exists, else just `("OPERATIONS AND SUPPORT",)`.
+    For a SECTION anchor: `("TITLE IV", "SEC. 406")` normally, but when a
+    grouping header (`ADMINISTRATIVE PROVISIONS`) precedes the section within the
+    same title, the section nests under it: `("TITLE I", "ADMINISTRATIVE
+    PROVISIONS", "SEC. 101")` (DeltaTrack#103). Sections under a general-provisions
+    title with no grouping header keep the 2-level chain.
 
-    The agency-level heading (e.g. "OFFICE OF THE SECRETARY") is not currently
-    captured by anchor extraction; once that lands the chain becomes three
-    levels deep without changing this function's contract.
+    The agency-level heading (e.g. "OFFICE OF THE SECRETARY") is not yet captured
+    (DeltaTrack#104); once that lands the chain deepens without changing this
+    function's contract.
     """
     if anchor.kind in ("title", "preamble"):
         return (anchor.text,)
@@ -356,8 +370,17 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
         idx = list(all_anchors).index(anchor)
     except ValueError:
         return (anchor.text,)
-    # Walk back for the most recent preceding TITLE
+    # Walk back to the nearest preceding TITLE, capturing a grouping-header parent
+    # if one falls between that TITLE and the section (sections only). The walk
+    # stops at the TITLE, so a grouping from an earlier title is never reached.
+    grouping: str | None = None
     for j in range(idx - 1, -1, -1):
-        if all_anchors[j].kind == "title":
-            return (all_anchors[j].text, anchor.text)
+        prev = all_anchors[j]
+        if prev.kind == "title":
+            chain = (prev.text,) + ((grouping,) if grouping else ()) + (anchor.text,)
+            return chain
+        if anchor.kind == "section" and prev.kind == "grouping" and grouping is None:
+            grouping = prev.text
+    if grouping:
+        return (grouping, anchor.text)
     return (anchor.text,)
