@@ -9,7 +9,7 @@ New to the codebase or to congressional bills? Two things are worth reading firs
 
 ## Community
 
-DeltaTrack is built by the DeltaTrack/BillTrax team at [Civic Tech DC](https://luma.com/civic-tech-dc). The work focuses on diffing draft versions of bills for congressional staffers, across two repos: **BillTrax** (online) and **DeltaTrack** (local). The fastest way to get oriented and find people to pair with:
+DeltaTrack is built by the Congressional Tech team at [Civic Tech DC](https://luma.com/civic-tech-dc). The work focuses on diffing draft versions of bills for congressional staffers, across two repos: **BillTrax** (online) and **DeltaTrack** (local). The fastest way to get oriented and find people to pair with:
 
 - **Join the Slack** -- the [`#congressional-tech` channel](https://civictechdc.slack.com/archives/C0AT13U25V2) in the Civic Tech DC workspace. Day-to-day questions and coordination happen here.
 - **Come to the biweekly meetup** -- in person, via [Civic Tech DC on Luma](https://luma.com/civic-tech-dc). The single best way to get started: come, say hello, and pick up a first issue with someone alongside you.
@@ -155,13 +155,74 @@ What to look at, roughly in priority order:
 
 Leave specific comments, then approve or request changes. A maintainer does the actual merge.
 
-## Reporting bugs
+## Filing an issue
 
-Open an issue with:
+Keep it light. Pick the matching template (bug, feature, or task) and fill in
+what you know — you don't need to scope, size, or solve it. The most useful thing
+you can provide for a bug is a way to reproduce it.
+
+For bug reports, include:
 - What you expected to happen
 - What actually happened
 - Steps to reproduce (bill number, versions compared, command you ran)
 - Any error output
+
+That's enough. The team fleshes out the rest when grooming the issue for pickup.
+
+## Grooming an issue for pickup
+
+Reporting and picking-up are two different jobs. Filing should be low-friction;
+making an issue *ready to pick up* is the team's job, done during triage (the
+**Backlog → Ready** move on the board, usually at the biweekly sync). An issue is
+**Ready** when it answers:
+
+- **Problem / why** — what's wrong or missing, and why it matters.
+- **Acceptance criteria** — a short checklist of what "done" looks like.
+- **Scope** — one line on what's in and out, so the work doesn't sprawl.
+- **Where to start** — entry file(s) or the relevant doc.
+- **Priority** — set the org-level Priority field: Urgent / High / Medium / Low (see below).
+- **Effort** *(optional)* — set the org-level Effort field if useful; not a focus right now.
+
+This keeps the bar to *report* low while still giving a newcomer everything they
+need to *start*.
+
+### Priority
+
+Priority lives in the **org-level Priority issue field** (defined once for the
+AgoraDMV org, so it's consistent across DeltaTrack and BillTrax), set during
+grooming. Its values are **Urgent / High / Medium / Low**:
+
+- **Urgent** — broken or trust-critical: wrong/lost diff output, silent data
+  corruption. Drop other work for these.
+- **High** — important correctness or coverage to do soon; cheap unblockers.
+- **Medium** — coverage, fidelity, structure, contributor on-ramp. Most work.
+- **Low** — cleanups, cosmetics, deferred decisions, nice-to-haves.
+
+Priority is "the next-couple-weeks tier," not a permanent ranking — the **Ready**
+column holds the current Urgent/High items, and we re-look at each sync. We track
+priority in one place (the field), not also as labels, to avoid two competing
+sources of truth.
+
+Sizing is available via the org-level **Effort** field (High / Medium / Low) if a
+piece of work needs it, but it isn't a focus right now — don't block grooming on
+it.
+
+## Epics
+
+A larger effort that spans several pull requests is tracked as an **epic**: an
+issue with the **`epic` label** that is broken into **sub-issues** (the smaller,
+discrete pieces of work). Pick up the *sub-issues*, not the epic itself.
+
+- The epic's progress is the **sub-issues progress bar** on the parent — it isn't
+  dragged through the board columns like a normal issue.
+- Each **sub-issue** flows the board normally and closes via its own
+  `Closes #<n>` pull request. When all sub-issues are done, a maintainer closes
+  the epic.
+- Epics live on the **Roadmap** view; the working board filters them out, so the
+  day-to-day columns show only discrete, pickup-ready work.
+
+Reach for an epic only when work genuinely needs decomposing — most features are a
+single issue.
 
 ## Questions?
 
