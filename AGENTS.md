@@ -12,6 +12,15 @@ uv run pytest tests/test_diff_bill.py::TestMatchNodesIntegration  # Single test
 uv run python scripts/serve_compare.py 118-hr-8752  # PDF vs XML diff side by side (see TESTING.md)
 ```
 
+## Workflow
+
+This repo follows the workflow in [CONTRIBUTING.md](CONTRIBUTING.md). The load-bearing parts for an agent:
+
+- **Pick work from the `Ready` column** of the project board. Before starting, assign the issue to whoever is doing the work and move its card to **In progress**.
+- **Branch from `develop`** (never `main`), commit in small focused steps, and open the PR against `develop`. A maintainer merges; do not merge yourself.
+- **Link the issue in the PR** body with `Closes #<n>` so the issue and its board card resolve on merge.
+- **Before pushing, run the CI gates locally** (lint, `ruff format --check`, fast, browser, external-validation) -- see CONTRIBUTING's "What CI checks." `ruff check` is not covered by the pre-commit format hook, so run it explicitly.
+
 ## Key architecture concepts
 
 - The shared bill data model (the two-tree hierarchy, the glossary, why the XML encodes nesting positionally, and the PDF↔XML parity goal) lives in [docs/bill-structure.md](docs/bill-structure.md). Read it before working on heading/anchor/account detection or DeltaTrack#54.
@@ -25,7 +34,7 @@ uv run python scripts/serve_compare.py 118-hr-8752  # PDF vs XML diff side by si
 ## Test conventions
 
 - All test files live in `tests/`; source modules stay at the repo root and are importable because `pythonpath = ["."]` is set in `pyproject.toml`. Run pytest from the repo root so CWD-relative fixtures (`bills/`, `test_data/`) resolve.
-- Tests requiring real bill XML files are marked `@pytest.mark.slow`; CI runs only fast tests
+- Tests requiring real bill XML files are marked `@pytest.mark.slow`; front-end tests `@pytest.mark.browser`. The fast suite is `-m "not slow and not browser"`. CI runs more than the fast suite (see CONTRIBUTING's "What CI checks")
 - Shared test helpers live in `tests/conftest.py`: `make_bill_node()`, `make_bill_tree()`, `make_node_diff()`, `make_change_dict()`
 - Session-scoped fixtures in `tests/conftest.py` cache parsed bill trees and diffs to avoid redundant XML parsing
 - `fetch_bills.py` tests use `respx.mock` decorator and monkeypatch `time.sleep`
