@@ -510,6 +510,442 @@ class TestCarryoverAgencies:
         assert breadcrumb_for(later, anchors) == ("TITLE I", "WORKING CAPITAL FUND")
 
 
+class TestMajorLevel:
+    """Slice C of the #54 leveled-heading tree (DeltaTrack#105).
+
+    A *major* (``appropriations-major``: DEPARTMENTAL MANAGEMENT…, GENERAL
+    PROVISIONS) is the department/division heading GPO prints at BODY size +
+    ALL-CAPS directly under a ``TITLE`` line and ABOVE the heading band. It is the
+    level above the carry-over agency, completing TITLE > major > agency > account.
+
+    Load-bearing invariant (verified on 118-hr-8752 / 118-s-4795): majors render at
+    BODY size while agencies/accounts render in the disjoint HEADING band. A major
+    is therefore the contiguous run of body-size all-caps heading lines IMMEDIATELY
+    following a TITLE; the run stops at the first heading-band line (agency/account),
+    body prose line, or SEC. line. The "immediately after TITLE" structural gate is
+    what separates a real major from a body-size all-caps SEC.-catchline fragment, a
+    statutory-citation wrap (``U.S.C. 279)).``), or a body-size grouping header
+    (``SPENDING REDUCTION ACCOUNT`` mid-title) — none of which sit right after a
+    TITLE. These synthetic fixtures mirror the real 118-hr-8752 shapes (3-line
+    hyphenated wrap, conjunction-tail wrap, GENERAL PROVISIONS single line).
+    """
+
+    def test_single_line_major_emitted_after_title(self):
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL MANAGEMENT", BODY),  # major (body all-caps, after title)
+            (3, "MANAGEMENT DIRECTORATE", HEAD),  # agency (heading band)
+            (4, "OPERATIONS AND SUPPORT", HEAD),  # leaf account
+            (5, "the body prose runs here now", BODY),
+        ]
+        majors = _by_kind(extract_anchors([_page(1, rows)]), "major")
+        # exactly the major name — the run STOPS at the heading-band agency line and
+        # does not over-eat it (the size bands are disjoint).
+        assert [a.text for a in majors] == ["DEPARTMENTAL MANAGEMENT"]
+        assert majors[0].page_number == 1 and majors[0].line_number == 2
+
+    def test_multiline_major_dehyphenated_join(self):
+        # THE real 118-hr-8752 TITLE I case: a 3-line wrap with a soft hyphen
+        # ("INTEL-" / "LIGENCE") that must rejoin to "INTELLIGENCE", and a middle
+        # line ending in "AND" that joins with a space. Result must equal the XML
+        # major text exactly.
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL MANAGEMENT, INTEL-", BODY),
+            (3, "LIGENCE, SITUATIONAL AWARENESS, AND", BODY),
+            (4, "OVERSIGHT", BODY),
+            (5, "MANAGEMENT DIRECTORATE", HEAD),
+            (6, "OPERATIONS AND SUPPORT", HEAD),
+            (7, "the body prose runs here now", BODY),
+        ]
+        majors = _by_kind(extract_anchors([_page(1, rows)]), "major")
+        assert [a.text for a in majors] == [
+            "DEPARTMENTAL MANAGEMENT, INTELLIGENCE, SITUATIONAL AWARENESS, AND OVERSIGHT"
+        ]
+        # the joined anchor takes the run's FIRST line (mirrors the agency-join rule)
+        assert majors[0].page_number == 1 and majors[0].line_number == 2
+
+    def test_wrap_line_ending_in_conjunction_joined(self):
+        # 118-hr-8752 TITLE II: the first wrap line ends in "AND". The greedy join
+        # gathers the whole body-size run to the heading band, so this real major is
+        # joined whole; the dangle guard applies only to the FINAL joined text.
+        rows = [
+            (1, "TITLE II", BODY),
+            (2, "SECURITY, ENFORCEMENT, AND", BODY),
+            (3, "INVESTIGATIONS", BODY),
+            (4, "U.S. CUSTOMS AND BORDER PROTECTION", HEAD),  # agency
+            (5, "OPERATIONS AND SUPPORT", HEAD),  # account
+            (6, "the body prose runs here now", BODY),
+        ]
+        majors = _by_kind(extract_anchors([_page(1, rows)]), "major")
+        assert [a.text for a in majors] == ["SECURITY, ENFORCEMENT, AND INVESTIGATIONS"]
+
+    def test_content_word_wrap_joined_whole(self):
+        # 118-hr-9029 (Labor-HHS) TITLE II: the major name wraps at a CONTENT word
+        # ("DEPARTMENT OF HEALTH AND HUMAN" / "SERVICES"), not a conjunction. The
+        # greedy join (all body-size all-caps to the heading band) recovers the whole
+        # name. A continuation-only join keyed on a dangling conjunction would TRUNCATE
+        # this to "...AND HUMAN" — verified across Ag/THUD/SFOPS too, so this is the
+        # discriminating case for the join rule.
+        rows = [
+            (1, "TITLE II", BODY),
+            (2, "DEPARTMENT OF HEALTH AND HUMAN", BODY),
+            (3, "SERVICES", BODY),
+            (4, "HEALTH RESOURCES AND SERVICES ADMINISTRATION", HEAD),  # agency
+            (5, "PRIMARY HEALTH CARE", HEAD),  # account
+            (6, "For carrying out the program, $100.", BODY),
+        ]
+        majors = _by_kind(extract_anchors([_page(1, rows)]), "major")
+        assert [a.text for a in majors] == ["DEPARTMENT OF HEALTH AND HUMAN SERVICES"]
+
+    def test_inline_emdash_title_followed_by_body_size_run_emits_no_major(self):
+        # An inline em-dash title ("TITLE VIII—ADDITIONAL GENERAL PROVISIONS") carries
+        # its own name; a body-size all-caps line after it is NOT a department major and
+        # must be suppressed. The body-size run is non-empty here (a HEAD line for the
+        # band, then a BODY all-caps line right under the title) so the test genuinely
+        # exercises the em-dash guard: delete the guard and a spurious major appears.
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "OPERATIONS AND SUPPORT", HEAD),  # establishes the heading band
+            (3, "For necessary expenses of the office, $100.", BODY),
+            (4, "TITLE VIII—ADDITIONAL GENERAL PROVISIONS", BODY),  # inline em-dash title
+            (5, "SPENDING REDUCTION ACCOUNT", BODY),  # body-size, must NOT become a major
+            (6, "SEC. 8001. $0.", BODY),
+            (7, "more body prose runs here now", BODY),
+        ]
+        majors = {a.text for a in _by_kind(extract_anchors([_page(1, rows)]), "major")}
+        assert "SPENDING REDUCTION ACCOUNT" not in majors
+        assert "ADDITIONAL GENERAL PROVISIONS" not in majors
+
+    def test_inline_emdash_title_wrapped_name_not_emitted_as_major(self):
+        # 118-hr-4665 (SFOPS FY24) TITLE VIII: the inline em-dash title's own name
+        # wraps onto a body-size all-caps line ("TITLE VIII—COUNTERING THE MALIGN
+        # INFLU-" / "ENCE OF THE PEOPLE'S REPUBLIC OF" / "CHINA"). The greedy run must
+        # NOT emit that wrapped title-name continuation as a (spurious) major — this is
+        # a real corpus corruption the em-dash-title guard prevents.
+        rows = [
+            (1, "TITLE VIII—COUNTERING THE MALIGN INFLU-", BODY),
+            (2, "ENCE OF THE PEOPLE’S REPUBLIC OF", BODY),
+            (3, "CHINA", BODY),
+            (4, "BILATERAL ECONOMIC ASSISTANCE", BODY),
+            (5, "FUNDS APPROPRIATED TO THE PRESIDENT", HEAD),  # agency
+            (6, "ECONOMIC SUPPORT FUND", HEAD),  # account
+            (7, "For necessary expenses, $100.", BODY),
+        ]
+        majors = {a.text for a in _by_kind(extract_anchors([_page(1, rows)]), "major")}
+        assert not any("CHINA" in m or "ENCE" in m for m in majors)
+
+    @pytest.mark.xfail(
+        reason="Documented slice-C residue (DeltaTrack#105): two DISTINCT body-size "
+        "header levels stacked under one title (e.g. 118-hr-8998 Interior TITLE III "
+        "'RELATED AGENCIES' / 'DEPARTMENT OF AGRICULTURE') are indistinguishable from a "
+        "single wrapped name by size/casing alone — both are centered body-size all-caps. "
+        "The greedy join mashes them into one major; splitting needs the geometric "
+        "(centering / vertical-leading) signal deferred to the bbox plumbing (#106) and "
+        "the tree (#108). Flips to pass when that lands.",
+        strict=True,
+    )
+    def test_stacked_distinct_headings_split_into_two_majors(self):
+        rows = [
+            (1, "TITLE III", BODY),
+            (2, "RELATED AGENCIES", BODY),  # heading level 1 (complete)
+            (3, "DEPARTMENT OF AGRICULTURE", BODY),  # heading level 2 (distinct)
+            (4, "FOREST SERVICE", HEAD),  # agency
+            (5, "FOREST AND RANGELAND RESEARCH", HEAD),  # account
+            (6, "For necessary expenses of the Forest Service, $100.", BODY),
+        ]
+        majors = {a.text for a in _by_kind(extract_anchors([_page(1, rows)]), "major")}
+        assert majors == {"RELATED AGENCIES", "DEPARTMENT OF AGRICULTURE"}
+
+    def test_title_directly_followed_by_heading_band_emits_no_major(self):
+        # No body-size major present: the line after the TITLE is already in the
+        # heading band, so NO major is fabricated, and the agency/account still emit.
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "MANAGEMENT DIRECTORATE", HEAD),  # agency directly under title
+            (3, "OPERATIONS AND SUPPORT", HEAD),  # account
+            (4, "the body prose runs here now", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        assert _by_kind(anchors, "major") == []
+        assert "MANAGEMENT DIRECTORATE" in {a.text for a in _by_kind(anchors, "agency")}
+
+    def test_citation_fragment_not_after_title_not_major(self):
+        # A body-size all-caps statutory-citation wrap ("U.S.C. 279)).") sits in the
+        # middle of section body, NOT right after a TITLE, so it must not surface as a
+        # major. The real 118-hr-8752 false-positive class.
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "OPERATIONS AND SUPPORT", HEAD),  # account directly (no major)
+            (3, "For necessary expenses, see section 462 (6", BODY),
+            (4, "U.S.C. 279)).", BODY),  # body-size all-caps citation wrap
+            (5, "more body prose follows here now", BODY),
+        ]
+        majors = {a.text for a in _by_kind(extract_anchors([_page(1, rows)]), "major")}
+        assert "U.S.C. 279))." not in majors
+        assert majors == set()
+
+    def test_body_size_grouping_header_midtitle_not_major(self):
+        # GENERAL PROVISIONS (right after TITLE V) IS a major; SPENDING REDUCTION
+        # ACCOUNT (mid-title, after rescission body prose) is a body-size grouping
+        # header and must NOT be a major. The structural gate disambiguates them even
+        # though both are single-line body-size all-caps. (Slice A owns the grouping
+        # level; leaving it unemitted at body size is the documented slice-C boundary.)
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "OPERATIONS AND SUPPORT", HEAD),  # establishes the heading band
+            (3, "For necessary expenses of the office, $100.", BODY),
+            (4, "TITLE V", BODY),
+            (5, "GENERAL PROVISIONS", BODY),  # major (after title)
+            (6, "SEC. 501. (a) The Secretary shall act here.", BODY),
+            (7, "such unobligated balances are hereby rescinded.", BODY),
+            (8, "SPENDING REDUCTION ACCOUNT", BODY),  # grouping header, NOT a major
+            (9, "SEC. 552. $0.", BODY),
+            (10, "more body prose runs here now", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        majors = {a.text for a in _by_kind(anchors, "major")}
+        assert "GENERAL PROVISIONS" in majors
+        assert "SPENDING REDUCTION ACCOUNT" not in majors
+
+    def test_sec_catchline_fragment_not_after_title_not_major(self):
+        # Defends the 117-hr-2471 / 118-hr-2882 catchline class at the major level: a
+        # body-size all-caps SEC.-catchline fragment in mid-section must not be a
+        # major. It is not preceded by a TITLE, so the structural gate excludes it.
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "OPERATIONS AND SUPPORT", HEAD),
+            (3, "SEC. 5. ACTIONS TO PROMOTE FREEDOM OF THE PRESS", BODY),
+            (4, "AND ASSEMBLY IN HAITI.", BODY),  # all-caps catchline tail, mid-section
+            (5, "the section body prose runs here now", BODY),
+        ]
+        majors = {a.text for a in _by_kind(extract_anchors([_page(1, rows)]), "major")}
+        assert "AND ASSEMBLY IN HAITI." not in majors
+
+    def test_dangling_join_after_title_suppressed(self):
+        # A stray body-size all-caps line after a TITLE whose run (when joined) ends on
+        # a coordinating conjunction is a malformed/incomplete heading, not a major —
+        # the dangle guard drops it (consistent with slice B, applied to joined text).
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENT OF JUSTICE AND", BODY),  # body-caps, completing line dropped to body
+            (3, "the body prose runs here now", BODY),  # body-lowercase stops the run
+            (4, "MANAGEMENT DIRECTORATE", HEAD),
+            (5, "OPERATIONS AND SUPPORT", HEAD),
+            (6, "the body prose continues here now", BODY),
+        ]
+        majors = _by_kind(extract_anchors([_page(1, rows)]), "major")
+        assert majors == []
+
+    # ---- breadcrumb depth: TITLE > major > agency > account ----
+
+    def test_breadcrumb_title_major_agency_account(self):
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL MANAGEMENT", BODY),  # major
+            (3, "MANAGEMENT DIRECTORATE", HEAD),  # agency
+            (4, "OPERATIONS AND SUPPORT", HEAD),  # account
+            (5, "the body prose runs here now", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        account = next(a for a in anchors if a.kind == "account")
+        assert breadcrumb_for(account, anchors) == (
+            "TITLE I",
+            "DEPARTMENTAL MANAGEMENT",
+            "MANAGEMENT DIRECTORATE",
+            "OPERATIONS AND SUPPORT",
+        )
+
+    def test_breadcrumb_title_major_account_no_agency(self):
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL MANAGEMENT", BODY),  # major
+            (3, "OPERATIONS AND SUPPORT", HEAD),  # account directly under the major
+            (4, "the body prose runs here now", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        account = next(a for a in anchors if a.kind == "account")
+        assert breadcrumb_for(account, anchors) == (
+            "TITLE I",
+            "DEPARTMENTAL MANAGEMENT",
+            "OPERATIONS AND SUPPORT",
+        )
+
+    def test_breadcrumb_agency_deepens_to_title_major_agency(self):
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL MANAGEMENT", BODY),
+            (3, "MANAGEMENT DIRECTORATE", HEAD),
+            (4, "OPERATIONS AND SUPPORT", HEAD),
+            (5, "the body prose runs here now", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        agency = next(a for a in anchors if a.kind == "agency")
+        assert breadcrumb_for(agency, anchors) == (
+            "TITLE I",
+            "DEPARTMENTAL MANAGEMENT",
+            "MANAGEMENT DIRECTORATE",
+        )
+
+    def test_breadcrumb_title_major_section_general_provisions(self):
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "OPERATIONS AND SUPPORT", HEAD),  # establishes the heading band
+            (3, "For necessary expenses of the office, $100.", BODY),
+            (4, "TITLE V", BODY),
+            (5, "GENERAL PROVISIONS", BODY),  # major
+            (6, "SEC. 501. No part of any appropriation may be used.", BODY),
+            (7, "continuing body prose for the section here", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        sec = next(a for a in anchors if a.kind == "section" and a.text == "SEC. 501")
+        assert breadcrumb_for(sec, anchors) == ("TITLE V", "GENERAL PROVISIONS", "SEC. 501")
+
+    def test_breadcrumb_title_major_grouping_section(self):
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL MANAGEMENT", BODY),  # major
+            (3, "MANAGEMENT DIRECTORATE", HEAD),  # agency
+            (4, "OPERATIONS AND SUPPORT", HEAD),  # account
+            (5, "For necessary expenses of the office, $100.", BODY),
+            (6, "ADMINISTRATIVE PROVISIONS", HEAD),  # grouping header
+            (7, "SEC. 101. (a) The Secretary shall act here.", BODY),
+            (8, "more body prose for the section here", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        sec = next(a for a in anchors if a.kind == "section" and a.text == "SEC. 101")
+        assert breadcrumb_for(sec, anchors) == (
+            "TITLE I",
+            "DEPARTMENTAL MANAGEMENT",
+            "ADMINISTRATIVE PROVISIONS",
+            "SEC. 101",
+        )
+
+    def test_breadcrumb_post_grouping_account_keeps_major(self):
+        # An account after a grouping boundary loses its agency (scope ended) but must
+        # KEEP the title-level major: the major capture is independent of the agency
+        # `agency_blocked` gate.
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL MANAGEMENT", BODY),  # major
+            (3, "MANAGEMENT DIRECTORATE", HEAD),  # agency
+            (4, "OPERATIONS AND SUPPORT", HEAD),  # account under the agency
+            (5, "the body prose for the account here", BODY),
+            (6, "ADMINISTRATIVE PROVISIONS", HEAD),  # grouping header
+            (7, "SEC. 101. (a) The Secretary shall act here.", BODY),
+            (8, "more body prose for the section here", BODY),
+            (9, "WORKING CAPITAL FUND", HEAD),  # title-level account after grouping
+            (10, "the body prose for the later account", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        later = next(a for a in anchors if a.kind == "account" and a.text == "WORKING CAPITAL FUND")
+        assert breadcrumb_for(later, anchors) == ("TITLE I", "DEPARTMENTAL MANAGEMENT", "WORKING CAPITAL FUND")
+
+    def test_breadcrumb_unchanged_when_no_major_present(self):
+        # Regression guard: titles with no body-size major (the slice-A/B shape) keep
+        # their existing depth — slice C is purely additive.
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "MANAGEMENT DIRECTORATE", HEAD),  # agency directly under title
+            (3, "OPERATIONS AND SUPPORT", HEAD),
+            (4, "the body prose runs here now", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        account = next(a for a in anchors if a.kind == "account")
+        assert breadcrumb_for(account, anchors) == (
+            "TITLE I",
+            "MANAGEMENT DIRECTORATE",
+            "OPERATIONS AND SUPPORT",
+        )
+
+    def test_breadcrumb_major_own_chain(self):
+        # The major anchor's OWN breadcrumb is (TITLE, major) — mirrors slice B's
+        # test_agency_breadcrumb_three_levels for the agency's own chain.
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL MANAGEMENT", BODY),
+            (3, "OPERATIONS AND SUPPORT", HEAD),
+            (4, "the body prose runs here now", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        major = next(a for a in anchors if a.kind == "major")
+        assert breadcrumb_for(major, anchors) == ("TITLE I", "DEPARTMENTAL MANAGEMENT")
+
+    def test_major_and_agency_span_multiple_accounts(self):
+        # One major + one agency over TWO accounts: the second account, preceded only by
+        # body prose, still inherits BOTH via the breadcrumb walk-back (mirrors slice B's
+        # test_carryover_agency_spans_multiple_accounts, now with a major above).
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL MANAGEMENT", BODY),  # major
+            (3, "MANAGEMENT DIRECTORATE", HEAD),  # agency
+            (4, "OPERATIONS AND SUPPORT", HEAD),  # account A
+            (5, "the body prose for account A here", BODY),
+            (6, "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS", HEAD),  # account B
+            (7, "the body prose for account B here", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        assert len(_by_kind(anchors, "major")) == 1
+        account_b = next(a for a in anchors if a.kind == "account" and a.text.startswith("PROCUREMENT"))
+        assert breadcrumb_for(account_b, anchors) == (
+            "TITLE I",
+            "DEPARTMENTAL MANAGEMENT",
+            "MANAGEMENT DIRECTORATE",
+            "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+        )
+
+    def test_earlier_major_does_not_bleed_into_later_title(self):
+        # Two titles, each with its own major + account. The account under TITLE II must
+        # resolve to MAJOR-B, never MAJOR-A: the walk-back stops at the nearest TITLE.
+        # Mirrors slice B's test_second_agency_overrides_first.
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL MANAGEMENT", BODY),  # major A
+            (3, "OPERATIONS AND SUPPORT", HEAD),  # account under A
+            (4, "the body prose for account A here", BODY),
+            (5, "TITLE II", BODY),
+            (6, "SECURITY, ENFORCEMENT, AND INVESTIGATIONS", BODY),  # major B
+            (7, "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS", HEAD),  # account under B
+            (8, "the body prose for account B here", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        account_b = next(a for a in anchors if a.kind == "account" and a.text.startswith("PROCUREMENT"))
+        crumb = breadcrumb_for(account_b, anchors)
+        assert crumb == (
+            "TITLE II",
+            "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+            "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+        )
+        assert "DEPARTMENTAL MANAGEMENT" not in crumb
+
+    def test_major_run_at_page_seam_takes_run_first_line(self):
+        # The major sits at the end of page 1; its agency/account open page 2. The major
+        # anchor must take its own page-1 line (found via the flattened cross-page
+        # stream), mirroring test_agency_run_at_page_seam_takes_run_first_line.
+        pages = [
+            _page(1, [(19, "TITLE I", BODY), (20, "DEPARTMENTAL MANAGEMENT", BODY)]),
+            _page(
+                2,
+                [
+                    (1, "MANAGEMENT DIRECTORATE", HEAD),  # agency
+                    (2, "OPERATIONS AND SUPPORT", HEAD),  # account
+                    (3, "the body prose runs here now", BODY),
+                ],
+            ),
+        ]
+        anchors = extract_anchors(pages)
+        major = next(a for a in anchors if a.kind == "major")
+        assert major.text == "DEPARTMENTAL MANAGEMENT"
+        assert major.page_number == 1 and major.line_number == 20
+        account = next(a for a in anchors if a.kind == "account")
+        assert breadcrumb_for(account, anchors) == (
+            "TITLE I",
+            "DEPARTMENTAL MANAGEMENT",
+            "MANAGEMENT DIRECTORATE",
+            "OPERATIONS AND SUPPORT",
+        )
+
+
 class TestFallbackWhenNoBands:
     def test_legacy_trigger_used_when_no_sizes(self):
         # No glyph sizes (e.g. a draft/odd PDF): derive_size_bands -> None, so the
@@ -526,3 +962,24 @@ class TestFallbackWhenNoBands:
         assert isinstance(derive_size_bands(pages), (type(None), SizeBands))
         accounts = _accounts(extract_anchors(pages))
         assert any(a.text == "OPERATIONS AND SUPPORT" for a in accounts)
+
+    def test_legacy_path_emits_no_major(self):
+        # Majors are a size-band-path feature: a no-glyph-size doc (legacy fallback)
+        # emits the account but NO major, and the account breadcrumb has no major
+        # segment. Pins the "breadcrumb depth is detection-path dependent" contract.
+        pages = [
+            Page(
+                1,
+                (
+                    Line(1, "TITLE I"),
+                    Line(2, "DEPARTMENTAL MANAGEMENT"),
+                    Line(3, "OPERATIONS AND SUPPORT"),
+                    Line(4, "For necessary expenses of the agency, $1,000."),
+                ),
+            )
+        ]
+        assert derive_size_bands(pages) is None  # no sizes -> legacy path
+        anchors = extract_anchors(pages)
+        assert _by_kind(anchors, "major") == []
+        account = next(a for a in anchors if a.kind == "account")
+        assert "DEPARTMENTAL MANAGEMENT" not in breadcrumb_for(account, anchors)

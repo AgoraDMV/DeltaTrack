@@ -6,6 +6,12 @@
   7
  ],
  [
+  "major",
+  "DEPARTMENTAL MANAGEMENT, INTELLIGENCE, SITUATIONAL AWARENESS, AND OVERSIGHT",
+  2,
+  8
+ ],
+ [
   "agency",
   "OFFICE OF THE SECRETARY AND EXECUTIVE MANAGEMENT",
   2,
@@ -112,6 +118,12 @@
   "TITLE II",
   11,
   3
+ ],
+ [
+  "major",
+  "SECURITY, ENFORCEMENT, AND INVESTIGATIONS",
+  11,
+  4
  ],
  [
   "agency",
@@ -546,6 +558,12 @@
   15
  ],
  [
+  "major",
+  "PROTECTION, PREPAREDNESS, RESPONSE, AND RECOVERY",
+  43,
+  16
+ ],
+ [
   "agency",
   "CYBERSECURITY AND INFRASTRUCTURE SECURITY AGENCY",
   43,
@@ -676,6 +694,12 @@
   "TITLE IV",
   56,
   11
+ ],
+ [
+  "major",
+  "RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES",
+  56,
+  12
  ],
  [
   "agency",
@@ -856,6 +880,12 @@
   "TITLE V",
   64,
   1
+ ],
+ [
+  "major",
+  "GENERAL PROVISIONS",
+  64,
+  2
  ],
  [
   "section",

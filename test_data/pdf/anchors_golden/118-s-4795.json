@@ -6,6 +6,12 @@
   1
  ],
  [
+  "major",
+  "DEPARTMENT OF COMMERCE",
+  2,
+  2
+ ],
+ [
   "agency",
   "INTERNATIONAL TRADE ADMINISTRATION",
   2,
@@ -304,6 +310,12 @@
   "TITLE II",
   29,
   1
+ ],
+ [
+  "major",
+  "DEPARTMENT OF JUSTICE",
+  29,
+  2
  ],
  [
   "agency",
@@ -732,6 +744,12 @@
   1
  ],
  [
+  "major",
+  "SCIENCE",
+  88,
+  2
+ ],
+ [
   "account",
   "OFFICE OF SCIENCE AND TECHNOLOGY POLICY",
   88,
@@ -870,6 +888,12 @@
   1
  ],
  [
+  "major",
+  "RELATED AGENCIES",
+  104,
+  2
+ ],
+ [
   "agency",
   "COMMISSION ON CIVIL RIGHTS",
   104,
@@ -976,6 +1000,12 @@
   "TITLE V",
   111,
   1
+ ],
+ [
+  "major",
+  "GENERAL PROVISIONS",
+  111,
+  2
  ],
  [
   "section",
