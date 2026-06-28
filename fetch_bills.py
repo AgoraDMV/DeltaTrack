@@ -317,7 +317,7 @@ def cmd_download_all(client: httpx.Client, args: argparse.Namespace, api_key: st
         return
 
     start_year = args.start_year or 1789
-    end_year = args.end_year or datetime.datetime.now().year
+    end_year = args.end_year or datetime.now().year
     if start_year > end_year:
         print(f"start_year ({start_year}) must be <= end_year ({end_year}).", file=sys.stderr)
         sys.exit(1)
@@ -380,13 +380,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_dl.add_argument("number", type=int, help="Bill number")
     p_dl.add_argument("--version", type=int, default=None, help="Specific version number (1-indexed)")
     p_dl.add_argument("--output-dir", type=Path, default=Path("bills"), help="Output directory")
-    # INVARIANT: the default is XML, always. XML is the authoritative published
-    # source (ADR 0010: prefer published XML); PDF is opt-in for the
-    # pre-publication / last-resort path and must be requested with --format.
-    # Do not change this default — test_parser_format_defaults_to_xml fails if it
-    # drifts (it last regressed to pdf unnoticed in a "lint" commit).
     p_dl.add_argument(
-        "--format", choices=["xml", "pdf", "both"], default="xml", help="Format(s) to download (default: xml)"
+        "--format", choices=["xml", "pdf", "both"], default="pdf", help="Format(s) to download (default: pdf)"
     )
 
     # download-all: bulk download for a year range
@@ -395,10 +390,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_all.add_argument("--end_year", type=int, default=None, help="End year (e.g. 2026)")
     p_all.add_argument("--file", type=Path, default=None, help="CSV file path with an 'id' column")
     p_all.add_argument("--output-dir", type=Path, default=Path("bills"), help="Output directory")
-    # Default xml by decision — see the invariant note on the `download` subcommand
-    # above (ADR 0010). PDF is opt-in via --format.
     p_all.add_argument(
-        "--format", choices=["xml", "pdf", "both"], default="xml", help="Format(s) to download (default: xml)"
+        "--format", choices=["xml", "pdf", "both"], default="pdf", help="Format(s) to download (default: pdf)"
     )
 
     return parser

@@ -54,42 +54,20 @@ The tool works without an API key using a free demo key (limited to 30 requests 
 CONGRESS_API_KEY=your_key_here
 ```
 
-## Command reference
-
-The product commands are wrapper scripts in the project root; run them after `source init`. `download` and `download-all` default to **XML** — pass `--format pdf` or `--format both` for PDFs.
-
-| Command | What it does |
-|---------|--------------|
-| `./fetch_bills versions <congress> <type> <number>` | List a bill's available text versions |
-| `./fetch_bills download <congress> <type> <number>` | Download a bill's versions (XML by default; `--format pdf\|both`, `--version N`) |
-| `./fetch_bills download-all --start_year <Y> --end_year <Y>` | Download all appropriations bills in a year range (or `--file <csv>` for a specific set) |
-| `./diff_bill compare <old.xml> <new.xml>` | Diff two XML versions (HTML by default; `--format json`, `--financial`, `--filter`, `-o`) |
-| `./diff_pdf <old.pdf> <new.pdf> -o <out.html>` | Diff two PDF versions into the same HTML report |
-| `./fetch_bill_archives` | Bulk-build a bill-metadata index from govinfo archives — **see the warning below** |
-
-Environment setup is `source init` (installs dependencies and activates the virtualenv). Use `source` so the environment change sticks; it is not a runnable command.
-
-> **`fetch_bill_archives` is an advanced bulk tool.** Run with no arguments it immediately downloads every GovInfo BILLSTATUS archive for congresses 112–119 (hundreds of MB) with no prompt, extracts them, and writes a `bills/bills.csv` metadata index. The congress range is hardcoded and there are no CLI flags yet (tracked in [#10](https://github.com/AgoraDMV/DeltaTrack/issues/10)). Reach for it only when you specifically need a bulk bill index.
-
-To run the web comparison app locally: `uvicorn server.app:app --reload --port 8077` (see [docs/web-compare.md](docs/web-compare.md)).
-
 ## Downloading Bills
 
 ```bash
 # List available text versions
 ./fetch_bills versions 118 hr 4366
 
-# Download all versions of a bill (XML by default; add --format pdf or --format both for PDFs)
+# Download all versions of a bill
 ./fetch_bills download 118 hr 4366
 
 # Download a specific version (1-indexed)
 ./fetch_bills download 118 hr 4366 --version 2
 
 # Download all appropriations bills for a year range
-./fetch_bills download-all --start_year 2024 --end_year 2026
-
-# Or batch-download a specific set of bills from a CSV you create with an 'id' column
-./fetch_bills download-all --file your_bills.csv
+./fetch_bills download-all 2024 2026
 ```
 
 Files are saved to `bills/<congress>-<type>-<number>/`.
@@ -97,7 +75,7 @@ Files are saved to `bills/<congress>-<type>-<number>/`.
 ## Comparing Bills
 
 ```bash
-# Compare two versions (prints an HTML report to stdout by default)
+# Compare two versions (JSON output)
 ./diff_bill compare bills/118-hr-4366/1_reported-in-house.xml bills/118-hr-4366/6_enrolled-bill.xml
 
 # Only sections with dollar amount changes
@@ -109,8 +87,8 @@ Files are saved to `bills/<congress>-<type>-<number>/`.
 # Include unchanged sections
 ./diff_bill compare old.xml new.xml --include-unchanged
 
-# Save machine-readable JSON to a file (output defaults to HTML, so request json explicitly)
-./diff_bill compare old.xml new.xml --format json -o diff.json
+# Save to file
+./diff_bill compare old.xml new.xml -o diff.json
 
 # Generate a standalone HTML report
 ./diff_bill compare old.xml new.xml --format html -o reports/report.html
@@ -152,20 +130,6 @@ The tool focuses on substantive changes and ignores formatting differences betwe
 - Differences in spacing around numbered list markers like (1), (A), or (iv), which vary between House and Senate formatting conventions
 
 Floor amendment annotations like "(increased by $2,000,000)" appear in engrossed versions after floor votes. These annotations reference the budget request baseline, not the previous bill version, so the base amount in the text is the authoritative appropriation. The tool strips the annotations before comparing amounts across versions, then flags their presence with an informational badge in the HTML report so readers can see where the floor acted.
-
-## Comparing PDF versions
-
-Some bill versions are only available as PDF — pre-publication committee prints, chair's marks, and markup amendments are posted as PDF before the authoritative XML exists (see [ADR 0010](docs/decisions/0010-pdf-pipeline-pre-publication.md)). For those, use `diff_pdf`, the PDF-native counterpart to `diff_bill`:
-
-```bash
-# download defaults to XML, so request the PDFs explicitly
-./fetch_bills download 118 hr 4366 --format pdf
-
-# Generate the same standalone HTML report from two PDFs
-./diff_pdf bills/118-hr-4366/1_reported-in-house.pdf bills/118-hr-4366/2_engrossed-in-house.pdf -o reports/hr4366.html
-```
-
-`diff_pdf` runs the same pipeline as the web app (full-bill view, in-page search, section navigation, embedded export) and writes the same HTML report described above. Output goes to stdout unless `-o` is given. Prefer `diff_bill` on XML whenever the published XML exists; it extracts structure and amounts exactly rather than reconstructing them from a rendered page.
 
 ## Output Structure
 
@@ -235,28 +199,30 @@ Integration tests use real XML files from `bills/` and skip if not present. To r
 
 ```bash
 # fetch_bills reads CONGRESS_API_KEY from .env automatically; no need to source it.
-# --format both fetches XML and PDF together, covering both the XML tests and the
-# PDF comparison tests (test_pdf_*) in one pass.
-./fetch_bills download 118 hr 4366 --format both
-./fetch_bills download 118 hr 2882 --format both
-./fetch_bills download 118 hr 8282 --format both
-./fetch_bills download 118 hr 8752 --format both
-./fetch_bills download 118 hr 8774 --format both
-./fetch_bills download 118 hr 4820 --format both
-./fetch_bills download 117 hr 2471 --format both
-./fetch_bills download 117 hr 4432 --format both
-./fetch_bills download 117 hr 4502 --format both
-./fetch_bills download 116 hr 1865 --format both
-./fetch_bills download 116 hr 133 --format both
-./fetch_bills download 115 hr 5895 --format both
-./fetch_bills download 115 hr 1625 --format both
-./fetch_bills download 115 hr 244 --format both
-./fetch_bills download 114 hr 2029 --format both
-./fetch_bills download 113 hr 83 --format both
-./fetch_bills download 113 hr 3547 --format both
+./fetch_bills download 118 hr 4366
+./fetch_bills download 118 hr 2882
+./fetch_bills download 118 hr 8282
+./fetch_bills download 118 hr 8752
+./fetch_bills download 118 hr 8774
+./fetch_bills download 118 hr 4820
+./fetch_bills download 117 hr 2471
+./fetch_bills download 117 hr 4432
+./fetch_bills download 117 hr 4502
+./fetch_bills download 116 hr 1865
+./fetch_bills download 116 hr 133
+./fetch_bills download 115 hr 5895
+./fetch_bills download 115 hr 1625
+./fetch_bills download 115 hr 244
+./fetch_bills download 114 hr 2029
+./fetch_bills download 113 hr 83
+./fetch_bills download 113 hr 3547
 ```
 
-These fetch both XML and PDF: the XML covers the XML-based tests, and the PDF rendering is what the PDF comparison tests (`test_pdf_*`) need. Drop `--format both` if you only want the XML (the default).
+These fetch XML, which covers the XML-based tests. The PDF comparison tests (`test_pdf_*`) also need each bill's PDF rendering. Add `--format both` to any download to fetch the PDF alongside the XML, for example:
+
+```bash
+./fetch_bills download 118 hr 4366 --format both
+```
 
 The validation tests compare extracted line items across Legislative Branch bills (both chambers, multiple fiscal years) against amounts from a curated appropriations spreadsheet. The corpus property tests (`test_corpus_properties.py`) check dollar coverage, path uniqueness, and character coverage across all downloaded bills. See [TESTING.md](TESTING.md) for what each validation layer proves and where the gaps are.
 
