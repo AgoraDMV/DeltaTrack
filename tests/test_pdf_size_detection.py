@@ -598,6 +598,20 @@ class TestMajorLevel:
         majors = _by_kind(extract_anchors([_page(1, rows)]), "major")
         assert [a.text for a in majors] == ["DEPARTMENT OF HEALTH AND HUMAN SERVICES"]
 
+    def test_dehyphenation_handles_unicode_hyphen(self):
+        # Some PDF extractors emit a Unicode hyphen (U+2010) rather than ASCII '-' at a
+        # soft wrap. The de-hyphenation join must treat it the same (drop + no space).
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL MANAGEMENT, INTEL‐", BODY),  # U+2010 hyphen
+            (3, "LIGENCE", BODY),
+            (4, "MANAGEMENT DIRECTORATE", HEAD),  # agency
+            (5, "OPERATIONS AND SUPPORT", HEAD),  # account
+            (6, "the body prose runs here now", BODY),
+        ]
+        majors = _by_kind(extract_anchors([_page(1, rows)]), "major")
+        assert [a.text for a in majors] == ["DEPARTMENTAL MANAGEMENT, INTELLIGENCE"]
+
     def test_inline_emdash_title_followed_by_body_size_run_emits_no_major(self):
         # An inline em-dash title ("TITLE VIII—ADDITIONAL GENERAL PROVISIONS") carries
         # its own name; a body-size all-caps line after it is NOT a department major and

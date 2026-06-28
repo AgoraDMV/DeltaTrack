@@ -62,9 +62,11 @@ _TITLE_PATTERN = re.compile(r"^TITLE\s+([IVXLC]+)\b.*$")
 # A TITLE line carrying its OWN inline name after a dash ("TITLE VIII—ADDITIONAL
 # GENERAL PROVISIONS", "TITLE I—DEPARTMENT OF COMMERCE"). The body-size all-caps run
 # below such a title is the title's own (possibly wrapped) name, NOT a department
-# major, so the major detector skips it (DeltaTrack#105). Covers em-dash (U+2014),
-# en-dash (U+2013), and ASCII hyphen.
-_INLINE_TITLE_NAME = re.compile(r"^TITLE\s+[IVXLC]+\s*[—–\-]\s*\S")
+# major, so the major detector skips it (DeltaTrack#105). GPO sets the inline name off
+# with an em-dash (U+2014); en-dash (U+2013) is accepted defensively. An ASCII hyphen
+# is deliberately NOT matched, so a hyphenated numeral like "TITLE I-A" is not mistaken
+# for an inline-named title.
+_INLINE_TITLE_NAME = re.compile(r"^TITLE\s+[IVXLC]+\s*[—–]\s*\S")
 _SECTION_PATTERN = re.compile(r"^(SEC(?:TION)?\.?\s+\d+)\b")
 _FOR_NECESSARY_EXPENSES = re.compile(r"^For necessary expenses of\b", re.IGNORECASE)
 # A run-in subsection header ("(B) Current visas revoked.—") renders small-caps,
@@ -79,6 +81,9 @@ _ENUM_PREFIX = re.compile(r"^\([0-9A-Za-z]{1,4}\)\s")
 # general needs the leveled tree (#54/#108); this dangle guard cheaply rejects the
 # worst mis-joins. No real agency name ends on one of these words.
 _DANGLING_TAIL = frozenset({"AND", "OR", "OF", "FOR", "TO", "THE", "A", "AN", "IN", "ON", "WITH", "AT", "BY"})
+# Line-final hyphens that mark a GPO soft wrap to de-hyphenate across (DeltaTrack#105):
+# ASCII hyphen-minus, Unicode hyphen, and non-breaking hyphen.
+_WRAP_HYPHENS = ("-", "‐", "‑")
 
 
 def _dangles(text: str) -> bool:
@@ -425,6 +430,10 @@ def _major_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
     n = len(flat)
 
     def is_body(size: float | None) -> bool:
+        # A size-less line is NOT body here (the run stops), the opposite of the
+        # account detector's `is_body` (which treats an unattached line as body to
+        # avoid dropping a leaf). For majors the conservative choice is to STOP the
+        # run, so a join miss can't greedily swallow a following heading into a major.
         return size is not None and abs(size - bands.body) <= _SIZE_EPS
 
     def is_major_line(line) -> bool:
@@ -456,11 +465,20 @@ def _major_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
             j += 1
         if not run:
             continue
+        # Join the run. A line ending in a hyphen is a GPO soft wrap (``INTEL-`` +
+        # ``LIGENCE`` -> ``INTELLIGENCE``): drop the hyphen, no space. Accepts the
+        # ASCII hyphen plus the Unicode hyphen (U+2010) and non-breaking hyphen
+        # (U+2011) some extractors emit. This assumes a line-final hyphen is always a
+        # wrap break, not a genuine compound (``ANTI-`` / ``DRUG``); no major in the
+        # corpus breaks at a real compound hyphen. Otherwise join with a single space.
         text = run[0][2]
         for _p, _l, seg in run[1:]:
-            text = text[:-1] + seg if text.endswith("-") else f"{text} {seg}"
+            text = text[:-1] + seg if text.endswith(_WRAP_HYPHENS) else f"{text} {seg}"
+        # The dangle guard drops the WHOLE major (vs the agency join, which only
+        # suppresses the agency and keeps the leaf): a run that joins into a phrase
+        # ending on a conjunction/preposition never closed, so it is not a real major.
         if _dangles(text):
-            continue  # an incomplete run that never closed; not a real major
+            continue
         first_page, first_line, _ = run[0]
         anchors.append(Anchor(first_page, first_line, "major", text))
     return anchors
@@ -507,8 +525,10 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
     For a SECTION anchor: `("TITLE IV", "SEC. 406")` normally, but when a
     grouping header (`ADMINISTRATIVE PROVISIONS`) precedes the section within the
     same title, the section nests under it: `("TITLE I", "ADMINISTRATIVE
-    PROVISIONS", "SEC. 101")` (DeltaTrack#103). Sections under a general-provisions
-    title with no grouping header keep the 2-level chain.
+    PROVISIONS", "SEC. 101")` (DeltaTrack#103). A general-provisions title now carries
+    its own `GENERAL PROVISIONS` major (DeltaTrack#105), so its sections resolve to
+    `("TITLE V", "GENERAL PROVISIONS", "SEC. 501")` — three levels via the major, even
+    with no grouping header.
 
     For a MAJOR / department anchor (DeltaTrack#105): the body-size heading under a
     TITLE deepens the chain to `("TITLE I", "DEPARTMENTAL MANAGEMENT", "MANAGEMENT

@@ -46,10 +46,21 @@ _SUBCOMMITTEE_PACKAGES = {
     "BILLS-118hr9028rh": "transportation-hud",
 }
 
+# SEC.-catchline false-positive repro bills (introduced-in-House). Used by the
+# catchline guards in test_pdf_anchor_golden.py (a wrapped SEC. catchline must not
+# surface as an account or a major). They live under bills/<id>/ to match the
+# fetch_bills.py layout the tests already reference; sourcing them from govinfo here
+# means the guards run in CI instead of skipping when no Congress.gov key is set.
+_CATCHLINE_BILLS = {
+    "bills/117-hr-2471/1_introduced-in-house.pdf": "BILLS-117hr2471ih",
+    "bills/118-hr-2882/1_introduced-in-house.pdf": "BILLS-118hr2882ih",
+}
+
 # (destination path relative to the repo root, govinfo URL)
 ASSETS: list[tuple[str, str]] = [
     ("test_data/BILLS-118s4795rs.pdf", _gov("BILLS-118s4795rs")),
     *((f"test_data/subcommittee/{pkg}.pdf", _gov(pkg)) for pkg in _SUBCOMMITTEE_PACKAGES),
+    *((dest, _gov(pkg)) for dest, pkg in _CATCHLINE_BILLS.items()),
 ]
 
 
