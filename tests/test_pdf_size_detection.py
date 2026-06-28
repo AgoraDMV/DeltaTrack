@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from parsers.pdf_anchors import SizeBands, derive_size_bands, extract_anchors
+from parsers.pdf_anchors import SizeBands, breadcrumb_for, derive_size_bands, extract_anchors
 from parsers.pdf_text import Line, Page
 
 BODY = 14.0
@@ -189,9 +189,13 @@ class TestSizePositionClassification:
     @pytest.mark.xfail(
         reason="Known #89 residual deferred to #54: a SEC. catchline directly "
         "abutting an agency heading with NO body between false-skips the account. "
-        "Needs the leveled tree to disambiguate; does not occur in the corpus "
-        "(catchline wraps appear only in account-free authorization bills). This "
-        "xfail makes the limitation visible and flips to pass when #54 closes it.",
+        "Confirmed NOT closeable by #103 (grouping headers): this input is "
+        "structurally identical to test_multiline_section_catchline_continuation_"
+        "not_account (SEC.@heading-size / heading-band run / body), so any rule that "
+        "emits this account re-emits that false one. Disambiguation needs the agency "
+        "level (#104) or the leveled tree (#108); flips to pass when one lands. Does "
+        "not occur in the corpus (catchline wraps appear only in account-free "
+        "authorization bills).",
         strict=True,
     )
     def test_account_directly_after_section_catchline_no_body(self):
@@ -235,6 +239,77 @@ class TestSizePositionClassification:
         rows += [(n, f"more body prose line {n}", BODY) for n in range(4, 14)]
         pages = [_page(1, rows)]
         assert any(a.text == "OPERATIONS AND SUPPORT" for a in _accounts(extract_anchors(pages)))
+
+
+def _by_kind(anchors, kind):
+    return [a for a in anchors if a.kind == kind]
+
+
+class TestGroupingHeaders:
+    """Slice A of the #54 leveled-heading tree (DeltaTrack#103).
+
+    A heading-band line whose next meaningful line is a `SEC.` section is a
+    *grouping header* (ADMINISTRATIVE PROVISIONS, GENERAL PROVISIONS) — a
+    header-only intermediate node owning a run of `SEC.` sections, not an account.
+    Today the size path mislabels it `account` because in appropriations bills the
+    SEC. line carries body prose ("SEC. 101. (a) The Secretary…") and renders at
+    BODY size, so the look-ahead reads it as "followed by body."
+
+    These synthetic fixtures mirror the real H.R. 8752 shape verified in the golden:
+    a heading-band (HEAD) grouping line immediately followed by a body-size (BODY)
+    `SEC.` line.
+    """
+
+    def _grouping_page(self):
+        # TITLE I / a real account / a grouping header + its sections. TITLE is
+        # detected by pattern regardless of size; the account and grouping are
+        # heading-band; their following prose / SEC. lines are body-size.
+        rows = [
+            (1, "TITLE I", BODY),
+            (2, "DEPARTMENTAL OPERATIONS", HEAD),  # real account (followed by body)
+            (3, "For the salaries of the office, $100.", BODY),
+            (4, "ADMINISTRATIVE PROVISIONS", HEAD),  # grouping (followed by SEC.)
+            (5, "SEC. 101. (a) The Secretary shall act here.", BODY),
+            (6, "continuing body prose for the section here", BODY),
+            (7, "SEC. 102. Another provision follows in body.", BODY),
+            (8, "more body prose for section 102 runs here", BODY),
+        ]
+        return _page(1, rows)
+
+    def test_grouping_header_not_classified_as_account(self):
+        anchors = extract_anchors([self._grouping_page()])
+        account_names = {a.text for a in _by_kind(anchors, "account")}
+        grouping_names = {a.text for a in _by_kind(anchors, "grouping")}
+        assert "ADMINISTRATIVE PROVISIONS" not in account_names
+        assert "ADMINISTRATIVE PROVISIONS" in grouping_names
+
+    def test_grouping_header_sections_nest_under_it(self):
+        anchors = extract_anchors([self._grouping_page()])
+        sec_101 = next(a for a in anchors if a.kind == "section" and a.text == "SEC. 101")
+        assert breadcrumb_for(sec_101, anchors) == ("TITLE I", "ADMINISTRATIVE PROVISIONS", "SEC. 101")
+        sec_102 = next(a for a in anchors if a.kind == "section" and a.text == "SEC. 102")
+        assert breadcrumb_for(sec_102, anchors) == ("TITLE I", "ADMINISTRATIVE PROVISIONS", "SEC. 102")
+
+    def test_real_account_still_classified_account(self):
+        # Regression guard: an in-band heading followed by appropriation prose (not a
+        # SEC. line) is still an account, and does NOT pick up a grouping parent.
+        anchors = extract_anchors([self._grouping_page()])
+        account = next(a for a in anchors if a.kind == "account" and a.text == "DEPARTMENTAL OPERATIONS")
+        assert breadcrumb_for(account, anchors) == ("TITLE I", "DEPARTMENTAL OPERATIONS")
+
+    def test_section_without_grouping_keeps_title_only_breadcrumb(self):
+        # A SEC. directly under a TITLE (general-provisions title, no grouping header)
+        # keeps the 2-level breadcrumb; the grouping level is added only when present.
+        rows = [
+            (1, "TITLE V", BODY),
+            (2, "SEC. 501. No part of any appropriation may be used.", BODY),
+            (3, "continuing body prose for the section runs here", BODY),
+            (4, "ANOTHER ACCOUNT NAME HERE", HEAD),
+            (5, "For necessary prose at body size follows here now", BODY),
+        ]
+        anchors = extract_anchors([_page(1, rows)])
+        sec = next(a for a in anchors if a.kind == "section" and a.text == "SEC. 501")
+        assert breadcrumb_for(sec, anchors) == ("TITLE V", "SEC. 501")
 
 
 class TestFallbackWhenNoBands:
