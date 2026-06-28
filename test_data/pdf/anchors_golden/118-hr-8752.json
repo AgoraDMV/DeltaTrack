@@ -6,10 +6,22 @@
   7
  ],
  [
+  "agency",
+  "OFFICE OF THE SECRETARY AND EXECUTIVE MANAGEMENT",
+  2,
+  11
+ ],
+ [
   "account",
   "OPERATIONS AND SUPPORT",
   2,
   13
+ ],
+ [
+  "agency",
+  "MANAGEMENT DIRECTORATE",
+  3,
+  1
  ],
  [
   "account",
@@ -30,10 +42,22 @@
   12
  ],
  [
+  "agency",
+  "INTELLIGENCE, ANALYSIS, AND SITUATIONAL AWARENESS",
+  3,
+  18
+ ],
+ [
   "account",
   "OPERATIONS AND SUPPORT",
   3,
   20
+ ],
+ [
+  "agency",
+  "OFFICE OF INSPECTOR GENERAL",
+  4,
+  6
  ],
  [
   "account",
@@ -90,6 +114,12 @@
   3
  ],
  [
+  "agency",
+  "U.S. CUSTOMS AND BORDER PROTECTION",
+  11,
+  6
+ ],
+ [
   "account",
   "OPERATIONS AND SUPPORT",
   11,
@@ -102,6 +132,12 @@
   22
  ],
  [
+  "agency",
+  "U.S. IMMIGRATION AND CUSTOMS ENFORCEMENT",
+  13,
+  5
+ ],
+ [
   "account",
   "OPERATIONS AND SUPPORT",
   13,
@@ -112,6 +148,12 @@
   "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
   14,
   21
+ ],
+ [
+  "agency",
+  "TRANSPORTATION SECURITY ADMINISTRATION",
+  15,
+  3
  ],
  [
   "account",
@@ -130,6 +172,12 @@
   "RESEARCH AND DEVELOPMENT",
   16,
   1
+ ],
+ [
+  "agency",
+  "COAST GUARD",
+  16,
+  6
  ],
  [
   "account",
@@ -154,6 +202,12 @@
   "RETIRED PAY",
   18,
   7
+ ],
+ [
+  "agency",
+  "UNITED STATES SECRET SERVICE",
+  18,
+  18
  ],
  [
   "account",
@@ -492,6 +546,12 @@
   15
  ],
  [
+  "agency",
+  "CYBERSECURITY AND INFRASTRUCTURE SECURITY AGENCY",
+  43,
+  18
+ ],
+ [
   "account",
   "OPERATIONS AND SUPPORT",
   43,
@@ -502,6 +562,12 @@
   "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
   44,
   3
+ ],
+ [
+  "agency",
+  "FEDERAL EMERGENCY MANAGEMENT AGENCY",
+  44,
+  8
  ],
  [
   "account",
@@ -612,10 +678,22 @@
   11
  ],
  [
+  "agency",
+  "U.S. CITIZENSHIP AND IMMIGRATION SERVICES",
+  56,
+  14
+ ],
+ [
   "account",
   "OPERATIONS AND SUPPORT",
   56,
   15
+ ],
+ [
+  "agency",
+  "FEDERAL LAW ENFORCEMENT TRAINING CENTERS",
+  57,
+  1
  ],
  [
   "account",
@@ -628,6 +706,12 @@
   "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
   57,
   12
+ ],
+ [
+  "agency",
+  "SCIENCE AND TECHNOLOGY DIRECTORATE",
+  57,
+  20
  ],
  [
   "account",
@@ -646,6 +730,12 @@
   "RESEARCH AND DEVELOPMENT",
   58,
   9
+ ],
+ [
+  "agency",
+  "COUNTERING WEAPONS OF MASS DESTRUCTION OFFICE",
+  58,
+  14
  ],
  [
   "account",

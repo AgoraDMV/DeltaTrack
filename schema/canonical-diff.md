@@ -150,7 +150,12 @@ for distinct styling. `""` or `null` when not applicable. **Redundant with
 ### `path`
 
 Breadcrumb arrays per side. Each element is one segment of the bill's
-hierarchical structure (Title → Subtitle → Section → ...).
+hierarchical structure (Title → Subtitle → Section → ...). The array is
+open-ended, so deepening the breadcrumb is **not** a schema change. PDF
+appropriations diffs may now carry a carry-over agency segment
+(`TITLE I > MANAGEMENT DIRECTORATE > OPERATIONS AND SUPPORT`, DeltaTrack#104),
+reaching the depth the XML side already emits; renderers join whatever segments
+are present and need no per-pipeline branch.
 
 | Side | When `null`                                         |
 |------|-----------------------------------------------------|

@@ -18,7 +18,7 @@ from typing import Literal
 
 from parsers.pdf_text import Page, parse_lines, strip_page_chrome
 
-AnchorKind = Literal["title", "section", "account", "grouping", "preamble"]
+AnchorKind = Literal["title", "section", "account", "grouping", "agency", "preamble"]
 
 
 @dataclass(frozen=True)
@@ -26,9 +26,11 @@ class Anchor:
     page_number: int  # 1-based
     line_number: int  # 1-based, from the source PDF's printed line numbers
     kind: AnchorKind
-    # canonical form, e.g. "TITLE I", "SEC. 406", "OPERATIONS AND SUPPORT", or a
+    # canonical form, e.g. "TITLE I", "SEC. 406", "OPERATIONS AND SUPPORT", a
     # grouping header like "ADMINISTRATIVE PROVISIONS" (a header-only intermediate
-    # node owning a run of SEC. sections — DeltaTrack#103).
+    # node owning a run of SEC. sections — DeltaTrack#103), or a carry-over agency
+    # like "MANAGEMENT DIRECTORATE" (one agency spanning >=2 accounts — #104). An
+    # agency whose name wraps across heading lines is joined into one text.
     text: str
 
 
@@ -64,6 +66,18 @@ _FOR_NECESSARY_EXPENSES = re.compile(r"^For necessary expenses of\b", re.IGNOREC
 # parenthesized enumerator, which appropriations account headings never do. Used
 # to reject these false accounts on general (non-appropriations) bills.
 _ENUM_PREFIX = re.compile(r"^\([0-9A-Za-z]{1,4}\)\s")
+# A carry-over agency name that, when its heading-band run is joined, ends on a
+# coordinating conjunction or preposition is a *wrapped account name* mistaken for
+# an agency (e.g. "CONSTRUCTION AND ENVIRONMENTAL COMPLIANCE AND" / "RESTORATION"
+# on 118-s-4795), not a real agency. Telling a wrapped account from an agency in
+# general needs the leveled tree (#54/#108); this dangle guard cheaply rejects the
+# worst mis-joins. No real agency name ends on one of these words.
+_DANGLING_TAIL = frozenset({"AND", "OR", "OF", "FOR", "TO", "THE", "A", "AN", "IN", "ON", "WITH", "AT", "BY"})
+
+
+def _dangles(text: str) -> bool:
+    words = text.split()
+    return bool(words) and words[-1].upper() in _DANGLING_TAIL
 
 
 def _is_uppercase_heading(content: str) -> bool:
@@ -206,12 +220,23 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
         renders at body size, which is why the look-ahead used to read it as
         "followed by body" and mislabel the header `account`.
       - body prose (or end-of-document) ⇒ an `account` leaf.
-      - another heading ⇒ an agency parent (skipped — deferred to #104).
+      - another heading ⇒ this line belongs to a carry-over agency (one agency over
+        >=2 accounts, DeltaTrack#104). It is not emitted on its own; instead, when a
+        leaf account is reached, the contiguous heading-band run immediately
+        preceding it is joined into ONE `agency` anchor (`agency_before_leaf`). The
+        join rejoins agency names that GPO wrapped across heading lines (e.g.
+        "OFFICE OF THE SECRETARY AND EXECUTIVE" / "MANAGEMENT").
     The look-ahead skips blank lines and parenthetical qualifiers; an unattached
     (size-less) next line counts as body (conservative — skipping toward the next
     heading would wrongly drop a leaf). Run-in subsection headers (`(a) …`) and
-    parenthetical qualifiers are never accounts. The anchor keeps the heading's own
-    page/line, never the look-ahead target's.
+    parenthetical qualifiers are never accounts. The account/grouping anchor keeps
+    the heading's own page/line; the agency anchor takes the run's FIRST line.
+
+    The agency signal is bounded: a *leaf account* name that itself wraps across
+    heading lines is indistinguishable from an agency by size/position, so the join
+    can absorb a wrapped account fragment. The dangle guard (`_dangles`) rejects the
+    worst of these; the rest is the leveled-tree problem (#54/#108). Exact on the
+    clean bill (118-hr-8752), a tolerant floor on the hard one (118-s-4795).
 
     Body must be confirmed positively (at body size) rather than "anything that
     isn't a heading": a wrapped run-in header continuation can sit in the heading
@@ -277,6 +302,39 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
             return True
         return abs(line.glyph_size - bands.body) <= _SIZE_EPS
 
+    def agency_before_leaf(leaf_idx: int) -> Anchor | None:
+        """Join the contiguous heading-band run immediately preceding a leaf account
+        into one carry-over agency anchor, or None when there is no such run.
+
+        The run is the candidate lines directly above the leaf (blanks and
+        parentheticals skipped), stopping at the first body line, recognized
+        heading, or document edge. Catchline continuations are excluded so a wrapped
+        SEC. catchline never leaks into an agency name. Lines are joined in document
+        order; the anchor takes the run's first (topmost) line. The dangle guard
+        drops a run that joins into a wrapped-account fragment (ends on a
+        conjunction/preposition), which is not an agency.
+        """
+        run: list[tuple[int, int, str]] = []  # (page, line_number, text), nearest first
+        j = leaf_idx - 1
+        while j >= 0:
+            page_no, prev = flat[j]
+            if not prev.text.strip() or _is_parenthetical(prev.text):
+                j -= 1
+                continue
+            if is_account_candidate(prev) and not continues_section_catchline(j):
+                run.append((page_no, prev.line_number, prev.text.strip()))
+                j -= 1
+                continue
+            break
+        if not run:
+            return None
+        run.reverse()  # document order
+        text = " ".join(t for _, _, t in run)
+        if _dangles(text):
+            return None
+        first_page, first_line, _ = run[0]
+        return Anchor(first_page, first_line, "agency", text)
+
     anchors: list[Anchor] = []
     for idx in range(n):
         page_number, line = flat[idx]
@@ -296,6 +354,11 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
             anchors.append(Anchor(page_number, line.line_number, "grouping", line.text.strip()))
         elif nxt is None or is_body(nxt):
             anchors.append(Anchor(page_number, line.line_number, "account", line.text.strip()))
+            agency = agency_before_leaf(idx)
+            if agency is not None:
+                anchors.append(agency)
+        # else: candidate followed by another heading ⇒ part of a carry-over agency
+        # run, emitted as one joined `agency` anchor at the leaf account above.
     return anchors
 
 
@@ -349,16 +412,24 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
     For a TITLE anchor: returns just `("TITLE I",)`.
     For a PREAMBLE (front-matter) anchor: returns just `("Front Matter",)` —
     it's top-level, preceding the first TITLE.
-    For an ACCOUNT or GROUPING anchor: returns `("TITLE I", "OPERATIONS AND
-    SUPPORT")` if a preceding TITLE exists, else just `("OPERATIONS AND SUPPORT",)`.
+    For an ACCOUNT anchor: `("TITLE I", "OPERATIONS AND SUPPORT")`, but when a
+    carry-over agency (`MANAGEMENT DIRECTORATE`) precedes it within the same title,
+    the account nests under it: `("TITLE I", "MANAGEMENT DIRECTORATE", "OPERATIONS
+    AND SUPPORT")` (DeltaTrack#104). One agency carries over several accounts, so
+    the account need not be immediately preceded by the agency anchor — the walk
+    passes through intervening sibling accounts. It does NOT pass a grouping/section
+    boundary: an account after `ADMINISTRATIVE PROVISIONS` is title-level, not
+    agency-scoped.
+    For an AGENCY or GROUPING anchor: `("TITLE I", "MANAGEMENT DIRECTORATE")`, or
+    just `("MANAGEMENT DIRECTORATE",)` with no preceding TITLE.
     For a SECTION anchor: `("TITLE IV", "SEC. 406")` normally, but when a
     grouping header (`ADMINISTRATIVE PROVISIONS`) precedes the section within the
     same title, the section nests under it: `("TITLE I", "ADMINISTRATIVE
     PROVISIONS", "SEC. 101")` (DeltaTrack#103). Sections under a general-provisions
     title with no grouping header keep the 2-level chain.
 
-    The agency-level heading (e.g. "OFFICE OF THE SECRETARY") is not yet captured
-    (DeltaTrack#104); once that lands the chain deepens without changing this
+    The major / department level (DeltaTrack#105) is not yet captured; once it lands
+    the chain deepens (TITLE > major > agency > account) without changing this
     function's contract.
     """
     if anchor.kind in ("title", "preamble"):
@@ -371,16 +442,28 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
     except ValueError:
         return (anchor.text,)
     # Walk back to the nearest preceding TITLE, capturing a grouping-header parent
-    # if one falls between that TITLE and the section (sections only). The walk
-    # stops at the TITLE, so a grouping from an earlier title is never reached.
+    # (sections) or a carry-over agency parent (accounts) that falls between that
+    # TITLE and the anchor. The walk stops at the TITLE, so a parent from an earlier
+    # title is never reached. For an account, a grouping/section boundary ends the
+    # agency's scope: `agency_blocked` stops capture there but the walk continues to
+    # the TITLE so the chain still carries it.
     grouping: str | None = None
+    agency: str | None = None
+    agency_blocked = False
     for j in range(idx - 1, -1, -1):
         prev = all_anchors[j]
         if prev.kind == "title":
-            chain = (prev.text,) + ((grouping,) if grouping else ()) + (anchor.text,)
-            return chain
+            parents = ((agency,) if agency else ()) + ((grouping,) if grouping else ())
+            return (prev.text,) + parents + (anchor.text,)
         if anchor.kind == "section" and prev.kind == "grouping" and grouping is None:
             grouping = prev.text
-    if grouping:
-        return (grouping, anchor.text)
+        if anchor.kind == "account" and not agency_blocked:
+            if prev.kind == "agency":
+                agency = prev.text
+                agency_blocked = True  # nearest agency only
+            elif prev.kind in ("grouping", "section"):
+                agency_blocked = True  # agency scope ended before this account
+    parents = ((agency,) if agency else ()) + ((grouping,) if grouping else ())
+    if parents:
+        return parents + (anchor.text,)
     return (anchor.text,)

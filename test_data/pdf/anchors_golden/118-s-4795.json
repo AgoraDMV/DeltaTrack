@@ -6,16 +6,34 @@
   1
  ],
  [
+  "agency",
+  "INTERNATIONAL TRADE ADMINISTRATION",
+  2,
+  3
+ ],
+ [
   "account",
   "OPERATIONS AND ADMINISTRATION",
   2,
   4
  ],
  [
+  "agency",
+  "BUREAU OF INDUSTRY AND SECURITY",
+  4,
+  8
+ ],
+ [
   "account",
   "OPERATIONS AND ADMINISTRATION",
   4,
   9
+ ],
+ [
+  "agency",
+  "ECONOMIC DEVELOPMENT ADMINISTRATION",
+  6,
+  3
  ],
  [
   "account",
@@ -30,16 +48,34 @@
   7
  ],
  [
+  "agency",
+  "MINORITY BUSINESS DEVELOPMENT AGENCY",
+  7,
+  17
+ ],
+ [
   "account",
   "MINORITY BUSINESS DEVELOPMENT",
   7,
   18
  ],
  [
+  "agency",
+  "ECONOMIC AND STATISTICAL ANALYSIS",
+  8,
+  1
+ ],
+ [
   "account",
   "SALARIES AND EXPENSES",
   8,
   2
+ ],
+ [
+  "agency",
+  "BUREAU OF THE CENSUS",
+  8,
+  7
  ],
  [
   "account",
@@ -54,6 +90,12 @@
   14
  ],
  [
+  "agency",
+  "NATIONAL TELECOMMUNICATIONS AND INFORMATION ADMINISTRATION",
+  9,
+  1
+ ],
+ [
   "account",
   "SALARIES AND EXPENSES",
   9,
@@ -66,10 +108,22 @@
   23
  ],
  [
+  "agency",
+  "UNITED STATES PATENT AND TRADEMARK OFFICE",
+  10,
+  5
+ ],
+ [
   "account",
   "SALARIES AND EXPENSES",
   10,
   6
+ ],
+ [
+  "agency",
+  "NATIONAL INSTITUTE OF STANDARDS AND TECHNOLOGY",
+  13,
+  7
  ],
  [
   "account",
@@ -88,6 +142,12 @@
   "CONSTRUCTION OF RESEARCH FACILITIES",
   14,
   8
+ ],
+ [
+  "agency",
+  "NATIONAL OCEANIC AND ATMOSPHERIC ADMINISTRATION",
+  16,
+  1
  ],
  [
   "account",
@@ -130,6 +190,12 @@
   "RECREATIONAL QUOTA ENTITY FUND",
   21,
   1
+ ],
+ [
+  "agency",
+  "DEPARTMENTAL MANAGEMENT",
+  21,
+  11
  ],
  [
   "account",
@@ -240,6 +306,12 @@
   1
  ],
  [
+  "agency",
+  "JUSTICE OPERATIONS, MANAGEMENT, AND ACCOUNTABILITY",
+  29,
+  3
+ ],
+ [
   "account",
   "SALARIES AND EXPENSES",
   29,
@@ -264,10 +336,22 @@
   19
  ],
  [
+  "agency",
+  "UNITED STATES PAROLE COMMISSION",
+  31,
+  1
+ ],
+ [
   "account",
   "SALARIES AND EXPENSES",
   31,
   2
+ ],
+ [
+  "agency",
+  "LEGAL ACTIVITIES",
+  31,
+  9
  ],
  [
   "account",
@@ -294,6 +378,12 @@
   5
  ],
  [
+  "agency",
+  "SALARIES AND EXPENSES, FOREIGN CLAIMS",
+  36,
+  11
+ ],
+ [
   "account",
   "SETTLEMENT COMMISSION",
   36,
@@ -306,6 +396,12 @@
   17
  ],
  [
+  "agency",
+  "SALARIES AND EXPENSES, COMMUNITY RELATIONS",
+  37,
+  9
+ ],
+ [
   "account",
   "SERVICE",
   37,
@@ -316,6 +412,12 @@
   "ASSETS FORFEITURE FUND",
   38,
   3
+ ],
+ [
+  "agency",
+  "UNITED STATES MARSHALS SERVICE",
+  38,
+  8
  ],
  [
   "account",
@@ -336,16 +438,34 @@
   1
  ],
  [
+  "agency",
+  "NATIONAL SECURITY DIVISION",
+  39,
+  17
+ ],
+ [
   "account",
   "SALARIES AND EXPENSES",
   39,
   18
  ],
  [
+  "agency",
+  "INTERAGENCY LAW ENFORCEMENT",
+  40,
+  11
+ ],
+ [
   "account",
   "ORGANIZED CRIME DRUG ENFORCEMENT TASK FORCES",
   40,
   12
+ ],
+ [
+  "agency",
+  "FEDERAL BUREAU OF INVESTIGATION",
+  41,
+  3
  ],
  [
   "account",
@@ -360,16 +480,34 @@
   20
  ],
  [
+  "agency",
+  "DRUG ENFORCEMENT ADMINISTRATION",
+  42,
+  5
+ ],
+ [
   "account",
   "SALARIES AND EXPENSES",
   42,
   6
  ],
  [
+  "agency",
+  "BUREAU OF ALCOHOL, TOBACCO, FIREARMS AND EXPLOSIVES",
+  43,
+  12
+ ],
+ [
   "account",
   "SALARIES AND EXPENSES",
   43,
   14
+ ],
+ [
+  "agency",
+  "FEDERAL PRISON SYSTEM",
+  44,
+  15
  ],
  [
   "account",
@@ -390,6 +528,12 @@
   6
  ],
  [
+  "agency",
+  "LIMITATION ON ADMINISTRATIVE EXPENSES, FEDERAL",
+  47,
+  15
+ ],
+ [
   "account",
   "PRISON INDUSTRIES, INCORPORATED",
   47,
@@ -399,6 +543,12 @@
   "account",
   "PROSECUTION PROGRAMS",
   48,
+  9
+ ],
+ [
+  "agency",
+  "OFFICE OF JUSTICE PROGRAMS",
+  56,
   9
  ],
  [
@@ -424,6 +574,12 @@
   "PUBLIC SAFETY OFFICER BENEFITS",
   74,
   11
+ ],
+ [
+  "agency",
+  "COMMUNITY ORIENTED POLICING SERVICES",
+  75,
+  8
  ],
  [
   "account",
@@ -588,6 +744,12 @@
   13
  ],
  [
+  "agency",
+  "NATIONAL AERONAUTICS AND SPACE ADMINISTRATION",
+  89,
+  1
+ ],
+ [
   "account",
   "SCIENCE",
   89,
@@ -648,10 +810,22 @@
   6
  ],
  [
+  "agency",
+  "NATIONAL SCIENCE FOUNDATION",
+  99,
+  6
+ ],
+ [
   "account",
   "RESEARCH AND RELATED ACTIVITIES",
   99,
   7
+ ],
+ [
+  "agency",
+  "MAJOR RESEARCH EQUIPMENT AND FACILITIES",
+  100,
+  8
  ],
  [
   "account",
@@ -696,10 +870,22 @@
   1
  ],
  [
+  "agency",
+  "COMMISSION ON CIVIL RIGHTS",
+  104,
+  3
+ ],
+ [
   "account",
   "SALARIES AND EXPENSES",
   104,
   4
+ ],
+ [
+  "agency",
+  "EQUAL EMPLOYMENT OPPORTUNITY COMMISSION",
+  105,
+  1
  ],
  [
   "account",
@@ -708,10 +894,22 @@
   2
  ],
  [
+  "agency",
+  "INTERNATIONAL TRADE COMMISSION",
+  106,
+  8
+ ],
+ [
   "account",
   "SALARIES AND EXPENSES",
   106,
   9
+ ],
+ [
+  "agency",
+  "LEGAL SERVICES CORPORATION",
+  106,
+  16
  ],
  [
   "account",
@@ -720,16 +918,34 @@
   17
  ],
  [
+  "agency",
+  "ADMINISTRATIVE PROVISION\u2014LEGAL SERVICES",
+  107,
+  15
+ ],
+ [
   "account",
   "CORPORATION",
   107,
   16
  ],
  [
+  "agency",
+  "MARINE MAMMAL COMMISSION",
+  109,
+  1
+ ],
+ [
   "account",
   "SALARIES AND EXPENSES",
   109,
   2
+ ],
+ [
+  "agency",
+  "OFFICE OF THE UNITED STATES TRADE REPRESENTATIVE",
+  109,
+  7
  ],
  [
   "account",
@@ -742,6 +958,12 @@
   "TRADE ENFORCEMENT TRUST FUND",
   109,
   19
+ ],
+ [
+  "agency",
+  "STATE JUSTICE INSTITUTE",
+  110,
+  4
  ],
  [
   "account",
