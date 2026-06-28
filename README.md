@@ -88,8 +88,8 @@ To run the web comparison app locally: `uvicorn server.app:app --reload --port 8
 # Download all appropriations bills for a year range
 ./fetch_bills download-all --start_year 2024 --end_year 2026
 
-# Or batch-download a specific set of bills from a CSV that has an 'id' column
-./fetch_bills download-all --file my_bills.csv
+# Or batch-download a specific set of bills from a CSV you create with an 'id' column
+./fetch_bills download-all --file your_bills.csv
 ```
 
 Files are saved to `bills/<congress>-<type>-<number>/`.
