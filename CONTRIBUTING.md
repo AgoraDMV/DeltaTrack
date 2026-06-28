@@ -41,9 +41,9 @@ uv run pre-commit install
 uv run pytest -m "not slow and not browser"
 ```
 
-### Optional: download bill XML for full test suite
+### Optional: download bill files for full test suite
 
-The fast tests use inline XML and mocked data. Integration tests need real bill XML files:
+The fast tests use inline XML and mocked data. Integration tests need real bill files: XML for the diff tests and PDF for the PDF comparison tests (`test_pdf_*`):
 
 ```bash
 # An API key is optional: the tool falls back to a rate-limited demo key
@@ -52,8 +52,8 @@ The fast tests use inline XML and mocked data. Integration tests need real bill 
 # .env automatically, so no `source` is needed.
 cp .env.example .env   # then edit .env and paste your key
 
-# Download the primary test bill
-uv run python fetch_bills.py download 118 hr 4366
+# Download the primary test bill (--format both gets XML + PDF; default is XML only)
+uv run python fetch_bills.py download 118 hr 4366 --format both
 
 # Run the suite; tests whose bill isn't downloaded yet skip automatically
 uv run pytest
