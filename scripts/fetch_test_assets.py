@@ -8,6 +8,11 @@ test corpus reproducible without committing PDFs.
 Currently:
 - test_data/BILLS-118s4795rs.pdf - the reported-in-Senate (watermarked) print
   of S.4795, read by tests/test_pdf_watermark_recall.py.
+- test_data/subcommittee/BILLS-118hr*rh.pdf - one FY2025 reported-in-House print
+  per appropriations subcommittee, read by the major-level cross-subcommittee
+  tests (DeltaTrack#105). Major/department heading vocabulary differs per
+  subcommittee, so these guard against overfitting to one or two bills. CJS and
+  Homeland are covered by existing fixtures (118-s-4795, 118-hr-8752).
 
 Usage:
   uv run python scripts/fetch_test_assets.py        # fetch any missing assets
@@ -21,9 +26,30 @@ from pathlib import Path
 _ROOT = Path(__file__).resolve().parents[1]
 _GOVINFO = "https://www.govinfo.gov/content/pkg"
 
+
+def _gov(pkg: str) -> str:
+    return f"{_GOVINFO}/{pkg}/pdf/{pkg}.pdf"
+
+
+# FY2025 House reported prints, one per appropriations subcommittee not already
+# covered by an existing fixture (DeltaTrack#105). govinfo package -> subcommittee.
+_SUBCOMMITTEE_PACKAGES = {
+    "BILLS-118hr9027rh": "agriculture",
+    "BILLS-118hr8774rh": "defense",
+    "BILLS-118hr8997rh": "energy-water",
+    "BILLS-118hr8773rh": "financial-services",
+    "BILLS-118hr8998rh": "interior",
+    "BILLS-118hr9029rh": "labor-hhs",
+    "BILLS-118hr8772rh": "legislative-branch",
+    "BILLS-118hr8580rh": "milcon-va",
+    "BILLS-118hr8771rh": "state-foreign-ops",
+    "BILLS-118hr9028rh": "transportation-hud",
+}
+
 # (destination path relative to the repo root, govinfo URL)
 ASSETS: list[tuple[str, str]] = [
-    ("test_data/BILLS-118s4795rs.pdf", f"{_GOVINFO}/BILLS-118s4795rs/pdf/BILLS-118s4795rs.pdf"),
+    ("test_data/BILLS-118s4795rs.pdf", _gov("BILLS-118s4795rs")),
+    *((f"test_data/subcommittee/{pkg}.pdf", _gov(pkg)) for pkg in _SUBCOMMITTEE_PACKAGES),
 ]
 
 
