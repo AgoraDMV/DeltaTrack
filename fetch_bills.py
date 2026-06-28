@@ -381,7 +381,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_dl.add_argument("--version", type=int, default=None, help="Specific version number (1-indexed)")
     p_dl.add_argument("--output-dir", type=Path, default=Path("bills"), help="Output directory")
     p_dl.add_argument(
-        "--format", choices=["xml", "pdf", "both"], default="pdf", help="Format(s) to download (default: pdf)"
+        "--format", choices=["xml", "pdf", "both"], default="xml", help="Format(s) to download (default: xml)"
     )
 
     # download-all: bulk download for a year range
@@ -391,7 +391,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_all.add_argument("--file", type=Path, default=None, help="CSV file path with an 'id' column")
     p_all.add_argument("--output-dir", type=Path, default=Path("bills"), help="Output directory")
     p_all.add_argument(
-        "--format", choices=["xml", "pdf", "both"], default="pdf", help="Format(s) to download (default: pdf)"
+        "--format", choices=["xml", "pdf", "both"], default="xml", help="Format(s) to download (default: xml)"
     )
 
     return parser
