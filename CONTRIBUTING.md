@@ -78,6 +78,8 @@ To pick up work:
 1. Choose an issue from **Ready**, or one labeled [`good first issue`](https://github.com/AgoraDMV/DeltaTrack/labels/good%20first%20issue) if you're new.
 2. **Claim it** so two people don't start the same thing: comment on the issue to call it. If you have write access, also assign yourself and move the card to **In progress**; otherwise a maintainer will. We're a small team and work mostly async between syncs, so visible ownership matters.
 
+The board handles the later transitions for you: opening a pull request with `Closes #<n>` moves the issue to **In review**, and merging it moves the issue to **Done** and closes it. The only card you move by hand is **In progress**, when you start work.
+
 Not sure whether an issue is a good fit? Ask in a comment or at the regular sync (see [Community](#community)).
 
 ## Making changes
