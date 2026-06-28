@@ -84,6 +84,15 @@ _DANGLING_TAIL = frozenset({"AND", "OR", "OF", "FOR", "TO", "THE", "A", "AN", "I
 # Line-final hyphens that mark a GPO soft wrap to de-hyphenate across (DeltaTrack#105):
 # ASCII hyphen-minus, Unicode hyphen, and non-breaking hyphen.
 _WRAP_HYPHENS = ("-", "‐", "‑")
+# Line-fullness split (DeltaTrack#130): two stacked majors vs one wrapped name. A run
+# line broke EARLY (its successor's first word would have fit) ⇒ an intentional break
+# between stacked headings; otherwise it wrapped because the next word didn't fit. The
+# test is `w_prev + space + first_word(next) <= column_width - slack`. `space` is one
+# inter-word gap, `slack` absorbs measurement wobble; both are small against the ~40pt
+# class margin measured across the FY2025 corpus (splits summed 250–315pt, wraps 354–418),
+# so they are not knife-edge. column_width is measured per document from body prose.
+_MAJOR_SPLIT_SPACE = 6.0  # pt — one inter-word space at body size
+_MAJOR_SPLIT_SLACK = 4.0  # pt — guard band for per-line edge wobble
 
 
 def _dangles(text: str) -> bool:
@@ -396,6 +405,75 @@ def _account_anchors_legacy(pages: list[Page]) -> list[Anchor]:
     return anchors
 
 
+def _body_column_width(pages: list[Page]) -> float | None:
+    """The justified body text column width (points) for one document, or None.
+
+    GPO justifies appropriation prose, so body-prose lines share a left edge and a
+    right edge; the column width is `median(content_right) − median(content_left)`
+    over those lines. Medians (not min/max) shrug off the short paragraph-final lines
+    that don't reach the right margin and the occasional indented line. Returns None
+    when no body line carries geometry (synthetic Pages, or a non-PDF pipeline), which
+    disables the line-fullness split (the major run then joins greedily, as before).
+    """
+    lefts: list[float] = []
+    rights: list[float] = []
+    for page in pages:
+        for ln in page.lines:
+            if ln.geom is None or not _has_lowercase(ln.text):
+                continue
+            lefts.append(ln.geom.content_left)
+            rights.append(ln.geom.content_right)
+    if not lefts:
+        return None
+    return statistics.median(rights) - statistics.median(lefts)
+
+
+def _is_line_fullness_break(prev, cur, column_width: float) -> bool:
+    """True when `cur` cannot be a soft wrap of `prev`, so they are two stacked majors.
+
+    The first word of `cur` would have fit at the end of `prev` within the justified
+    column, meaning `prev` broke before it was full — an intentional break between two
+    stacked department headings, not the soft wrap of one long name (DeltaTrack#130,
+    signal from spike #106). Conservative on missing geometry (keep joined) and on a
+    line broken mid-word by a hyphen (a wrap by construction).
+    """
+    if prev.geom is None or cur.geom is None:
+        return False
+    if prev.text.rstrip().endswith(_WRAP_HYPHENS):
+        return False
+    w_prev = prev.geom.content_right - prev.geom.content_left
+    first_word_cur = cur.geom.first_word_right - cur.geom.content_left
+    return w_prev + _MAJOR_SPLIT_SPACE + first_word_cur <= column_width - _MAJOR_SPLIT_SLACK
+
+
+def _split_major_run(run, column_width):
+    """Split a body-size run `[(page, Line), …]` into stacked-major segments.
+
+    Walks adjacent pairs; a line-fullness hard break starts a new segment, otherwise
+    the line continues the current one (a soft wrap). With no column width (geometry
+    absent) the whole run stays one segment — the pre-#130 greedy join.
+    """
+    if column_width is None or len(run) <= 1:
+        return [run]
+    segments: list[list] = [[run[0]]]
+    for prev, cur in zip(run, run[1:]):
+        if _is_line_fullness_break(prev[1], cur[1], column_width):
+            segments.append([cur])
+        else:
+            segments[-1].append(cur)
+    return segments
+
+
+def _join_major_run(segment) -> str:
+    """Join one segment's lines into a major name: de-hyphenate a GPO soft wrap
+    (``INTEL-`` + ``LIGENCE`` → ``INTELLIGENCE``), else space-join."""
+    text = segment[0][1].text.strip()
+    for _page, ln in segment[1:]:
+        seg = ln.text.strip()
+        text = text[:-1] + seg if text.endswith(_WRAP_HYPHENS) else f"{text} {seg}"
+    return text
+
+
 def _major_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
     """Major / department-level detection: the body-size all-caps heading GPO prints
     directly under a TITLE, above the heading band (DeltaTrack#105).
@@ -419,15 +497,18 @@ def _major_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
     Inline em-dash titles (``TITLE VIII—ADDITIONAL GENERAL PROVISIONS``) are skipped:
     the body-size run below them is the title's own wrapped name, not a major.
 
-    Known residue (deferred to the geometric signal, #106/#108): a title with TWO
-    distinct stacked body-size header levels (e.g. Energy-Water ``CORPS OF
-    ENGINEERS—CIVIL`` / ``DEPARTMENT OF THE ARMY``) is mashed into one major — size
-    and casing alone cannot tell a stacked sub-department from a single wrapped name,
-    since both are centered body-size all-caps. Correct on 8 of 12 subcommittees;
-    the 4 stacked ones are pinned as residue in the tests.
+    Stacked vs wrapped (DeltaTrack#130): a title can carry TWO distinct stacked
+    body-size headings (e.g. Energy-Water ``CORPS OF ENGINEERS—CIVIL`` /
+    ``DEPARTMENT OF THE ARMY``), which size and casing alone cannot tell from one
+    wrapped name (both are body-size all-caps). The run is split at each line-fullness
+    hard break (`_split_major_run`): a line that broke before the justified column
+    filled is an intentional stack boundary, so it starts a new major. Known limit:
+    two stacked departments whose UPPER line nearly fills the column read as a wrap
+    (no early break to see) — not present in the FY2025 corpus.
     """
     flat = _flatten(pages)
     n = len(flat)
+    column_width = _body_column_width(pages)
 
     def is_body(size: float | None) -> bool:
         # A size-less line is NOT body here (the run stops), the opposite of the
@@ -452,7 +533,7 @@ def _major_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
             continue
         if _INLINE_TITLE_NAME.match(line.text):
             continue  # inline-named title: the run below is its own name, not a major
-        run: list[tuple[int, int, str]] = []  # (page, line_number, text)
+        run: list[tuple[int, "Line"]] = []  # (page, Line)  # noqa: F821 - Line via pdf_text
         j = idx + 1
         while j < n:
             page_no, cand = flat[j]
@@ -461,26 +542,24 @@ def _major_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
                 continue
             if not is_major_line(cand):
                 break
-            run.append((page_no, cand.line_number, cand.text.strip()))
+            run.append((page_no, cand))
             j += 1
         if not run:
             continue
-        # Join the run. A line ending in a hyphen is a GPO soft wrap (``INTEL-`` +
-        # ``LIGENCE`` -> ``INTELLIGENCE``): drop the hyphen, no space. Accepts the
-        # ASCII hyphen plus the Unicode hyphen (U+2010) and non-breaking hyphen
-        # (U+2011) some extractors emit. This assumes a line-final hyphen is always a
-        # wrap break, not a genuine compound (``ANTI-`` / ``DRUG``); no major in the
-        # corpus breaks at a real compound hyphen. Otherwise join with a single space.
-        text = run[0][2]
-        for _p, _l, seg in run[1:]:
-            text = text[:-1] + seg if text.endswith(_WRAP_HYPHENS) else f"{text} {seg}"
-        # The dangle guard drops the WHOLE major (vs the agency join, which only
-        # suppresses the agency and keeps the leaf): a run that joins into a phrase
-        # ending on a conjunction/preposition never closed, so it is not a real major.
-        if _dangles(text):
-            continue
-        first_page, first_line, _ = run[0]
-        anchors.append(Anchor(first_page, first_line, "major", text))
+        # Split the run into stacked-major segments by line-fullness (#130), then join
+        # each segment into its own major. Within a segment a line ending in a hyphen
+        # is a GPO soft wrap (``INTEL-`` + ``LIGENCE`` -> ``INTELLIGENCE``): drop the
+        # hyphen, no space (accepts ASCII, U+2010, U+2011); otherwise join with a
+        # single space. (Pre-#130 this was always one segment = the greedy join.)
+        for segment in _split_major_run(run, column_width):
+            text = _join_major_run(segment)
+            # The dangle guard drops the WHOLE major (vs the agency join, which only
+            # suppresses the agency and keeps the leaf): a run that joins into a phrase
+            # ending on a conjunction/preposition never closed, so it is not a real major.
+            if _dangles(text):
+                continue
+            first_page, first_ln = segment[0]
+            anchors.append(Anchor(first_page, first_ln.line_number, "major", text))
     return anchors
 
 

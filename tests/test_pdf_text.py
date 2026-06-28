@@ -9,6 +9,7 @@ import pytest
 from parsers.pdf_text import (
     Line,
     Page,
+    _first_word_right,
     _merge_print_lines,
     _page_glyph_sizes,
     _parse_print_lines,
@@ -152,6 +153,49 @@ class TestStripPageChrome:
         assert strip_page_chrome("1 BODY\n2 MORE") == "1 BODY\n2 MORE"
 
 
+class TestFirstWordRight:
+    """`_first_word_right` finds the first word boundary in a line's content glyphs.
+
+    The load-bearing case (#130, #106 spike): PDFium emits a real space glyph (cp==32)
+    that sits IN the inter-word gap, so every glyph-to-glyph x-gap stays small and a
+    gap-only test never fires — it would return the whole line as one word. The
+    boundary must be the space glyph.
+    """
+
+    @staticmethod
+    def _glyphs(spec, size=11.0, width=6.0, gap=0.5):
+        """Lay `spec` (a string; ' ' becomes a real cp==32 space glyph) left to right
+        as `(bottom, left, right, cp, size)` tuples with a small, non-firing x-gap."""
+        glyphs = []
+        x = 100.0
+        for ch in spec:
+            glyphs.append((0.0, x, x + width, ord(ch), size))
+            x += width + gap
+        return glyphs
+
+    def test_space_glyph_bounds_first_word_despite_small_gap(self):
+        glyphs = self._glyphs("RELATED AGENCIES")
+        # right edge of "RELATED" = the 'D' glyph (index 6), not the whole line.
+        d_right = glyphs[6][2]
+        line_right = glyphs[-1][2]
+        assert d_right < line_right  # sanity: the two differ
+        assert _first_word_right(glyphs) == d_right
+
+    def test_falls_back_to_wide_gap_when_no_space_glyph(self):
+        # No space glyph emitted; a wide x-gap (> 0.25×size) marks the boundary.
+        left = self._glyphs("CORPS")
+        gap_start = left[-1][2] + 5.0  # 5pt > 0.25*11 = 2.75pt
+        right = [(0.0, gap_start, gap_start + 6.0, ord("OF"[i]), 11.0) for i in range(2)]
+        assert _first_word_right(left + right) == left[-1][2]
+
+    def test_skips_leading_space_glyph(self):
+        glyphs = self._glyphs(" RELATED")  # stray leading space
+        assert _first_word_right(glyphs) == glyphs[-1][2]  # 'RELATED' right edge
+
+    def test_none_when_no_content(self):
+        assert _first_word_right([]) is None
+
+
 class TestPageGlyphSizes:
     """The glyph-size measurement sidecar (#89). Assertions are RELATIVE/structural,
     predicted from the #89 evidence, not hardcoded point sizes."""
@@ -165,7 +209,9 @@ class TestPageGlyphSizes:
         try:
             tp = pdf[2].get_textpage()  # page 3 (0-based): MANAGEMENT DIRECTORATE ... FPS
             try:
-                return _page_glyph_sizes(tp, tp.get_text_range())
+                # _page_glyph_sizes now returns {line: (size, LineGeom)}; this class
+                # asserts on size only, so unwrap to {line: size}.
+                return {ln: size for ln, (size, _geom) in _page_glyph_sizes(tp, tp.get_text_range()).items()}
             finally:
                 tp.close()
         finally:
