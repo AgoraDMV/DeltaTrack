@@ -148,7 +148,7 @@ built-in examples and needs no downloads. The slow group runs against real bill
 files and skips automatically if those files are not present.
 
 ```bash
-uv run pytest -m "not slow"   # Fast group: built-in examples, no downloads
+uv run pytest -m "not slow and not browser"   # Fast group: built-in examples, no downloads
 uv run pytest                 # Everything, including checks against real bills
 ```
 
@@ -230,7 +230,7 @@ It is reported with `pytest-cov` (already included as a development dependency).
 
 ```bash
 uv run pytest --cov --cov-report=term-missing                 # Full suite (needs bills/)
-uv run pytest -m "not slow" --cov --cov-report=term-missing    # Fast group only
+uv run pytest -m "not slow and not browser" --cov --cov-report=term-missing  # Fast group only
 uv run pytest --cov --cov-report=html                          # Browsable report in htmlcov/
 ```
 
