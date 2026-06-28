@@ -268,6 +268,38 @@ def test_pdf_agency_breadcrumb_flows_into_canonical_path_without_schema_change()
     assert canonical["schema_version"] == SCHEMA_VERSION  # unchanged (still 1.2)
 
 
+# Major/department-level anchor for the #105 breadcrumb (slice C).
+MAJOR = Anchor(page_number=1, line_number=3, kind="major", text="DEPARTMENTAL MANAGEMENT")
+
+
+def test_pdf_major_breadcrumb_flows_into_canonical_path_without_schema_change():
+    # #105 deepens the PDF breadcrumb to TITLE > major > agency > account. Like #104,
+    # this is a deeper path array, not a new schema shape: it flows through
+    # pdf_diff_to_canonical with NO converter change and NO schema_version bump (the
+    # canonical `path` is open-ended; the bump in the issue's cross-cutting note is
+    # phantom work, settled by slice B — see the agency test above).
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=ACCOUNT,
+        v2_anchor=ACCOUNT,
+        v1_range=(1, 6, 1, 9),
+        v2_range=(1, 6, 1, 9),
+        v1_text="old",
+        v2_text="new",
+    )
+    anchors = (TITLE_I, MAJOR, AGENCY, ACCOUNT)
+    diff = PdfDiff(hunks=(hunk,), v1_anchors=anchors, v2_anchors=anchors)
+    canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
+    c = canonical["changes"][0]
+    assert c["path"]["v2"] == [
+        "TITLE I",
+        "DEPARTMENTAL MANAGEMENT",
+        "MANAGEMENT DIRECTORATE",
+        "OPERATIONS AND SUPPORT",
+    ]
+    assert canonical["schema_version"] == SCHEMA_VERSION  # unchanged (still 1.2)
+
+
 def test_pdf_envelope_marks_source_pdf_and_version_number_null():
     diff = PdfDiff(hunks=(), v1_anchors=(), v2_anchors=())
     canonical = pdf_diff_to_canonical(diff, **_pdf_meta())

@@ -18,7 +18,7 @@ from typing import Literal
 
 from parsers.pdf_text import Page, parse_lines, strip_page_chrome
 
-AnchorKind = Literal["title", "section", "account", "grouping", "agency", "preamble"]
+AnchorKind = Literal["title", "section", "account", "grouping", "agency", "major", "preamble"]
 
 
 @dataclass(frozen=True)
@@ -59,6 +59,14 @@ _COVERAGE_MIN = 0.85
 
 
 _TITLE_PATTERN = re.compile(r"^TITLE\s+([IVXLC]+)\b.*$")
+# A TITLE line carrying its OWN inline name after a dash ("TITLE VIII—ADDITIONAL
+# GENERAL PROVISIONS", "TITLE I—DEPARTMENT OF COMMERCE"). The body-size all-caps run
+# below such a title is the title's own (possibly wrapped) name, NOT a department
+# major, so the major detector skips it (DeltaTrack#105). GPO sets the inline name off
+# with an em-dash (U+2014); en-dash (U+2013) is accepted defensively. An ASCII hyphen
+# is deliberately NOT matched, so a hyphenated numeral like "TITLE I-A" is not mistaken
+# for an inline-named title.
+_INLINE_TITLE_NAME = re.compile(r"^TITLE\s+[IVXLC]+\s*[—–]\s*\S")
 _SECTION_PATTERN = re.compile(r"^(SEC(?:TION)?\.?\s+\d+)\b")
 _FOR_NECESSARY_EXPENSES = re.compile(r"^For necessary expenses of\b", re.IGNORECASE)
 # A run-in subsection header ("(B) Current visas revoked.—") renders small-caps,
@@ -73,6 +81,9 @@ _ENUM_PREFIX = re.compile(r"^\([0-9A-Za-z]{1,4}\)\s")
 # general needs the leveled tree (#54/#108); this dangle guard cheaply rejects the
 # worst mis-joins. No real agency name ends on one of these words.
 _DANGLING_TAIL = frozenset({"AND", "OR", "OF", "FOR", "TO", "THE", "A", "AN", "IN", "ON", "WITH", "AT", "BY"})
+# Line-final hyphens that mark a GPO soft wrap to de-hyphenate across (DeltaTrack#105):
+# ASCII hyphen-minus, Unicode hyphen, and non-breaking hyphen.
+_WRAP_HYPHENS = ("-", "‐", "‑")
 
 
 def _dangles(text: str) -> bool:
@@ -385,6 +396,94 @@ def _account_anchors_legacy(pages: list[Page]) -> list[Anchor]:
     return anchors
 
 
+def _major_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
+    """Major / department-level detection: the body-size all-caps heading GPO prints
+    directly under a TITLE, above the heading band (DeltaTrack#105).
+
+    A `major` (``DEPARTMENTAL MANAGEMENT…``, ``DEPARTMENT OF HEALTH AND HUMAN
+    SERVICES``, ``GENERAL PROVISIONS``) is the greedy run of body-size all-caps
+    heading lines IMMEDIATELY following a standalone ``TITLE n`` line, joined to the
+    heading band: a line ending in an ASCII hyphen de-hyphenates onto the next (a
+    GPO soft wrap, ``INTEL-`` + ``LIGENCE`` → ``INTELLIGENCE``); otherwise lines join
+    with a space. The run stops at the first heading-band line (agency/account), body
+    prose line, or ``SEC.`` line. The anchor takes the run's FIRST line.
+
+    Why "immediately after TITLE": verified across one reported-in-House print from
+    each of the 12 appropriations subcommittees (FY2025) plus the Senate CJS pair —
+    the department heading is always printed directly under its title, while the
+    body-size all-caps false positives (statutory-citation wraps like ``U.S.C.
+    279)).``, the body-size grouping header ``SPENDING REDUCTION ACCOUNT``, and
+    ``SEC.`` catchline fragments) never sit right after a TITLE. So the structural
+    gate disambiguates them without a lexical heuristic.
+
+    Inline em-dash titles (``TITLE VIII—ADDITIONAL GENERAL PROVISIONS``) are skipped:
+    the body-size run below them is the title's own wrapped name, not a major.
+
+    Known residue (deferred to the geometric signal, #106/#108): a title with TWO
+    distinct stacked body-size header levels (e.g. Energy-Water ``CORPS OF
+    ENGINEERS—CIVIL`` / ``DEPARTMENT OF THE ARMY``) is mashed into one major — size
+    and casing alone cannot tell a stacked sub-department from a single wrapped name,
+    since both are centered body-size all-caps. Correct on 8 of 12 subcommittees;
+    the 4 stacked ones are pinned as residue in the tests.
+    """
+    flat = _flatten(pages)
+    n = len(flat)
+
+    def is_body(size: float | None) -> bool:
+        # A size-less line is NOT body here (the run stops), the opposite of the
+        # account detector's `is_body` (which treats an unattached line as body to
+        # avoid dropping a leaf). For majors the conservative choice is to STOP the
+        # run, so a join miss can't greedily swallow a following heading into a major.
+        return size is not None and abs(size - bands.body) <= _SIZE_EPS
+
+    def is_major_line(line) -> bool:
+        return (
+            line.line_number is not None
+            and is_body(line.glyph_size)
+            and _is_uppercase_heading(line.text)
+            and not _ENUM_PREFIX.match(line.text)
+            and not _is_parenthetical(line.text)
+        )
+
+    anchors: list[Anchor] = []
+    for idx in range(n):
+        _page_no, line = flat[idx]
+        if line.line_number is None or not _TITLE_PATTERN.match(line.text):
+            continue
+        if _INLINE_TITLE_NAME.match(line.text):
+            continue  # inline-named title: the run below is its own name, not a major
+        run: list[tuple[int, int, str]] = []  # (page, line_number, text)
+        j = idx + 1
+        while j < n:
+            page_no, cand = flat[j]
+            if not cand.text.strip() or _is_parenthetical(cand.text):
+                j += 1
+                continue
+            if not is_major_line(cand):
+                break
+            run.append((page_no, cand.line_number, cand.text.strip()))
+            j += 1
+        if not run:
+            continue
+        # Join the run. A line ending in a hyphen is a GPO soft wrap (``INTEL-`` +
+        # ``LIGENCE`` -> ``INTELLIGENCE``): drop the hyphen, no space. Accepts the
+        # ASCII hyphen plus the Unicode hyphen (U+2010) and non-breaking hyphen
+        # (U+2011) some extractors emit. This assumes a line-final hyphen is always a
+        # wrap break, not a genuine compound (``ANTI-`` / ``DRUG``); no major in the
+        # corpus breaks at a real compound hyphen. Otherwise join with a single space.
+        text = run[0][2]
+        for _p, _l, seg in run[1:]:
+            text = text[:-1] + seg if text.endswith(_WRAP_HYPHENS) else f"{text} {seg}"
+        # The dangle guard drops the WHOLE major (vs the agency join, which only
+        # suppresses the agency and keeps the leaf): a run that joins into a phrase
+        # ending on a conjunction/preposition never closed, so it is not a real major.
+        if _dangles(text):
+            continue
+        first_page, first_line, _ = run[0]
+        anchors.append(Anchor(first_page, first_line, "major", text))
+    return anchors
+
+
 def extract_anchors(pages: list[Page]) -> list[Anchor]:
     """Extract all anchors (title/section/account) in document order.
 
@@ -399,6 +498,7 @@ def extract_anchors(pages: list[Page]) -> list[Anchor]:
     bands = derive_size_bands(pages)
     if bands is not None and _coverage(pages) >= _COVERAGE_MIN:
         anchors.extend(_account_anchors_by_size(pages, bands))
+        anchors.extend(_major_anchors_by_size(pages, bands))
     else:
         anchors.extend(_account_anchors_legacy(pages))
 
@@ -425,17 +525,22 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
     For a SECTION anchor: `("TITLE IV", "SEC. 406")` normally, but when a
     grouping header (`ADMINISTRATIVE PROVISIONS`) precedes the section within the
     same title, the section nests under it: `("TITLE I", "ADMINISTRATIVE
-    PROVISIONS", "SEC. 101")` (DeltaTrack#103). Sections under a general-provisions
-    title with no grouping header keep the 2-level chain.
+    PROVISIONS", "SEC. 101")` (DeltaTrack#103). A general-provisions title now carries
+    its own `GENERAL PROVISIONS` major (DeltaTrack#105), so its sections resolve to
+    `("TITLE V", "GENERAL PROVISIONS", "SEC. 501")` — three levels via the major, even
+    with no grouping header.
 
-    The major / department level (DeltaTrack#105) is not yet captured; once it lands
-    the chain deepens (TITLE > major > agency > account) without changing this
-    function's contract.
+    For a MAJOR / department anchor (DeltaTrack#105): the body-size heading under a
+    TITLE deepens the chain to `("TITLE I", "DEPARTMENTAL MANAGEMENT", "MANAGEMENT
+    DIRECTORATE", "OPERATIONS AND SUPPORT")`. One major scopes the whole title, so it
+    is captured INDEPENDENTLY of the agency `agency_blocked` gate (a title-level
+    account after a grouping boundary still carries the major) and threaded leftmost,
+    just inside the TITLE.
 
-    Breadcrumb DEPTH is detection-path dependent: agency/grouping parents exist only
-    on the size path, so a low-coverage/no-band bill (legacy fallback) yields a
-    shallower chain for the same logical account. Consumers must not assume an agency
-    segment is always present.
+    Breadcrumb DEPTH is detection-path dependent: major/agency/grouping parents exist
+    only on the size path, so a low-coverage/no-band bill (legacy fallback) yields a
+    shallower chain for the same logical account. Consumers must not assume a major or
+    agency segment is always present.
     """
     if anchor.kind in ("title", "preamble"):
         return (anchor.text,)
@@ -454,12 +559,22 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
     # the TITLE so the chain still carries it.
     grouping: str | None = None
     agency: str | None = None
+    major: str | None = None
     agency_blocked = False
+
+    def chain(title: tuple[str, ...]) -> tuple[str, ...]:
+        # Leftmost-to-rightmost: major, then agency, then grouping, then the anchor.
+        parents = ((major,) if major else ()) + ((agency,) if agency else ()) + ((grouping,) if grouping else ())
+        return title + parents + (anchor.text,)
+
     for j in range(idx - 1, -1, -1):
         prev = all_anchors[j]
         if prev.kind == "title":
-            parents = ((agency,) if agency else ()) + ((grouping,) if grouping else ())
-            return (prev.text,) + parents + (anchor.text,)
+            return chain((prev.text,))
+        # The major scopes the whole title, so it is captured for every anchor kind and
+        # is NOT gated by agency_blocked (an account after a grouping boundary keeps it).
+        if prev.kind == "major" and major is None:
+            major = prev.text
         if anchor.kind == "section" and prev.kind == "grouping" and grouping is None:
             grouping = prev.text
         if anchor.kind == "account" and not agency_blocked:
@@ -468,7 +583,7 @@ def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor
                 agency_blocked = True  # nearest agency only
             elif prev.kind in ("grouping", "section"):
                 agency_blocked = True  # agency scope ended before this account
-    parents = ((agency,) if agency else ()) + ((grouping,) if grouping else ())
-    if parents:
-        return parents + (anchor.text,)
+    parents = chain(())
+    if len(parents) > 1:
+        return parents
     return (anchor.text,)

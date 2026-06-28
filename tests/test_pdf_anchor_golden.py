@@ -179,6 +179,230 @@ def _pdf_agency_vocab(pdf_path: Path) -> set[str]:
     return {normalize_header(a.text) for a in anchors if a.kind == "agency"}
 
 
+def _xml_major_vocab(xml_path: Path) -> set[str]:
+    """The XML's major/department-level vocabulary (normalized) — the casing
+    complement of ``_xml_agency_vocab``.
+
+    The level above the leaf is not positional, but casing separates it: GPO renders
+    the major ALL-CAPS and the agency Title-case (see ``_xml_agency_vocab``). So the
+    major vocab = every ALL-CAPS ``display_path`` segment between the title prefix and
+    the leaf. Derived, never hardcoded, so it can't drift against a regenerated golden.
+
+    This oracle is INCOMPLETE on some bills: a department folded into the title prefix
+    (``TITLE I—DEPARTMENT OF COMMERCE``) or a general-provisions title with no
+    ``appropriations-small`` leaf never appears as a standalone ALL-CAPS path segment,
+    so it is absent here even though GPO prints it as a body-size major in the PDF.
+    Hence exact PDF==XML parity holds only on the clean bill (118-hr-8752); the hard
+    bill uses a recall floor (see TestMajorLevelEndToEnd).
+    """
+    from bill_tree import normalize_bill, normalize_header
+
+    tree = normalize_bill(xml_path)
+    vocab: set[str] = set()
+    for n in tree.nodes:
+        if n.tag == "appropriations-small":
+            for seg in n.display_path[1:-1]:  # exclude the title prefix and the leaf
+                if not any("a" <= ch <= "z" for ch in seg):  # ALL-CAPS => major, not an agency
+                    vocab.add(normalize_header(seg))
+    return vocab
+
+
+def _pdf_major_vocab(pdf_path: Path) -> set[str]:
+    from bill_tree import normalize_header
+
+    anchors = extract_anchors(extract_clean_pages(pdf_path))
+    return {normalize_header(a.text) for a in anchors if a.kind == "major"}
+
+
+class TestMajorLevelEndToEnd:
+    """Slice C of #54 (DeltaTrack#105): the size path recovers the major/department
+    level — the body-size all-caps department heading GPO prints directly under each
+    TITLE, above the heading band.
+
+    118-hr-8752 is the CLEAN case: 5 majors, each immediately following a TITLE, and
+    the XML surfaces all 5 as ALL-CAPS path segments, so it gets exact-set parity.
+    118-s-4795 is the harder case — there the PDF recovers MORE majors than the XML
+    oracle (Commerce folded into the title prefix, GENERAL PROVISIONS with no small
+    leaf), so it gets a recall floor + documented residue, NOT exact parity (mirrors
+    the agency vocab-floor discipline: clean bill exact, hard bill tolerant).
+    """
+
+    def test_hr8752_majors_exact_set(self):
+        # Exact-set parity on the clean bill: every XML major recovered, none spurious.
+        # No SPENDING REDUCTION ACCOUNT (body-size grouping header), no "U.S.C." or
+        # "(8 U.S.C. 1448)." citation false positives.
+        pdf = FIXTURES["118-hr-8752"]
+        xml = ROOT / "bills" / "118-hr-8752" / "1_reported-in-house.xml"
+        if not pdf.exists():
+            pytest.skip("HR 8752 PDF not present")
+        assert _pdf_major_vocab(pdf) == _xml_major_vocab(xml)
+
+    def test_zero_majors_on_non_approps(self):
+        # Negative control: a non-appropriations bill has no department headings under
+        # its titles, so the major rule must emit zero.
+        pdf = FIXTURES["118-hr-8282"]
+        if not pdf.exists():
+            pytest.skip("HR 8282 PDF not present")
+        anchors = extract_anchors(extract_clean_pages(pdf))
+        assert [a.text for a in anchors if a.kind == "major"] == []
+
+    def test_s4795_major_recall_and_documented_residue(self):
+        # Hard bill: the PDF recovers EVERY XML-oracle major (recall 1.0) and ADDS real
+        # majors the oracle folds into the title / omits — so emitted is a strict
+        # superset of the oracle, never a subset. The exact anchor set is pinned
+        # separately and deterministically by test_anchors_match_golden; here we assert
+        # the semantic floor, not a brittle hand-coded literal.
+        pdf = ROOT / "test_data" / "BILLS-118s4795rs.pdf"
+        xml = ROOT / "bills" / "118-s-4795" / "1_reported-in-senate.xml"
+        if not pdf.exists() or not xml.exists():
+            pytest.skip("118-s-4795 pdf/xml pair not present")
+        xm = _xml_major_vocab(xml)
+        pm = _pdf_major_vocab(pdf)
+        assert xm, "XML major oracle is empty — derivation broke"
+        assert xm <= pm, f"XML-oracle majors not all recovered: missing {xm - pm}"
+        # Documented residue: the PDF surfaces majors the oracle can't (folded-into-
+        # title departments, general-provisions titles), so it is a strict superset.
+        assert len(pm) > len(xm), f"expected PDF to over-recover vs the oracle; pdf={pm} xml={xm}"
+
+    # (pdf, the body-size all-caps catchline fragment that must NOT become a major)
+    _MAJOR_FP_REPROS = {
+        ROOT / "bills" / "117-hr-2471" / "1_introduced-in-house.pdf": "AND ASSEMBLY IN HAITI.",
+        ROOT / "bills" / "118-hr-2882" / "1_introduced-in-house.pdf": "TRUST FUND.",
+    }
+
+    @pytest.mark.parametrize("pdf", sorted(_MAJOR_FP_REPROS), ids=lambda p: p.parent.name)
+    def test_no_catchline_fragment_major(self, pdf: Path):
+        # The 117-hr-2471 / 118-hr-2882 catchline class must not leak into the major
+        # level either (the structural "after TITLE" gate excludes mid-section frags).
+        if not pdf.exists():
+            pytest.skip(f"{pdf.parent.name} PDF not present")
+        majors = {a.text for a in extract_anchors(extract_clean_pages(pdf)) if a.kind == "major"}
+        assert self._MAJOR_FP_REPROS[pdf] not in majors
+
+
+def _pdf_major_texts(pdf_path: Path) -> set[str]:
+    return {a.text for a in extract_anchors(extract_clean_pages(pdf_path)) if a.kind == "major"}
+
+
+# One FY2025 reported-in-House print per appropriations subcommittee (CJS=Senate
+# 118-s-4795, Homeland=existing 118-hr-8752). Fetched by scripts/fetch_test_assets.py.
+_SUBC_DIR = ROOT / "test_data" / "subcommittee"
+SUBCOMMITTEE_FIXTURES = {
+    "agriculture": _SUBC_DIR / "BILLS-118hr9027rh.pdf",
+    "cjs": ROOT / "test_data" / "BILLS-118s4795rs.pdf",
+    "defense": _SUBC_DIR / "BILLS-118hr8774rh.pdf",
+    "energy-water": _SUBC_DIR / "BILLS-118hr8997rh.pdf",
+    "financial-services": _SUBC_DIR / "BILLS-118hr8773rh.pdf",
+    "homeland": FIXTURES["118-hr-8752"],
+    "interior": _SUBC_DIR / "BILLS-118hr8998rh.pdf",
+    "labor-hhs": _SUBC_DIR / "BILLS-118hr9029rh.pdf",
+    "legislative-branch": _SUBC_DIR / "BILLS-118hr8772rh.pdf",
+    "milcon-va": _SUBC_DIR / "BILLS-118hr8580rh.pdf",
+    "state-foreign-ops": _SUBC_DIR / "BILLS-118hr8771rh.pdf",
+    "transportation-hud": _SUBC_DIR / "BILLS-118hr9028rh.pdf",
+}
+
+
+MAJOR_VOCAB_GOLDEN = GOLDEN_DIR / "major_vocab.json"
+
+
+class TestMajorLevelAcrossSubcommittees:
+    """Cross-subcommittee acceptance for the major level (DeltaTrack#105).
+
+    The detector was validated against one reported-in-House print from EACH of the
+    12 appropriations subcommittees (verified from the FY2025 GPO prints, 2026-06).
+    These guard against the overfitting that one or two bills hid: each subcommittee
+    has different department/major vocabulary and a different wrap shape.
+
+    Two complementary guards:
+    - The major-vocab GOLDEN (`test_major_vocab_matches_golden`) pins the FULL sorted
+      major set per subcommittee, so it catches both over-emission (a spurious extra
+      major) and under-emission/truncation — the exhaustive regression lock.
+    - SIGNATURE_MAJORS pins one readable full name per subcommittee as a red-first
+      spec. The *discriminating* ones are the content-word wraps — agriculture
+      (`…DRUG`), labor-hhs (`…HUMAN`/`SERVICES`), state-foreign-ops (`…INTERNATIONAL`/
+      `DEVELOPMENT`), transportation-hud (`…URBAN`/`DEVELOPMENT`), plus homeland's
+      3-line hyphen wrap: a continuation-only join keyed on a dangling conjunction
+      truncates exactly these, the greedy join recovers them. The remaining signatures
+      are single-line or conjunction-tail and serve as presence guards, not
+      truncation discriminators.
+    """
+
+    # subcommittee -> a full-name major that must be present. Discriminating wraps are
+    # noted in the class docstring; the golden below is the exhaustive gate.
+    SIGNATURE_MAJORS = {
+        "agriculture": "RELATED AGENCIES AND FOOD AND DRUG ADMINISTRATION",
+        "cjs": "DEPARTMENT OF JUSTICE",
+        "defense": "RESEARCH, DEVELOPMENT, TEST AND EVALUATION",
+        "energy-water": "DEPARTMENT OF THE INTERIOR",
+        "financial-services": "EXECUTIVE OFFICE OF THE PRESIDENT AND FUNDS APPROPRIATED TO THE PRESIDENT",
+        "homeland": "DEPARTMENTAL MANAGEMENT, INTELLIGENCE, SITUATIONAL AWARENESS, AND OVERSIGHT",
+        "interior": "ENVIRONMENTAL PROTECTION AGENCY",
+        "labor-hhs": "DEPARTMENT OF HEALTH AND HUMAN SERVICES",
+        "legislative-branch": "GENERAL PROVISIONS",
+        "milcon-va": "DEPARTMENT OF VETERANS AFFAIRS",
+        "state-foreign-ops": "UNITED STATES AGENCY FOR INTERNATIONAL DEVELOPMENT",
+        "transportation-hud": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
+    }
+
+    # Documented residue (DeltaTrack#105): titles with two DISTINCT stacked body-size
+    # header levels are mashed by the greedy join (size+casing can't split them; needs
+    # the geometric signal in #106). Asserted STRUCTURALLY (some single major contains
+    # both component substrings) so the residue is tracked but survives cosmetic
+    # join-spacing changes; it flips only when the geometric split actually lands.
+    STACK_RESIDUE_COMPONENTS = {
+        "energy-water": ("CORPS OF ENGINEERS", "DEPARTMENT OF THE ARMY"),
+        "interior": ("RELATED AGENCIES", "DEPARTMENT OF AGRICULTURE"),
+        "legislative-branch": ("LEGISLATIVE BRANCH", "HOUSE OF REPRESENTATIVES"),
+        "state-foreign-ops": ("RELATED AGENCY", "DEPARTMENT OF STATE"),
+    }
+
+    @pytest.mark.parametrize("subc", sorted(SIGNATURE_MAJORS))
+    def test_signature_major_recovered_intact(self, subc: str):
+        pdf = SUBCOMMITTEE_FIXTURES[subc]
+        if not pdf.exists():
+            pytest.skip(f"{subc} fixture not present (run scripts/fetch_test_assets.py)")
+        assert self.SIGNATURE_MAJORS[subc] in _pdf_major_texts(pdf)
+
+    @pytest.mark.parametrize("subc", sorted(STACK_RESIDUE_COMPONENTS))
+    def test_stacked_header_residue_pinned(self, subc: str):
+        # Two distinct headers mashed into one major (documents the residue; flips when
+        # the geometric split #106 lands and they become two separate majors).
+        pdf = SUBCOMMITTEE_FIXTURES[subc]
+        if not pdf.exists():
+            pytest.skip(f"{subc} fixture not present")
+        a, b = self.STACK_RESIDUE_COMPONENTS[subc]
+        majors = _pdf_major_texts(pdf)
+        assert any(a in m and b in m for m in majors), f"expected {a!r}+{b!r} mashed in one major; got {majors}"
+
+    @pytest.mark.parametrize("subc", sorted(SUBCOMMITTEE_FIXTURES))
+    def test_major_vocab_matches_golden(self, subc: str):
+        # Exhaustive over/under-emission gate per subcommittee. The golden is generated
+        # from the implementation and reviewed (mirrors test_anchors_match_golden);
+        # skipped until it exists so the red scaffold stays clean.
+        pdf = SUBCOMMITTEE_FIXTURES[subc]
+        if not pdf.exists():
+            pytest.skip(f"{subc} fixture not present")
+        if not MAJOR_VOCAB_GOLDEN.exists():
+            pytest.skip("major_vocab golden not generated yet (created during implementation)")
+        golden = json.loads(MAJOR_VOCAB_GOLDEN.read_text())
+        assert sorted(_pdf_major_texts(pdf)) == golden[subc]
+
+
+@pytest.mark.parametrize("name", sorted(FIXTURES))
+def test_no_duplicate_page_line_anchors(name: str):
+    # breadcrumb_for resolves parents via list.index() on value-equality, which relies
+    # on anchors being unique per (page, line). The new major anchors must preserve
+    # that invariant (a major's first line is distinct from the title/agency/account
+    # lines around it). Guards every fixture, all kinds.
+    pdf_path = FIXTURES[name]
+    if not pdf_path.exists():
+        pytest.skip(f"{name} PDF not present")
+    anchors = extract_anchors(extract_clean_pages(pdf_path))
+    seen = [(a.page_number, a.line_number) for a in anchors]
+    assert len(seen) == len(set(seen)), "duplicate (page, line) anchors break breadcrumb .index()"
+
+
 class TestCarryoverAgenciesEndToEnd:
     """Slice B of #54 (DeltaTrack#104): the size path recovers the XML agency level.
 
