@@ -207,6 +207,16 @@ Sizing is available via the org-level **Effort** field (High / Medium / Low) if 
 piece of work needs it, but it isn't a focus right now — don't block grooming on
 it.
 
+### Sprints
+
+The biweekly sync doubles as sprint planning. The **`Sprint` iteration field**
+(two-week, Wednesday-aligned blocks) is the sprint container, and the current
+iteration's title holds that cycle's **theme** ("this sprint: get the demo out").
+Committing an issue to the sprint = set its `Sprint` to the current iteration and
+move it to **Ready**. We don't freeze the sprint or size by points — critical
+items are chosen by judgment, and other **Ready** work is fair game. Track the
+active sprint on the **Current sprint** board view (`iteration:@current`).
+
 ## Epics
 
 A larger effort that spans several pull requests is tracked as an **epic**: an
