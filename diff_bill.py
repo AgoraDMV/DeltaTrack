@@ -756,8 +756,8 @@ def cmd_compare(args: argparse.Namespace) -> None:
         from formatters.diff_html import format_diff_html
         from formatters.text_serializer import build_xml_full_text
 
-        full_text, full_text_spans, sections = build_xml_full_text(old_tree, new_tree)
-        canonical = xml_diff_to_canonical(diff_dict, full_text=full_text, full_text_spans=full_text_spans)
+        full_text, full_text_spans, sections, tree = build_xml_full_text(old_tree, new_tree)
+        canonical = xml_diff_to_canonical(diff_dict, full_text=full_text, full_text_spans=full_text_spans, tree=tree)
         output = format_diff_html(
             view_from_canonical(canonical),
             canonical=canonical,

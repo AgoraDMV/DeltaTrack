@@ -28,7 +28,8 @@ from formatters.canonical import (
 )
 from parsers.pdf_anchors import Anchor
 
-SCHEMA_VERSION = "1.2"
+# Local pin (guard against unintended bumps). 1.3 added the optional `tree` field (#108).
+SCHEMA_VERSION = "1.3"
 
 
 # ---------- XML producer ------------------------------------------------------
@@ -266,7 +267,7 @@ def test_pdf_agency_breadcrumb_flows_into_canonical_path_without_schema_change()
     canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
     c = canonical["changes"][0]
     assert c["path"]["v2"] == ["TITLE I", "MANAGEMENT DIRECTORATE", "OPERATIONS AND SUPPORT"]
-    assert canonical["schema_version"] == SCHEMA_VERSION  # unchanged (still 1.2)
+    assert canonical["schema_version"] == SCHEMA_VERSION  # PDF breadcrumb change adds no bump of its own
 
 
 # Major/department-level anchor for the #105 breadcrumb (slice C).
@@ -298,7 +299,7 @@ def test_pdf_major_breadcrumb_flows_into_canonical_path_without_schema_change():
         "MANAGEMENT DIRECTORATE",
         "OPERATIONS AND SUPPORT",
     ]
-    assert canonical["schema_version"] == SCHEMA_VERSION  # unchanged (still 1.2)
+    assert canonical["schema_version"] == SCHEMA_VERSION  # PDF breadcrumb change adds no bump of its own
 
 
 def test_pdf_division_breadcrumb_flows_into_canonical_path_without_schema_change():
@@ -330,7 +331,7 @@ def test_pdf_division_breadcrumb_flows_into_canonical_path_without_schema_change
         "MANAGEMENT DIRECTORATE",
         "OPERATIONS AND SUPPORT",
     ]
-    assert canonical["schema_version"] == SCHEMA_VERSION  # unchanged (still 1.2)
+    assert canonical["schema_version"] == SCHEMA_VERSION  # PDF breadcrumb change adds no bump of its own
 
 
 def test_pdf_envelope_marks_source_pdf_and_version_number_null():

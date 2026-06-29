@@ -21,11 +21,13 @@ from __future__ import annotations
 
 from html import escape
 
+from diff_bill import extract_amounts
 from diff_pdf import PdfDiff, PdfHunk
 from formatters.view_model import ChangeView, DiffView
 from parsers.pdf_anchors import Anchor, breadcrumb_for
+from structure_tree import TreeNode, build_pdf_tree
 
-SCHEMA_VERSION = "1.2"
+SCHEMA_VERSION = "1.3"
 GENERATOR_NAME = "deltatrack"
 
 
@@ -138,7 +140,11 @@ def _xml_move(change: dict) -> dict:
 
 
 def xml_diff_to_canonical(
-    diff_dict: dict, *, full_text: dict | None = None, full_text_spans: dict | None = None
+    diff_dict: dict,
+    *,
+    full_text: dict | None = None,
+    full_text_spans: dict | None = None,
+    tree: dict | None = None,
 ) -> dict:
     """Convert a bill-diff dict (from bill_diff_to_dict) into canonical JSON.
 
@@ -179,6 +185,7 @@ def xml_diff_to_canonical(
         },
         "summary": dict(diff_dict.get("summary") or {}),
         "full_text": normalized_full_text,
+        "tree": _normalize_tree(tree, normalized_full_text),
         "changes": [
             _xml_change_to_canonical(c, i, normalized_full_text, full_text_spans, search_state)
             for i, c in enumerate(diffed)
@@ -200,6 +207,25 @@ def _normalize_full_text(full_text: dict | None) -> dict | None:
     if not all(isinstance(full_text[k], str) for k in ("v1", "v2")):
         raise ValueError("full_text values must be strings")
     return {"v1": full_text["v1"], "v2": full_text["v2"]}
+
+
+def _normalize_tree(tree: dict | None, full_text: dict | None) -> dict | None:
+    """Validate and pass through the optional per-side `tree` field (#108, v1.3+).
+
+    Accepts None for "no tree available," or a dict with v1/v2 keys each a list of
+    root nodes. Co-presence rule: a non-null tree REQUIRES a non-null full_text —
+    every node's `full_text_span` indexes into `full_text[side]`, so a tree without
+    it would carry dangling spans. The producer is the schema gatekeeper.
+    """
+    if tree is None:
+        return None
+    if not isinstance(tree, dict) or set(tree) != {"v1", "v2"}:
+        raise ValueError("tree must be None or a dict with keys 'v1' and 'v2'")
+    if not all(isinstance(tree[k], list) for k in ("v1", "v2")):
+        raise ValueError("tree values must be lists of root nodes")
+    if full_text is None:
+        raise ValueError("tree requires full_text (its spans index into it)")
+    return {"v1": tree["v1"], "v2": tree["v2"]}
 
 
 # ---------- PDF producer -----------------------------------------------------
@@ -303,6 +329,60 @@ def _pdf_span(hunk: PdfHunk, line_offsets_v1: dict | None, line_offsets_v2: dict
     return {"v1": _span(hunk.v1_range, line_offsets_v1), "v2": _span(hunk.v2_range, line_offsets_v2)}
 
 
+def _pdf_tree_payload(
+    anchors: tuple[Anchor, ...],
+    side_offsets: dict | None,
+    side_text: str | None,
+) -> list[dict]:
+    """Serialize one PDF version's structure tree to canonical JSON nodes (#108).
+
+    The XML pipeline gets per-node ``own_amounts`` and spans for free from the
+    serializer's body-span index; PDF has no such index, so this derives both from
+    the anchor stream and the per-line offset table: each anchor's OWN block is the
+    char range ``[start(this anchor), start(next anchor))`` in ``side_text``. That
+    partitions the body across anchors with no overlap, so a node's ``own_amounts``
+    (amounts in its own block) never double-counts a child's — the conservation
+    invariant. Text before the first anchor (front matter) is unattributed; for
+    appropriations bills it carries no dollar amounts (bounded, documented drop).
+
+    Returns ``[]`` when there are no anchors or no offset table to index into.
+    """
+    if not anchors or side_offsets is None or side_text is None:
+        return []
+    ordered = list(anchors)  # extract_anchors yields document order
+    starts = [
+        (off[0] if (off := side_offsets.get((a.page_number, a.line_number))) is not None else None) for a in ordered
+    ]
+    # Per-anchor own block, computed BY INDEX and keyed by id(anchor). Index-based
+    # ranges make the partition robust to two anchors sharing a (page, line): they
+    # get start_i == start_{i+1}, so all but the last collapse to an empty range
+    # rather than both inheriting one block — which would double-count, the #108
+    # prohibition. id() keeps colliding anchors distinct in the lookup. (The current
+    # corpus never collides — title/section/account/major detectors are size-disjoint
+    # — so this is a guard against a future anchor emitter, not an active path.)
+    block: dict[int, tuple[dict | None, tuple[int, ...]]] = {}
+    for i, a in enumerate(ordered):
+        start = starts[i]
+        if start is None:
+            block[id(a)] = (None, ())
+            continue
+        end = next((s for s in starts[i + 1 :] if s is not None), len(side_text))
+        end = max(start, end)  # guard non-monotonic offsets (multi-column) → empty, never overlap
+        block[id(a)] = ({"start": start, "end": end}, tuple(extract_amounts(side_text[start:end])))
+
+    def node_json(n: TreeNode) -> dict:
+        span, own = block.get(id(n.source), (None, ())) if n.source is not None else (None, ())
+        return {
+            "label": n.label,
+            "level": n.level,
+            "own_amounts": list(own),
+            "full_text_span": span,
+            "children": [node_json(c) for c in n.children],
+        }
+
+    return [node_json(r) for r in build_pdf_tree(ordered)]
+
+
 def pdf_diff_to_canonical(
     diff: PdfDiff,
     *,
@@ -323,6 +403,15 @@ def pdf_diff_to_canonical(
     """
     line_offsets_v1 = (line_offsets or {}).get("v1")
     line_offsets_v2 = (line_offsets or {}).get("v2")
+    normalized_full_text = _normalize_full_text(full_text)
+    # The structure tree's spans index into full_text, so it only ships when
+    # full_text does (co-presence rule, enforced by _normalize_tree).
+    tree = None
+    if normalized_full_text is not None:
+        tree = {
+            "v1": _pdf_tree_payload(diff.v1_anchors, line_offsets_v1, normalized_full_text["v1"]),
+            "v2": _pdf_tree_payload(diff.v2_anchors, line_offsets_v2, normalized_full_text["v2"]),
+        }
     return {
         "schema_version": SCHEMA_VERSION,
         "generator": {"name": GENERATOR_NAME, "version": "0"},
@@ -332,7 +421,8 @@ def pdf_diff_to_canonical(
             "v2": {"label": v2_label, "version_number": None, "source": "pdf"},
         },
         "summary": dict(diff.summary),
-        "full_text": _normalize_full_text(full_text),
+        "full_text": normalized_full_text,
+        "tree": _normalize_tree(tree, normalized_full_text),
         "changes": [
             _pdf_hunk_to_canonical(h, i, diff.v1_anchors, diff.v2_anchors, line_offsets_v1, line_offsets_v2)
             for i, h in enumerate(diff.hunks)

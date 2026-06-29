@@ -189,12 +189,14 @@ def build_pdf_tree(anchors: Iterable[Anchor]) -> list[TreeNode]:
 
     Relies on ``breadcrumb_for``'s invariant that anchors are unique per
     (page, line) — it resolves position by value-equality ``.index()``. The
-    extractor guarantees this (one anchor per line, legacy path dedups); a
-    violation would still conserve every anchor (duplicates become distinct
-    content siblings) but could mis-nest the second one, which the id-based
-    conservation gate cannot catch. We don't re-assert it here, to keep a
-    malformed bill degrading to a mis-nest rather than a crashed report.
+    extractor guarantees this (one anchor per line, legacy path dedups). If a
+    future emitter broke it, the trie would mis-nest the colliding anchor; the
+    money derivation in ``canonical._pdf_tree_payload`` is independently hardened
+    against the collision (index-based ranges keyed by id) so it can't
+    double-count. We don't re-assert here, to keep a malformed bill degrading to
+    a mis-nest rather than a crashed report (anchors degrade, they don't gate).
     """
     anchors = list(anchors)
-    # PDF own_amounts attach in step 4 (block char-offsets), so () for now.
+    # own_amounts attach in canonical._pdf_tree_payload (it owns full_text + the
+    # per-line char offsets); the tree itself carries () here.
     return _build_tree((breadcrumb_for(a, anchors), a.kind, a, ()) for a in anchors)
