@@ -75,6 +75,37 @@ Grouping headers (`ADMINISTRATIVE PROVISIONS`, `GENERAL PROVISIONS`,
 
 "Agency vs account" (DeltaTrack#54) is **intermediate vs small** in this vocabulary.
 
+### Emitted `level` vocabulary (the canonical structure tree, #108)
+
+The leveled tree (`structure_tree.py`, exposed as the canonical `tree` field) labels
+every node with one `level` from a **shared 9-value enum** both pipelines map into, so
+the contract speaks one language and the renderer branches on data, not source
+(`schema/canonical-diff.schema.json` → `TreeNode.level`). The enum names are *budget
+roles*, not DTD tag names — note `Intermediate` (the tag) surfaces as the level
+`agency`. The two pipelines derive a level differently, and that asymmetry is real:
+
+| `level` | XML source (`_LEAF_LEVEL` / `_interior_level`) | PDF source (`AnchorKind`) |
+|---|---|---|
+| `division` | interior, synthesized from the `display_path` prefix | synthesized division root |
+| `title` | interior, synthesized (`TITLE <roman>`) | `title` anchor |
+| `major` | **leaf**, tag `appropriations-major` | `major` anchor |
+| `agency` | **leaf**, tag `appropriations-intermediate` | `agency` anchor |
+| `account` | **leaf**, tag `appropriations-small` (and the default) | `account` anchor |
+| `section` | **leaf**, tag `section` | `section` anchor |
+| `grouping` | — *(surfaces as `heading`; see below)* | `grouping` anchor |
+| `preamble` | **leaf**, tag `front-matter` | `preamble` anchor |
+| `heading` | interior fallback: any synthesized container that is not a division/title | — *(PDF anchors are always typed)* |
+
+The asymmetry to keep in mind: **XML interior levels are positional, not typed.** XML
+emits a standalone node only for nodes that carry a body (the leaf tags above); the
+department/agency/grouping *containers* above them have no node of their own (the
+"hierarchy is positional, not nested" fact above), so the tree synthesizes them from
+the `display_path` and labels them `heading` — including grouping headers, which on
+the **PDF** side are a typed `grouping` anchor. So `grouping` is PDF-only, `heading` is
+XML-only, and an agency/major that is a *synthesized container* (not a body-bearing
+leaf) is `heading` on XML but `agency`/`major` on PDF. The leaf levels
+(`major`/`agency`/`account`/`section`/`preamble`) and `division`/`title` agree on both.
+
 **Where these terms come from (two separate sources, do not conflate them):**
 
 - The **tag names** (`title`, `appropriations-*`, `section`, `enum`, `header`) are
