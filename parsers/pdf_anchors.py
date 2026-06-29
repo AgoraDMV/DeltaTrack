@@ -630,24 +630,27 @@ def _division_name(flat: list[tuple[int, "Line"]], idx: int) -> tuple[str, bool]
 def _detect_division_banners(flat: list[tuple[int, "Line"]]) -> list[tuple[int, str, str]]:  # noqa: F821
     """Real division starts as ``(flat_index, letter, name)`` in document order.
 
-    Keeps the first occurrence per letter whose name run is followed by content (a real
-    division start); rows that run straight into the next banner are the short-title
-    table of divisions and are skipped.
+    A big omnibus prints each ``DIVISION X—NAME`` TWICE: once in a front-matter table
+    of divisions, then again as the real banner above that division's content. Two
+    guards separate them, both validated on the corpus (incl. the 33-division FY22
+    omnibus, where every content anchor must resolve to its OWN division, not the
+    nearest front-matter table row):
+      - a row that runs straight into the next banner is a *consecutive* table entry
+        and is dropped (``ran_into_banner``); and
+      - when a letter still appears more than once (a table whose entries are separated
+        by their own wrapped names, so they don't abut), the LAST occurrence wins — the
+        front-matter table always precedes the real, content-bearing banners.
     """
-    real: list[tuple[int, str, str]] = []
-    seen: set[str] = set()
+    real: dict[str, tuple[int, str]] = {}  # letter -> (flat_index, name); last wins
     for i, (_page, line) in enumerate(flat):
         if not _is_division_banner(line.text):
             continue
         letter = _DIVISION_BANNER.match(line.text.strip()).group(1)
-        if letter in seen:
-            continue
         name, ran_into_banner = _division_name(flat, i)
         if ran_into_banner:
             continue
-        seen.add(letter)
-        real.append((i, letter, name))
-    return real
+        real[letter] = (i, name)
+    return sorted((i, letter, name) for letter, (i, name) in real.items())
 
 
 def _assign_divisions(anchors: list[Anchor], flat: list[tuple[int, "Line"]]) -> list[Anchor]:  # noqa: F821
