@@ -15,6 +15,7 @@ consumer (view_from_canonical) is tested via the adapter-contract suites
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -292,6 +293,38 @@ def test_pdf_major_breadcrumb_flows_into_canonical_path_without_schema_change():
     canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
     c = canonical["changes"][0]
     assert c["path"]["v2"] == [
+        "TITLE I",
+        "DEPARTMENTAL MANAGEMENT",
+        "MANAGEMENT DIRECTORATE",
+        "OPERATIONS AND SUPPORT",
+    ]
+    assert canonical["schema_version"] == SCHEMA_VERSION  # unchanged (still 1.2)
+
+
+def test_pdf_division_breadcrumb_flows_into_canonical_path_without_schema_change():
+    # #107 prepends the division as the leftmost breadcrumb segment for omnibus bills.
+    # Like #104/#105 this is just a deeper path array, so it flows through
+    # pdf_diff_to_canonical with NO converter change and NO schema_version bump.
+    div = "Division A: ENERGY AND WATER DEVELOPMENT AND RELATED AGENCIES APPROPRIATIONS ACT, 2019"
+    title = replace(TITLE_I, division=div)
+    major = replace(MAJOR, division=div)
+    agency = replace(AGENCY, division=div)
+    account = replace(ACCOUNT, division=div)
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=account,
+        v2_anchor=account,
+        v1_range=(1, 6, 1, 9),
+        v2_range=(1, 6, 1, 9),
+        v1_text="old",
+        v2_text="new",
+    )
+    anchors = (title, major, agency, account)
+    diff = PdfDiff(hunks=(hunk,), v1_anchors=anchors, v2_anchors=anchors)
+    canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
+    c = canonical["changes"][0]
+    assert c["path"]["v2"] == [
+        div,
         "TITLE I",
         "DEPARTMENTAL MANAGEMENT",
         "MANAGEMENT DIRECTORATE",
