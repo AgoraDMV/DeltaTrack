@@ -602,6 +602,12 @@ def _division_name(flat: list[tuple[int, "Line"]], idx: int) -> tuple[str, bool]
     year line is absorbed (the trailing ``…ACT,`` / ``2024`` split), and the run stops at
     the next banner, a TITLE/SEC heading, or body prose.
 
+    The run deliberately does NOT stop at a major/account heading (also all-caps), which
+    would otherwise be swallowed into the name. That is safe by structure: a division's
+    first child is always a TITLE (or, for a title-less division, a SEC/body line), and
+    each of those stops the run — so the name always closes before the first department
+    major. Corpus-confirmed (names exact across every parseable version).
+
     ``ran_into_banner`` is True when the run hit ANOTHER banner with no content between —
     the signature of a front-matter table-of-divisions row, which is not a real division
     start and is dropped by the caller.
