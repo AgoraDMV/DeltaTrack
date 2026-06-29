@@ -353,21 +353,25 @@ def _pdf_tree_payload(
     starts = [
         (off[0] if (off := side_offsets.get((a.page_number, a.line_number))) is not None else None) for a in ordered
     ]
-    # Per-anchor own block keyed by (page, line) — the breadcrumb_for uniqueness
-    # invariant guarantees that key is unique, so the tree nodes resolve cleanly.
-    block: dict[tuple[int, int], tuple[dict | None, tuple[int, ...]]] = {}
+    # Per-anchor own block, computed BY INDEX and keyed by id(anchor). Index-based
+    # ranges make the partition robust to two anchors sharing a (page, line): they
+    # get start_i == start_{i+1}, so all but the last collapse to an empty range
+    # rather than both inheriting one block — which would double-count, the #108
+    # prohibition. id() keeps colliding anchors distinct in the lookup. (The current
+    # corpus never collides — title/section/account/major detectors are size-disjoint
+    # — so this is a guard against a future anchor emitter, not an active path.)
+    block: dict[int, tuple[dict | None, tuple[int, ...]]] = {}
     for i, a in enumerate(ordered):
-        key = (a.page_number, a.line_number)
         start = starts[i]
         if start is None:
-            block[key] = (None, ())
+            block[id(a)] = (None, ())
             continue
         end = next((s for s in starts[i + 1 :] if s is not None), len(side_text))
-        block[key] = ({"start": start, "end": end}, tuple(extract_amounts(side_text[start:end])))
+        end = max(start, end)  # guard non-monotonic offsets (multi-column) → empty, never overlap
+        block[id(a)] = ({"start": start, "end": end}, tuple(extract_amounts(side_text[start:end])))
 
     def node_json(n: TreeNode) -> dict:
-        key = (n.source.page_number, n.source.line_number) if n.source is not None else None
-        span, own = block.get(key, (None, ()))
+        span, own = block.get(id(n.source), (None, ())) if n.source is not None else (None, ())
         return {
             "label": n.label,
             "level": n.level,

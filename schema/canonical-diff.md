@@ -17,8 +17,10 @@ Top-level field: `schema_version: "1.3"`.
   root `TreeNode`s; each node carries `label`, `level` (the shared GPO
   vocabulary), `own_amounts` (the dollar figures in its own block), a
   `full_text_span` into `full_text` (reference, never duplicated text), and
-  nested `children`. Requires `full_text` present (spans index into it). The
-  section TOC is derivable from it. Additive, backward compatible.
+  nested `children`. Requires `full_text` present (spans index into it). A
+  leveled TOC is derivable from it (the renderer still consumes the separate
+  `sections` jump-list today; absorbing it is a later step). Additive,
+  backward compatible.
 - **1.2** — Added optional `full_text_span: { v1, v2 } | null` field on
   each change object, locating the change's content inside `full_text.v1`
   and `full_text.v2` as character offsets. Renderers use it to project
@@ -104,8 +106,9 @@ A `TreeNode`:
 The tree is **per-side, independently built, not paired** — cross-version
 node pairing remains the diff engine's job (the `changes` array). A node may
 be both content and container (an account that holds sub-accounts has a
-`full_text_span`/`own_amounts` AND `children`). The section TOC is derivable
-from this tree (it absorbs the former side-channel jump-list).
+`full_text_span`/`own_amounts` AND `children`). A leveled section TOC is
+derivable from this tree; the renderer still reads the separate `sections`
+jump-list today, and folding it into the tree is a later step (#108 commit B).
 
 ### `bill`
 

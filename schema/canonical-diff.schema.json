@@ -40,7 +40,7 @@
           }
         }
       ],
-      "description": "Optional (v1.3+) per-side leveled structure tree (#108). Each side is an ordered list of root nodes. Requires full_text present (node spans index into it). Absorbs the section TOC: derivable from the tree."
+      "description": "Optional (v1.3+) per-side leveled structure tree (#108). Each side is an ordered list of root nodes. Requires full_text present (node spans index into it). A leveled TOC is derivable from the tree; the renderer still reads the separate sections jump-list today (folding it in is a later step)."
     },
     "generator": {
       "type": "object",

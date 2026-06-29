@@ -77,7 +77,29 @@ def test_node_spans_slice_their_own_text():
             f"{node['label']}: own_amounts not in its own span"
         )
         checked += 1
-    assert checked > 0  # the assertion actually ran on real nodes
+    assert checked > 0
+
+
+def test_synthesized_interior_nodes_span_their_heading_label():
+    # The other span branch in _xml_tree_payload: a synthesized interior node (no
+    # source element_id) is located by its heading-line offset and spans exactly
+    # its label. Slicing it must return the label verbatim — a regression in
+    # heading_offsets / line_starts would silently corrupt the span, and
+    # test_node_spans_slice_their_own_text never reaches this branch (it skips
+    # nodes without own_amounts). Interior nodes are exactly the synthesized levels
+    # (division/title/heading); leaf content nodes carry account/section/etc and a
+    # body span, so they're excluded here.
+    canonical, full_text = _canonical(_V1, _V2)
+    interior = {"division", "title", "heading"}
+    checked = 0
+    for node in _walk(canonical["tree"]["v2"]):
+        if node["level"] not in interior or not node["label"]:
+            continue
+        span = node["full_text_span"]
+        assert span is not None, f"{node['label']}: interior node lost its heading span"
+        assert full_text["v2"][span["start"] : span["end"]] == node["label"]
+        checked += 1
+    assert checked > 0  # the assertion actually ran on real interior nodes
 
 
 def test_tree_conserves_money_against_full_diff_amounts():
@@ -185,15 +207,19 @@ def test_pdf_tree_conserves_money_no_overcount_on_real_bill():
     jsonschema = pytest.importorskip("jsonschema")
     jsonschema.validate(canonical, json.loads(_SCHEMA.read_text()))
 
-    # No overcount: the per-node own_amounts are a sub-multiset of the amounts the
-    # parser extracts from the same full_text (front matter before the first anchor
-    # is the only allowed drop — bounded, documented).
+    # Conservation has two halves and BOTH are asserted (the over==0-only form
+    # would pass a regression that silently drops nearly all amounts):
+    #   - no overcount: per-node own_amounts ⊆ the parser's full_text amounts.
+    #   - no drop: every full_text amount lands in exactly one node's block. The
+    #     only structurally-allowed drop is $ in front matter BEFORE the first
+    #     anchor; this bill has none, so the union is exact on both sides.
     for side in ("v1", "v2"):
         tree_amounts: Counter = Counter()
         for n in _walk(canonical["tree"][side]):
             tree_amounts.update(n["own_amounts"])
         body_amounts = Counter(extract_amounts(canonical["full_text"][side]))
         assert sum((tree_amounts - body_amounts).values()) == 0, f"{side}: overcount"
+        assert sum((body_amounts - tree_amounts).values()) == 0, f"{side}: dropped amounts"
 
     checked = 0
     for n in _walk(canonical["tree"]["v2"]):
