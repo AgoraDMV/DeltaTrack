@@ -1,7 +1,7 @@
 ---
 name: Task / chore
 about: Internal work — tooling, refactor, docs, repo admin, validation
-labels: ''
+type: Task
 ---
 
 **What needs doing?**
