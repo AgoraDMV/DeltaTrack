@@ -236,14 +236,92 @@ def _build_toc(sections: list[dict]) -> str:
     return f'<div class="toc__title">Sections</div>{"".join(blocks)}'
 
 
-def _build_sidebar(view: DiffView, sections: list[dict] | None = None) -> str:
+def _walk_tree(nodes: list[dict]):
+    """Depth-first walk over canonical structure-tree nodes (#108)."""
+    for n in nodes:
+        yield n
+        yield from _walk_tree(n.get("children") or [])
+
+
+def _node_anchor_offset(full_text: str, node: dict) -> int | None:
+    """Char offset of the heading ROW a tree node should jump to.
+
+    A node's ``full_text_span`` locates its *content*: for an interior node that is
+    its own heading line, but for a content node (account/section) it's the body,
+    which sits below an own-line heading equal to the node's ``label``. To land the
+    TOC on the heading (matching the flat ``sections`` anchors and the PDF pipeline,
+    not one line into the body), resolve the anchor from the label:
+
+      - if the span's own line already starts with the label, it IS the heading;
+      - else jump to the nearest preceding line equal to the label (the own-line
+        heading the serializer emitted just above the body);
+      - else (e.g. a ``SEC. NN.`` run-in, whose label is the lowercased number and
+        never appears as a bare line) fall back to the span's line start — the
+        run-in line, which is the right anchor for a section.
+
+    Deriving from the label keeps this a renderer concern (no extra contract field)
+    and is robust to duplicate account names: the nearest preceding match wins.
+    """
+    span = node.get("full_text_span")
+    if not span:
+        return None
+    line_start = full_text.rfind("\n", 0, span["start"]) + 1
+    label = node.get("label") or ""
+    if not label or full_text.startswith(label, line_start):
+        return line_start
+    pos = full_text.rfind("\n" + label + "\n", 0, span["start"])
+    return pos + 1 if pos != -1 else line_start
+
+
+def _build_toc_from_tree(tree_nodes: list[dict], full_text: str) -> str:
+    """Leveled full-bill navigation built from the canonical structure tree (#108).
+
+    Renders the tree as arbitrary-depth nested ``<details>``, so the hierarchy
+    mirrors the bill (division > title > agency > account > section). Unlike the
+    former flat 2-level TOC, this is where the #155 fix becomes visible: an account
+    named "Title 17 …" nests under its agency instead of being promoted to a title
+    group, because the node's level is tag-derived, not inferred from its label
+    text. Each node links to its heading row in the full-bill view; groups are
+    collapsed by default.
+    """
+    if not tree_nodes:
+        return '<p class="toc-empty">No sections detected.</p>'
+
+    def link(node: dict) -> str:
+        off = _node_anchor_offset(full_text, node)
+        label = escape(node["label"])
+        return f'<a href="#fb-off-{off}">{label}</a>' if off is not None else f"<span>{label}</span>"
+
+    def render(node: dict) -> str:
+        kids = node.get("children") or []
+        if not (node.get("label") or "").strip():
+            # An unlabeled node (e.g. the XML front-matter placeholders — masthead,
+            # enacting clause — which carry no heading) makes no useful TOC entry;
+            # skip it but hoist any children so their subtree stays reachable. A
+            # proper labelled "Front Matter" group is tracked as a follow-up.
+            return "".join(render(k) for k in kids)
+        if not kids:
+            return f'<li class="toc-child">{link(node)}</li>'
+        inner = "".join(render(k) for k in kids)
+        return (
+            f'<li><details class="toc-group"><summary>{link(node)}</summary><ul class="toc">{inner}</ul></details></li>'
+        )
+
+    blocks = "".join(render(n) for n in tree_nodes)
+    return f'<div class="toc__title">Sections</div><ul class="toc toc--root">{blocks}</ul>'
+
+
+def _build_sidebar(view: DiffView, canonical: dict | None = None, sections: list[dict] | None = None) -> str:
     """Render the sidebar with both view variants inside one ``<nav>``.
 
     ``.sidebar-changes`` (filters + changes grouped by section) is shown in the
     Changes view; ``.sidebar-toc`` (full-bill section jump list) in the Full bill
-    view — the JS view toggle swaps them. The TOC variant is rendered only when
-    ``sections`` is provided (the PDF/full-bill path); ``None`` (XML/no full bill)
-    renders just the changes variant and the swap no-ops.
+    view — the JS view toggle swaps them. The TOC is built from ``canonical``'s
+    leveled structure tree when present (#108 — the renderer that surfaces the tree
+    in the contract; its anchors and nesting come from the same canonical the
+    full-bill view renders from, so they line up). It falls back to the flat
+    ``sections`` jump-list, and is omitted entirely (the swap no-ops) when neither
+    is available (XML/no full bill).
     """
     changes_pane = (
         '<div class="sidebar-changes">\n'
@@ -256,7 +334,15 @@ def _build_sidebar(view: DiffView, sections: list[dict] | None = None) -> str:
         f"{_build_change_groups(view)}\n"
         "</div>"
     )
-    toc_pane = "" if sections is None else f'<div class="sidebar-toc" hidden>{_build_toc(sections)}</div>'
+    tree_v2 = (canonical.get("tree") or {}).get("v2") if (canonical and canonical.get("tree")) else None
+    full_text_v2 = (canonical.get("full_text") or {}).get("v2") if canonical else None
+    if tree_v2 and full_text_v2:
+        toc_html = _build_toc_from_tree(tree_v2, full_text_v2)
+    elif sections is not None:
+        toc_html = _build_toc(sections)
+    else:
+        toc_html = None
+    toc_pane = "" if toc_html is None else f'<div class="sidebar-toc" hidden>{toc_html}</div>'
     return f'<nav class="sidebar">\n{changes_pane}\n{toc_pane}\n</nav>'
 
 
@@ -606,8 +692,19 @@ def _full_bill_html(canonical: dict, sections: list[dict] | None = None) -> str:
         cursor = end
     placed = len(marks)
 
-    # Heading char offset -> TOC index, so the heading's row gets id="sec-{i}".
-    sec_starts = {s["start"]: i for i, s in enumerate(sections or [])}
+    # Heading row char offset -> its DOM id, so the sidebar TOC can jump to it.
+    # Prefer the canonical structure tree (leveled, #155-correct anchors); fall
+    # back to the flat sections list when no tree is present (legacy / no full
+    # text). Both schemes are internally consistent with their matching TOC.
+    tree_v2 = (canonical.get("tree") or {}).get("v2") if canonical.get("tree") else None
+    if tree_v2:
+        row_ids: dict[int, str] = {}
+        for node in _walk_tree(tree_v2):
+            off = _node_anchor_offset(v2_text, node)
+            if off is not None:
+                row_ids.setdefault(off, f"fb-off-{off}")
+    else:
+        row_ids = {s["start"]: f"sec-{i}" for i, s in enumerate(sections or [])}
 
     guttered = _full_text_is_guttered(canonical)
     emitted_ids: set[str] = set()
@@ -618,8 +715,8 @@ def _full_bill_html(canonical: dict, sections: list[dict] | None = None) -> str:
             seen_page = row["page"]
             parts.append(f'<div class="fb-page">p. {seen_page}</div>')
         body = _render_fb_row_body(v2_text, row, marks, emitted_ids)
-        sid = sec_starts.get(row["raw_start"])
-        row_id = f' id="sec-{sid}"' if sid is not None else ""
+        anchor = row_ids.get(row["raw_start"])
+        row_id = f' id="{anchor}"' if anchor else ""
         if guttered:
             gutter = str(row["line"]) if row["line"] is not None else ""
             parts.append(
@@ -785,6 +882,10 @@ def format_diff_html(
         heading = "Bill Comparison"
         doc_title = "Bill Comparison — Diff"
     data_script = _embed_canonical(canonical) if canonical else ""
+    # The TOC/full-bill anchors must come from the same canonical the full-bill view
+    # renders from (display_canonical when given), so their offsets line up.
+    sidebar_canonical = (display_canonical or canonical) if _has_full_bill(canonical) else None
+    sidebar = _build_sidebar(view, sidebar_canonical, sections if _has_full_bill(canonical) else None)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -798,7 +899,7 @@ def format_diff_html(
 <body>
 <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar" title="Toggle sidebar">&#9776;</button>
 <div class="layout">
-{_build_sidebar(view, sections if _has_full_bill(canonical) else None)}
+{sidebar}
 <div class="main">
 <div class="report-header">
 <h1>{heading}</h1>
@@ -1081,13 +1182,16 @@ mark.find-hit--current { background: var(--gold); color: #fff; }
 .financial-callout .delta.increase { color: var(--success); font-weight: 600; }
 
 /* Nav targets clear the sticky action bar when scrolled to via Prev/Next */
-.change-card, .full-bill [id^="attr-"], .full-bill [id^="sec-"], .removed-block { scroll-margin-top: 64px; }
+.change-card, .full-bill [id^="attr-"], .full-bill [id^="sec-"], .full-bill [id^="fb-off-"],
+.removed-block { scroll-margin-top: 64px; }
 
 /* Full-bill section TOC (sidebar variant) */
 .sidebar-changes[hidden], .sidebar-toc[hidden] { display: none; }
 .toc__title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--muted-foreground); margin-bottom: 8px; font-weight: 600; }
 .toc { list-style: none; }
+.toc--root { margin: 0; padding: 0; }
+.toc li { list-style: none; }
 .toc-group { margin-bottom: 2px; }
 .toc-group > summary { cursor: pointer; padding: 6px 8px; border-radius: var(--radius);
   font-size: 13px; font-weight: 600; color: var(--foreground); list-style: none;
