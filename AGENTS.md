@@ -22,11 +22,20 @@ This repo follows the workflow in [CONTRIBUTING.md](CONTRIBUTING.md). The load-b
 - **Link the issue in the PR** body with `Closes #<n>` so the issue and its board card resolve on merge.
 - **Before pushing, run the CI gates locally** (lint, `ruff format --check`, fast, browser, external-validation) -- see CONTRIBUTING's "What CI checks." `ruff check` is not covered by the pre-commit format hook, so run it explicitly.
 
+### Sprints (biweekly, theme-driven)
+
+The team meets in person every two weeks (Wednesdays); that meeting is the only ceremony — it grooms critical issues to `Ready`, assigns them, and sets a **theme** for the cycle ("this sprint: get the demo out"). This is Scrumban, not strict Scrum: no frozen commitment, no point capacity. Critical work is committed by judgment; other `Ready` work is fair to pull as bonus.
+
+- **The `Sprint` iteration field** is the two-week container (14-day, Wednesday-aligned blocks). The current iteration's **title carries the theme** (rename `Sprint N` → e.g. `Demo out`), so it rides on every card and is API-readable.
+- **"Committed this sprint" = `Sprint` set to the current iteration + Status `Ready`.** There is no separate commit flag.
+- **Work the `Current sprint` view** (`iteration:@current`) first; `Ready` items with no iteration are the bonus pool.
+
 ### Filing and grooming issues
 
 - **File with a template** (bug / feature / task). Keep *reporting* lean — for a bug, a way to reproduce is the highest-value thing. Don't pre-scope or pre-size; that's the grooming step.
 - **Grooming makes an issue pickup-ready** (the `Backlog → Ready` move): add acceptance criteria, scope, where-to-start, and set **Priority**. See CONTRIBUTING's "Grooming an issue for pickup."
 - **Priority and Effort are org-level issue fields**, not labels: Priority = Urgent / High / Medium / Low (single source of truth — don't reintroduce priority labels); Effort = High / Medium / Low, optional and not a current focus.
+- **Reading/writing board fields by script.** Status and `Sprint` are project fields — read via `gh project item-list` or the project GraphQL query, write with `updateProjectV2ItemFieldValue`. **Priority and Effort live on the issue, not the project item** — read them from `gh api /repos/AgoraDMV/DeltaTrack/issues/<n>/issue-field-values` (or GraphQL `issue.issueFieldValues`) and write with `setIssueFieldValue` using the option's **node** id; they do *not* surface in the project item query even though they group on the board. View filters, grouping, and charts are UI-only — don't try to script them.
 - **Watch for security-sensitive work.** Anything touching the public/deployed surface (e.g. `server/`, `/api/compare`) gets the `security` label and a hard look — that's the one outward-facing, abusable part of the project.
 - **Epics** carry the `epic` label and are decomposed into native **sub-issues**; the parent's progress bar is its status. Pick up the sub-issues, not the epic. An epic stays open until all its sub-issues close, then a maintainer closes it by hand (the parent does not auto-close). Epics live on the Roadmap view and are filtered off the working board.
 
