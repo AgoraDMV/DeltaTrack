@@ -17,7 +17,12 @@ from bill_tree import _extract_appropriations_text, find_bill_body, normalize_bi
 pytestmark = pytest.mark.slow
 
 BILLS_DIR = Path(__file__).parent.parent / "bills"
-ALL_XML_FILES = sorted(BILLS_DIR.glob("**/*.xml"))
+# Corpus bill-version files are `bills/<congress>-<chamber>-<num>/<n>_<stage>.xml`
+# (e.g. `2_engrossed-in-house.xml`). Scope to that naming rather than a recursive
+# `**/*.xml`: any other XML dropped under bills/ — e.g. govinfo BILLSTATUS metadata,
+# which is XML but not a bill document — would otherwise become thousands of failing
+# parametrized cases. bills/ is gitignored, so such strays are invisible to git.
+ALL_XML_FILES = sorted(BILLS_DIR.glob("*/[0-9]*_*.xml"))
 DOLLAR_RE = re.compile(r"\$[\d,]+")
 
 # Tags whose subtrees should be excluded from raw text collection.
