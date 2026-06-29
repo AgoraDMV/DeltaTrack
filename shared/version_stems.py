@@ -1,8 +1,10 @@
-"""Parse version-prefixed bill filename stems (e.g. ``1_reported-in-house``).
+"""Resolve version-prefixed bill filename stems (e.g. ``1_reported-in-house``).
 
-Transitional: the on-disk convention is ``<n>_<label>.{xml,pdf}``. If downloaded
-filenames move to the slug convention (``119-hr-1:2``), prefer
-``bill_index.parse_bill_id`` and retire these helpers.
+The on-disk convention is ``<n>_<label>.{xml,pdf}`` inside a ``{congress}-{type}-{number}``
+bill folder, where ``<n>`` is the 1-indexed legislative order and ``<label>`` is the
+readable stage. A version's number and meaning are **per-bill**, not universal
+(ADR 0013), so these helpers resolve a bill slug + ordinal ``n`` to its readable version
+file. The readable labels stay; filenames are not migrated to a slug form.
 """
 
 from __future__ import annotations
