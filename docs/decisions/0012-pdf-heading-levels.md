@@ -1,6 +1,6 @@
 # 12. Recover PDF heading levels from deterministic geometry; accept the prose-leading agency gap
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-06-28
 
 ## Context
