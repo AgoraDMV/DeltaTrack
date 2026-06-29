@@ -33,11 +33,12 @@ The team meets in person every two weeks (Wednesdays); that meeting is the only 
 ### Filing and grooming issues
 
 - **File with a template** (bug / feature / task). Keep *reporting* lean — for a bug, a way to reproduce is the highest-value thing. Don't pre-scope or pre-size; that's the grooming step.
+- **Kind is the issue type** (Bug / Feature / Task), not a label — the template sets it. Type is single-select (a thing is one kind); labels are for cross-cutting attributes that stack (`security`, `blocked`, `epic`, `testing`, `good first issue`). Don't reintroduce `bug`/`enhancement` labels.
 - **Grooming makes an issue pickup-ready** (the `Backlog → Ready` move): add acceptance criteria, scope, where-to-start, and set **Priority**. See CONTRIBUTING's "Grooming an issue for pickup."
 - **Priority and Effort are org-level issue fields**, not labels: Priority = Urgent / High / Medium / Low (single source of truth — don't reintroduce priority labels); Effort = High / Medium / Low, optional and not a current focus.
 - **Reading/writing board fields by script.** Status and `Sprint` are project fields — read via `gh project item-list` or the project GraphQL query, write with `updateProjectV2ItemFieldValue`. **Priority and Effort live on the issue, not the project item** — read them from `gh api /repos/AgoraDMV/DeltaTrack/issues/<n>/issue-field-values` (or GraphQL `issue.issueFieldValues`) and write with `setIssueFieldValue` using the option's **node** id; they do *not* surface in the project item query even though they group on the board. View filters, grouping, and charts are UI-only — don't try to script them.
 - **Watch for security-sensitive work.** Anything touching the public/deployed surface (e.g. `server/`, `/api/compare`) gets the `security` label and a hard look — that's the one outward-facing, abusable part of the project.
-- **Epics** carry the `epic` label and are decomposed into native **sub-issues**; the parent's progress bar is its status. Pick up the sub-issues, not the epic. An epic stays open until all its sub-issues close, then a maintainer closes it by hand (the parent does not auto-close). Epics live on the Roadmap view and are filtered off the working board.
+- **Epics** carry the `epic` label and stay **untyped** (no issue type) until the org-level `Epic` type exists (#127); they are decomposed into native **sub-issues**; the parent's progress bar is its status. Pick up the sub-issues, not the epic. An epic stays open until all its sub-issues close, then a maintainer closes it by hand (the parent does not auto-close). Epics live on the Roadmap view and are filtered off the working board.
 
 ## Key architecture concepts
 
