@@ -345,12 +345,16 @@ class TestMajorLevelAcrossSubcommittees:
         "transportation-hud": "DEPARTMENT OF HOUSING AND URBAN DEVELOPMENT",
     }
 
-    # Documented residue (DeltaTrack#105): titles with two DISTINCT stacked body-size
-    # header levels are mashed by the greedy join (size+casing can't split them; needs
-    # the geometric signal in #106). Asserted STRUCTURALLY (some single major contains
-    # both component substrings) so the residue is tracked but survives cosmetic
-    # join-spacing changes; it flips only when the geometric split actually lands.
-    STACK_RESIDUE_COMPONENTS = {
+    # Titles with two DISTINCT stacked body-size headings. The greedy join used to mash
+    # each pair into one major (size+casing can't split them); the line-fullness split
+    # (DeltaTrack#130, signal from spike #106) now separates them. Each component is a
+    # substring of the major it belongs to: for the three full-resolve bills a/b become
+    # exactly two majors; for state-foreign-ops the upper line is the within-line
+    # compound "DEPARTMENT OF STATE AND RELATED AGENCY" (no geometry can split a single
+    # printed line further), so "RELATED AGENCY" rides in that major and "DEPARTMENT OF
+    # STATE" is the second — still two different majors. The assertion (no single major
+    # carries both) holds for all four and survives cosmetic join-spacing changes.
+    STACKED_HEADER_SPLITS = {
         "energy-water": ("CORPS OF ENGINEERS", "DEPARTMENT OF THE ARMY"),
         "interior": ("RELATED AGENCIES", "DEPARTMENT OF AGRICULTURE"),
         "legislative-branch": ("LEGISLATIVE BRANCH", "HOUSE OF REPRESENTATIVES"),
@@ -364,16 +368,27 @@ class TestMajorLevelAcrossSubcommittees:
             pytest.skip(f"{subc} fixture not present (run scripts/fetch_test_assets.py)")
         assert self.SIGNATURE_MAJORS[subc] in _pdf_major_texts(pdf)
 
-    @pytest.mark.parametrize("subc", sorted(STACK_RESIDUE_COMPONENTS))
-    def test_stacked_header_residue_pinned(self, subc: str):
-        # Two distinct headers mashed into one major (documents the residue; flips when
-        # the geometric split #106 lands and they become two separate majors).
+    @pytest.mark.parametrize("subc", sorted(STACKED_HEADER_SPLITS))
+    def test_stacked_headers_split(self, subc: str):
+        # The line-fullness split (#130) separates two stacked headings that the greedy
+        # join previously mashed: they no longer share one major, and neither component
+        # was dropped. (Was test_stacked_header_residue_pinned, asserting the mash;
+        # flipped when the geometric split landed.)
         pdf = SUBCOMMITTEE_FIXTURES[subc]
         if not pdf.exists():
             pytest.skip(f"{subc} fixture not present")
-        a, b = self.STACK_RESIDUE_COMPONENTS[subc]
+        a, b = self.STACKED_HEADER_SPLITS[subc]
         majors = _pdf_major_texts(pdf)
-        assert any(a in m and b in m for m in majors), f"expected {a!r}+{b!r} mashed in one major; got {majors}"
+        assert any(a in m for m in majors) and any(b in m for m in majors), (
+            f"a split component went missing; got {majors}"
+        )
+        # The two components now span ≥2 distinct majors. Was 1 (the mashed major) under
+        # the greedy join. A substring "both in one major" test can't be used here:
+        # sfops' within-line compound "DEPARTMENT OF STATE AND RELATED AGENCY" really
+        # does contain both components on its single upper line, yet the split is correct
+        # ("DEPARTMENT OF STATE" peels off as its own second major).
+        covering = {m for m in majors if a in m or b in m}
+        assert len(covering) >= 2, f"{a!r}/{b!r} still mashed in one major; got {majors}"
 
     @pytest.mark.parametrize("subc", sorted(SUBCOMMITTEE_FIXTURES))
     def test_major_vocab_matches_golden(self, subc: str):

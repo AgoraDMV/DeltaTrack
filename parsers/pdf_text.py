@@ -62,6 +62,24 @@ _WATERMARK_AND_BELOW = re.compile(r"\n?\S+ on DSK\S*PROD with .*\Z", re.DOTALL)
 
 
 @dataclass(frozen=True)
+class LineGeom:
+    """Horizontal extent (points, page space) of a numbered line's content glyphs,
+    margin number excluded. Recovered in the same char walk as `glyph_size`, so it
+    costs no extra PDFium calls (#130).
+
+    `content_left`/`content_right` bound the printed text (the line's left edge and
+    its rightmost glyph). `first_word_right` is the right edge of the FIRST word,
+    used by the major detector's line-fullness split: a heading line that broke
+    before its column filled is a hard break between two stacked headings, not a
+    soft wrap of one name.
+    """
+
+    content_left: float
+    content_right: float
+    first_word_right: float
+
+
+@dataclass(frozen=True)
 class Line:
     line_number: int | None  # 1-based source PDF line number; None if unnumbered
     text: str  # cleaned line content (line-number prefix stripped)
@@ -70,6 +88,10 @@ class Line:
     # match for this line number). Filled post-merge by extract_clean_pages; the
     # string pipeline leaves it None. Used for size-based heading segmentation (#89).
     glyph_size: float | None = None
+    # Horizontal content extent for this line (#130), or None when no geometry was
+    # attached (same cases as glyph_size). Filled post-merge from the same sidecar;
+    # used by the major detector's stacked-vs-wrapped line-fullness split.
+    geom: "LineGeom | None" = None
 
 
 @dataclass(frozen=True)
@@ -322,14 +344,41 @@ def _line_text(cluster: list[tuple[float, float, float, int, float]]) -> str:
     return re.sub(r" +", " ", "".join(out)).strip()
 
 
-def _page_glyph_sizes(textpage, page_text: str) -> dict[int, float]:
-    """Map GPO margin line number → representative recovered glyph size for one page.
+def _first_word_right(content_glyphs: list[tuple[float, float, float, int, float]]) -> float | None:
+    """Right x-edge of the FIRST word in a line's content glyphs (margin number
+    already stripped), or None if there are no content glyphs. `content_glyphs` is
+    `(bottom, left, right, cp, size)` tuples in left-to-right x order.
+
+    A word boundary is the first SPACE GLYPH (cp == 32) or, as a fallback, an x-gap
+    wider than SPACE_FACTOR × size. The space-glyph test is load-bearing: PDFium
+    emits real space glyphs that sit IN the inter-word gap, so the gap between the
+    last glyph of word one and the first of word two is bridged — a gap-only test
+    never fires and silently returns the whole line as one word (this bit the #106
+    spike; #130). Leading space glyphs are skipped so the first real word is found.
+    """
+    first_word_right: float | None = None
+    prev_right: float | None = None
+    for _bottom, left, right, cp, size in content_glyphs:
+        if cp == 32:  # real space glyph ⇒ end of the first word
+            if first_word_right is None:
+                continue  # leading space before any word; skip it
+            break
+        if prev_right is not None and left - prev_right > _SPACE_FACTOR * size:
+            break  # fallback: wide x-gap with no emitted space glyph
+        first_word_right = right
+        prev_right = right
+    return first_word_right
+
+
+def _page_glyph_sizes(textpage, page_text: str) -> dict[int, tuple[float, LineGeom]]:
+    """Map GPO margin line number → `(glyph size, horizontal extent)` for one page.
 
     Walks raw chars, clusters into visual lines by baseline, reconstructs each
     line's text, reads its margin number via `_NUMBERED_LINE`, and takes the median
-    size over the line's *content* glyphs (after the margin number). Returns {} for
-    an empty/failed page. On an intra-page duplicate line number the entry is
-    dropped (ambiguous), never overwritten.
+    size over the line's *content* glyphs (after the margin number). The same content
+    glyphs yield the `LineGeom` extent (left/right edge + first-word right edge, #130)
+    at no extra PDFium cost. Returns {} for an empty/failed page. On an intra-page
+    duplicate line number the entry is dropped (ambiguous), never overwritten.
 
     `page_text` is the caller's `textpage.get_text_range()` result, passed in so the
     page text is extracted once and shared with the string pipeline rather than
@@ -384,7 +433,7 @@ def _page_glyph_sizes(textpage, page_text: str) -> dict[int, float]:
         chars.append((bottom, left, right, cp, size))
     if not chars:
         return {}
-    sizes: dict[int, float] = {}
+    sizes: dict[int, tuple[float, LineGeom]] = {}
     ambiguous: set[int] = set()
     for cluster in _cluster_baselines(chars):
         # Drop far-smaller outlier glyphs: a printed line is one uniform size, so a
@@ -401,18 +450,44 @@ def _page_glyph_sizes(textpage, page_text: str) -> dict[int, float]:
             continue
         line_number = int(m.group(1))
         content = m.group(2)
-        # content glyph sizes: the chars after the margin number, by x order
+        # content glyphs: the chars after the margin number, by x order (includes the
+        # real space glyphs PDFium emits between words — needed for the geometry below).
         n_margin = len(m.group(1))
-        content_sizes = [c[4] for c in sorted(kept, key=lambda c: c[1])][n_margin:]
+        content_glyphs = sorted(kept, key=lambda c: c[1])[n_margin:]
+        content_sizes = [c[4] for c in content_glyphs]
         content_sizes = content_sizes[: len(content.replace(" ", ""))] or content_sizes
         if not content_sizes:
             continue
+        # Horizontal extent (#130) over the non-space content glyphs; first-word edge
+        # over all of them (it must SEE the space glyphs to find the word boundary).
+        printed = [c for c in content_glyphs if c[3] != 32]
+        if not printed:
+            continue
+        content_left = printed[0][1]
+        content_right = max(c[2] for c in printed)
+        # `printed` is non-empty ⇒ content_glyphs holds a non-space ⇒ _first_word_right
+        # finds it ⇒ never None here (it only returns None on no content glyphs at all).
+        first_word_right = _first_word_right(content_glyphs)
+        assert first_word_right is not None
+        geom = LineGeom(content_left, content_right, first_word_right)
         if line_number in sizes or line_number in ambiguous:
             ambiguous.add(line_number)
             sizes.pop(line_number, None)
             continue
-        sizes[line_number] = round(statistics.median(content_sizes), 1)
+        sizes[line_number] = (round(statistics.median(content_sizes), 1), geom)
     return sizes
+
+
+def _attach_geometry(ln: Line, line_sizes: dict[int, tuple[float, LineGeom]]) -> Line:
+    """Attach a merged line's `(glyph_size, geom)` sidecar entry, keyed by line number.
+    Unnumbered lines and numbers absent from the sidecar (ambiguous/failed) get None."""
+    if ln.line_number is None:
+        return ln
+    hit = line_sizes.get(ln.line_number)
+    if hit is None:
+        return replace(ln, glyph_size=None, geom=None)
+    size, geom = hit
+    return replace(ln, glyph_size=size, geom=geom)
 
 
 def extract_clean_pages(pdf_path: Path) -> list[Page]:
@@ -434,10 +509,7 @@ def extract_clean_pages(pdf_path: Path) -> list[Page]:
             chrome_stripped = strip_page_chrome(normalize_raw(raw))
             print_lines = _parse_print_lines(chrome_stripped)
             merged, ranges = _merge_print_lines(print_lines)
-            merged = [
-                ln if ln.line_number is None else replace(ln, glyph_size=line_sizes.get(ln.line_number))
-                for ln in merged
-            ]
+            merged = [_attach_geometry(ln, line_sizes) for ln in merged]
             pages.append(Page(i + 1, tuple(merged), tuple(print_lines), tuple(ranges)))
         return pages
     finally:
