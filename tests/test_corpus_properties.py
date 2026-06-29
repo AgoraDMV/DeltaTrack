@@ -128,7 +128,12 @@ def test_every_dollar_amount_appears_in_a_node(xml_path: Path) -> None:
 # Values are the current duplicate counts. Files not listed must have zero duplicates.
 _KNOWN_DUPLICATE_COUNTS: dict[str, int] = {
     "113-hr-3547/5_engrossed-amendment-house.xml": 150,
-    "113-hr-3547/6_enrolled-bill.xml": 73,
+    # Enrolled has 12 divisions whose later titles spill out as orphan <title>
+    # siblings. Walking them (#146) surfaces genuine cross-division collisions
+    # (general provisions, same-named bureaus across divisions) on division-stripped
+    # match_paths — now matching the engrossed-amendment version's 150 (was 73 when
+    # the orphan titles were silently dropped). Real source structure, not a bug.
+    "113-hr-3547/6_enrolled-bill.xml": 150,
     "113-hr-83/6_engrossed-amendment-house.xml": 112,
     "113-hr-83/7_enrolled-bill.xml": 112,
     "114-hr-2029/6_engrossed-amendment-house.xml": 156,
