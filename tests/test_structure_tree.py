@@ -8,11 +8,20 @@ in normalize_bill (#154), so by the time build_xml_tree sees a node its
 display_path already carries the right division prefix.
 """
 
+import xml.etree.ElementTree as ET
+from collections import Counter
 from pathlib import Path
 
 import pytest
 
-from bill_tree import BillNode, BillTree, normalize_bill
+from bill_tree import (
+    BillNode,
+    BillTree,
+    extract_text_content,
+    find_bill_body,
+    normalize_bill,
+)
+from diff_bill import extract_amounts
 from parsers.pdf_anchors import Anchor
 from structure_tree import TreeNode, build_pdf_tree, build_xml_tree
 
@@ -290,3 +299,64 @@ def test_pdf_real_bill_conserves_and_is_leveled():
     # The clean bill resolves the full leveled depth via typed anchors.
     levels_seen = {c.level for c in content}
     assert {"title", "major", "agency", "account"} <= levels_seen
+
+
+# --- The money conservation gate (XML, strong): the union of per-node own_amounts
+# measured against the INDEPENDENT raw-XML body (not the derived full_text, which
+# is built from the same nodes — feedback_measure_at_consumed_output). over==0
+# everywhere proves no parent/child double-count; dropped is exact on clean bills
+# and a documented tolerant residue on the hard amendment/omnibus shapes
+# (feedback_validate_against_hard_fixture). PDF has no independent ground truth, so
+# its span-coverage check rides on step 4's offsets, not this gate. ---
+
+_HR83_AMEND = Path("bills/113-hr-83/6_engrossed-amendment-house.xml")
+
+# (path, max_dropped, why)
+_CONSERVATION_FIXTURES = [
+    (_CLEAN, 0, "clean bill — exact"),
+    (_BOTH_SHAPES, 0, "both-shapes enrolled (#146 fix) — exact"),
+    (_OMNIBUS, 1, "omnibus — 1 documented residue; cross-division same-name agencies must not double-count"),
+    (_HR83_AMEND, 4, "amendment doc — 4 documented residue (deeply nested clause edge)"),
+]
+
+
+def _tree_own_amount_counter(roots: list[TreeNode]) -> Counter:
+    c: Counter = Counter()
+
+    def walk(n: TreeNode) -> None:
+        c.update(n.own_amounts)
+        for ch in n.children:
+            walk(ch)
+
+    for r in roots:
+        walk(r)
+    return c
+
+
+def _raw_body_amount_counter(xml_path: Path) -> Counter:
+    """Independent reference: amounts in the raw XML body, parsed directly — NOT
+    via the tree's nodes — so the gate can't tautologically pass over dropped money."""
+    body = find_bill_body(ET.parse(xml_path).getroot())
+    return Counter(extract_amounts(extract_text_content(body)))
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    "path,max_dropped,why",
+    _CONSERVATION_FIXTURES,
+    ids=[p.parent.name for p, _, _ in _CONSERVATION_FIXTURES],
+)
+def test_money_conservation_no_overcount_bounded_drops(path: Path, max_dropped: int, why: str):
+    if not path.exists():
+        pytest.skip("bill corpus not present (fetch_bills.py)")
+    tree_amounts = _tree_own_amount_counter(build_xml_tree(normalize_bill(path)))
+    raw_amounts = _raw_body_amount_counter(path)
+
+    over = sum((tree_amounts - raw_amounts).values())
+    dropped = sum((raw_amounts - tree_amounts).values())
+
+    # Strong invariant everywhere: the tree never over-counts (no node attaches an
+    # amount twice; appropriations-* are flat siblings, so no parent/child sum).
+    assert over == 0, f"{why}: tree over-counts {over} amount(s) — double-count"
+    # Exact on clean bills; tolerant documented floor on hard shapes.
+    assert dropped <= max_dropped, f"{why}: dropped {dropped} > documented {max_dropped}"

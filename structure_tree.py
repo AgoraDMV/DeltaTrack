@@ -32,6 +32,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 
 from bill_tree import BillNode, BillTree
+from diff_bill import extract_amounts
 from parsers.pdf_anchors import Anchor, breadcrumb_for
 
 # Leaf level from the XML tag — typed and reliable (docs/bill-structure.md glossary).
@@ -87,9 +88,19 @@ class TreeNode:
     source: BillNode | Anchor | None = None
     """The flat node when this path carries content; ``None`` for a pure container."""
 
+    own_amounts: tuple[int, ...] = ()
+    """Dollar amounts in THIS node's own block only (never its children's) — the
+    figures pinned to this block. XML: extracted from the node's display_text. The
+    union over all content nodes conserves the bill's amounts exactly (the money
+    gate). PDF own_amounts attach in step 4, where block char-offsets exist; until
+    then PDF nodes carry ()."""
 
-def _build_tree(items: Iterable[tuple[tuple[str, ...], str, object]]) -> list[TreeNode]:
-    """Shared trie builder over ``(path, level, source)`` items in document order.
+
+def _build_tree(
+    items: Iterable[tuple[tuple[str, ...], str, object, tuple[int, ...]]],
+) -> list[TreeNode]:
+    """Shared trie builder over ``(path, level, source, own_amounts)`` items in
+    document order.
 
     Each path prefix that has no item of its own becomes a synthesized interior
     node (``source is None``, positional level). An item whose path was already
@@ -114,19 +125,20 @@ def _build_tree(items: Iterable[tuple[tuple[str, ...], str, object]]) -> list[Tr
             ensure_interior(path[:-1]).children.append(node)
         return node
 
-    for path, level, source in items:
+    for path, level, source, own_amounts in items:
         if not path:
             # Empty-path content (front matter, body-level "Sec. 1"): a top-level leaf.
-            roots.append(TreeNode(label="", level=level, display_path=path, source=source))
+            roots.append(TreeNode(label="", level=level, display_path=path, source=source, own_amounts=own_amounts))
             continue
 
         existing = by_path.get(path)
         if existing is not None and existing.source is None:
             existing.source = source
             existing.level = level
+            existing.own_amounts = own_amounts
             continue
 
-        leaf = TreeNode(label=path[-1], level=level, display_path=path, source=source)
+        leaf = TreeNode(label=path[-1], level=level, display_path=path, source=source, own_amounts=own_amounts)
         if len(path) == 1:
             roots.append(leaf)
         else:
@@ -144,8 +156,18 @@ def build_xml_tree(bill: BillTree) -> list[TreeNode]:
     Returns the ordered top-level nodes (divisions, or bare titles for a
     no-division bill, plus any empty-path front-matter/preamble leaves). Leaf
     level comes from the XML tag; interior structure from display_path nesting.
+    ``own_amounts`` come from each node's display_text (the locked decision: NOT
+    the lossy body_text — display_text keeps trailing content body_text drops).
     """
-    return _build_tree((n.display_path, _leaf_level(n.tag), n) for n in bill.nodes)
+    return _build_tree(
+        (
+            n.display_path,
+            _leaf_level(n.tag),
+            n,
+            extract_amounts(n.display_text or n.body_text),
+        )
+        for n in bill.nodes
+    )
 
 
 def build_pdf_tree(anchors: Iterable[Anchor]) -> list[TreeNode]:
@@ -160,4 +182,5 @@ def build_pdf_tree(anchors: Iterable[Anchor]) -> list[TreeNode]:
     shallow. An empty anchor list yields an empty tree.
     """
     anchors = list(anchors)
-    return _build_tree((breadcrumb_for(a, anchors), a.kind, a) for a in anchors)
+    # PDF own_amounts attach in step 4 (block char-offsets), so () for now.
+    return _build_tree((breadcrumb_for(a, anchors), a.kind, a, ()) for a in anchors)
