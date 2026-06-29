@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import re
 import statistics
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal
 
 from parsers.pdf_text import Page, parse_lines, strip_page_chrome
@@ -32,6 +32,13 @@ class Anchor:
     # like "MANAGEMENT DIRECTORATE" (one agency spanning >=2 accounts — #104). An
     # agency whose name wraps across heading lines is joined into one text.
     text: str
+    # Division label for omnibus/minibus bills (DeltaTrack#107), e.g.
+    # "Division A: ENERGY AND WATER DEVELOPMENT…". A DISPLAY field only — it is
+    # prepended as the leftmost breadcrumb segment but never enters block matching
+    # (mirroring the XML `division_label`, which sits in display_path, not match_path,
+    # so a bill that gains/loses division wrappers across versions still aligns).
+    # Empty on single-division bills, leaving all existing behavior unchanged.
+    division: str = ""
 
 
 @dataclass(frozen=True)
@@ -93,6 +100,17 @@ _WRAP_HYPHENS = ("-", "‐", "‑")
 # so they are not knife-edge. column_width is measured per document from body prose.
 _MAJOR_SPLIT_SPACE = 6.0  # pt — one inter-word space at body size
 _MAJOR_SPLIT_SLACK = 4.0  # pt — guard band for per-line edge wobble
+
+# Division banner (DeltaTrack#107): the all-caps "DIVISION A—<NAME>" heading that opens
+# each act in an omnibus/minibus. Case-SENSITIVE and em-dash-required so running prose
+# ("division C of this Act", "Division Engineers") is never mistaken for a banner — the
+# discriminator is validated across the corpus (3/7/…/33 divisions, zero false hits).
+_DIVISION_BANNER = re.compile(r"^DIVISION\s+([A-Z]+)\s*[—–]")
+# The division name commonly breaks its trailing year onto its own line; a digits-only
+# line is not an uppercase heading, so the name run needs this explicit year-token
+# continuation. Strict (exactly four digits, optional comma) so a body line that merely
+# opens with a number is not swallowed.
+_YEAR_TOKEN = re.compile(r"^\d{4},?$")
 
 
 def _dangles(text: str) -> bool:
@@ -563,12 +581,112 @@ def _major_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
     return anchors
 
 
+def _is_division_banner(text: str) -> bool:
+    """A real division banner: a case-sensitive all-caps ``DIVISION A—…`` heading.
+
+    Both gates matter: ``_DIVISION_BANNER`` rejects lowercase/mixed-case prose
+    references (``division C of this Act``, ``Division Engineers``), and
+    ``_is_uppercase_heading`` rejects any line carrying lowercase, so only the
+    standalone banner survives.
+    """
+    t = text.strip()
+    return bool(_DIVISION_BANNER.match(t)) and _is_uppercase_heading(t)
+
+
+def _division_name(flat: list[tuple[int, "Line"]], idx: int) -> tuple[str, bool]:  # noqa: F821 - Line via pdf_text
+    """Join a banner's (possibly wrapped) name; return ``(name, ran_into_banner)``.
+
+    The name is the text after the em-dash, continued across following heading lines:
+    an UPPERCASE soft-wrap is de-hyphenated (``APPROPRIA-`` + ``TIONS`` → ``APPROPRIATIONS``;
+    the lowercase-only ``rejoin_soft_hyphens`` never fires on these), a bare four-digit
+    year line is absorbed (the trailing ``…ACT,`` / ``2024`` split), and the run stops at
+    the next banner, a TITLE/SEC heading, or body prose.
+
+    ``ran_into_banner`` is True when the run hit ANOTHER banner with no content between —
+    the signature of a front-matter table-of-divisions row, which is not a real division
+    start and is dropped by the caller.
+    """
+    head = re.split(r"[—–]", flat[idx][1].text.strip(), maxsplit=1)
+    name = head[1].strip() if len(head) == 2 else ""
+    j = idx + 1
+    while j < len(flat):
+        t = flat[j][1].text.strip()
+        if not t:
+            j += 1
+            continue
+        if _is_division_banner(t):
+            return name, True
+        if _YEAR_TOKEN.match(t):
+            name = f"{name} {t}"
+            j += 1
+            continue
+        if not _is_uppercase_heading(t):  # TITLE/SEC and body prose both stop the run
+            break
+        name = (name[:-1] + t) if name.endswith(_WRAP_HYPHENS) else f"{name} {t}"
+        j += 1
+    return name, False
+
+
+def _detect_division_banners(flat: list[tuple[int, "Line"]]) -> list[tuple[int, str, str]]:  # noqa: F821
+    """Real division starts as ``(flat_index, letter, name)`` in document order.
+
+    Keeps the first occurrence per letter whose name run is followed by content (a real
+    division start); rows that run straight into the next banner are the short-title
+    table of divisions and are skipped.
+    """
+    real: list[tuple[int, str, str]] = []
+    seen: set[str] = set()
+    for i, (_page, line) in enumerate(flat):
+        if not _is_division_banner(line.text):
+            continue
+        letter = _DIVISION_BANNER.match(line.text.strip()).group(1)
+        if letter in seen:
+            continue
+        name, ran_into_banner = _division_name(flat, i)
+        if ran_into_banner:
+            continue
+        seen.add(letter)
+        real.append((i, letter, name))
+    return real
+
+
+def _assign_divisions(anchors: list[Anchor], flat: list[tuple[int, "Line"]]) -> list[Anchor]:  # noqa: F821
+    """Tag each anchor with the nearest preceding division banner, or '' (DeltaTrack#107).
+
+    No banners ⇒ anchors returned unchanged (single-division bills). Position is the
+    DOCUMENT (flatten) index, never a raw ``(page, line)`` tuple: a banner line can be
+    unnumbered, and ``(page, None)`` vs ``(page, int)`` would raise on ordering.
+    """
+    banners = _detect_division_banners(flat)
+    if not banners:
+        return anchors
+    flat_index: dict[tuple[int, int | None], int] = {}
+    for i, (page_no, line) in enumerate(flat):
+        flat_index.setdefault((page_no, line.line_number), i)
+
+    def label_for(anchor: Anchor) -> str:
+        ai = flat_index.get((anchor.page_number, anchor.line_number))
+        if ai is None:
+            return ""
+        label = ""
+        for bi, letter, name in banners:  # document order; last banner at/above wins
+            if bi > ai:
+                break
+            label = f"Division {letter}: {name}"
+        return label
+
+    return [replace(a, division=label_for(a)) for a in anchors]
+
+
 def extract_anchors(pages: list[Page]) -> list[Anchor]:
     """Extract all anchors (title/section/account) in document order.
 
     TITLE/SEC are detected per page. Accounts use size-band + position
     classification when the document yields clean bands and adequate glyph-size
     attachment coverage; otherwise they fall back to the legacy text trigger.
+
+    On an omnibus/minibus, each anchor is finally tagged with its division
+    (DeltaTrack#107) — a display field prepended in the breadcrumb, not a matching key.
     """
     anchors: list[Anchor] = []
     for page in pages:
@@ -582,10 +700,26 @@ def extract_anchors(pages: list[Page]) -> list[Anchor]:
         anchors.extend(_account_anchors_legacy(pages))
 
     anchors.sort(key=lambda a: (a.page_number, a.line_number))
-    return anchors
+    return _assign_divisions(anchors, _flatten(pages))
 
 
 def breadcrumb_for(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor]) -> tuple[str, ...]:
+    """Assemble an anchor's breadcrumb, prepending its division when present.
+
+    Delegates the title/major/agency/grouping walk to ``_breadcrumb_core`` (whose
+    docstring documents the levels), then prepends the anchor's division label as the
+    leftmost segment for omnibus/minibus bills (DeltaTrack#107):
+    ``("Division A: ENERGY AND WATER…", "TITLE I", "DEPARTMENT OF THE ARMY", "INVESTIGATIONS")``.
+    The prepend wraps EVERY core return path (incl. the bare title/preamble early-return),
+    so a multi-division title also carries its division. Single-division bills carry no
+    label, so the result is unchanged. The synthesized front-matter ``preamble`` anchor
+    has no division by construction (it sits above all divisions).
+    """
+    core = _breadcrumb_core(anchor, all_anchors)
+    return (anchor.division, *core) if anchor.division else core
+
+
+def _breadcrumb_core(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anchor]) -> tuple[str, ...]:
     """Walk back through `all_anchors` from `anchor` to assemble a parent chain.
 
     For a TITLE anchor: returns just `("TITLE I",)`.
