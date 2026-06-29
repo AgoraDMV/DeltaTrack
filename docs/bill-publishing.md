@@ -80,8 +80,10 @@ is the access gap the PDF pipeline exists to close.
 - **Bill-status XML** (metadata, not text): 108th Congress forward, via the GPO Bulk
   Data Repository.
 
-This is why the project fetches text and discovery from govinfo bulk data
-([ADR 0004](decisions/0004-govinfo-bulk-data.md)).
+Today `fetch_bills.py` fetches bill text and committee-bill discovery from the
+Congress.gov API v3, while `fetch_bill_archives.py` already loads bill-status metadata
+from the govinfo bulk repository. [ADR 0004](decisions/0004-govinfo-bulk-data.md) sets
+the planned move of text and discovery to govinfo bulk data as well.
 
 ## Practical guidance: prefer XML when it exists
 
