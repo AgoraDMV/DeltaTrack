@@ -176,6 +176,12 @@ def _assert_no_blank_toc_rows(roots: list[dict], full_text: str) -> None:
     summaries = re.findall(r"<summary>(.*?)</summary>", html, re.S)
     blank_groups = [s for s in summaries if not re.sub(r"<[^>]+>", "", s).strip()]
     assert not blank_groups, f"{len(blank_groups)} blank TOC group heading(s)"
+    # Completeness floor: the renderer DROPS unlabeled leaves and HOISTS the children
+    # of unlabeled groups, so wholesale label loss would yield an empty TOC with no
+    # blank rows — passing the checks above while rendering nothing. If the tree
+    # carries any labeled node, the TOC must render at least one entry.
+    if any((n["label"] or "").strip() for n in _walk(roots)):
+        assert "toc-child" in html or "toc-group" in html, "labeled tree rendered an empty TOC"
 
 
 def _assert_money_conserves(roots: list[dict], reference: Counter, max_drop: int, label: str) -> None:
