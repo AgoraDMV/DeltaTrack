@@ -138,7 +138,12 @@ _KNOWN_DUPLICATE_COUNTS: dict[str, int] = {
     "115-hr-5895/2_engrossed-in-house.xml": 20,
     "115-hr-5895/3_placed-on-calendar-senate.xml": 20,
     "115-hr-5895/4_engrossed-amendment-senate.xml": 6,
-    "115-hr-5895/5_enrolled-bill.xml": 2,
+    # Enrolled version places Division C's TITLE II-V at <legis-body> level beside the
+    # divisions (not nested). Walking them (#146) surfaces genuine cross-division
+    # collisions: the orphaned "TITLE V—General provisions" (sec. 501-505) shares a
+    # division-stripped match_path with Division A's "TITLE V—General provisions".
+    # Real source structure, not a parser error (cf. 119-hr-1's twin Sec. 10012).
+    "115-hr-5895/5_enrolled-bill.xml": 8,
     "116-hr-1865/5_engrossed-amendment-house.xml": 55,
     "116-hr-1865/6_enrolled-bill.xml": 55,
     "118-hr-2882/5_engrossed-amendment-house.xml": 41,
@@ -217,7 +222,9 @@ _APPRO_TAGS = {"appropriations-major", "appropriations-intermediate", "appropria
 # Typically caused by elements nested inside divisions/titles the parser skips.
 _KNOWN_MISSING_APPRO: dict[str, int] = {
     "113-hr-3547/6_enrolled-bill.xml": 310,
-    "115-hr-5895/5_enrolled-bill.xml": 33,
+    # 115-hr-5895 enrolled previously missed 33 appropriations elements — exactly the
+    # top-level titles normalize_bill dropped (#146). Now fully walked; baseline is 0
+    # (entry removed) so any future regression trips the assertion.
     # Fresh bills added for Part C smoke test (2026-04-15)
     "116-hr-133/6_engrossed-amendment-house.xml": 1,
     "116-hr-133/7_enrolled-bill.xml": 1,
