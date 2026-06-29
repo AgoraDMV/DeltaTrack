@@ -1,4 +1,4 @@
-# Canonical Diff JSON — v1.2
+# Canonical Diff JSON — v1.3
 
 This document specifies the canonical JSON shape produced when comparing two
 versions of a bill. It is the public contract between the diff engine and any
@@ -8,10 +8,17 @@ XML inputs and a diff produced from PDF inputs share this shape.
 
 ## Versioning
 
-Top-level field: `schema_version: "1.2"`.
+Top-level field: `schema_version: "1.3"`.
 
 ## Changelog
 
+- **1.3** — Added optional top-level `tree: { v1, v2 } | null` field: the
+  per-side leveled structure tree (#108). Each side is an ordered list of
+  root `TreeNode`s; each node carries `label`, `level` (the shared GPO
+  vocabulary), `own_amounts` (the dollar figures in its own block), a
+  `full_text_span` into `full_text` (reference, never duplicated text), and
+  nested `children`. Requires `full_text` present (spans index into it). The
+  section TOC is derivable from it. Additive, backward compatible.
 - **1.2** — Added optional `full_text_span: { v1, v2 } | null` field on
   each change object, locating the change's content inside `full_text.v1`
   and `full_text.v2` as character offsets. Renderers use it to project
@@ -75,6 +82,30 @@ fragments in `changes[].text` — `full_text` is the document; `text.old`/
 `text.new` are the diff fragments. Consumers using `full_text` for
 rendering should compute the diff at render time over the full strings,
 not try to splice the change fragments into the document.
+
+### `tree` (optional, v1.3+)
+
+Top-level object: the per-side leveled structure tree (#108). Each of `v1`
+and `v2` is an ordered list of root `TreeNode`s in document order. The whole
+field is `null` (or absent) when no tree is available. **Co-presence:** a
+non-null `tree` requires a non-null `full_text` — every node's
+`full_text_span` indexes into `full_text[side]`.
+
+A `TreeNode`:
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `label` | string | The node's own heading text (`""` for an empty-path root). |
+| `level` | enum | Shared GPO vocabulary: `division`, `title`, `major`, `agency`, `account`, `section`, `grouping`, `preamble`, `heading`. Leaf level is typed from the source tag/kind; interior levels are positional (`heading` when an interior container has no typed source). |
+| `own_amounts` | int[] | Dollar amounts in **this node's own block only** (never its children's). The union over all nodes conserves the bill's amounts exactly. |
+| `full_text_span` | Offset \| null | `{ start, end }` char range into `full_text[side]` locating this node; `null` when it can't be located. Reference only — never duplicates the text. |
+| `children` | TreeNode[] | Ordered child nodes. |
+
+The tree is **per-side, independently built, not paired** — cross-version
+node pairing remains the diff engine's job (the `changes` array). A node may
+be both content and container (an account that holds sub-accounts has a
+`full_text_span`/`own_amounts` AND `children`). The section TOC is derivable
+from this tree (it absorbs the former side-channel jump-list).
 
 ### `bill`
 

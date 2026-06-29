@@ -25,7 +25,7 @@ from diff_pdf import PdfDiff, PdfHunk
 from formatters.view_model import ChangeView, DiffView
 from parsers.pdf_anchors import Anchor, breadcrumb_for
 
-SCHEMA_VERSION = "1.2"
+SCHEMA_VERSION = "1.3"
 GENERATOR_NAME = "deltatrack"
 
 
@@ -138,7 +138,11 @@ def _xml_move(change: dict) -> dict:
 
 
 def xml_diff_to_canonical(
-    diff_dict: dict, *, full_text: dict | None = None, full_text_spans: dict | None = None
+    diff_dict: dict,
+    *,
+    full_text: dict | None = None,
+    full_text_spans: dict | None = None,
+    tree: dict | None = None,
 ) -> dict:
     """Convert a bill-diff dict (from bill_diff_to_dict) into canonical JSON.
 
@@ -179,6 +183,7 @@ def xml_diff_to_canonical(
         },
         "summary": dict(diff_dict.get("summary") or {}),
         "full_text": normalized_full_text,
+        "tree": _normalize_tree(tree, normalized_full_text),
         "changes": [
             _xml_change_to_canonical(c, i, normalized_full_text, full_text_spans, search_state)
             for i, c in enumerate(diffed)
@@ -200,6 +205,25 @@ def _normalize_full_text(full_text: dict | None) -> dict | None:
     if not all(isinstance(full_text[k], str) for k in ("v1", "v2")):
         raise ValueError("full_text values must be strings")
     return {"v1": full_text["v1"], "v2": full_text["v2"]}
+
+
+def _normalize_tree(tree: dict | None, full_text: dict | None) -> dict | None:
+    """Validate and pass through the optional per-side `tree` field (#108, v1.3+).
+
+    Accepts None for "no tree available," or a dict with v1/v2 keys each a list of
+    root nodes. Co-presence rule: a non-null tree REQUIRES a non-null full_text —
+    every node's `full_text_span` indexes into `full_text[side]`, so a tree without
+    it would carry dangling spans. The producer is the schema gatekeeper.
+    """
+    if tree is None:
+        return None
+    if not isinstance(tree, dict) or set(tree) != {"v1", "v2"}:
+        raise ValueError("tree must be None or a dict with keys 'v1' and 'v2'")
+    if not all(isinstance(tree[k], list) for k in ("v1", "v2")):
+        raise ValueError("tree values must be lists of root nodes")
+    if full_text is None:
+        raise ValueError("tree requires full_text (its spans index into it)")
+    return {"v1": tree["v1"], "v2": tree["v2"]}
 
 
 # ---------- PDF producer -----------------------------------------------------

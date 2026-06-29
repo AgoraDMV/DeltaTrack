@@ -27,6 +27,21 @@
       ],
       "description": "Optional (v1.1+) full bill text per side, for full-document tracked-changes rendering."
     },
+    "tree": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["v1", "v2"],
+          "additionalProperties": false,
+          "properties": {
+            "v1": { "type": "array", "items": { "$ref": "#/$defs/TreeNode" } },
+            "v2": { "type": "array", "items": { "$ref": "#/$defs/TreeNode" } }
+          }
+        }
+      ],
+      "description": "Optional (v1.3+) per-side leveled structure tree (#108). Each side is an ordered list of root nodes. Requires full_text present (node spans index into it). Absorbs the section TOC: derivable from the tree."
+    },
     "generator": {
       "type": "object",
       "additionalProperties": false,
@@ -64,6 +79,25 @@
     }
   },
   "$defs": {
+    "TreeNode": {
+      "type": "object",
+      "required": ["label", "level", "own_amounts", "full_text_span", "children"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "level": {
+          "enum": ["division", "title", "major", "agency", "account", "section", "grouping", "preamble", "heading"],
+          "description": "Shared GPO vocabulary (docs/bill-structure.md). Leaf level from the tag/kind; interior positional."
+        },
+        "own_amounts": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "description": "Dollar amounts in THIS node's own block only (not its children's)."
+        },
+        "full_text_span": { "$ref": "#/$defs/Offset" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/TreeNode" } }
+      }
+    },
     "VersionInfo": {
       "type": "object",
       "required": ["label", "version_number", "source"],

@@ -69,8 +69,8 @@ def render_xml_diff(spec: ExampleSpec) -> Path:
     # Carry the serialized full text so the report offers the full-bill view.
     # XML full_text is gutterless paragraph flow (no PDF line-number column); the
     # v2 walk also yields the section TOC offsets.
-    full_text, full_text_spans, sections = build_xml_full_text(v1, v2)
-    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text, full_text_spans=full_text_spans)
+    full_text, full_text_spans, sections, tree = build_xml_full_text(v1, v2)
+    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text, full_text_spans=full_text_spans, tree=tree)
     html = format_diff_html(
         view_from_canonical(canonical),
         canonical=canonical,

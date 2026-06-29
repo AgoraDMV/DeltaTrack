@@ -58,8 +58,8 @@ def _build(
     diff_dict["new_version"] = end_label
 
     # Readable full text + per-side element_id spans + the v2 TOC offsets.
-    full_text, full_text_spans, sections = build_xml_full_text(old_tree, new_tree)
-    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text, full_text_spans=full_text_spans)
+    full_text, full_text_spans, sections, tree = build_xml_full_text(old_tree, new_tree)
+    canonical = xml_diff_to_canonical(diff_dict, full_text=full_text, full_text_spans=full_text_spans, tree=tree)
     return canonical, sections, bill_title(new_tree)
 
 
