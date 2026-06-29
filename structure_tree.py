@@ -21,16 +21,18 @@ carries the division prefix), so the builder needs no special orphan logic.
 grouping / preamble), so the canonical contract speaks one language both pipelines
 map into (ADR 0006/0007 — no pipeline branch in the renderer).
 
-Step 1 (this commit): the ``TreeNode`` type + the XML builder. PDF builder
-(step 2) and per-block ``own_amounts`` + spans (steps 3-4) land later.
+Steps 1-2: the ``TreeNode`` type + the XML and PDF builders, sharing one trie
+core. Per-block ``own_amounts`` + canonical ``tree`` spans (steps 3-4) land later.
 """
 
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 
 from bill_tree import BillNode, BillTree
+from parsers.pdf_anchors import Anchor, breadcrumb_for
 
 # Leaf level from the XML tag — typed and reliable (docs/bill-structure.md glossary).
 _LEAF_LEVEL: dict[str, str] = {
@@ -82,18 +84,20 @@ class TreeNode:
     """Full path identity from the root to this node."""
 
     children: list[TreeNode] = field(default_factory=list)
-    source: BillNode | None = None
+    source: BillNode | Anchor | None = None
     """The flat node when this path carries content; ``None`` for a pure container."""
 
 
-def build_xml_tree(bill: BillTree) -> list[TreeNode]:
-    """Reconstruct the leveled structure tree for one XML bill version.
+def _build_tree(items: Iterable[tuple[tuple[str, ...], str, object]]) -> list[TreeNode]:
+    """Shared trie builder over ``(path, level, source)`` items in document order.
 
-    Returns the ordered top-level nodes (divisions, or bare titles for a
-    no-division bill, plus any empty-path front-matter/preamble leaves). Nodes
-    keep document order among siblings. Duplicate ``display_path``s (genuine
-    cross-division collisions, division-stripped) become distinct content
-    siblings — never merged — so the tree conserves every flat node exactly once.
+    Each path prefix that has no item of its own becomes a synthesized interior
+    node (``source is None``, positional level). An item whose path was already
+    synthesized as an interior is adopted as that node's content — so a node can
+    be both content and container (an account holding sub-accounts; a PDF
+    title/agency anchor that scopes deeper accounts). Duplicate paths (genuine
+    cross-division collisions) become distinct content siblings, never merged, so
+    every item is conserved as exactly one content node.
     """
     roots: list[TreeNode] = []
     by_path: dict[tuple[str, ...], TreeNode] = {}
@@ -110,28 +114,50 @@ def build_xml_tree(bill: BillTree) -> list[TreeNode]:
             ensure_interior(path[:-1]).children.append(node)
         return node
 
-    for n in bill.nodes:
-        dp = n.display_path
-        if not dp:
+    for path, level, source in items:
+        if not path:
             # Empty-path content (front matter, body-level "Sec. 1"): a top-level leaf.
-            roots.append(TreeNode(label="", level=_leaf_level(n.tag), display_path=dp, source=n))
+            roots.append(TreeNode(label="", level=level, display_path=path, source=source))
             continue
 
-        existing = by_path.get(dp)
+        existing = by_path.get(path)
         if existing is not None and existing.source is None:
-            # A prefix-synthesized interior turns out to carry content: adopt it
-            # (a content node that is also a container for deeper accounts).
-            existing.source = n
-            existing.level = _leaf_level(n.tag)
+            existing.source = source
+            existing.level = level
             continue
 
-        leaf = TreeNode(label=dp[-1], level=_leaf_level(n.tag), display_path=dp, source=n)
-        if len(dp) == 1:
+        leaf = TreeNode(label=path[-1], level=level, display_path=path, source=source)
+        if len(path) == 1:
             roots.append(leaf)
         else:
-            ensure_interior(dp[:-1]).children.append(leaf)
+            ensure_interior(path[:-1]).children.append(leaf)
         # Register the first occurrence so deeper nodes nest under it; a later
-        # node at the same path is a genuine duplicate -> distinct sibling (above).
-        by_path.setdefault(dp, leaf)
+        # item at the same path is a genuine duplicate -> distinct sibling (above).
+        by_path.setdefault(path, leaf)
 
     return roots
+
+
+def build_xml_tree(bill: BillTree) -> list[TreeNode]:
+    """Reconstruct the leveled structure tree for one XML bill version.
+
+    Returns the ordered top-level nodes (divisions, or bare titles for a
+    no-division bill, plus any empty-path front-matter/preamble leaves). Leaf
+    level comes from the XML tag; interior structure from display_path nesting.
+    """
+    return _build_tree((n.display_path, _leaf_level(n.tag), n) for n in bill.nodes)
+
+
+def build_pdf_tree(anchors: Iterable[Anchor]) -> list[TreeNode]:
+    """Reconstruct the leveled structure tree for one PDF bill version.
+
+    Built from ``breadcrumb_for`` paths over the anchor stream. PDF emits its
+    interior levels as typed anchors (title/major/agency/grouping), so those
+    nodes carry both a source and children with a precise ``level`` (the anchor
+    kind) — unlike XML, where interior levels are synthesized strings. Breadcrumb
+    DEPTH is detection-path dependent: a degraded/legacy bill yields shallower
+    chains (title→account, no major/agency), so the tree is correspondingly
+    shallow. An empty anchor list yields an empty tree.
+    """
+    anchors = list(anchors)
+    return _build_tree((breadcrumb_for(a, anchors), a.kind, a) for a in anchors)

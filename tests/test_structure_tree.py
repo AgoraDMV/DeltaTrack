@@ -13,7 +13,8 @@ from pathlib import Path
 import pytest
 
 from bill_tree import BillNode, BillTree, normalize_bill
-from structure_tree import TreeNode, build_xml_tree
+from parsers.pdf_anchors import Anchor
+from structure_tree import TreeNode, build_pdf_tree, build_xml_tree
 
 
 def _node(display_path: tuple[str, ...], tag: str = "appropriations-small") -> BillNode:
@@ -175,9 +176,69 @@ class TestTreeConservation:
         assert {id(c.source) for c in content} == {id(a), id(b)}
 
 
+def _anchor(line: int, kind: str, text: str, division: str = "") -> Anchor:
+    return Anchor(page_number=1, line_number=line, kind=kind, text=text, division=division)
+
+
+class TestPdfTree:
+    """PDF builds the same tree from breadcrumb_for paths. Unlike XML, PDF emits
+    interior levels as typed anchors, so those nodes carry a precise level."""
+
+    def test_empty_anchor_list_returns_empty(self):
+        assert build_pdf_tree([]) == []
+
+    def test_title_account_two_levels(self):
+        roots = build_pdf_tree([_anchor(1, "title", "TITLE I"), _anchor(2, "account", "OPERATIONS AND SUPPORT")])
+        assert [r.label for r in roots] == ["TITLE I"]
+        assert roots[0].level == "title"
+        assert roots[0].source is not None  # title anchor is content AND container
+        assert [c.label for c in roots[0].children] == ["OPERATIONS AND SUPPORT"]
+        assert roots[0].children[0].level == "account"
+
+    def test_full_four_level_chain_carries_precise_levels(self):
+        roots = build_pdf_tree(
+            [
+                _anchor(1, "title", "TITLE I"),
+                _anchor(2, "major", "DEPARTMENTAL MANAGEMENT"),
+                _anchor(3, "agency", "OFFICE OF THE SECRETARY"),
+                _anchor(4, "account", "OPERATIONS AND SUPPORT"),
+            ]
+        )
+        levels = []
+        n: TreeNode | None = roots[0]
+        while n is not None:
+            levels.append(n.level)
+            n = n.children[0] if n.children else None
+        assert levels == ["title", "major", "agency", "account"]
+
+    def test_division_is_a_synthesized_root(self):
+        roots = build_pdf_tree(
+            [
+                _anchor(1, "title", "TITLE I", division="Division A: ENERGY"),
+                _anchor(2, "account", "CORPS OF ENGINEERS", division="Division A: ENERGY"),
+            ]
+        )
+        assert [r.label for r in roots] == ["Division A: ENERGY"]
+        assert roots[0].level == "division"
+        assert roots[0].source is None  # no anchor of its own — a display segment
+        assert roots[0].children[0].label == "TITLE I"
+
+    def test_pdf_conservation_every_anchor_is_one_content_node(self):
+        anchors = [
+            _anchor(1, "title", "TITLE I"),
+            _anchor(2, "agency", "AGENCY A"),
+            _anchor(3, "account", "ACCT 1"),
+            _anchor(4, "account", "ACCT 2"),
+            _anchor(5, "section", "SEC. 101"),
+        ]
+        content = _content_nodes(build_pdf_tree(anchors))
+        assert {id(c.source) for c in content} == {id(a) for a in anchors}
+
+
 # --- Real-bill drift + conservation guards (slow; skip when corpus absent) ---
 
 _CLEAN = Path("bills/118-hr-8752/1_reported-in-house.xml")
+_CLEAN_PDF = Path("bills/118-hr-8752/1_reported-in-house.pdf")
 _OMNIBUS = Path("bills/113-hr-3547/6_enrolled-bill.xml")
 _BOTH_SHAPES = Path("bills/115-hr-5895/5_enrolled-bill.xml")
 
@@ -214,3 +275,18 @@ def test_orphan_titles_absorbed_no_bare_title_roots():
     roots = build_xml_tree(normalize_bill(_BOTH_SHAPES))
     bare_title_roots = [r for r in roots if r.label.upper().startswith("TITLE ")]
     assert bare_title_roots == []
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not _CLEAN_PDF.exists(), reason="bill corpus not present (fetch_bills.py)")
+def test_pdf_real_bill_conserves_and_is_leveled():
+    from parsers.pdf_anchors import extract_anchors
+    from parsers.pdf_text import extract_clean_pages
+
+    anchors = extract_anchors(extract_clean_pages(_CLEAN_PDF))
+    content = _content_nodes(build_pdf_tree(anchors))
+    # Conservation: every anchor maps to exactly one content node.
+    assert {id(c.source) for c in content} == {id(a) for a in anchors}
+    # The clean bill resolves the full leveled depth via typed anchors.
+    levels_seen = {c.level for c in content}
+    assert {"title", "major", "agency", "account"} <= levels_seen
