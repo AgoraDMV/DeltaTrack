@@ -57,6 +57,18 @@ _GLUED_CHROME = re.compile(r"￾(?:VerDate\b|\S* on DSK)[^\n]*")
 # bottom; either may be the anchor depending on the page, so both are stripped.
 _PAGE_HEADER_NUMBER = re.compile(r"\A\d+ *\n")
 _RUNNING_HEADER = re.compile(r"^•(?:HR|S)\b.*\n", re.MULTILINE)
+# Some print stages carry an UNbulleted running line that PDFium also floats to the
+# top, e.g. `HR 5895 PCS` (Placed on Calendar, Senate). With no bullet `_RUNNING_HEADER`
+# misses it, so it survives as body text on nearly every page and, at a page seam,
+# wedges between a soft-hyphenated word and its continuation, blocking the cross-page
+# rejoin (DeltaTrack#140). Matched as a WHOLE line so prose mentioning a bill mid-
+# sentence is never stripped (body lines always carry a leading margin number; this
+# floated chrome line does not). The suffix is the GPO bill-stage code: the corpus
+# shows PCS/RDS/RFS unbulleted and EAH/RH/EH/RS/IH bulleted, all 2-4 caps.
+_RUNNING_FOOTER = re.compile(
+    r"^(?:H|S|HR|HRES|SRES|HJRES|SJRES|HCONRES|SCONRES)\s+\d+\s+[A-Z]{2,4}$\n?",
+    re.MULTILINE,
+)
 _VERDATE_AND_BELOW = re.compile(r"\n?VerDate\b.*\Z", re.DOTALL)
 _WATERMARK_AND_BELOW = re.compile(r"\n?\S+ on DSK\S*PROD with .*\Z", re.DOTALL)
 
@@ -136,14 +148,19 @@ def normalize_raw(text: str) -> str:
 
 def strip_page_chrome(text: str) -> str:
     """Remove page furniture: the page-number header, the running `•HR` header, the
-    VerDate print line, and the reversed-glyph watermark below it.
+    unbulleted running footer (`HR 5895 PCS`), the VerDate print line, and the
+    reversed-glyph watermark below it.
 
-    PDFium floats the `•HR … RH` running header to the top of the page (after the
-    page number), so it is removed in place rather than from the bottom. VerDate and
-    the watermark are each dropped from their first occurrence to end-of-text.
+    PDFium floats both the bulleted `•HR … RH` running header and the unbulleted
+    `HR … PCS` running footer to the top of the page (after the page number), so each
+    is removed in place rather than from the bottom. Stripping the footer here, before
+    line parsing and the cross-page hyphen rejoin, also keeps it from wedging into a
+    page-seam word break. VerDate and the watermark are each dropped from their first
+    occurrence to end-of-text.
     """
     text = _PAGE_HEADER_NUMBER.sub("", text)
     text = _RUNNING_HEADER.sub("", text)
+    text = _RUNNING_FOOTER.sub("", text)
     text = _VERDATE_AND_BELOW.sub("", text)
     text = _WATERMARK_AND_BELOW.sub("", text)
     return text
