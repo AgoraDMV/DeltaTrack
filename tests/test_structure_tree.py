@@ -128,6 +128,15 @@ class TestLevelVocabulary:
         roots = build_xml_tree(_bill([_node(("TITLE I", "Bureau of land management", "Acct"))]))
         assert roots[0].children[0].level == "heading"
 
+    def test_interior_named_division_of_is_not_a_division(self):
+        # "Division of Enforcement" is an agency/container, not a bill division —
+        # the enum guard (like _TITLE_RE for #155) keeps it a heading.
+        roots = build_xml_tree(_bill([_node(("TITLE I", "Division of Enforcement", "Acct"))]))
+        assert roots[0].children[0].level == "heading"
+        # A real division label still resolves to division.
+        roots2 = build_xml_tree(_bill([_node(("Division A: Energy", "TITLE I", "Acct"))]))
+        assert roots2[0].level == "division"
+
     def test_account_named_title_is_not_a_title(self):
         # #155 / #114: an account whose name begins with "Title 17" must stay an
         # account (level from tag), never be elevated to title by its text.
@@ -231,6 +240,24 @@ class TestPdfTree:
         assert roots[0].level == "division"
         assert roots[0].source is None  # no anchor of its own — a display segment
         assert roots[0].children[0].label == "TITLE I"
+
+    def test_agency_scopes_account_and_is_a_content_container(self):
+        # In document order (the only valid PDF input — breadcrumb_for resolves
+        # position by list index, so a later agency can't scope an earlier
+        # account), the agency anchor becomes a content node that is ALSO the
+        # account's parent container.
+        roots = build_pdf_tree(
+            [
+                _anchor(1, "title", "TITLE I"),
+                _anchor(2, "agency", "MANAGEMENT DIRECTORATE"),
+                _anchor(3, "account", "OPERATIONS AND SUPPORT"),
+            ]
+        )
+        agency = roots[0].children[0]
+        assert agency.label == "MANAGEMENT DIRECTORATE"
+        assert agency.level == "agency"
+        assert agency.source is not None  # content AND container
+        assert [c.label for c in agency.children] == ["OPERATIONS AND SUPPORT"]
 
     def test_pdf_conservation_every_anchor_is_one_content_node(self):
         anchors = [

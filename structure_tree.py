@@ -50,13 +50,19 @@ _LEAF_LEVEL: dict[str, str] = {
 # drive structure; here they can't, since this only labels already-interior nodes).
 _TITLE_RE = re.compile(r"^TITLE\s+[IVXLCDM]+\b", re.IGNORECASE)
 
+# A real division label is "Division {ENUM}" / "Division {ENUM}: {header}" with a
+# single-letter enum (bill_tree builds it; PDF mirrors it). Requiring the enum —
+# not just the word "Division " — avoids mislabeling an account/agency named
+# "Division of Enforcement" as a division (same text-trigger guard as _TITLE_RE).
+_DIVISION_RE = re.compile(r"^Division [A-Z](?=$|[\s:])")
+
 
 def _leaf_level(tag: str) -> str:
     return _LEAF_LEVEL.get(tag, "account")
 
 
 def _interior_level(label: str) -> str:
-    if label.startswith("Division "):
+    if _DIVISION_RE.match(label):
         return "division"
     if _TITLE_RE.match(label):
         return "title"
@@ -180,6 +186,14 @@ def build_pdf_tree(anchors: Iterable[Anchor]) -> list[TreeNode]:
     DEPTH is detection-path dependent: a degraded/legacy bill yields shallower
     chains (title→account, no major/agency), so the tree is correspondingly
     shallow. An empty anchor list yields an empty tree.
+
+    Relies on ``breadcrumb_for``'s invariant that anchors are unique per
+    (page, line) — it resolves position by value-equality ``.index()``. The
+    extractor guarantees this (one anchor per line, legacy path dedups); a
+    violation would still conserve every anchor (duplicates become distinct
+    content siblings) but could mis-nest the second one, which the id-based
+    conservation gate cannot catch. We don't re-assert it here, to keep a
+    malformed bill degrading to a mis-nest rather than a crashed report.
     """
     anchors = list(anchors)
     # PDF own_amounts attach in step 4 (block char-offsets), so () for now.
