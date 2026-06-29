@@ -42,7 +42,7 @@ from formatters.canonical import _pdf_tree_payload
 from formatters.diff_html import _build_toc_from_tree
 from formatters.text_serializer import _xml_tree_payload, serialize_tree_for_tree
 from parsers.pdf_anchors import extract_anchors
-from parsers.pdf_text import pdf_full_text_print
+from parsers.pdf_text import pdf_full_text
 from tests.pdf_corpus import cached_pages
 
 pytestmark = pytest.mark.slow
@@ -126,9 +126,14 @@ def _xml_tree_payload_for(path: Path) -> tuple[list[dict], str]:
 
 def _pdf_tree_payload_for(path: Path) -> tuple[list[dict], str]:
     """The contract-shaped PDF tree for one version, plus its full_text — built the
-    way ``pdf_diff_to_canonical`` does, reusing the disk-cached page extraction."""
+    way the shipped canonical does. Uses ``pdf_full_text`` (the merged whole-word
+    variant), NOT ``pdf_full_text_print``: ``compare_pdfs`` builds the contract tree
+    from the non-print text (``_build_canonical(printed=False)``); the print variant
+    is display-only, and a dollar amount broken across a printed line would extract
+    differently there — so the print variant would measure a tree the consumer never
+    sees (feedback_measure_at_consumed_output)."""
     pages = cached_pages(path)
-    full_text, offsets = pdf_full_text_print(pages)
+    full_text, offsets = pdf_full_text(pages)
     anchors = tuple(extract_anchors(pages))
     return _pdf_tree_payload(anchors, offsets, full_text), full_text
 
@@ -200,9 +205,10 @@ def test_xml_tree_invariants_hold_corpus_wide(xml_path: Path) -> None:
     _assert_schema_and_levels(roots)
     _assert_no_blank_toc_rows(roots, full_text)
     # Strong gate: against the INDEPENDENT raw-XML body, not the derived full_text.
+    # Asserted unconditionally (even on a no-amount shell, where over==0 / drop==0
+    # both hold) so a spurious over-count on an empty body can't slip through.
     reference = _raw_xml_body_amounts(xml_path)
-    if reference:  # amendment shells with no body $ carry nothing to conserve
-        _assert_money_conserves(roots, reference, _XML_DROP_BUDGET.get(test_id, 0), test_id)
+    _assert_money_conserves(roots, reference, _XML_DROP_BUDGET.get(test_id, 0), test_id)
 
 
 # --- PDF corpus ----------------------------------------------------------------
@@ -222,5 +228,4 @@ def test_pdf_tree_invariants_hold_corpus_wide(pdf_path: Path) -> None:
     if test_id in _PDF_MONEY_SKIP:
         return  # known degraded extraction — see _PDF_MONEY_SKIP for the reason
     reference = Counter(extract_amounts(full_text))
-    if reference:
-        _assert_money_conserves(roots, reference, _PDF_DROP_BUDGET.get(test_id, 0), test_id)
+    _assert_money_conserves(roots, reference, _PDF_DROP_BUDGET.get(test_id, 0), test_id)
