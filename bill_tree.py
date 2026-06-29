@@ -987,26 +987,32 @@ def normalize_bill(xml_path: Path) -> BillTree:
     divisions = body.findall("division")
     if divisions:
         all_nodes.extend(walk_body_sections(body))
-        for div in divisions:
-            div_enum = div.find("enum")
-            div_header = div.find("header")
-            div_enum_text = div_enum.text.strip() if div_enum is not None and div_enum.text else ""
-            div_header_text = extract_text_content(div_header).strip() if div_header is not None else ""
-            if div_header_text:
-                division_label = f"Division {div_enum_text}: {div_header_text}"
-            else:
-                division_label = f"Division {div_enum_text}"
+        # Walk divisions and titles in document order. Some enrolled bills place a
+        # division's later titles as <title> siblings beside the <division> (only
+        # TITLE I stays nested) — e.g. 113-hr-3547, 115-hr-5895. Such an orphan
+        # title continues the preceding division's numbering, so attribute it to
+        # that division (its label) rather than dropping it (#146) or detaching it
+        # at the bill's end with no division breadcrumb. match_path excludes the
+        # division, so cross-version diff matching is unaffected; only the
+        # display_path (breadcrumb) and document order change.
+        current_division_label = ""
+        for child in body:
+            if child.tag == "division":
+                div_enum = child.find("enum")
+                div_header = child.find("header")
+                div_enum_text = div_enum.text.strip() if div_enum is not None and div_enum.text else ""
+                div_header_text = extract_text_content(div_header).strip() if div_header is not None else ""
+                if div_header_text:
+                    current_division_label = f"Division {div_enum_text}: {div_header_text}"
+                else:
+                    current_division_label = f"Division {div_enum_text}"
 
-            for title in div.findall("title"):
-                title_header = build_title_label(title)
-                all_nodes.extend(walk_title(title, title_header, division_label))
-
-        # Top-level titles can sit beside the divisions under <legis-body>
-        # (e.g. 115-hr-5895 enrolled). Walk them too, else they (and their
-        # amounts) are silently dropped (#146).
-        for title in body.findall("title"):
-            title_header = build_title_label(title)
-            all_nodes.extend(walk_title(title, title_header, ""))
+                for title in child.findall("title"):
+                    title_header = build_title_label(title)
+                    all_nodes.extend(walk_title(title, title_header, current_division_label))
+            elif child.tag == "title":
+                title_header = build_title_label(child)
+                all_nodes.extend(walk_title(child, title_header, current_division_label))
         return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)
 
     # Check for titles directly under body

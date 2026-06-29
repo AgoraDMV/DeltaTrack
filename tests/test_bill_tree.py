@@ -182,6 +182,44 @@ def test_divisions_and_top_level_titles_both_walked():
     assert sum(dropped.values()) == 0, f"dropped amounts: {dict(dropped)}"
 
 
+@pytest.mark.slow
+@pytest.mark.skipif(not _HR5895_ENROLLED.exists(), reason="bill corpus not present (fetch_bills.py)")
+def test_orphan_titles_attributed_to_a_division():
+    """Orphan <title>s beside divisions continue the preceding division's
+    numbering, so they must carry that division's label — not an empty one. When
+    a bill has divisions, no content node should have a bare TITLE at the root of
+    its display_path (that would be an unattributed orphan)."""
+    tree = normalize_bill(_HR5895_ENROLLED)
+    bare_title_roots = [
+        n
+        for n in tree.nodes
+        if n.tag != "front-matter" and n.display_path and n.display_path[0].upper().startswith("TITLE ")
+    ]
+    assert bare_title_roots == [], f"unattributed orphan titles: {[n.display_path for n in bare_title_roots[:3]]}"
+
+
+# 113-hr-3547 enrolled (FY2014 omnibus): 12 divisions, each with later titles
+# spilled out as orphan <title> siblings INTERLEAVED between divisions. Exercises
+# document-order attribution (each orphan cluster belongs to its preceding division).
+_HR3547_ENROLLED = Path("bills/113-hr-3547/6_enrolled-bill.xml")
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not _HR3547_ENROLLED.exists(), reason="bill corpus not present (fetch_bills.py)")
+def test_orphan_titles_interleave_in_document_order():
+    """Each division's nodes (including its orphan titles) form a single
+    contiguous run in document order — orphans are attributed to the division
+    they follow, not all lumped after the last division."""
+    tree = normalize_bill(_HR3547_ENROLLED)
+    divisions_in_order = [
+        n.display_path[0] for n in tree.nodes if n.display_path and n.display_path[0].startswith("Division ")
+    ]
+    runs = [d for i, d in enumerate(divisions_in_order) if i == 0 or d != divisions_in_order[i - 1]]
+    # One contiguous run per division => no division label repeats across runs.
+    assert len(runs) == len(set(runs)), f"division runs not contiguous: {runs}"
+    assert len(set(runs)) == 12
+
+
 class TestNormalizeHeader:
     def test_lowercase(self):
         assert normalize_header("DEPARTMENT OF DEFENSE") == "department of defense"
