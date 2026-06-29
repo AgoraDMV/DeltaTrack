@@ -149,11 +149,57 @@ class TestStripPageChrome:
         raw = "24 training and ad-\npbinns on DSKJLVW7X2PROD with $$_JOB"
         assert strip_page_chrome(raw) == "24 training and ad-"
 
+    def test_strips_unbulleted_running_footer(self):
+        # Some print stages (Placed on Calendar, Senate) carry an UNbulleted running
+        # line `HR 5895 PCS` that PDFium floats to the top. With no bullet the
+        # `•`-anchored header regex misses it, so it survives as body text on nearly
+        # every page (DeltaTrack#140). Strip it as a whole-line match.
+        assert strip_page_chrome("HR 5895 PCS\n1 BODY") == "1 BODY"
+
+    def test_strips_unbulleted_footer_for_all_corpus_stage_codes(self):
+        # The stage codes actually seen unbulleted in the corpus: PCS, RDS, RFS.
+        # Senate bills use the `S <num>` prefix.
+        assert strip_page_chrome("HR 4366 RDS\n1 BODY") == "1 BODY"
+        assert strip_page_chrome("S 1234 RFS\n1 BODY") == "1 BODY"
+
+    def test_keeps_prose_line_with_bill_ref_no_stage_code(self):
+        # A real prose line mentioning the bill mid-sentence (no trailing stage code,
+        # and prefixed by a margin number like all body lines) must NOT be stripped.
+        # The whole-line anchors plus the {2,4}-caps suffix are the guard.
+        assert strip_page_chrome("23 amounts under HR 5895 are appropriated") == (
+            "23 amounts under HR 5895 are appropriated"
+        )
+        assert strip_page_chrome("HR 5895 appropriations bill") == "HR 5895 appropriations bill"
+
     def test_keeps_body_without_chrome_unchanged(self):
         assert strip_page_chrome("1 BODY\n2 MORE") == "1 BODY\n2 MORE"
 
 
-class TestFirstWordRight:
+_HR5895_V3 = Path(__file__).resolve().parent.parent / "bills" / "115-hr-5895" / "3_placed-on-calendar-senate.pdf"
+
+
+@pytest.mark.skipif(not _HR5895_V3.exists(), reason="115-hr-5895 v3 PDF not present")
+class TestUnbulletedFooterConsumedOutput:
+    """End-to-end checks on the consumed output (extracted lines / flattened diff
+    stream), not the strip regex in isolation. 115-hr-5895 v3 (Placed on Calendar,
+    Senate) carries the unbulleted `HR 5895 PCS` footer on 181/184 pages (#140)."""
+
+    def test_footer_absent_from_extracted_lines(self):
+        pages = extract_clean_pages(_HR5895_V3)
+        offenders = [(p.page_number, ln.text) for p in pages for ln in p.lines if "HR 5895 PCS" in ln.text]
+        assert offenders == []
+
+    def test_cross_page_word_rejoins_across_footer_seam(self):
+        # p27 ends "...for replace-"; the footer floats to the top of p28 between the
+        # hyphen line and its "ment only," continuation, blocking the cross-page
+        # rejoin. With the footer stripped, the seam stitches back to "replacement".
+        from diff_pdf import _flatten
+
+        pages = extract_clean_pages(_HR5895_V3)
+        flat = _flatten(pages)
+        assert any("airplane for replacement only" in ln.text for ln in flat)
+        assert not any(ln.text == "HR 5895 PCS" for ln in flat)
+
     """`_first_word_right` finds the first word boundary in a line's content glyphs.
 
     The load-bearing case (#130, #106 spike): PDFium emits a real space glyph (cp==32)
