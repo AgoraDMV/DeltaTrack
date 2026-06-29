@@ -165,8 +165,13 @@ def fast_normalize_diff(monkeypatch, hr4366_v1, hr4366_v2, hr4366_v6, hr4366_v1_
 
 
 def has_bill_xml() -> bool:
-    """Check if real bill XML files are available."""
-    return any(BILLS_DIR.glob("**/*.xml"))
+    """Check if real bill XML files are available.
+
+    Matches the corpus version-file naming (`<n>_<stage>.xml`), not any `*.xml`, so a
+    directory holding only non-bill XML (e.g. govinfo BILLSTATUS metadata) doesn't
+    falsely report the corpus as present.
+    """
+    return any(BILLS_DIR.glob("*/[0-9]*_*.xml"))
 
 
 def make_bill_node(
