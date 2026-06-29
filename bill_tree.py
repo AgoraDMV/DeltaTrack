@@ -1000,6 +1000,13 @@ def normalize_bill(xml_path: Path) -> BillTree:
             for title in div.findall("title"):
                 title_header = build_title_label(title)
                 all_nodes.extend(walk_title(title, title_header, division_label))
+
+        # Top-level titles can sit beside the divisions under <legis-body>
+        # (e.g. 115-hr-5895 enrolled). Walk them too, else they (and their
+        # amounts) are silently dropped (#146).
+        for title in body.findall("title"):
+            title_header = build_title_label(title)
+            all_nodes.extend(walk_title(title, title_header, ""))
         return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)
 
     # Check for titles directly under body

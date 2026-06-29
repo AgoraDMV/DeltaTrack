@@ -146,6 +146,42 @@ def test_real_bill_body_nodes_have_display_text():
     assert empty == []
 
 
+# 115-hr-5895 enrolled has BOTH <division> children and top-level <title> children
+# directly under <legis-body> — the structural shape that exposed the normalize_bill
+# div+title drop (#146). It is the conservation/regression fixture for that fix.
+_HR5895_ENROLLED = Path("bills/115-hr-5895/5_enrolled-bill.xml")
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not _HR5895_ENROLLED.exists(), reason="bill corpus not present (fetch_bills.py)")
+def test_divisions_and_top_level_titles_both_walked():
+    """Regression for #146: a bill with both <division> children and top-level
+    <title> siblings under <legis-body> must walk both. normalize_bill used to
+    early-return after the divisions, silently dropping the 4 top-level titles
+    (Department of Veterans Affairs, Related Agencies, Overseas Contingency
+    Operations, General Provisions) and ~16% of the bill's dollar amounts."""
+    from collections import Counter
+
+    from diff_bill import extract_amounts
+
+    root = ET.parse(_HR5895_ENROLLED).getroot()
+    body = find_bill_body(root)
+    # Precondition: this fixture really has the both-shapes structure.
+    assert len(body.findall("division")) > 0
+    assert len(body.findall("title")) > 0
+
+    tree = normalize_bill(_HR5895_ENROLLED)
+    node_amounts: Counter[int] = Counter()
+    for n in tree.nodes:
+        node_amounts.update(extract_amounts(n.display_text or n.body_text or ""))
+    raw_amounts = Counter(extract_amounts(extract_text_content(body)))
+
+    # Financial conservation: every amount in the independent raw-XML body is
+    # accounted for by the union of per-node amounts (no drops).
+    dropped = raw_amounts - node_amounts
+    assert sum(dropped.values()) == 0, f"dropped amounts: {dict(dropped)}"
+
+
 class TestNormalizeHeader:
     def test_lowercase(self):
         assert normalize_header("DEPARTMENT OF DEFENSE") == "department of defense"
