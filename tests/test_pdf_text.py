@@ -200,6 +200,8 @@ class TestUnbulletedFooterConsumedOutput:
         assert any("airplane for replacement only" in ln.text for ln in flat)
         assert not any(ln.text == "HR 5895 PCS" for ln in flat)
 
+
+class TestFirstWordRight:
     """`_first_word_right` finds the first word boundary in a line's content glyphs.
 
     The load-bearing case (#130, #106 spike): PDFium emits a real space glyph (cp==32)
