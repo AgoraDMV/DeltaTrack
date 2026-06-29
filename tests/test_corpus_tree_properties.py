@@ -78,10 +78,16 @@ def _corpus_id(path: Path) -> str:
 # #108 — #108's job is conservation (no double-count) + documented residue.
 
 # XML: union(own_amounts) vs the INDEPENDENT raw-XML body (the strong gate).
+# Calibrated against the FULL local corpus (every fetched version, not just the
+# committed-reproducible subset); a clean clone simply won't reach the absent entries.
+# Note the shape: the product's actual diff targets — reported / engrossed / introduced
+# working versions — conserve EXACTLY (none listed); residue lives only in the
+# secondary enrolled / engrossed-amendment / reconciliation shapes.
 _XML_DROP_BUDGET: dict[str, int] = {
     # Amendment docs — deeply nested clause edges (0009 amendment-shape posture).
     "113-hr-83/6_engrossed-amendment-house.xml": 4,
     "113-hr-83/7_enrolled-bill.xml": 4,
+    "113-hr-3547/5_engrossed-amendment-house.xml": 1,
     "114-hr-2029/5_engrossed-amendment-senate.xml": 3,
     "114-hr-2029/6_engrossed-amendment-house.xml": 4,
     "116-hr-1865/5_engrossed-amendment-house.xml": 17,
@@ -89,9 +95,11 @@ _XML_DROP_BUDGET: dict[str, int] = {
     # Enrolled multi-division omnibus — cross-division residue + amendment carryover.
     "113-hr-3547/6_enrolled-bill.xml": 1,
     "114-hr-2029/7_enrolled-bill.xml": 4,
+    "115-hr-244/6_enrolled-bill.xml": 4,
     "115-hr-1625/7_enrolled-bill.xml": 16,
     "116-hr-133/7_enrolled-bill.xml": 21,
     "116-hr-1865/6_enrolled-bill.xml": 17,
+    "117-hr-2471/6_enrolled-bill.xml": 20,
     # 119-hr-1 reconciliation (not appropriations; corpus smoke bill) — amounts in
     # provision body text the appropriations-focused parser doesn't node-ize.
     "119-hr-1/1_reported-in-house.xml": 15,
