@@ -5,12 +5,17 @@ Guidelines for AI coding agents working on this repository.
 ## Quick reference
 
 ```bash
-uv sync                          # Install dependencies
+source init                      # Install deps + activate the venv (use `source`, not ./init)
+uv sync                          # (what init runs to install dependencies)
 uv run pytest -m "not slow and not browser"  # Fast tests only (~1s)
 uv run pytest                    # All tests (needs bills/ XML files)
 uv run pytest tests/test_diff_bill.py::TestMatchNodesIntegration  # Single test
 uv run python scripts/serve_compare.py 118-hr-8752  # PDF vs XML diff side by side (see TESTING.md)
 ```
+
+After `source init`, the top-level CLIs run via bare-name symlinks (`./fetch_bills`,
+`./diff_bill`, `./diff_pdf`, `./fetch_bill_archives` → their `.py` files); the
+`uv run python <script>.py` form still works either way.
 
 ## Workflow
 
@@ -39,6 +44,7 @@ This repo follows the workflow in [CONTRIBUTING.md](CONTRIBUTING.md). The load-b
 - `match_nodes()` in `diff_bill.py` uses division-aware matching: unique paths pair directly, collision groups (same `match_path` in multiple divisions) are resolved by normalized division title, then text similarity.
 - Floor amendment annotations like "(increased by $2,000,000)" reference the **budget request baseline**, not the previous bill version. The base amount in the text IS the correct appropriation. `amounts_changed` compares base amounts (annotations stripped). The `has_amendment_annotations` field on `FinancialChange` flags their presence for informational display.
 - Preamble sections (Short Title, References, etc.) sit alongside divisions/titles at the body level and are captured by `walk_body_sections()`.
+- Fetch tooling is layered: `fetch_bills.py` (per-bill text from the Congress.gov API) and `fetch_bill_archives.py` (bulk bill *metadata* from govinfo BILLSTATUS archives). Both share `shared/` (`http.py` API client + retry, `bill_types.py` the bill-type vocab, `version_stems.py` the version-file resolver) and `bill_index/` (a CSV-backed `BillIndex` keyed by `{congress}-{type}-{number}` slug; `parse_bill_id`/`make_bill_id`). `download-all --file <csv>` reads a slug list through `BillIndex`. Bills are stored as `bills/{congress}-{type}-{number}/{n}_{label}.{ext}` (folder = bill, file = version).
 
 ## Test conventions
 
