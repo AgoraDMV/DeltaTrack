@@ -350,8 +350,18 @@ def _pdf_tree_payload(
     if not anchors or side_offsets is None or side_text is None:
         return []
     ordered = list(anchors)  # extract_anchors yields document order
+    # The synthesized front-matter anchor (diff_pdf #33) sits at the bill's opening;
+    # its coerced (page, 1) coordinate is often absent from the per-line offset table,
+    # which would leave its block — the masthead / enacting clause — unattributed and
+    # the "Front Matter" node un-navigable. Anchor it at offset 0 (the document
+    # beginning) so it owns [0, start(first real anchor)) and renders as a navigable
+    # entry (#161). Front matter carries no dollar amounts in appropriations bills,
+    # so claiming this range stays conservation-clean.
     starts = [
-        (off[0] if (off := side_offsets.get((a.page_number, a.line_number))) is not None else None) for a in ordered
+        0
+        if a.kind == "preamble"
+        else (off[0] if (off := side_offsets.get((a.page_number, a.line_number))) is not None else None)
+        for a in ordered
     ]
     # Per-anchor own block, computed BY INDEX and keyed by id(anchor). Index-based
     # ranges make the partition robust to two anchors sharing a (page, line): they

@@ -66,12 +66,16 @@ class TestPrefixNesting:
     def test_empty_node_list_returns_empty(self):
         assert build_xml_tree(_bill([])) == []
 
-    def test_empty_path_leaf_is_top_level(self):
-        # Front-matter / preamble / body "Sec. 1" carry display_path=(); roots.
+    def test_leading_empty_path_nodes_group_under_front_matter(self):
+        # Front-matter / preamble / leading "Sec. 1" carry display_path=(); the
+        # leading run is grouped under a synthesized "Front Matter" container so the
+        # bill's opening is navigable (#161). The node is conserved as its child.
         roots = build_xml_tree(_bill([_node((), tag="front-matter")]))
         assert len(roots) == 1
-        assert roots[0].source is not None
+        assert roots[0].label == "Front Matter"
         assert roots[0].level == "preamble"
+        assert roots[0].source is None  # a synthesized container, not content
+        assert [c.source is not None for c in roots[0].children] == [True]  # node conserved
 
     def test_nested_path_creates_interior_chain(self):
         dp = ("TITLE I", "AGRICULTURAL PROGRAMS", "Office of the Secretary", "Salaries")

@@ -81,10 +81,13 @@ def _xml_tree_payload(
 
     A content node takes its body span (by element_id — the exact slice its text
     and own_amounts occupy); a synthesized interior node takes its heading-line
-    offset. Nodes with neither get a null span.
+    offset. A container with neither (the synthesized "Front Matter" group, whose
+    label is printed nowhere in the bill) spans its children, so the bill's opening
+    stays navigable; a node with none of the three gets a null span.
     """
 
     def node_json(n: TreeNode) -> dict:
+        children = [node_json(c) for c in n.children]
         span = None
         element_id = getattr(n.source, "element_id", "") if n.source is not None else ""
         if element_id and element_id in body_spans:
@@ -93,12 +96,16 @@ def _xml_tree_payload(
         elif n.display_path in heading_offsets:
             start = heading_offsets[n.display_path]
             span = {"start": start, "end": start + len(n.label)}
+        else:
+            child_spans = [c["full_text_span"] for c in children if c["full_text_span"]]
+            if child_spans:
+                span = {"start": min(s["start"] for s in child_spans), "end": max(s["end"] for s in child_spans)}
         return {
             "label": n.label,
             "level": n.level,
             "own_amounts": list(n.own_amounts),
             "full_text_span": span,
-            "children": [node_json(c) for c in n.children],
+            "children": children,
         }
 
     return [node_json(r) for r in build_xml_tree(bill)]
