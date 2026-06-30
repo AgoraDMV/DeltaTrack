@@ -52,3 +52,4 @@ relitigated.
 | [0010](0010-pdf-pipeline-pre-publication.md) | Support a PDF pipeline for pre-publication bills; prefer XML once published |
 | [0011](0011-local-only-processing.md) | Process user-provided bill content only on the user's machine; no channel may send it off-device |
 | [0012](0012-pdf-heading-levels.md) | Recover PDF heading levels from deterministic geometry; accept the prose-leading agency gap |
+| [0014](0014-leveled-heading-tree-scope.md) | Ship the recoverable heading levels as a conservation-checked tree; defer semantic rollup |
