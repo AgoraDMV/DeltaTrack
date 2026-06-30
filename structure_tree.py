@@ -57,8 +57,31 @@ _TITLE_RE = re.compile(r"^TITLE\s+[IVXLCDM]+\b", re.IGNORECASE)
 _DIVISION_RE = re.compile(r"^Division [A-Z](?=$|[\s:])")
 
 
+_FRONT_MATTER_LABEL = "Front Matter"
+
+
 def _leaf_level(tag: str) -> str:
     return _LEAF_LEVEL.get(tag, "account")
+
+
+def _front_matter_child_label(source: object) -> str | None:
+    """Display label for a node nested under the Front Matter group, or ``None`` to
+    keep its existing label.
+
+    XML children carry a ``BillNode`` whose ``<header>`` is the right label: a
+    short-title / definitions SEC. takes its heading ("Short Title", "Table of
+    Contents") so the group renders as a navigable toggle; masthead / enacting-clause
+    boilerplate has no heading -> "" (the renderer skips it but keeps it for
+    conservation). PDF children carry an ``Anchor`` whose catchline label (read from
+    the print) is already the best available, so they are left unchanged (``None``).
+    These are DISPLAY labels, not structure/match keys (#114)."""
+    if not isinstance(source, BillNode):
+        return None  # PDF Anchor (or container): keep the label it already has
+    if source.header_text:
+        return source.header_text
+    if source.tag == "section" and source.section_number:
+        return source.section_number  # already formatted ("Sec. 1"); don't re-prefix
+    return ""
 
 
 def _interior_level(label: str) -> str:
@@ -164,8 +187,14 @@ def build_xml_tree(bill: BillTree) -> list[TreeNode]:
     level comes from the XML tag; interior structure from display_path nesting.
     ``own_amounts`` come from each node's display_text (the locked decision: NOT
     the lossy body_text — display_text keeps trailing content body_text drops).
+
+    The leading run of empty-path front-matter nodes (masthead / enacting clause /
+    leading boilerplate, and any short-title/definitions sections that precede the
+    first title) is grouped under one synthesized ``Front Matter`` container so the
+    bill's opening is navigable at parity with the PDF pipeline (#161). Grouping
+    only reparents nodes — every amount stays attached to its block (conservation).
     """
-    return _build_tree(
+    roots = _build_tree(
         (
             n.display_path,
             _leaf_level(n.tag),
@@ -174,6 +203,56 @@ def build_xml_tree(bill: BillTree) -> list[TreeNode]:
         )
         for n in bill.nodes
     )
+    return _group_front_matter(roots)
+
+
+def _group_front_matter(roots: list[TreeNode]) -> list[TreeNode]:
+    """Wrap the bill's opening — everything before the first title/division — under
+    a single Front Matter node, on either pipeline.
+
+    The front matter is the masthead / enacting-clause boilerplate PLUS any leading
+    sections that precede the first appropriations structure: in an omnibus that is
+    the ``Sec. 1 Short title`` / ``Table of contents`` / ``Definitions`` run, which
+    carries real headings and so renders as a navigable toggle. ``_build_tree`` emits
+    all of these as bare top-level roots; left ungrouped the leveled TOC scatters
+    them (or skips the blank boilerplate), with no single "bill opening" entry.
+
+    The run is ``roots`` up to the first ``title``/``division`` root (document
+    order — front matter precedes the first title). The PDF pipeline already opens
+    with a synthesized ``Front Matter`` preamble anchor (diff_pdf #33), so that node
+    is REUSED as the container and the leading sections nest under it; the XML
+    pipeline has no such node, so one is synthesized. When the bill has no title or
+    division (a purely sectional, non-appropriations document) only empty-path
+    boilerplate is grouped, so real section content is not mislabeled as front
+    matter. Returns ``roots`` unchanged when the bill opens directly on a title."""
+    first_structural = next((i for i, r in enumerate(roots) if r.level in ("title", "division")), None)
+    if first_structural is not None:
+        end = first_structural
+    else:
+        end = 0
+        while end < len(roots) and roots[end].source is not None and not roots[end].display_path:
+            end += 1
+    if end == 0:
+        return roots
+    run, rest = roots[:end], roots[end:]
+    if run[0].label == _FRONT_MATTER_LABEL:
+        # PDF: reuse the synthesized Front Matter anchor as the container.
+        container = run[0]
+        container.children.extend(run[1:])
+    else:
+        # XML: synthesize the container over the whole run.
+        container = TreeNode(
+            label=_FRONT_MATTER_LABEL,
+            level="preamble",
+            display_path=(_FRONT_MATTER_LABEL,),
+            children=run,
+        )
+    for child in container.children:
+        relabel = _front_matter_child_label(child.source)
+        if relabel is not None:
+            child.label = relabel
+            child.display_path = (_FRONT_MATTER_LABEL, relabel)
+    return [container, *rest]
 
 
 def build_pdf_tree(anchors: Iterable[Anchor]) -> list[TreeNode]:
@@ -199,4 +278,9 @@ def build_pdf_tree(anchors: Iterable[Anchor]) -> list[TreeNode]:
     anchors = list(anchors)
     # own_amounts attach in canonical._pdf_tree_payload (it owns full_text + the
     # per-line char offsets); the tree itself carries () here.
-    return _build_tree((breadcrumb_for(a, anchors), a.kind, a, ()) for a in anchors)
+    roots = _build_tree((breadcrumb_for(a, anchors), a.kind, a, ()) for a in anchors)
+    # Group the bill's opening (the synthesized Front Matter anchor + any leading
+    # SEC. anchors before the first title/division) under one node, at parity with
+    # the XML pipeline (#161). Span/own_amounts are computed downstream from the flat
+    # anchor list, so reshaping the tree here does not affect conservation.
+    return _group_front_matter(roots)

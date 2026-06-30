@@ -295,14 +295,18 @@ def _build_toc_from_tree(tree_nodes: list[dict], full_text: str) -> str:
     def render(node: dict) -> str:
         kids = node.get("children") or []
         if not (node.get("label") or "").strip():
-            # An unlabeled node (e.g. the XML front-matter placeholders — masthead,
-            # enacting clause — which carry no heading) makes no useful TOC entry;
-            # skip it but hoist any children so their subtree stays reachable. A
-            # proper labelled "Front Matter" group is tracked as a follow-up.
+            # An unlabeled node (e.g. the front-matter boilerplate placeholders —
+            # masthead, enacting clause — which carry no heading) makes no useful TOC
+            # entry; skip it but hoist any children so their subtree stays reachable.
             return "".join(render(k) for k in kids)
-        if not kids:
-            return f'<li class="toc-child">{link(node)}</li>'
         inner = "".join(render(k) for k in kids)
+        if not inner:
+            # Labeled, but no child renders a visible entry (e.g. a "Front Matter"
+            # group over only unlabeled boilerplate): a toggle would expand to
+            # nothing, so render a clickable leaf that jumps to the node's span. When
+            # the group DOES have labeled children (leading short-title/definitions
+            # sections) it falls through to the <details> toggle below (#161).
+            return f'<li class="toc-child">{link(node)}</li>'
         return (
             f'<li><details class="toc-group"><summary>{link(node)}</summary><ul class="toc">{inner}</ul></details></li>'
         )
