@@ -8,7 +8,7 @@ of in production. It asserts on the **contract-shaped tree** (the canonical JSON
 nodes both pipelines emit), not an internal ``TreeNode`` dump — the consumed output
 (``feedback_measure_at_consumed_output``).
 
-Four invariants per bill version:
+Five invariants per bill version:
 
 1. **Schema-valid** — every node validates against the published ``TreeNode`` def.
 2. **Valid level** — every node's ``level`` is in the shared GPO enum.
@@ -21,6 +21,17 @@ Four invariants per bill version:
 4. **No blank-label TOC rows** — the leveled TOC the tree renders carries no blank
    clickable rows or empty groups (``feedback_validate_against_hard_fixture``: the
    consumed-output form of the blank-row invariant).
+5. **Well-behaved subtree extents** — the prerequisite for #172's span-containment
+   join (epic #175, step 1). A tree node's ``full_text_span`` is NOT a container span
+   (an interior node's span is its heading line only; a content node's is its own body
+   slice, excluding children — see ``_xml_tree_payload`` / ``_pdf_tree_payload`` and the
+   doc note in ``formatters/diff_html.py``). So #172 must derive a per-node *subtree
+   extent* = ``(min start, max end)`` over the node's own span and all descendants'.
+   The join is only correct if extents are well-behaved: sibling extents pairwise
+   disjoint + document-ordered, and every content child's span inside its parent's
+   extent. This gate tests that corpus-wide BEFORE the join is built on it. See
+   ``_assert_subtree_extents_well_behaved`` for what the corpus actually does (spoiler:
+   sibling disjointness trips, and that is a design input to #172, not a test bug).
 
 ``bills/`` is gitignored (fetched via ``fetch_bills.py``), so every case skips
 cleanly on a clean clone / in CI; local runs gate.
@@ -125,6 +136,72 @@ _PDF_DROP_BUDGET: dict[str, int] = {}
 _PDF_MONEY_SKIP: set[str] = {"116-hr-133/7_enrolled-bill.pdf"}
 
 
+# --- Subtree-extent overlap budgets (invariant 5) ------------------------------
+# A node's SUBTREE EXTENT is (min start, max end) over its own span and all
+# descendants' — the quantity #172's span-containment join will use ("deepest node
+# whose extent contains the change start"). For that join to be deterministic,
+# sibling extents must be pairwise DISJOINT and document-ordered; a change that lands
+# in two overlapping sibling extents has to escalate to their common ancestor.
+#
+# The corpus does NOT uphold sibling disjointness by construction, and this gate
+# measures how far off it is. Mechanism (the fresh-eyes prediction on #172, confirmed
+# here): the tree nests every item sharing a path prefix under the FIRST occurrence's
+# node, while the serializer / anchor stream revisit that prefix in document order — so
+# a parent's subtree extent stretches across intervening siblings. Two concrete shapes:
+#   - XML: a repeated account heading yields two sibling nodes with the same label, the
+#     later one's small extent nested inside the earlier one's wide extent (e.g. two
+#     "Legal Activities" under Dept. of Justice); or a genuinely different agency whose
+#     subtree extent swallows the next sibling (Architect of the Capitol over Library of
+#     Congress).
+#   - PDF: a division whose title anchors arrive out of numeric order (TITLE IV before
+#     TITLE I), or root-level title extents that overlap on a degraded omnibus scan.
+#
+# This is a DESIGN INPUT to #172, not a test bug: the escalation-to-common-ancestor
+# rule is load-bearing, not a rare edge. The budgets below LOCK IN the current overlap
+# counts (calibrated on the FULL local corpus, every fetched version — a clean clone
+# won't reach the absent entries) so a parser change that INCREASES structural overlap
+# trips the gate. A version not listed must have ZERO sibling-extent overlaps. The
+# CONTAINMENT half of the invariant (content child inside parent extent) holds EXACTLY
+# corpus-wide (0 violations, both pipelines) and is asserted strictly, no budget.
+#
+# Overlaps concentrate in enrolled / engrossed-amendment / reconciliation shapes but
+# are present in some working reported / engrossed-in-house versions too, so this is a
+# general structural property of the tree, not a secondary-shape artifact.
+_XML_EXTENT_OVERLAP_BUDGET: dict[str, int] = {
+    "113-hr-3547/5_engrossed-amendment-house.xml": 18,
+    "113-hr-3547/6_enrolled-bill.xml": 18,
+    "113-hr-83/6_engrossed-amendment-house.xml": 19,
+    "113-hr-83/7_enrolled-bill.xml": 19,
+    "114-hr-2029/6_engrossed-amendment-house.xml": 26,
+    "114-hr-2029/7_enrolled-bill.xml": 26,
+    "115-hr-1625/7_enrolled-bill.xml": 20,
+    "115-hr-244/6_enrolled-bill.xml": 19,
+    "115-hr-5895/4_engrossed-amendment-senate.xml": 2,
+    "115-hr-5895/5_enrolled-bill.xml": 1,
+    "116-hr-1865/5_engrossed-amendment-house.xml": 14,
+    "116-hr-1865/6_enrolled-bill.xml": 14,
+    "117-hr-2471/6_enrolled-bill.xml": 1,
+    "117-hr-4502/1_reported-in-house.xml": 1,
+    "117-hr-4502/2_engrossed-in-house.xml": 8,
+    "117-hr-4502/3_received-in-senate.xml": 8,
+    "118-hr-4366/4_engrossed-amendment-senate.xml": 3,
+    "118-hr-4366/5_engrossed-amendment-house.xml": 3,
+    "118-hr-4366/6_enrolled-bill.xml": 3,
+    "118-hr-4820/1_reported-in-house.xml": 3,
+    "118-s-4796/1_reported-in-senate.xml": 3,
+    "118-s-4927/1_reported-in-senate.xml": 1,
+}
+
+_PDF_EXTENT_OVERLAP_BUDGET: dict[str, int] = {
+    "114-hr-2029/4_reported-to-senate.pdf": 4,
+    "114-hr-2029/6_engrossed-amendment-house.pdf": 2,
+    "115-hr-244/5_engrossed-amendment-house.pdf": 1,
+    "116-hr-133/6_engrossed-amendment-house.pdf": 2,
+    "117-hr-2471/5_engrossed-amendment-house.pdf": 1,
+    "119-hr-1/1_reported-in-house.pdf": 1,
+}
+
+
 def _xml_tree_payload_for(path: Path) -> tuple[list[dict], str]:
     """The contract-shaped XML tree for one version, plus its full_text — built the
     way ``build_xml_full_text`` does, without the diff (the tree is per-side)."""
@@ -204,6 +281,115 @@ def _assert_money_conserves(roots: list[dict], reference: Counter, max_drop: int
     assert dropped <= max_drop, f"{label}: dropped {dropped} > documented budget {max_drop}"
 
 
+# --- Subtree extents (invariant 5) ---------------------------------------------
+
+
+def _span_valid(span: dict | None) -> bool:
+    """A span contributes to an extent only if it is present and non-empty. Extents are
+    half-open ``[start, end)``; a null or zero-length span matches nothing (mirrors the
+    collision / non-monotonic guards in ``formatters/canonical.py``)."""
+    return span is not None and span["end"] > span["start"]
+
+
+def _subtree_extent(node: dict) -> tuple[int, int] | None:
+    """The (min start, max end) over the node's own valid span and every descendant's —
+    the quantity #172's join will use. ``None`` when nothing in the subtree has a valid
+    span. This is the *reference* implementation of the extent the join must compute;
+    the gate asserts extents built this way are well-behaved."""
+    lo = hi = None
+    span = node["full_text_span"]
+    if _span_valid(span):
+        lo, hi = span["start"], span["end"]
+    for child in node["children"]:
+        ext = _subtree_extent(child)
+        if ext is None:
+            continue
+        lo = ext[0] if lo is None else min(lo, ext[0])
+        hi = ext[1] if hi is None else max(hi, ext[1])
+    return None if lo is None else (lo, hi)
+
+
+def _span_within_extent(extent: tuple[int, int] | None, span: dict | None) -> bool:
+    """Whether a (valid) span lies inside an extent, half-open. A null extent or an
+    invalid/zero-length span vacuously satisfies (nothing to contain / matches nothing).
+
+    NOTE: under ``_subtree_extent`` a content child's own span is ALWAYS within its
+    parent's extent (the extent folds the child in), so the containment check below
+    never trips on any tree the current extent function produces — it is an executable
+    spec of the precondition #172's own extent code must satisfy, and a guard against a
+    future change to the extent definition. The FALSIFIABLE half of invariant 5 (the one
+    that actually trips on the corpus) is sibling disjointness. This predicate is factored
+    out so its detection logic is unit-testable independent of that construction fact."""
+    if extent is None or not _span_valid(span):
+        return True
+    return extent[0] <= span["start"] and span["end"] <= extent[1]
+
+
+def _extent_violations(roots: list[dict]) -> tuple[list[str], list[str], int, int]:
+    """Walk the tree and collect invariant-5 violations.
+
+    Returns ``(sibling_overlaps, containment_violations, interior_nodes, sibling_cmps)``.
+    A *sibling overlap* is a consecutive pair of siblings (in document / child order,
+    the order the join descends) whose extents are not disjoint-and-increasing
+    (``prev.end <= next.start``, half-open — touching is allowed). Consecutive checking
+    is sufficient: if every consecutive pair is ordered-disjoint, all pairs are. A
+    *containment violation* is a content child whose own valid span falls outside its
+    parent's extent. ``interior_nodes`` / ``sibling_cmps`` feed the completeness floor.
+    """
+    overlaps: list[str] = []
+    containment: list[str] = []
+    interior = 0
+    sibling_cmps = 0
+
+    def visit(siblings: list[dict], parent_label: str) -> None:
+        nonlocal interior, sibling_cmps
+        # Sibling disjointness + document order, over siblings with a real extent.
+        real = [(n, ext) for n in siblings if (ext := _subtree_extent(n)) is not None]
+        for (a, ea), (b, eb) in zip(real, real[1:]):
+            sibling_cmps += 1
+            if not (ea[1] <= eb[0]):
+                overlaps.append(
+                    f"under {parent_label!r}: {a['label']!r} extent {ea} then "
+                    f"{b['label']!r} extent {eb} (not disjoint/ordered)"
+                )
+        for node in siblings:
+            if not node["children"]:
+                continue
+            interior += 1
+            parent_ext = _subtree_extent(node)
+            for child in node["children"]:
+                span = child["full_text_span"]
+                if not _span_within_extent(parent_ext, span):
+                    containment.append(
+                        f"child {child['label']!r} span "
+                        f"[{span['start']}, {span['end']}) outside parent "
+                        f"{node['label']!r} extent {parent_ext}"
+                    )
+            visit(node["children"], node["label"])
+
+    visit(roots, "<roots>")
+    return overlaps, containment, interior, sibling_cmps
+
+
+def _assert_subtree_extents_well_behaved(roots: list[dict], max_overlaps: int, label: str) -> int:
+    """Invariant 5. CONTAINMENT is strict (0 corpus-wide); sibling DISJOINTNESS is
+    bounded by the documented per-bill overlap budget — a version not in the registry
+    must have zero overlaps, and a regression that adds structural overlap trips here.
+    Returns the interior-node count so the caller can feed the completeness floor."""
+    overlaps, containment, interior, _cmps = _extent_violations(roots)
+    assert not containment, (
+        f"{label}: {len(containment)} content child span(s) outside the parent's subtree "
+        f"extent (invariant 5 containment is strict): {containment[:3]}"
+    )
+    assert len(overlaps) <= max_overlaps, (
+        f"{label}: {len(overlaps)} sibling-extent overlap(s) > documented budget "
+        f"{max_overlaps}. Overlaps are a known design input to #172 (escalate to the "
+        f"common ancestor); a NEW one means the parser deepened the interleaving — "
+        f"investigate before widening the budget. Samples: {overlaps[:3]}"
+    )
+    return interior
+
+
 def test_corpus_present_when_required() -> None:
     """Fail-loud completeness floor for the tree property gates (#167).
 
@@ -214,6 +400,44 @@ def test_corpus_present_when_required() -> None:
     """
     require_corpus_or_skip(ALL_XML_FILES, "tree-properties (XML)")
     require_corpus_or_skip(ALL_PDF_FILES, "tree-properties (PDF)")
+
+
+def test_extent_gate_runs_on_interior_nodes() -> None:
+    """Completeness floor for invariant 5 (the #167 fail-open pattern).
+
+    The overlap budgets and the containment assertion only bite when the tree has
+    interior (parent) nodes with siblings — a corpus of flat shells, or an extent walker
+    that silently visited nothing, would pass invariant 5 vacuously. Outside
+    REQUIRE_CORPUS this skips (clean-clone). In REQUIRE_CORPUS mode it asserts the gate
+    machinery actually exercises interior nodes AND sibling comparisons on real
+    structure, on BOTH pipelines, so a green run proves the invariant ran. It builds the
+    trees independently of the parametrized cases, so it holds even run in isolation.
+    """
+    require_corpus_or_skip(ALL_XML_FILES, "extent gate (XML)")
+    require_corpus_or_skip(ALL_PDF_FILES, "extent gate (PDF)")
+
+    # XML: a pinned, structurally-rich baseline (guaranteed present in REQUIRE_CORPUS).
+    xml_roots, _ = _xml_tree_payload_for(BILLS_DIR / "118-hr-4366" / "1_reported-in-house.xml")
+    _overlaps, _containment, xml_interior, xml_cmps = _extent_violations(xml_roots)
+    assert xml_interior > 0 and xml_cmps > 0, (
+        "extent gate visited no XML interior nodes / sibling pairs — invariant 5 would pass vacuously"
+    )
+
+    # PDF: not in the pinned baseline, so scan discovered files for structure and assert
+    # at least one case exercises the walk (accumulate until both counts are positive).
+    pdf_interior = pdf_cmps = 0
+    for pdf_path in ALL_PDF_FILES:
+        roots, _ = _pdf_tree_payload_for(pdf_path)
+        if not roots:
+            continue
+        _o, _c, interior, cmps = _extent_violations(roots)
+        pdf_interior += interior
+        pdf_cmps += cmps
+        if pdf_interior and pdf_cmps:
+            break
+    assert pdf_interior > 0 and pdf_cmps > 0, (
+        "extent gate visited no PDF interior nodes / sibling pairs — invariant 5 would pass vacuously"
+    )
 
 
 # --- XML corpus ----------------------------------------------------------------
@@ -236,6 +460,8 @@ def test_xml_tree_invariants_hold_corpus_wide(xml_path: Path) -> None:
     # both hold) so a spurious over-count on an empty body can't slip through.
     reference = _raw_xml_body_amounts(xml_path)
     _assert_money_conserves(roots, reference, _XML_DROP_BUDGET.get(test_id, 0), test_id)
+    # Invariant 5: subtree extents well-behaved (the #172 join prerequisite).
+    _assert_subtree_extents_well_behaved(roots, _XML_EXTENT_OVERLAP_BUDGET.get(test_id, 0), test_id)
 
 
 # --- PDF corpus ----------------------------------------------------------------
@@ -250,6 +476,9 @@ def test_pdf_tree_invariants_hold_corpus_wide(pdf_path: Path) -> None:
 
     _assert_schema_and_levels(roots)
     _assert_no_blank_toc_rows(roots, full_text)
+    # Invariant 5: subtree extents well-behaved (the #172 join prerequisite). Runs even
+    # on the money-skip bill below — extent geometry is independent of amount coverage.
+    _assert_subtree_extents_well_behaved(roots, _PDF_EXTENT_OVERLAP_BUDGET.get(test_id, 0), test_id)
     # Carve-out: PDF has no independent ground truth, so it measures against its own
     # rendered full_text (a labeled span-coverage check, weaker by construction).
     if test_id in _PDF_MONEY_SKIP:
