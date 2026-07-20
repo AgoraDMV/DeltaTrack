@@ -1492,8 +1492,30 @@ document.addEventListener('DOMContentLoaded', function() {
     a.addEventListener('click', function() {
       showView('changes');
       var href = a.getAttribute('href') || '';
-      if (href.charAt(0) === '#') revealCard(document.getElementById(href.slice(1)));
+      if (href.charAt(0) !== '#') return;
+      var target = document.getElementById(href.slice(1));
+      revealCard(target);
+      syncCurrentTo(target);
     });
+  });
+  // Financial-table rows link into the changes view the same way (#185).
+  // (Phrased to avoid the literal table heading: a test asserts that string
+  // is absent from a report with no financial data.)
+  document.querySelectorAll('.financial-table a[href^="#change-"]').forEach(function(a) {
+    a.addEventListener('click', function() {
+      showView('changes');
+      var target = document.getElementById((a.getAttribute('href') || '').slice(1));
+      revealCard(target);
+      syncCurrentTo(target);
+    });
+  });
+  // Clicking a card itself: covers the scroll-and-read flow, where the reader
+  // wants the arrows to continue from the card in front of them (#185). A
+  // click on a link inside a card is that link's navigation, not this one.
+  document.addEventListener('click', function(e) {
+    if (e.target.closest && e.target.closest('a')) return;
+    var card = e.target.closest && e.target.closest('.view-changes .change-card');
+    if (card) syncCurrentTo(card);
   });
 
   // Export modal: download diff.json / report.html, then reveal AI prompts.
@@ -1615,6 +1637,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (counter) counter.textContent = (current + 1) + ' / ' + n;
     if (prevBtn) prevBtn.disabled = current <= 0;
     if (nextBtn) nextBtn.disabled = current >= n - 1;
+  }
+  // Explicit navigation to a card (sidebar link, financial row, card click)
+  // moves the counter there, so the arrows step from what the reader is
+  // looking at rather than from wherever they last were (#185). A target the
+  // active filter hides isn't in navTargets, so leave the position alone.
+  function syncCurrentTo(el) {
+    if (!el) return;
+    var idx = navTargets().indexOf(el);
+    if (idx !== -1) { current = idx; refreshNav(); }
   }
   function goTo(idx) {
     var targets = navTargets();

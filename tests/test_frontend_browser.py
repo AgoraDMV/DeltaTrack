@@ -292,6 +292,48 @@ def test_prev_next_steps_into_nested_groups_and_reveals_collapsed(chromium, tmp_
     page.close()
 
 
+def test_explicit_navigation_syncs_the_prev_next_counter(chromium, tmp_path):
+    """Jumping to a card by sidebar link, Financial Summary row, or a click on
+    the card itself moves the counter to that card, so the arrows step from
+    what the reader is looking at rather than from where they last were (#185).
+
+    Browser-level because the contract is the runtime relationship between the
+    click handlers and navTargets' filter-aware target list.
+    """
+    report = tmp_path / "nav_sync.html"
+    report.write_text(_render_grouped_report(), encoding="utf-8")
+    page = chromium.new_page(viewport={"width": 1280, "height": 900})
+    page.goto(report.as_uri(), wait_until="domcontentloaded")
+
+    counter = page.locator("#nav-counter")
+    assert counter.inner_text() == "0 / 3"
+
+    # Sidebar link: counter lands on the linked card, and -> steps past it.
+    page.locator(".sidebar .nav-group > summary").first.click()
+    page.locator(".sidebar .nav-group .nav-group > summary").first.click()
+    page.locator('.sidebar a[href="#change-1"]').click()
+    assert counter.inner_text() == "2 / 3"
+    page.locator("#btn-next").click()
+    assert counter.inner_text() == "3 / 3"
+    assert page.locator("#change-2").is_visible()
+
+    # Clicking the card body itself (the free-scroll reading flow).
+    page.locator("#change-2 .change-header").click()
+    assert counter.inner_text() == "3 / 3"
+
+    # Financial Summary row link (change-0 is the only card carrying amounts).
+    page.locator('.financial-table a[href="#change-0"]').click()
+    assert counter.inner_text() == "1 / 3"
+
+    # Filter-aware: with the financial filter on, change-0 is the only visible
+    # target, so a jump to it reads 1 / 1 rather than its unfiltered position.
+    page.locator('input[name="change-filter"][value="financial"]').check()
+    assert counter.inner_text() == "0 / 1"
+    page.locator('.financial-table a[href="#change-0"]').click()
+    assert counter.inner_text() == "1 / 1"
+    page.close()
+
+
 def test_sample_report_opens_in_new_tab(live_url, chromium):
     """Clicking "View a sample report" opens the report in a new tab (#41).
 
