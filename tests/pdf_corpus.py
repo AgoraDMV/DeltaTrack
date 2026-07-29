@@ -20,7 +20,7 @@ from functools import lru_cache
 from importlib.metadata import version
 from pathlib import Path
 
-import parsers.pdf_text
+import deltatrack.parsers.pdf_text
 from corpus_paths import FIXTURES_DIR, sweep_bill_dirs
 from deltatrack.parsers.pdf_text import Page, extract_clean_pages
 
@@ -41,9 +41,10 @@ _CORPUS_SWEEP = os.environ.get("CORPUS_SWEEP") == "1"
 def _extractor_fingerprint() -> str:
     """Identity of the code that decides what a cache entry contains (#393).
 
-    Keying only on the PDF is not enough: editing `parsers/pdf_text.py` changes what
-    extraction produces but touches no PDF, so every entry still looks current and is
-    served unchanged. Tests that read the cache then assert against pre-change text and
+    Keying only on the PDF is not enough: editing `src/deltatrack/parsers/pdf_text.py`
+    changes what extraction produces but touches no PDF, so every entry still looks
+    current and is served unchanged. Tests that read the cache then assert against
+    pre-change text and
     stay green, which is worst for the golden suites, whose whole job is to go red on
     exactly that drift. The engine version is in here for the same reason: a pypdfium2
     upgrade can alter glyph handling without any source edit.
@@ -51,7 +52,7 @@ def _extractor_fingerprint() -> str:
     Deliberately blunt. A comment-only edit to the extractor also invalidates, costing
     one re-extraction; that is cheaper than reasoning about which edits are behavioral.
     """
-    src = Path(parsers.pdf_text.__file__).read_bytes()
+    src = Path(deltatrack.parsers.pdf_text.__file__).read_bytes()
     return hashlib.sha1(src + version("pypdfium2").encode()).hexdigest()[:12]
 
 

@@ -20,7 +20,7 @@ import os
 from importlib.metadata import version
 from pathlib import Path
 
-import parsers.pdf_text
+import deltatrack.parsers.pdf_text
 from tests import pdf_corpus
 
 
@@ -36,9 +36,8 @@ def test_fingerprint_tracks_extractor_source_and_engine():
     version. Recomputed here from those inputs directly, so dropping either one from
     `_extractor_fingerprint` fails here instead of silently widening what a stale entry
     can survive."""
-    expected = hashlib.sha1(Path(parsers.pdf_text.__file__).read_bytes() + version("pypdfium2").encode()).hexdigest()[
-        :12
-    ]
+    extractor_src = Path(deltatrack.parsers.pdf_text.__file__).read_bytes()
+    expected = hashlib.sha1(extractor_src + version("pypdfium2").encode()).hexdigest()[:12]
     assert pdf_corpus._extractor_fingerprint() == expected
 
 
