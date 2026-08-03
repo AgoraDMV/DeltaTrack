@@ -640,12 +640,9 @@ class TestTitleDescriptorOnRealBills:
     def _descriptors(self, pdf):
         from deltatrack.parsers.pdf_anchors import title_descriptor
 
-        anchors = extract_anchors(cached_pages(pdf))
-        return [
-            (a.text, title_descriptor(cached_pages(pdf), anchors, i))
-            for i, a in enumerate(anchors)
-            if a.kind == "title"
-        ]
+        pages = cached_pages(pdf)
+        anchors = extract_anchors(pages)
+        return [(a.text, title_descriptor(pages, anchors, i)) for i, a in enumerate(anchors) if a.kind == "title"]
 
     @pytest.mark.parametrize("name", sorted(_BILLS))
     def test_no_title_name_is_truncated(self, name):
