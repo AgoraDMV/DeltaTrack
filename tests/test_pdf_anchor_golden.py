@@ -614,3 +614,57 @@ class TestNoOpenerAccountRecall:
             "FEDERAL PROTECTIVE SERVICE (no 'For necessary expenses' opener) must be "
             f"captured exactly once as an account anchor on page 3; got {fps}"
         )
+
+
+class TestTitleDescriptorOnRealBills:
+    """Every TITLE carries its complete printed name (#49).
+
+    The unit tests in `test_pdf_anchors.py` build their own `Page` objects, so they
+    encode a belief about what the extractor emits rather than testing against it.
+    These run the real extractor over committed fixtures covering both shapes GPO
+    uses: the name as a separate heading below a bare `TITLE I` (118-hr-8752), and
+    the name inline after an em-dash (119-hr-1, 117-hr-4502).
+    """
+
+    _BILLS = {
+        "118-hr-8752": fixture_path("118-hr-8752", "2_engrossed-in-house.pdf"),
+        "119-hr-1": fixture_path("119-hr-1", "1_reported-in-house.pdf"),
+        "117-hr-4502": fixture_path("117-hr-4502", "2_engrossed-in-house.pdf"),
+    }
+    # A joined name never ends mid-word or on a conjunction/preposition: both mean the
+    # run stopped early. This is the shape of the #49 defect (`… INTEL-`, `SECURITY,
+    # ENFORCEMENT, AND`), so it fails on the pre-fix behaviour rather than passing
+    # vacuously.
+    _DANGLING = frozenset({"AND", "OR", "OF", "FOR", "TO", "THE", "A", "AN", "IN", "ON", "WITH", "AT", "BY"})
+
+    def _descriptors(self, pdf):
+        from deltatrack.parsers.pdf_anchors import title_descriptor
+
+        anchors = extract_anchors(cached_pages(pdf))
+        return [
+            (a.text, title_descriptor(cached_pages(pdf), anchors, i))
+            for i, a in enumerate(anchors)
+            if a.kind == "title"
+        ]
+
+    @pytest.mark.parametrize("name", sorted(_BILLS))
+    def test_no_title_name_is_truncated(self, name):
+        descriptors = self._descriptors(self._BILLS[name])
+        # Completeness floor: a bill that emitted no titles would pass every assertion
+        # below vacuously, which is the fail-open shape these gates keep hitting.
+        assert descriptors, f"{name} emitted no title anchors — the check never ran"
+        for title, desc in descriptors:
+            assert desc, f"{name} {title} has no name"
+            assert not desc.rstrip().endswith(("-", "‐", "‑")), f"{name} {title}: {desc!r} ends mid-word"
+            assert desc.split()[-1].upper() not in self._DANGLING, f"{name} {title}: {desc!r} stops on a dangling word"
+
+    def test_hr8752_title_one_matches_the_published_heading(self):
+        """The exact acceptance case from #49."""
+        descriptors = dict(self._descriptors(self._BILLS["118-hr-8752"]))
+        assert descriptors["TITLE I"] == ("DEPARTMENTAL MANAGEMENT, INTELLIGENCE, SITUATIONAL AWARENESS, AND OVERSIGHT")
+
+    def test_inline_named_title_recovers_the_part_on_the_title_line(self):
+        """119-hr-1 TITLE IX wraps twice and hyphenates both times; the pre-fix read
+        returned the middle fragment `SIGHT AND GOVERNMENT RE-` alone."""
+        descriptors = dict(self._descriptors(self._BILLS["119-hr-1"]))
+        assert descriptors["TITLE IX"] == "COMMITTEE ON OVERSIGHT AND GOVERNMENT REFORM"

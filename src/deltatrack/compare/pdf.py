@@ -23,7 +23,7 @@ from pathlib import Path
 from deltatrack.diff_pdf import PdfDiff, diff_pdfs
 from deltatrack.formatters.canonical import pdf_diff_to_canonical, view_from_canonical
 from deltatrack.formatters.diff_html import format_diff_html
-from deltatrack.parsers.pdf_anchors import Anchor
+from deltatrack.parsers.pdf_anchors import title_descriptor
 from deltatrack.parsers.pdf_text import Page, extract_clean_pages, pdf_full_text, pdf_full_text_print
 
 
@@ -270,20 +270,6 @@ def compare_pdfs_html(
     )
 
 
-def _title_descriptor(new_pages: list[Page], anchor: Anchor) -> str:
-    """The heading printed right below a TITLE line (e.g. "DEPARTMENT OF DEFENSE"),
-    which names the otherwise bare "TITLE I". "" when the next line isn't an
-    uppercase heading (so we never pull body prose into the label)."""
-    page = next((p for p in new_pages if p.page_number == anchor.page_number), None)
-    if page is None:
-        return ""
-    idx = next((i for i, ln in enumerate(page.lines) if ln.line_number == anchor.line_number), None)
-    if idx is None or idx + 1 >= len(page.lines):
-        return ""
-    nxt = page.lines[idx + 1].text.strip()
-    return nxt if nxt and nxt == nxt.upper() and not nxt.startswith("SEC.") else ""
-
-
 def _section_nav(pdf_diff: PdfDiff, new_pages: list[Page]) -> list[dict]:
     """Section-jump list for the full-bill view's TOC.
 
@@ -291,14 +277,16 @@ def _section_nav(pdf_diff: PdfDiff, new_pages: list[Page]) -> list[dict]:
     the print-faithful display text, so the renderer can id the matching row and
     the sidebar can link to it. `pdf_full_text_print`'s offsets are keyed by the
     same (page, merged-line) coordinates the anchors use; unresolved anchors are
-    skipped. TITLE anchors carry a `descriptor` (the heading below them) so the
-    bare "TITLE I" can be labelled. The synthesized front-matter anchor (issue
-    #33) has no printed line number to resolve against, so it maps to offset 0 —
-    the front matter always sits at the very top of the text.
+    skipped. TITLE anchors carry a `descriptor` — the title's full printed name,
+    joined across the lines it wraps onto and de-hyphenated (`title_descriptor`,
+    #49) — so the bare "TITLE I" can be labelled. The synthesized front-matter
+    anchor (issue #33) has no printed line number to resolve against, so it maps
+    to offset 0 — the front matter always sits at the very top of the text.
     """
     _, offsets = pdf_full_text_print(new_pages)
     sections: list[dict] = []
-    for a in pdf_diff.v2_anchors:
+    anchors = pdf_diff.v2_anchors
+    for i, a in enumerate(anchors):
         if a.kind == "preamble":
             start = 0
         else:
@@ -308,6 +296,6 @@ def _section_nav(pdf_diff: PdfDiff, new_pages: list[Page]) -> list[dict]:
             start = rng[0]
         entry = {"label": a.text, "kind": a.kind, "start": start}
         if a.kind == "title":
-            entry["descriptor"] = _title_descriptor(new_pages, a)
+            entry["descriptor"] = title_descriptor(new_pages, anchors, i)
         sections.append(entry)
     return sections

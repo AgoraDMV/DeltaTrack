@@ -6,7 +6,12 @@ reliably carries and the diff layer attaches to hunks as a "where am I" label.
 
 from __future__ import annotations
 
-from deltatrack.parsers.pdf_anchors import Anchor, _scan_anchors_in_page, breadcrumb_for
+from deltatrack.parsers.pdf_anchors import (
+    Anchor,
+    _scan_anchors_in_page,
+    breadcrumb_for,
+    title_descriptor,
+)
 
 
 class TestTitleAnchor:
@@ -363,3 +368,75 @@ class TestAnchorOrderingWithinPage:
         anchors = _scan_anchors_in_page(11, text)
         line_numbers = [a.line_number for a in anchors]
         assert line_numbers == sorted(line_numbers)
+
+
+class TestTitleDescriptor:
+    """The full printed name of a TITLE (#49).
+
+    GPO prints a title's name either as a separate centered heading below the
+    bare `TITLE I` line, or inline after an em-dash on the title line itself.
+    Both forms wrap across physical lines and both de-hyphenate at a soft wrap.
+    """
+
+    def _pages(self, *texts, page=1, size=18.0):
+        from deltatrack.parsers.pdf_text import Line
+        from deltatrack.parsers.pdf_text import Page as P
+
+        return [P(page, tuple(Line(i + 1, t, size) for i, t in enumerate(texts)))]
+
+    def test_separate_heading_is_joined_and_dehyphenated(self):
+        """118-hr-8752 TITLE I: the name is a wrapped, hyphenated run below the title."""
+        pages = self._pages(
+            "TITLE I",
+            "DEPARTMENTAL MANAGEMENT, INTEL-",
+            "LIGENCE, SITUATIONAL AWARENESS, AND",
+            "OVERSIGHT",
+            "SEC. 101. SOMETHING.",
+        )
+        anchors = [
+            Anchor(1, 1, "title", "TITLE I"),
+            Anchor(1, 2, "major", "DEPARTMENTAL MANAGEMENT, INTELLIGENCE, SITUATIONAL AWARENESS, AND OVERSIGHT"),
+        ]
+        assert title_descriptor(pages, anchors, 0) == (
+            "DEPARTMENTAL MANAGEMENT, INTELLIGENCE, SITUATIONAL AWARENESS, AND OVERSIGHT"
+        )
+
+    def test_inline_name_is_joined_and_dehyphenated(self):
+        """119-hr-1 TITLE IX: the name starts on the title line and wraps twice."""
+        pages = self._pages(
+            "TITLE IX—COMMITTEE ON OVER-",
+            "SIGHT AND GOVERNMENT RE-",
+            "FORM",
+            "SEC. 90001. SOMETHING.",
+        )
+        anchors = [Anchor(1, 1, "title", "TITLE IX")]
+        assert title_descriptor(pages, anchors, 0) == "COMMITTEE ON OVERSIGHT AND GOVERNMENT REFORM"
+
+    def test_inline_run_stops_at_a_mixed_case_heading(self):
+        """A `Subtitle A—…` line is a different structural level, not part of the name."""
+        pages = self._pages(
+            "TITLE VIII—COMMITTEE ON",
+            "NATURAL RESOURCES",
+            "Subtitle A—Energy and Mineral",
+            "Resources",
+        )
+        anchors = [Anchor(1, 1, "title", "TITLE VIII")]
+        assert title_descriptor(pages, anchors, 0) == "COMMITTEE ON NATURAL RESOURCES"
+
+    def test_fully_inline_name_needs_no_continuation(self):
+        """117-hr-4502 TITLE IX: the whole name fits on the title line."""
+        pages = self._pages("TITLE IX—ADDITIONAL PROVISIONS", "SEC. 901. SOMETHING.")
+        anchors = [Anchor(1, 1, "title", "TITLE IX")]
+        assert title_descriptor(pages, anchors, 0) == "ADDITIONAL PROVISIONS"
+
+    def test_no_name_yields_empty(self):
+        """A bare title whose next line is body prose gets no descriptor."""
+        pages = self._pages("TITLE I", "For necessary expenses of the Department, $5,000.")
+        anchors = [Anchor(1, 1, "title", "TITLE I")]
+        assert title_descriptor(pages, anchors, 0) == ""
+
+    def test_non_adjacent_major_is_not_borrowed(self):
+        """A major further down the page belongs to something else, not this title."""
+        pages = self._pages("TITLE I", "For necessary expenses, $5,000.", "DEPARTMENT OF LABOR")
+        anchors = [Anchor(1, 1, "title", "TITLE I"), Anchor(1, 3, "major", "DEPARTMENT OF LABOR")]
+        assert title_descriptor(pages, anchors, 0) == ""

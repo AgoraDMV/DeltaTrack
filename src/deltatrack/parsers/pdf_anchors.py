@@ -73,7 +73,7 @@ _TITLE_PATTERN = re.compile(r"^TITLE\s+([IVXLC]+)\b.*$")
 # with an em-dash (U+2014); en-dash (U+2013) is accepted defensively. An ASCII hyphen
 # is deliberately NOT matched, so a hyphenated numeral like "TITLE I-A" is not mistaken
 # for an inline-named title.
-_INLINE_TITLE_NAME = re.compile(r"^TITLE\s+[IVXLC]+\s*[—–]\s*\S")
+_INLINE_TITLE_NAME = re.compile(r"^TITLE\s+[IVXLC]+\s*[—–]\s*(\S.*)$")
 _SECTION_PATTERN = re.compile(r"^(SEC(?:TION)?\.?\s+\d+)\b")
 _FOR_NECESSARY_EXPENSES = re.compile(r"^For necessary expenses of\b", re.IGNORECASE)
 # A run-in subsection header ("(B) Current visas revoked.—") renders small-caps,
@@ -591,6 +591,69 @@ def _join_major_run(segment) -> str:
         seg = ln.text.strip()
         text = text[:-1] + seg if text.endswith(_WRAP_HYPHENS) else f"{text} {seg}"
     return text
+
+
+def title_descriptor(pages: list[Page], anchors: list[Anchor], index: int) -> str:
+    """The full printed name of the title at ``anchors[index]``, or "" if it has none (#49).
+
+    GPO gives a title its name in one of two shapes, and both wrap across physical
+    lines, de-hyphenating at the break:
+
+        TITLE I                                  TITLE IX—COMMITTEE ON OVER-
+        DEPARTMENTAL MANAGEMENT, INTEL-          SIGHT AND GOVERNMENT RE-
+        LIGENCE, SITUATIONAL AWARENESS, AND      FORM
+        OVERSIGHT
+
+    The left shape is already joined for us: `_major_anchors_by_size` emits the run
+    below a bare title as a `major` anchor, de-hyphenated (`_join_major_run`) and cut
+    at stacked-heading boundaries (`_split_major_run`, #130). Reading that anchor
+    instead of re-walking the lines keeps ONE implementation of the join rules — the
+    single-line read this replaced was a second, weaker one, which is why it truncated
+    at the first physical line and left the dangling `INTEL-`.
+
+    Adjacency is required (same page, the very next printed line). A `major` further
+    down belongs to an account, not to this title.
+
+    The right shape has no major anchor *by construction*: the major detector skips an
+    inline-named title precisely because the run below it is the title's own name. So
+    that name is rebuilt here from the title line's post-em-dash remainder plus the
+    uppercase-heading lines continuing it. The run stops at the first line that is not
+    an uppercase heading, which is what keeps a following `Subtitle A—…` (mixed case)
+    or `SEC. …` out of the name.
+
+    Residue: the inline branch does not apply `_split_major_run`'s line-fullness test,
+    so an inline-named title followed by a genuine stacked all-caps heading would join
+    the two. No corpus instance exists (all 12 inline-named titles are 119-hr-1 and
+    117-hr-4502, each followed by a `Subtitle`/`SEC.` line that stops the run).
+    """
+    anchor = anchors[index]
+    nxt = anchors[index + 1] if index + 1 < len(anchors) else None
+    if (
+        nxt is not None
+        and nxt.kind == "major"
+        and nxt.page_number == anchor.page_number
+        and anchor.line_number is not None
+        and nxt.line_number == anchor.line_number + 1
+    ):
+        return nxt.text
+
+    page = next((p for p in pages if p.page_number == anchor.page_number), None)
+    if page is None:
+        return ""
+    idx = next((i for i, ln in enumerate(page.lines) if ln.line_number == anchor.line_number), None)
+    if idx is None:
+        return ""
+    inline = _INLINE_TITLE_NAME.match(page.lines[idx].text.strip())
+    if inline is None:
+        return ""
+
+    name = inline.group(1).strip()
+    for cont in page.lines[idx + 1 :]:
+        text = cont.text.strip()
+        if not _is_uppercase_heading(text):
+            break
+        name = name[:-1] + text if name.endswith(_WRAP_HYPHENS) else f"{name} {text}"
+    return name
 
 
 def _major_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
