@@ -17,6 +17,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from deltatrack.bill_tree import BillNode, BillTree, amount_text, normalize_bill
+from deltatrack.similarity import (
+    MOVE_THRESHOLD,
+    SIMILARITY_THRESHOLD,
+    move_candidates,
+    text_similarity,
+)
 from deltatrack.version_stems import (
     label_from_stem,
     local_versions,
@@ -203,7 +209,7 @@ def _similarity_pair(
         o_norm = _normalize_text(o.body_text)
         for ni, n in enumerate(new_nodes):
             n_norm = _normalize_text(n.body_text)
-            sim = _text_similarity(o_norm, n_norm)
+            sim = text_similarity(o_norm, n_norm)
             candidates.append((sim, oi, ni))
 
     # Greedy: highest similarity first
@@ -429,98 +435,14 @@ class BillDiff:
     changes: list[NodeDiff]
 
 
-_SIMILARITY_THRESHOLD = 0.4
-
-
 def _normalize_text(text: str) -> str:
     """Normalize whitespace for comparison: collapse runs, strip."""
     return " ".join(text.split())
 
 
-def _text_similarity(a: str, b: str) -> float:
-    """Compute word-level similarity ratio between two texts (0.0 to 1.0)."""
-    return difflib.SequenceMatcher(None, a.split(), b.split()).ratio()
-
-
-def _text_similarity_at_least(a: str, b: str, threshold: float) -> float:
-    """Word-level similarity, but skip the full computation when it provably
-    can't reach `threshold`.
-
-    `difflib.SequenceMatcher.real_quick_ratio()` (length-based) and
-    `quick_ratio()` (multiset-based) are documented upper bounds on `ratio()`,
-    so if either falls below `threshold` the true ratio does too. Returns the
-    exact ratio when it is >= `threshold`, else `0.0`. Result-preserving for any
-    caller that compares the result against `threshold` (and uses the exact
-    value only when it clears it). Matches `_text_similarity` (default autojunk)
-    when the full ratio is computed.
-    """
-    sm = difflib.SequenceMatcher(None, a.split(), b.split())
-    if sm.real_quick_ratio() < threshold or sm.quick_ratio() < threshold:
-        return 0.0
-    ratio = sm.ratio()
-    return ratio if ratio >= threshold else 0.0
-
-
-def _move_candidates(
-    removed_texts: list[str],
-    added_texts: list[str],
-    threshold: float,
-) -> list[tuple[float, int, int]]:
-    """All `(sim, removed_idx, added_idx)` whose word-level ratio >= `threshold`.
-
-    Two behavior-preserving speedups over the naive removed×added double loop:
-
-    1. One `SequenceMatcher` is reused with `set_seq2` called once per added text
-       (difflib's documented "compare one sequence against many" pattern), so the
-       expensive seq2 index (`__chain_b`) is built once per added text instead of
-       once per pair.
-    2. `real_quick_ratio()`/`quick_ratio()` (upper bounds on `ratio()`) gate the
-       full `ratio()` so impossible pairs are skipped.
-
-    The returned tuples are identical to computing `_text_similarity` for every
-    pair: same seq1/seq2 and autojunk, and the indices are local positions in
-    `removed_texts`/`added_texts`. Callers sort by the full tuple, so iteration
-    order does not affect the result.
-
-    Text-free entries produce no candidate at all (#357). difflib scores two empty
-    sequences as a perfect 1.0, so every empty removed entry used to match every empty
-    added entry at the maximum, and the caller's greedy claim loop turned that tie into
-    a move record decided by iteration order rather than by any property of the two
-    sections. A section with no text carries no evidence that it moved anywhere. Such
-    nodes are legitimate rather than a text-extraction fault: a section whose subsections
-    all became their own nodes keeps the SEC. heading and an empty body (#188).
-
-    This is a behavior change, and the only one: an empty entry paired with a non-empty
-    one already scored 0.0, far below any usable threshold, so nothing that previously
-    reached the threshold stops doing so. It is also where most of the work went --
-    on 118-hr-3935 v1 -> v6, 75,032 of 78,397 candidate pairs were empty-against-empty.
-    """
-    removed_words = [t.split() for t in removed_texts]
-    candidates: list[tuple[float, int, int]] = []
-    sm = difflib.SequenceMatcher()  # autojunk=True, matching _text_similarity
-    for ai, added in enumerate(added_texts):
-        added_words = added.split()
-        if not added_words:
-            continue
-        sm.set_seq2(added_words)
-        for ri, words in enumerate(removed_words):
-            if not words:
-                continue
-            sm.set_seq1(words)
-            if sm.real_quick_ratio() < threshold or sm.quick_ratio() < threshold:
-                continue
-            sim = sm.ratio()
-            if sim >= threshold:
-                candidates.append((sim, ri, ai))
-    return candidates
-
-
-_MOVE_THRESHOLD = 0.6
-
-
 def reconcile_moves(
     changes: list[NodeDiff],
-    threshold: float = _MOVE_THRESHOLD,
+    threshold: float = MOVE_THRESHOLD,
 ) -> list[NodeDiff]:
     """Re-link removed+added pairs that are actually moved sections.
 
@@ -536,7 +458,7 @@ def reconcile_moves(
 
     # Pairwise similarities (gated + matcher-reused; identical result to the
     # naive removed×added double loop, since callers sort by the full tuple).
-    candidates = _move_candidates(
+    candidates = move_candidates(
         [_normalize_text(rc.old_text or "") for _, rc in removed],
         [_normalize_text(ac.new_text or "") for _, ac in added],
         threshold,
@@ -660,7 +582,7 @@ def diff_bills(old: BillTree, new: BillTree) -> BillDiff:
                         new_amount_text=amount_text(new_node),
                     )
                 )
-            elif _text_similarity(old_normalized, new_normalized) < _SIMILARITY_THRESHOLD:
+            elif text_similarity(old_normalized, new_normalized) < SIMILARITY_THRESHOLD:
                 # Texts too different: false match (e.g., reused section number).
                 changes.append(
                     NodeDiff(

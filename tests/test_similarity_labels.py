@@ -3,7 +3,7 @@
 `tests/data/similarity_labels.json` is a hand-labeled set of real section pairs, each
 tagged SAME (a revision of one provision -> the matcher should link them) or DIFFERENT
 (unrelated provisions that merely share boilerplate -> should not be linked). We run the
-production similarity pipeline (`_text_similarity(_normalize_text(...))`) over the frozen
+production similarity pipeline (`text_similarity(_normalize_text(...))`) over the frozen
 text and check whether the governing threshold classifies each pair the way a human did.
 
 Three kinds of pairs:
@@ -31,11 +31,11 @@ import json
 
 import pytest
 
-from deltatrack.diff_bill import (
-    _MOVE_THRESHOLD,
-    _SIMILARITY_THRESHOLD,
-    _normalize_text,
-    _text_similarity,
+from deltatrack.diff_bill import _normalize_text
+from deltatrack.similarity import (
+    MOVE_THRESHOLD,
+    SIMILARITY_THRESHOLD,
+    text_similarity,
 )
 from tests.corpus_paths import DATA_DIR
 
@@ -45,12 +45,12 @@ _PAIRS = json.loads(_FIXTURE.read_text())["pairs"]
 
 def _threshold(decision: str) -> float:
     """The similarity cutoff that governs this pair's decision."""
-    return _SIMILARITY_THRESHOLD if decision == "split" else _MOVE_THRESHOLD
+    return SIMILARITY_THRESHOLD if decision == "split" else MOVE_THRESHOLD
 
 
 def _predicted_label(pair: dict) -> str:
     """What the current thresholds decide for this pair: 'same' or 'different'."""
-    sim = _text_similarity(_normalize_text(pair["text_old"]), _normalize_text(pair["text_new"]))
+    sim = text_similarity(_normalize_text(pair["text_old"]), _normalize_text(pair["text_new"]))
     return "same" if sim >= _threshold(pair["decision"]) else "different"
 
 
