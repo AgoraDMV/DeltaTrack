@@ -141,6 +141,35 @@ in H.R. 8752, `GENERAL PROVISIONS` is tagged `appropriations-major` while
 `Administrative provisions` is `appropriations-intermediate`. Treat the tag as a level
 hint cross-checked against the budget-account meaning above, not a guaranteed semantic.
 
+### What the positional interiors cost the money rollup
+
+The asymmetry above is a *data* limitation, not only a display one, and it is worth
+stating explicitly because it keeps being rediscovered as a bug (#470).
+
+The financial-semantics epic (#147) rolls money along the tree edges
+`account → agency → department → title → division`, and [ADR 0014](decisions/0014-leveled-heading-tree-scope.md)
+names this tree as its substrate. On the XML side the *edges* are sound — accounts do
+nest under their agency's path segment — but the **node levels are not**: an agency
+container, a department container, and a grouping container are all `heading`, so a
+consumer cannot tell which edge it is crossing. A drill-down keyed on
+department/agency/account cannot be built from that, on XML, today.
+
+**This is a discard, not a detection problem.** The level is present in the source and
+read during parsing: GPO's own stylesheet distinguishes the three levels *by tag*
+(`appropriations-major` uppercase / `-intermediate` small-caps / `-small` lowercase —
+see [gpo-render-conventions.md](gpo-render-conventions.md)), and `bill_tree.py` already
+tracks `current_major` / `current_intermediate` from those tags while walking siblings.
+The tag reaches `_build_paths`, which uses it to *place* the segment and then keeps only
+the string. The PDF pipeline's typed `agency` / `major` anchors recover by glyph
+geometry what the XSLT generated from that same tag, so XML carries strictly more level
+information than PDF here, not less.
+
+Two constraints on any fix. First, the tag is **convention, not semantics** (see the
+caveat above), so a carried level is a well-grounded hint that still wants the
+committee-report cross-check (ADR 0009) before a rollup total is trusted. Second, per
+#114, the level must come from the tag — not from casing or wording of the header,
+which would put a text trigger back into structure detection.
+
 ### Section subdivision ladder (HOLC)
 
 Within a section, the House Office of the Legislative Counsel fixes the order and
