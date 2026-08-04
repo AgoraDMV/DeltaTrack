@@ -466,7 +466,11 @@ def test_counter_follows_explicit_card_navigation(chromium, tmp_path):
     page.locator("#btn-next").click()
     assert counter.inner_text() == "3 / 3"
 
-    # 2. Financial Summary row link (only change-0 carries amounts).
+    # 2. Financial Summary row link (only change-0 carries amounts). The table
+    # ships collapsed, so open it before reaching a row.
+    fin = page.locator("details.financial-summary")
+    assert fin.evaluate("el => el.open") is False
+    fin.locator("summary").click()
     page.locator('.financial-table a[href="#change-0"]').first.click()
     assert counter.inner_text() == "1 / 3"
 
@@ -526,6 +530,42 @@ def test_sample_report_opens_in_new_tab(live_url, chromium):
 
     # And the landing page shows no "pop-up blocked" / load error.
     assert page.locator("#upload-error").is_hidden()
+
+    report.close()
+    page.close()
+
+
+def test_report_tab_shows_progress_while_the_diff_renders(live_url, chromium, tmp_path):
+    """The report tab is opened on the click but can't be filled until the server
+    finishes, which on a large bill takes tens of seconds. It must say so rather
+    than sit on about:blank, where a slow render is indistinguishable from a
+    stalled one.
+
+    The compare request is intercepted and left unanswered, which is exactly the
+    state under test: the tab is open, the report has not arrived.
+    """
+    start = tmp_path / "start.pdf"
+    end = tmp_path / "end.pdf"
+    start.write_bytes(b"%PDF-1.4 start")
+    end.write_bytes(b"%PDF-1.4 end")
+
+    page = chromium.new_page()
+    # Hold the request open for the life of the test; nothing ever fulfills it.
+    page.route("**/api/compare*", lambda route: None)
+    page.goto(live_url.rstrip("/") + "/compare.html", wait_until="domcontentloaded")
+
+    page.locator("#start-input").set_input_files(str(start))
+    page.locator("#end-input").set_input_files(str(end))
+
+    with page.context.expect_page() as new_page_info:
+        page.locator("#compare-btn").click()
+    report = new_page_info.value
+
+    report.wait_for_selector(".spinner")
+    assert "Diff in progress" in report.locator("h1").inner_text()
+    # The spinner is a real animation, not a static glyph, so the tab reads as
+    # working rather than frozen.
+    assert report.locator(".spinner").evaluate("el => getComputedStyle(el).animationName") != "none"
 
     report.close()
     page.close()

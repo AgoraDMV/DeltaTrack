@@ -89,6 +89,17 @@ h1, h2, h3, h4 { font-family: var(--font-serif); letter-spacing: -0.02em; }
 .badge-removed { background: var(--diff-remove); color: var(--diff-remove-foreground); }
 .badge-moved { background: var(--diff-moved); color: var(--diff-moved-foreground); }
 
+/* Financial summary: collapsed by default so the table doesn't bury the text */
+.financial-summary { margin: 0 0 20px; }
+.financial-summary > summary { cursor: pointer; list-style: none; display: flex;
+  align-items: baseline; gap: 8px; padding: 4px 0; }
+.financial-summary > summary::-webkit-details-marker { display: none; }
+.financial-summary > summary::before { content: "\25be"; color: var(--muted-foreground);
+  font-size: 11px; align-self: center; }
+.financial-summary:not([open]) > summary::before { content: "\25b8"; }
+.financial-summary > summary h2 { display: inline; margin: 0; }
+.financial-summary > summary .count { color: var(--muted-foreground); font-size: 13px; font-weight: 400; }
+
 /* Financial table */
 .financial-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px; }
 .financial-table th { background: var(--muted); text-align: left; padding: 9px;
@@ -348,7 +359,8 @@ body.nav-collapsed .main { margin-left: 0; padding-left: 64px; }
 <button id="export-open" class="export-btn" type="button">Export and share</button>
 </div>
 </div>
-<div class="view view-changes"><h2>Financial Summary</h2>
+<div class="view view-changes"><details class="financial-summary">
+<summary><h2>Financial Summary</h2><span class="count">785 amount changes</span></summary>
 <table class="financial-table">
 <thead><tr>
 <th>Section</th>
@@ -1143,7 +1155,7 @@ body.nav-collapsed .main { margin-left: 0; padding-left: 64px; }
 <tr class="increase" data-group="262"><td rowspan="2"><a href="#change-627">Division C: Transportation, Housing and Urban Development, and Related Agencies Appropriations Act, 2024 &gt; TITLE IV—GENERAL PROVISIONS—THIS ACT &gt; sec. 405</a></td><td class="amount">—</td><td class="amount">$5,000,000</td><td class="amount change-amount">+$5,000,000</td><td class="amount change-amount">—</td></tr>
 <tr class="increase" data-group="262"><td class="amount">—</td><td class="amount">$5,000,000</td><td class="amount change-amount">+$5,000,000</td><td class="amount change-amount">—</td></tr>
 <tr class="increase" data-group="263"><td><a href="#change-701">Division A: Military Construction, Veterans Affairs, and Related Agencies Appropriations Act, 2024 &gt; TITLE II &gt; DEPARTMENT OF VETERANS AFFAIRS &gt; Administrative provisions &gt; sec. 251</a></td><td class="amount">—</td><td class="amount">$10,000,000</td><td class="amount change-amount">+$10,000,000</td><td class="amount change-amount">—</td></tr>
-</tbody></table>
+</tbody></table></details>
 <h2>Changes</h2>
 <details class="card-group" open><summary class="card-group__label">Sec. 1</summary>
 <div class="change-card added" id="change-108" data-type="added" data-financial="0">

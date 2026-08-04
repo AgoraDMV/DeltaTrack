@@ -72,17 +72,50 @@
 
   // --- Submit --------------------------------------------------------------
 
-  // Open a blank tab synchronously on user click so the browser treats it as
+  // Shown in the new tab while the server renders. A large bill takes tens of
+  // seconds, and an about:blank tab is indistinguishable from a stalled one, so
+  // the placeholder names the work and animates to show it is still running.
+  // Self-contained (no /css or /js fetch) because the tab is written via
+  // document.write and has no origin of its own to resolve relative URLs from.
+  const PENDING_HTML = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Diff in progress — DeltaTrack</title>
+<style>
+  html,body{height:100%;margin:0}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    background:#f9f7f5;color:#2c2c5c;
+    font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+  .spinner{width:44px;height:44px;border:4px solid #d8d4ce;border-top-color:#2c2c5c;
+    border-radius:50%;animation:spin 900ms linear infinite}
+  h1{font-size:1.15rem;font-weight:600;margin:0}
+  p{margin:0;font-size:.85rem;color:#686881}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spinner{animation-duration:2.4s}}
+</style></head>
+<body>
+  <div class="spinner" role="status" aria-live="polite" aria-label="Diff in progress"></div>
+  <h1>Diff in progress…</h1>
+  <p>Large bills can take a minute. This tab will fill in when the report is ready.</p>
+</body></html>`;
+
+  // Open the tab synchronously on user click so the browser treats it as
   // allowed. Do NOT pass "noopener" here — that makes window.open return null
   // even when the tab opens, which breaks document.write below.
   function openReportTab() {
-    return window.open('about:blank', '_blank');
+    const tab = window.open('about:blank', '_blank');
+    if (tab) writeTab(tab, PENDING_HTML);
+    return tab;
   }
 
-  function writeReportTab(tab, html) {
+  function writeTab(tab, html) {
     tab.document.open();
     tab.document.write(html);
     tab.document.close();
+  }
+
+  // Final write: sever the opener link only once the report is in place, so the
+  // placeholder write above can't be affected by dropping the reference.
+  function writeReportTab(tab, html) {
+    writeTab(tab, html);
     tab.opener = null;
   }
 

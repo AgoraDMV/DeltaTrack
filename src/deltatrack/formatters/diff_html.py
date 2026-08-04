@@ -561,14 +561,23 @@ def _build_financial_summary(view: DiffView) -> str:
     together. An added row has no old amount and a removed row no new amount —
     rendered as "—", never ``fmt_dollar(None)`` (which raises).
 
+    Wrapped in a ``<details>`` that is *closed* by default: on a real
+    appropriations bill the table runs hundreds of rows and pushes the bill text
+    off the first several screens. The summary carries the entry count so the
+    table's size is visible without opening it, and ``revealCard`` opens the
+    <details> like any other, so find-in-page hits and #change-N jumps still work.
+
     Returns "" when no change carries any amount entry.
     """
     rows: list[tuple[int, ChangeView]] = [(i, c) for i, c in enumerate(view.changes) if _amount_entries_for(c)]
     if not rows:
         return ""
 
+    entry_count = sum(len(_amount_entries_for(c)) for _, c in rows)
+    noun = "amount change" if entry_count == 1 else "amount changes"
     lines = [
-        "<h2>Financial Summary</h2>",
+        '<details class="financial-summary">',
+        f'<summary><h2>Financial Summary</h2><span class="count">{entry_count} {noun}</span></summary>',
         '<table class="financial-table">',
         "<thead><tr>",
         "<th>Section</th>",
@@ -619,7 +628,7 @@ def _build_financial_summary(view: DiffView) -> str:
                 f"</tr>"
             )
 
-    lines.append("</tbody></table>")
+    lines.append("</tbody></table></details>")
     return "\n".join(lines)
 
 
@@ -1189,6 +1198,17 @@ h1, h2, h3, h4 { font-family: var(--font-serif); letter-spacing: -0.02em; }
 .badge-added { background: var(--diff-add); color: var(--diff-add-foreground); }
 .badge-removed { background: var(--diff-remove); color: var(--diff-remove-foreground); }
 .badge-moved { background: var(--diff-moved); color: var(--diff-moved-foreground); }
+
+/* Financial summary: collapsed by default so the table doesn't bury the text */
+.financial-summary { margin: 0 0 20px; }
+.financial-summary > summary { cursor: pointer; list-style: none; display: flex;
+  align-items: baseline; gap: 8px; padding: 4px 0; }
+.financial-summary > summary::-webkit-details-marker { display: none; }
+.financial-summary > summary::before { content: "\\25be"; color: var(--muted-foreground);
+  font-size: 11px; align-self: center; }
+.financial-summary:not([open]) > summary::before { content: "\\25b8"; }
+.financial-summary > summary h2 { display: inline; margin: 0; }
+.financial-summary > summary .count { color: var(--muted-foreground); font-size: 13px; font-weight: 400; }
 
 /* Financial table */
 .financial-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px; }

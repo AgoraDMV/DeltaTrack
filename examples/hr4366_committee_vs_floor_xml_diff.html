@@ -89,6 +89,17 @@ h1, h2, h3, h4 { font-family: var(--font-serif); letter-spacing: -0.02em; }
 .badge-removed { background: var(--diff-remove); color: var(--diff-remove-foreground); }
 .badge-moved { background: var(--diff-moved); color: var(--diff-moved-foreground); }
 
+/* Financial summary: collapsed by default so the table doesn't bury the text */
+.financial-summary { margin: 0 0 20px; }
+.financial-summary > summary { cursor: pointer; list-style: none; display: flex;
+  align-items: baseline; gap: 8px; padding: 4px 0; }
+.financial-summary > summary::-webkit-details-marker { display: none; }
+.financial-summary > summary::before { content: "\25be"; color: var(--muted-foreground);
+  font-size: 11px; align-self: center; }
+.financial-summary:not([open]) > summary::before { content: "\25b8"; }
+.financial-summary > summary h2 { display: inline; margin: 0; }
+.financial-summary > summary .count { color: var(--muted-foreground); font-size: 13px; font-weight: 400; }
+
 /* Financial table */
 .financial-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px; }
 .financial-table th { background: var(--muted); text-align: left; padding: 9px;
