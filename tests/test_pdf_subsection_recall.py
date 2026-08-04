@@ -38,20 +38,20 @@ records what each document should do. A pair with no entry still runs, and
 same two-lists-pinned-to-each-other idiom as
 ``test_pipeline_parity.test_band_table_covers_every_parity_bill``.
 
-    document                                        catchlines  FP  missed  (2026-08-04)
-    113-hr-3547/4_engrossed-amendment-senate.pdf          0      0     0
-    115-hr-5895/1_reported-in-house.pdf                   5      0     0
-    115-hr-5895/2_engrossed-in-house.pdf                 29      0     0
-    115-hr-5895/5_enrolled-bill.pdf                      36      0    36  (declines, below)
-    117-hr-4502/1_reported-in-house.pdf                   8      0     0
-    117-hr-4502/2_engrossed-in-house.pdf                 48      0     0
-    118-hr-4366/1_reported-in-house.pdf                   4      0     0
-    118-hr-4366/2_engrossed-in-house.pdf                  4      0     0
-    118-hr-8752/1_reported-in-house.pdf                   3      0     0
-    118-hr-8752/2_engrossed-in-house.pdf                  3      0     0
-    118-hr-8774/1_reported-in-house.pdf                   3      0     0
-    118-hr-8774/2_engrossed-in-house.pdf                  3      0     0
-    119-hr-1/1_reported-in-house.pdf                    934      2     0
+    document                                    subsecs  catchlines  FP  missed  (2026-08-04)
+    113-hr-3547/4_engrossed-amendment-senate.pdf      0        0      0     0
+    115-hr-5895/1_reported-in-house.pdf             39        5      0     0
+    115-hr-5895/2_engrossed-in-house.pdf            93       29      0     0
+    115-hr-5895/5_enrolled-bill.pdf                112       36      0    36  (declines, below)
+    117-hr-4502/1_reported-in-house.pdf             55        8      0     0
+    117-hr-4502/2_engrossed-in-house.pdf           336       48      0     0
+    118-hr-4366/1_reported-in-house.pdf             37        4      0     0
+    118-hr-4366/2_engrossed-in-house.pdf            37        4      0     0
+    118-hr-8752/1_reported-in-house.pdf            131        3      0     0
+    118-hr-8752/2_engrossed-in-house.pdf           133        3      0     0
+    118-hr-8774/1_reported-in-house.pdf             90        3      0     0
+    118-hr-8774/2_engrossed-in-house.pdf            90        3      0     0
+    119-hr-1/1_reported-in-house.pdf               952      934      2     0
 
 Two documents are not ordinary members, and both are asserted rather than excluded:
 
@@ -150,11 +150,18 @@ class Expected:
     ``tests/test_corpus_properties.py``: an entry that stops being a false positive is a
     fixed defect, and leaving it here would let the gate keep tolerating a closed hole.
 
+    ``subsections`` is the same kind of pin on the oracle's OTHER denominator, every
+    non-quoted ``<section>/<subsection>`` pair. This module does not use it as a
+    denominator, but ``test_xml_subsection_nodes`` does, and that module reads its
+    document list from here — so one table records what a document is and one guard test
+    keeps it honest, rather than two lists that can disagree about the same corpus.
+
     ``anchors=False`` marks a layout the anchor pipeline declines outright. ``note`` says
     why, and is required for any document that is not an ordinary member.
     """
 
     catchlines: int
+    subsections: int
     false_positives: tuple[tuple[str, str], ...] = ()
     anchors: bool = True
     note: str = ""
@@ -167,14 +174,16 @@ class Expected:
 # pinned too.
 EXPECTED: dict[str, Expected] = {
     "113-hr-3547/4_engrossed-amendment-senate.pdf": Expected(
+        subsections=0,
         catchlines=0,
         note="engrossed Senate amendment — the operative text is quoted-block, so no "
         "catchline-bearing subsection exists to find. Pinned at 0 rather than excluded: "
         "the recall and leak gates are vacuous here by fact, and the precision gate is not.",
     ),
-    "115-hr-5895/1_reported-in-house.pdf": Expected(catchlines=5),
-    "115-hr-5895/2_engrossed-in-house.pdf": Expected(catchlines=29),
+    "115-hr-5895/1_reported-in-house.pdf": Expected(subsections=39, catchlines=5),
+    "115-hr-5895/2_engrossed-in-house.pdf": Expected(subsections=93, catchlines=29),
     "115-hr-5895/5_enrolled-bill.pdf": Expected(
+        subsections=112,
         catchlines=36,
         anchors=False,
         note="enrolled print — no GPO margin line numbers, so the anchor pipeline declines "
@@ -182,15 +191,16 @@ EXPECTED: dict[str, Expected] = {
         "subsections are real and unreachable, which is why this is asserted as a decline "
         "instead of counted as 36 misses.",
     ),
-    "117-hr-4502/1_reported-in-house.pdf": Expected(catchlines=8),
-    "117-hr-4502/2_engrossed-in-house.pdf": Expected(catchlines=48),
-    "118-hr-4366/1_reported-in-house.pdf": Expected(catchlines=4),
-    "118-hr-4366/2_engrossed-in-house.pdf": Expected(catchlines=4),
-    "118-hr-8752/1_reported-in-house.pdf": Expected(catchlines=3),
-    "118-hr-8752/2_engrossed-in-house.pdf": Expected(catchlines=3),
-    "118-hr-8774/1_reported-in-house.pdf": Expected(catchlines=3),
-    "118-hr-8774/2_engrossed-in-house.pdf": Expected(catchlines=3),
+    "117-hr-4502/1_reported-in-house.pdf": Expected(subsections=55, catchlines=8),
+    "117-hr-4502/2_engrossed-in-house.pdf": Expected(subsections=336, catchlines=48),
+    "118-hr-4366/1_reported-in-house.pdf": Expected(subsections=37, catchlines=4),
+    "118-hr-4366/2_engrossed-in-house.pdf": Expected(subsections=37, catchlines=4),
+    "118-hr-8752/1_reported-in-house.pdf": Expected(subsections=131, catchlines=3),
+    "118-hr-8752/2_engrossed-in-house.pdf": Expected(subsections=133, catchlines=3),
+    "118-hr-8774/1_reported-in-house.pdf": Expected(subsections=90, catchlines=3),
+    "118-hr-8774/2_engrossed-in-house.pdf": Expected(subsections=90, catchlines=3),
     "119-hr-1/1_reported-in-house.pdf": Expected(
+        subsections=952,
         catchlines=934,
         false_positives=(("80315", "aa"), ("80315", "bb")),
     ),
@@ -199,7 +209,9 @@ EXPECTED: dict[str, Expected] = {
 # An unrecorded pair is NOT skipped: it runs under this default and fails the coverage
 # guard until someone writes down what it does. Skipping it would reproduce exactly the
 # gap #488 exists to close — a committed document that no assertion reads.
-_UNRECORDED = Expected(catchlines=-1, note="no EXPECTED entry — see test_expectations_cover_every_committed_pair")
+_UNRECORDED = Expected(
+    catchlines=-1, subsections=-1, note="no EXPECTED entry — see test_expectations_cover_every_committed_pair"
+)
 
 PAIRS = _discover_pairs()
 FIXTURES = [p for p in PAIRS if EXPECTED.get(p[0], _UNRECORDED).anchors]
