@@ -27,10 +27,47 @@ something different on each one — 2% of 119-hr-1's 934 subsections is about 18
 while 2% of 118-hr-8752's 3 is less than one — so the same constant was simultaneously
 too loose to protect the big bill and unable to describe the small ones.
 
-    fixture      false positives  missed   (measured 2026-08-04)
-    118-hr-8752        0            0
-    117-hr-4502        0            0
-    119-hr-1           2            0
+The document set is DERIVED, not hand-listed (#488). Every committed PDF with a
+same-version XML beside it is a usable pair, and for most of this module's life three of
+the thirteen were named. That was not a judgement about the other ten: two of the six
+fabricated anchors found while reviewing #473 sat on documents this module did not read,
+and no tolerance could have caught them because the files were never opened. Hand
+maintenance is the failure mode, so ``_discover_pairs`` walks the corpus and ``EXPECTED``
+records what each document should do. A pair with no entry still runs, and
+``test_expectations_cover_every_committed_pair`` fails until someone records it — the
+same two-lists-pinned-to-each-other idiom as
+``test_pipeline_parity.test_band_table_covers_every_parity_bill``.
+
+    document                                        catchlines  FP  missed  (2026-08-04)
+    113-hr-3547/4_engrossed-amendment-senate.pdf          0      0     0
+    115-hr-5895/1_reported-in-house.pdf                   5      0     0
+    115-hr-5895/2_engrossed-in-house.pdf                 29      0     0
+    115-hr-5895/5_enrolled-bill.pdf                      36      0    36  (declines, below)
+    117-hr-4502/1_reported-in-house.pdf                   8      0     0
+    117-hr-4502/2_engrossed-in-house.pdf                 48      0     0
+    118-hr-4366/1_reported-in-house.pdf                   4      0     0
+    118-hr-4366/2_engrossed-in-house.pdf                  4      0     0
+    118-hr-8752/1_reported-in-house.pdf                   3      0     0
+    118-hr-8752/2_engrossed-in-house.pdf                  3      0     0
+    118-hr-8774/1_reported-in-house.pdf                   3      0     0
+    118-hr-8774/2_engrossed-in-house.pdf                  3      0     0
+    119-hr-1/1_reported-in-house.pdf                    934      2     0
+
+Two documents are not ordinary members, and both are asserted rather than excluded:
+
+- ``115-hr-5895/5_enrolled-bill.pdf`` yields no anchors at all. Enrolled prints carry no
+  GPO margin line numbers, so the anchor pipeline declines the document rather than
+  guessing (#141). Under this module's zero-tolerance recall that reads as 36 of 36
+  missed, which would be a false alarm. It is recorded as ``anchors=False`` and gets
+  ``test_declined_layout_yields_no_subsection_anchors`` instead: the decline is asserted
+  positively, so a document that starts producing anchors fails just as loudly as one
+  that stops. (``test_corpus_tree_properties`` owns the wider class registry and the
+  text-layer-is-still-whole property; this module asserts only the subsection view.)
+- ``113-hr-3547/4_engrossed-amendment-senate.pdf`` genuinely has zero catchline-bearing
+  subsections. That is the case a bare anti-vacuity floor cannot express: "no subsections
+  of this shape exist" and "the extractor returned nothing" are identical to a
+  ``>= MIN_CATCHLINES`` guard. So the floor was replaced by an exact per-document pin of
+  the oracle's count (see ``EXPECTED``), which distinguishes the two by construction.
 
 Recall carried 5 misses on 119-hr-1 until #473. They were subsections whose catchline
 wrapped past the parser's continuation window, so the longest-titled provisions in the
@@ -52,6 +89,7 @@ from __future__ import annotations
 
 import re
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
@@ -72,29 +110,100 @@ pytestmark = pytest.mark.slow
 
 ROOT = Path(__file__).parent.parent
 BILLS = FIXTURES_DIR
-# (bill, pdf rel path, xml rel path) under bills/.
-FIXTURES = [
-    ("118-hr-8752", "118-hr-8752/1_reported-in-house.pdf", "118-hr-8752/1_reported-in-house.xml"),
-    ("117-hr-4502", "117-hr-4502/1_reported-in-house.pdf", "117-hr-4502/1_reported-in-house.xml"),
-    ("119-hr-1", "119-hr-1/1_reported-in-house.pdf", "119-hr-1/1_reported-in-house.xml"),
-]
 
-# Denominator sanity so the gates can't pass vacuously on a broken extractor (#167).
-MIN_CATCHLINES = 3
 
-# The false positives on record, per fixture. Both are the documented doubled-two-letter
-# residue on the messy fixture: an (aa)/(bb) run-in that belongs to a deeper level and is
-# emitted at subsection level, which needs the leveled tree to tell apart (#54/#108). The
-# clean appropriations fixtures carry none, so their absence is pinned too.
-#
-# Self-cleaning, like KNOWN_UNCOVERED_AMOUNTS in tests/test_corpus_properties.py: an entry
-# that stops being a false positive is a fixed defect, and leaving it here would let the
-# gate keep tolerating a hole that has closed.
-KNOWN_FALSE_POSITIVES: dict[str, list[tuple[str, str]]] = {
-    "118-hr-8752": [],
-    "117-hr-4502": [],
-    "119-hr-1": [("80315", "aa"), ("80315", "bb")],
+def _discover_pairs() -> list[tuple[str, str, str]]:
+    """Every committed PDF with a same-version XML beside it, as ``(doc, pdf, xml)``.
+
+    Derived rather than listed (#488). ``doc`` is ``<bill>/<pdf filename>`` and is the
+    key into :data:`EXPECTED`; the bill alone is not a key, because a bill contributes
+    several versions and they behave differently — ``115-hr-5895`` supplies two ordinary
+    documents and one the anchor pipeline declines.
+    """
+    pairs: list[tuple[str, str, str]] = []
+    for bill_dir in sorted(FIXTURES_DIR.iterdir()):
+        if not bill_dir.is_dir():
+            continue
+        for pdf in sorted(bill_dir.glob("*.pdf")):
+            xml = pdf.with_suffix(".xml")
+            if xml.exists():
+                pairs.append(
+                    (f"{bill_dir.name}/{pdf.name}", f"{bill_dir.name}/{pdf.name}", f"{bill_dir.name}/{xml.name}")
+                )
+    return pairs
+
+
+@dataclass(frozen=True)
+class Expected:
+    """What one document should do, recorded so a change to it has to be deliberate.
+
+    ``catchlines`` is an EXACT pin on the XML oracle's denominator, not a floor. It
+    replaces the old ``MIN_CATCHLINES = 3`` guard, which existed to stop the gates passing
+    vacuously on a broken extractor (#167) but could not admit a document that genuinely
+    has none — 113-hr-3547's engrossed Senate amendment, which is all quoted-block
+    material. A floor cannot tell "this bill has no subsections of this shape" from "the
+    oracle returned nothing"; an exact count per committed, byte-fixed XML can, and it
+    also catches the denominator shrinking on the big fixtures, which a floor of 3 never
+    would. It moves only when the oracle or a fixture is deliberately changed.
+
+    ``false_positives`` is self-cleaning, like ``KNOWN_UNCOVERED_AMOUNTS`` in
+    ``tests/test_corpus_properties.py``: an entry that stops being a false positive is a
+    fixed defect, and leaving it here would let the gate keep tolerating a closed hole.
+
+    ``anchors=False`` marks a layout the anchor pipeline declines outright. ``note`` says
+    why, and is required for any document that is not an ordinary member.
+    """
+
+    catchlines: int
+    false_positives: tuple[tuple[str, str], ...] = ()
+    anchors: bool = True
+    note: str = ""
+
+
+# Measured 2026-08-04 on this branch. The only false positives on record are the
+# documented doubled-two-letter residue on the messy fixture: an (aa)/(bb) run-in that
+# belongs to a deeper level and is emitted at subsection level, which needs the leveled
+# tree to tell apart (#54/#108). Every other document carries none, so their absence is
+# pinned too.
+EXPECTED: dict[str, Expected] = {
+    "113-hr-3547/4_engrossed-amendment-senate.pdf": Expected(
+        catchlines=0,
+        note="engrossed Senate amendment — the operative text is quoted-block, so no "
+        "catchline-bearing subsection exists to find. Pinned at 0 rather than excluded: "
+        "the recall and leak gates are vacuous here by fact, and the precision gate is not.",
+    ),
+    "115-hr-5895/1_reported-in-house.pdf": Expected(catchlines=5),
+    "115-hr-5895/2_engrossed-in-house.pdf": Expected(catchlines=29),
+    "115-hr-5895/5_enrolled-bill.pdf": Expected(
+        catchlines=36,
+        anchors=False,
+        note="enrolled print — no GPO margin line numbers, so the anchor pipeline declines "
+        "the whole document rather than guessing (#141). Its 36 catchline-bearing "
+        "subsections are real and unreachable, which is why this is asserted as a decline "
+        "instead of counted as 36 misses.",
+    ),
+    "117-hr-4502/1_reported-in-house.pdf": Expected(catchlines=8),
+    "117-hr-4502/2_engrossed-in-house.pdf": Expected(catchlines=48),
+    "118-hr-4366/1_reported-in-house.pdf": Expected(catchlines=4),
+    "118-hr-4366/2_engrossed-in-house.pdf": Expected(catchlines=4),
+    "118-hr-8752/1_reported-in-house.pdf": Expected(catchlines=3),
+    "118-hr-8752/2_engrossed-in-house.pdf": Expected(catchlines=3),
+    "118-hr-8774/1_reported-in-house.pdf": Expected(catchlines=3),
+    "118-hr-8774/2_engrossed-in-house.pdf": Expected(catchlines=3),
+    "119-hr-1/1_reported-in-house.pdf": Expected(
+        catchlines=934,
+        false_positives=(("80315", "aa"), ("80315", "bb")),
+    ),
 }
+
+# An unrecorded pair is NOT skipped: it runs under this default and fails the coverage
+# guard until someone writes down what it does. Skipping it would reproduce exactly the
+# gap #488 exists to close — a committed document that no assertion reads.
+_UNRECORDED = Expected(catchlines=-1, note="no EXPECTED entry — see test_expectations_cover_every_committed_pair")
+
+PAIRS = _discover_pairs()
+FIXTURES = [p for p in PAIRS if EXPECTED.get(p[0], _UNRECORDED).anchors]
+DECLINED = [p for p in PAIRS if not EXPECTED.get(p[0], _UNRECORDED).anchors]
 
 # A section HEADING has no business inside a subsection's catchline: reaching one means the
 # join left this subsection and ran into the next section (#473).
@@ -217,11 +326,43 @@ def test_manifest_fixtures_committed():
     assert_manifest_committed(FIXTURES, "pdf-subsection-parity")
 
 
-@pytest.mark.parametrize(("bill", "pdf_rel", "xml_rel"), FIXTURES, ids=[f[0] for f in FIXTURES])
-def test_precision_no_false_subsections(bill, pdf_rel, xml_rel):
+def test_expectations_cover_every_committed_pair():
+    """``EXPECTED`` and the corpus name the same documents, in both directions (#488).
+
+    The gap this module had was a hand-written fixture list that no longer described the
+    corpus, and nothing said so. Deriving the list fixes half of it — a new pair is now
+    read on the run it lands. This closes the other half: it must also be WRITTEN DOWN,
+    because the per-document pins below (catchline count, false positives, whether the
+    layout anchors at all) are the assertions, and an unrecorded document runs against a
+    placeholder that cannot hold. The mirror direction matters as much: an entry for a
+    document no longer committed is a pin guarding nothing.
+
+    Modelled on ``test_pipeline_parity.test_band_table_covers_every_parity_bill``.
+    """
+    discovered = {doc for doc, _pdf, _xml in PAIRS}
+    recorded = set(EXPECTED)
+    assert discovered - recorded == set(), (
+        f"committed PDF/XML pairs with no EXPECTED entry: {sorted(discovered - recorded)}. "
+        f"Measure the document and record its catchline count, false positives, and whether "
+        f"the anchor pipeline handles its layout."
+    )
+    assert recorded - discovered == set(), (
+        f"EXPECTED names documents that are no longer committed pairs: {sorted(recorded - discovered)}. "
+        f"Drop the entry, or restore the fixture it was pinning."
+    )
+
+
+@pytest.mark.parametrize(("doc", "pdf_rel", "xml_rel"), FIXTURES, ids=[f[0] for f in FIXTURES])
+def test_precision_no_false_subsections(doc, pdf_rel, xml_rel):
+    bill = doc
+    exp = EXPECTED[doc]
     all_pairs, _catch, _quoted = _xml_index(xml_rel)
     pp = _pdf_pairs(pdf_rel)
-    assert len(pp) > 0, f"{bill}: zero subsections detected (fail-open)"
+    # Fail-open guard, conditioned on the oracle rather than absolute: a document whose XML
+    # has no catchline-bearing subsection is expected to detect none, and 113-hr-3547's
+    # engrossed Senate amendment is exactly that. Where the oracle does have members,
+    # detecting nothing is a collapse.
+    assert pp or exp.catchlines == 0, f"{bill}: zero subsections detected (fail-open)"
     fp = pp - all_pairs
     # Two assertions, because the shape alone is not a bound (#473).
     #
@@ -236,22 +377,29 @@ def test_precision_no_false_subsections(bill, pdf_rel, xml_rel):
     # grow from 2 to hundreds with this module green. The retired `precision >= 0.99`
     # capped it at 9 on this fixture, loosely and as a side effect; pinning the pairs
     # bounds it exactly, and makes a fixed one visible instead of silently absorbed.
-    assert sorted(fp) == KNOWN_FALSE_POSITIVES.get(bill, []), (
-        f"{bill}: false positives {sorted(fp)} != known {KNOWN_FALSE_POSITIVES.get(bill, [])}. "
+    assert sorted(fp) == sorted(exp.false_positives), (
+        f"{bill}: false positives {sorted(fp)} != known {sorted(exp.false_positives)}. "
         f"A new one is a regression; a missing one means it was fixed, so drop it from "
-        f"KNOWN_FALSE_POSITIVES (and close the issue it names if nothing else blocks it)."
+        f"this document's EXPECTED entry (and close the issue it names if nothing else blocks it)."
     )
 
 
-@pytest.mark.parametrize(("bill", "pdf_rel", "xml_rel"), FIXTURES, ids=[f[0] for f in FIXTURES])
-def test_every_catchline_subsection_is_found(bill, pdf_rel, xml_rel):
+@pytest.mark.parametrize(("doc", "pdf_rel", "xml_rel"), FIXTURES, ids=[f[0] for f in FIXTURES])
+def test_every_catchline_subsection_is_found(doc, pdf_rel, xml_rel):
     """Every catchline-bearing subsection in the XML gets a PDF anchor. No tolerance.
 
     Named for the property rather than for the mechanism it used to assert (#473): this
     was ``test_recall_floor``, which is a statement about a number, not about the bill.
     """
+    bill = doc
     _all, catchlines, _quoted = _xml_index(xml_rel)
-    assert len(catchlines) >= MIN_CATCHLINES, f"{bill}: catchline denominator {len(catchlines)} too small (fail-open)"
+    # Exact, not a floor (#488). See Expected.catchlines for why the `>= MIN_CATCHLINES`
+    # this replaced could not admit a document that genuinely has none.
+    assert len(catchlines) == EXPECTED[doc].catchlines, (
+        f"{bill}: catchline oracle yields {len(catchlines)}, pinned at {EXPECTED[doc].catchlines}. "
+        f"The XML is committed and byte-fixed, so this moved because the oracle or the fixture "
+        f"changed. Confirm the new count is right and update EXPECTED — do not widen it to a range."
+    )
     pp = _pdf_pairs(pdf_rel)
     missed = sorted(catchlines - pp)
     assert missed == [], (
@@ -309,14 +457,39 @@ def test_no_subsection_anchor_swallows_a_following_section() -> None:
     )
 
 
-@pytest.mark.parametrize(("bill", "pdf_rel", "xml_rel"), FIXTURES, ids=[f[0] for f in FIXTURES])
-def test_no_quoted_block_leak(bill, pdf_rel, xml_rel):
+@pytest.mark.parametrize(("doc", "pdf_rel", "xml_rel"), FIXTURES, ids=[f[0] for f in FIXTURES])
+def test_no_quoted_block_leak(doc, pdf_rel, xml_rel):
     # The PDF must detect ZERO subsections living inside a <quoted-block> amendment.
     # 119-hr-1 is the meaningful case (177 quoted subsections); the appropriations
     # fixtures have few or none, so guard the completeness with the count.
     _all, _catch, quoted = _xml_index(xml_rel)
     pp = _pdf_pairs(pdf_rel)
     leak = pp & quoted
-    assert not leak, f"{bill}: quoted-block subsections leaked as anchors: {sorted(leak)}"
-    if bill == "119-hr-1":
+    assert not leak, f"{doc}: quoted-block subsections leaked as anchors: {sorted(leak)}"
+    if doc.startswith("119-hr-1/"):
         assert len(quoted) > 50, f"quoted oracle shrank to {len(quoted)} — leak gate went vacuous"
+
+
+@pytest.mark.parametrize(("doc", "pdf_rel", "xml_rel"), DECLINED, ids=[f[0] for f in DECLINED])
+def test_declined_layout_yields_no_subsection_anchors(doc, pdf_rel, xml_rel):
+    """A layout the anchor pipeline declines detects NOTHING, and that is asserted (#488).
+
+    The alternative was to leave these documents out of the module, which reads the same
+    on a green run and says nothing on a red one. Asserted, the decline is bidirectional:
+    a document that starts emitting subsection anchors here fails, which is what would
+    happen if the line-number precondition were loosened without anyone revisiting the
+    enrolled print. It also keeps the oracle live — the count of what is being given up is
+    pinned, so it cannot quietly drift.
+    """
+    exp = EXPECTED[doc]
+    _all, catchlines, _quoted = _xml_index(xml_rel)
+    assert len(catchlines) == exp.catchlines, (
+        f"{doc}: catchline oracle yields {len(catchlines)}, pinned at {exp.catchlines}"
+    )
+    # The premise: these subsections are real and this layout cannot reach them.
+    assert catchlines, f"{doc}: recorded as a declined layout but its XML has nothing to lose"
+    assert _pdf_pairs(pdf_rel) == frozenset(), (
+        f"{doc}: recorded as a layout the anchor pipeline declines ({exp.note}), but it "
+        f"emitted subsection anchors: {sorted(_pdf_pairs(pdf_rel))[:10]}. If the pipeline now "
+        f"handles this layout, move the document out of the declined set and pin what it finds."
+    )
