@@ -663,7 +663,7 @@ FAIL  deltatrack.diff_pdf                   (same)
 
 | Class | Modules |
 |---|---|
-| **Works unchanged** | All 20 modules under `src/deltatrack/`, once `pypdfium2` is importable. Confirmed by re-running the matrix with the stub present: 17/17 import. |
+| **Works unchanged** | Every engine module, once `pypdfium2` is importable. Confirmed by re-running the matrix with the stub present: **17/17 import targets succeed.** (17 targets rather than the tree's 20 `.py` files: the three package `__init__.py` files under `parsers/`, `formatters/` and `compare/` are empty and are imported transitively rather than named separately.) |
 | **Requires small adaptation** | `parsers/pdf_text.py` only: move the module-level `import pypdfium2` behind the three native functions (`extract_clean_pages`, `_page_glyph_sizes`, `_char_box`) so the pure half imports without it. Optionally `bill_tree.py`, to stop reaching into `pdf_anchors` for two regex helpers. |
 | **Requires replacement** | PDFium text+geometry extraction, for the PDF pipeline only. Candidate replacements: PDF.js (geometry granularity open), or a WASM PDFium build. |
 | **Fundamentally incompatible** | Nothing found. |
