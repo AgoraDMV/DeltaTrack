@@ -46,8 +46,27 @@ This is not a tie-breaker to apply after scoring. It changes what the bake-off i
   that way in the results so nobody later reads a PyMuPDF win as a shippable
   recommendation.
 
-**Answer this first, record the answer here, then start.** The rest of the design does
-not change; only the interpretation of a PyMuPDF win does.
+### Answered, 2026-08-05: PyMuPDF is a ceiling reference, not a candidate
+
+**Decision: run PyMuPDF and score it in full, but treat it as an upper bound rather
+than a shippable backend.** AGPL-3.0 is disqualifying for what DeltaTrack ships,
+because the distributed combination would carry AGPL obligations into congressional
+offices and into BillTrax as a downstream consumer, against an existing Apache-2.0
+posture.
+
+Two consequences for the session running this spike:
+
+- **Do not report a PyMuPDF win as a recommendation.** Report it as "the best achievable
+  score on this corpus is X, and the best *shippable* backend scored Y." The gap between
+  X and Y is the number that prices a PDFium-WASM effort, which is the main reason
+  PyMuPDF is in the bake-off at all.
+- **The shippable candidates are PDF.js (Apache-2.0) and PDFium-WASM (BSD-3 / Apache-2.0),**
+  the latter subject to the Phase 0 FFI gate. If both fail and only PyMuPDF succeeds,
+  that is a genuine finding and it points the delivery decision at a packaged executable
+  for the PDF path, not at relicensing.
+
+Revisiting is possible but deliberate: it would take an explicit licensing decision by
+the maintainer, or a commercial license from Artifex, and neither is in scope here.
 
 ---
 
