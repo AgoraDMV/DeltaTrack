@@ -126,16 +126,51 @@ other ~15 (`normalize_raw`, `strip_page_chrome`, `rejoin_soft_hyphens`,
 ```
 backend(pdf_bytes) -> for each page:
     page_text : str
-    glyphs    : sequence of (bottom, left, right, codepoint, size)
+    glyphs    : sequence of (bottom, left, right, codepoint, size, font_id)
 ```
 
-That tuple shape is exactly what `_page_glyph_sizes` produces today. Each backend
-implements only that, and everything downstream is the existing, unmodified DeltaTrack
+The first five fields are exactly what `_page_glyph_sizes` produces today. Each backend
+implements only this, and everything downstream is the existing, unmodified DeltaTrack
 code.
+
+**`font_id` is in the contract deliberately, even though the engine does not use it
+yet.** [`docs/source-signal-inventory.md`](../../source-signal-inventory.md) records
+font name as "the solid PDF win": margin line-numbers are a different font from the body
+on **8965/8971 numbered lines (99.9%)**, and page chrome (VerDate, running header and
+footer, watermark, bullets) is Helvetica/Symbol. That is the highest-value unadopted PDF
+signal in the project. A bake-off that scored only text and position could pick a
+backend that **forecloses it**, and the cost would surface much later.
+
+Two constraints the inventory imposes, which the scorer must respect:
+
+- **Key on role (margin / body / chrome), never on a hardcoded name.** Literal names are
+  print-class dependent: bill bodies are `DeVinne`, while enrolled,
+  engrossed-amendment-senate and committee-print bodies are `NewCenturySchlbk`.
+- **Font must supplement, not replace, the position and regex gates**, because a small
+  fraction of glyphs return an empty font name.
 
 If instead each backend gets its own cleaning path, you are comparing **pipelines**, not
 backends, and a backend can win on a better-tuned cleaner while being worse at
 extraction. Do not do that.
+
+**Font-identity availability, measured 2026-08-05.** PDF.js's `item.fontName` is an
+opaque generated id (`g_d0_f1`), **not** the real name. The real name *is* recoverable,
+but only after the font objects resolve, which requires a `getOperatorList()` call per
+page before reading `page.commonObjs.get(id)`. With that call it returns exactly the
+names the inventory cites:
+
+```
+g_d0_f1 -> DeVinne                 g_d0_f4 -> Times-Roman
+g_d0_f2 -> Symbol                  g_d0_f5 -> DeVinne-Italic
+g_d0_f3 -> NewCenturySchlbk-Bold   g_d0_f6 -> Helvetica
+```
+
+So PDF.js is **not** disadvantaged on this axis, but it pays for it: 64 ms on the first
+page of a 94-page bill. Measure that cost across a whole document, because it is charged
+per page and does not appear in the 154 ms full-document `getTextContent()` figure.
+(An earlier probe that read `commonObjs` *without* `getOperatorList()` reported the names
+as unresolvable. That was a broken probe, not a PDF.js limitation; recorded here so it is
+not rediscovered as a finding.)
 
 **Known granularity mismatch, already measured:** PDF.js exposes geometry at *text-item*
 granularity (~13 chars/item, keys `str, dir, width, height, transform, fontName,
@@ -148,6 +183,72 @@ joining loses inter-word spaces at font boundaries
 adapter needs a gap-based word joiner.
 
 ---
+
+## The candidate set
+
+Availability under Pyodide was verified empirically on 2026-08-05, not assumed.
+"Not in the Pyodide distribution" does **not** mean unavailable: a pure-Python package
+installs from PyPI through `micropip`.
+
+| Backend | Language | License | Pyodide | Per-char geometry | Role |
+|---|---|---|---|---|---|
+| **PDF.js** | JS | Apache-2.0 | n/a (native JS) | **No**, ~13 chars/item | **Shippable candidate** |
+| **PDFium-WASM** | C++ → WASM | BSD-3 / Apache-2.0 | n/a | Yes, if the build exposes the FFI | **Shippable candidate**, behind the Phase 0 gate |
+| **pdfminer.six** | pure Python | MIT | **Installs via micropip (verified)** | **Yes** (`LTChar` bbox + size + fontname) | **Shippable candidate** |
+| **pypdf** | pure Python | BSD-3 | **Installs via micropip (verified)** | Partial (visitor callbacks give text-run matrices) | Cheap long shot |
+| **PyMuPDF** | C → WASM | AGPL-3.0 | **In the distribution** | Yes | **Ceiling reference only** (see above) |
+| **mupdf.js** | C++ → WASM | AGPL-3.0 | n/a (native WASM) | Yes | Optional alternative *form* of the ceiling |
+
+### pdfminer.six deserves an explicit re-examination
+
+ADR 0002 removed pdfplumber/pdfminer.six, so including it here needs justifying rather
+than glossing.
+
+**What ADR 0002 actually rejected was pdfplumber's high-level `extract_text()`**, on two
+grounds: it dislocated section-heading line numbers, and it leaked page chrome into
+section bodies. Both are failures of *layout analysis and text assembly*.
+
+Under this bake-off's adapter contract, no backend does layout analysis or text assembly.
+Each one emits raw glyph tuples, and **DeltaTrack's own** `_cluster_baselines`,
+`_line_text`, `strip_page_chrome` and `parse_lines` do the assembly. `pdfminer.six`
+exposes `LTChar` objects carrying a per-character bounding box, size and PostScript font
+name, which is the contract almost exactly. So the question this spike asks of it is one
+ADR 0002 never asked: **not "is pdfminer.six a good text extractor" (answered: no) but
+"is it a good glyph-geometry source for our cleaner" (unknown).** The two failure modes
+ADR 0002 cites are downstream of the seam, and would be handled by code that is now
+DeltaTrack's.
+
+It is also the only candidate that is simultaneously permissively licensed, pure Python,
+and per-character. That combination would make the browser story trivial.
+
+**The live risk is speed, not fidelity.** pdfminer.six is pure Python and slow, and under
+Pyodide it pays the 1.6x–1.9x WASM penalty on top. Gate it early on the largest
+appropriations bill; if a single document takes tens of seconds, it is out on Phase 5
+grounds regardless of accuracy, and that is worth learning in Phase 0 rather than Phase 5.
+
+### Considered and excluded
+
+- **Poppler / `pdftotext -bbox-layout` compiled to WASM.** Gives per-character boxes, but
+  GPL-2.0 puts it in the same shipping-disqualification class as AGPL, and it would add
+  little over the MuPDF ceiling already being measured.
+- **OCR (Tesseract WASM).** A different problem. Published GPO bills have text layers, so
+  it is irrelevant here. It is, however, the only answer for **image-only draft PDFs**,
+  which ADR 0003 flags as the untested hard case. Out of scope; named so the gap is not
+  mistaken for coverage.
+- **pikepdf / pdf-lib.** Manipulation and creation libraries, not text extractors.
+
+## Scoping tension worth stating in the results
+
+The XML-as-reference method only works where XML exists, and XML exists for
+**published** bills. But [ADR 0010](../../decisions/0010-pdf-pipeline-pre-publication.md)
+says the PDF pipeline exists for **pre-publication** documents: committee prints, chair's
+marks, discussion drafts, which have no XML and are not in the corpus.
+
+So this bake-off grades backends on precisely the documents where the PDF path matters
+least, and cannot grade them on the documents that motivate the path at all. That is
+inherent to the method, not a flaw in it, and the method is still the right one. But a
+winner here has been shown to handle **clean published GPO PDFs**, and the results must
+say so rather than claiming "PDF is solved."
 
 ## Corpus and N
 
@@ -189,11 +290,15 @@ spending a session on a backend that was already disqualified.
 2. **PyMuPDF-in-Pyodide gate.** `pymupdf` is in the Pyodide distribution (confirmed in
    the delivery spike). Load it and open a real bill PDF. If it fails, it is out.
 3. **PDF.js headless gate.** Already demonstrated: 94-page bill, full-document
-   `getTextContent()` in 154 ms.
-4. **Pre-register the scoring.** Write the metrics, weights and pass thresholds into
+   `getTextContent()` in 154 ms. Add the per-page `getOperatorList()` font cost.
+4. **pdfminer.six speed gate.** Installs under Pyodide (verified). Run it against the
+   largest appropriations bill in the corpus **before** building any scoring. If one
+   document takes tens of seconds it is out on Phase 5 grounds, and learning that here
+   costs minutes instead of a phase.
+5. **Pre-register the scoring.** Write the metrics, weights and pass thresholds into
    this document **before** seeing any results. A bake-off whose metrics are chosen
    after the fact is not a bake-off.
-5. **Calibrate the reference** (Trap 1): run current PDFium through the scorer and
+6. **Calibrate the reference** (Trap 1): run current PDFium through the scorer and
    confirm it lands near ceiling.
 
 ### Phase 1. Per-document scoring, native Python (N=52)
@@ -206,6 +311,10 @@ Score each backend through the shared adapter, on:
 - **Heading hierarchy** — the ADR 0012 / ADR 0014 leveled tree, with its
   conservation check.
 - **Citations / breadcrumbs** — `breadcrumb_for` output agreement.
+- **Font-role recovery** — can the backend separate margin / body / chrome by font, at
+  the 99.9% margin-vs-body rate the inventory measured? Score the *role separation*, not
+  name-string equality, since names are print-class dependent. Record the empty-font-name
+  rate per backend, because the inventory's guard depends on it.
 
 ### Phase 2. Terminal metric (N=15)
 
