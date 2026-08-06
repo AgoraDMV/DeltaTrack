@@ -60,8 +60,10 @@ html = """<!doctype html>
 
 <script type="module">
 const logEl=document.getElementById("log"); const t0=performance.now();
-const log=(m,c="")=>{logEl.innerHTML+=
-  `\\n<span class="${c}">[${((performance.now()-t0)/1000).toFixed(2)}s] ${m}</span>`;};
+// textContent on a built node, not innerHTML: log messages carry user-chosen file names
+// and nothing here needs markup (CodeQL js/xss-through-dom).
+const log=(m,c="")=>{const s=document.createElement("span");if(c)s.className=c;
+  s.textContent=`[${((performance.now()-t0)/1000).toFixed(2)}s] ${m}`;logEl.append("\\n",s);};
 logEl.textContent="";
 log(`protocol ${location.protocol} | origin ${window.origin}`);
 

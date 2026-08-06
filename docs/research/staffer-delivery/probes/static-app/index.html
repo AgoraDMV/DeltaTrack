@@ -25,8 +25,14 @@
 <script type="module">
 const logEl = document.getElementById("log");
 const t00 = performance.now();
+// Build nodes and set textContent rather than concatenating into innerHTML. Messages
+// include user-chosen file names, so string-building HTML here reinterprets DOM text as
+// markup (CodeQL js/xss-through-dom). Nothing in this log needs markup.
 const log = (m, cls = "") => {
-  logEl.innerHTML += `\n<span class="${cls}">[${((performance.now() - t00) / 1000).toFixed(2)}s] ${m}</span>`;
+  const span = document.createElement("span");
+  if (cls) span.className = cls;
+  span.textContent = `[${((performance.now() - t00) / 1000).toFixed(2)}s] ${m}`;
+  logEl.append("\n", span);
 };
 logEl.textContent = "";
 document.getElementById("origin").textContent = `${location.protocol}//${location.host || "(none)"} — origin ${window.origin}`;

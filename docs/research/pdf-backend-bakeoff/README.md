@@ -640,13 +640,17 @@ The spike succeeds if it can complete these sentences with evidence:
 ```python
 from pathlib import Path
 import re
+
 for d in sorted(Path("tests/corpus").iterdir()):
-    if not d.is_dir(): continue
+    if not d.is_dir():
+        continue
     stems = {}
     for f in d.iterdir():
         m = re.match(r"(\d+)_([a-z-]+)\.(pdf|xml)$", f.name)
-        if m: stems.setdefault(int(m.group(1)), set()).add(m.group(3))
+        if m:
+            stems.setdefault(int(m.group(1)), set()).add(m.group(3))
     both = sorted(n for n, v in stems.items() if v == {"pdf", "xml"})
     adj = [(a, b) for a, b in zip(both, both[1:]) if b == a + 1]
-    if both: print(d.name, len(both), "versions,", len(adj), "adjacent pairs")
+    if both:
+        print(d.name, len(both), "versions,", len(adj), "adjacent pairs")
 ```

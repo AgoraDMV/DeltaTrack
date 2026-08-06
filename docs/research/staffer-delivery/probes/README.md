@@ -27,6 +27,8 @@ from. Edit that constant before re-running them elsewhere.
 
 | Probe | Question |
 |---|---|
+| **`verify_parity.py`** | **Do native CPython and Pyodide produce identical output? One command, SHA-256 both sides, non-zero exit on mismatch.** |
+| `parity_pyodide.mjs` | Pyodide half of `verify_parity.py`. Not run directly. |
 | `exp1_imports.mjs` | Which `deltatrack` modules import under Pyodide, and why do the rest fail? |
 | `exp1_xml_e2e.mjs` | Does the full XML comparison pipeline run under Pyodide on real bills? |
 | `native_baseline.py` | Native CPython timings and canonical output, for the parity comparison. |
@@ -52,6 +54,30 @@ cp /tmp/dt-spike/node_modules/pyodide/{pyodide.mjs,pyodide.asm.mjs,pyodide.asm.w
 
 uv run python docs/research/staffer-delivery/probes/build_single_file.py
 ```
+
+## The parity check, which is the one that matters
+
+The memo's headline claim is byte-identical output across runtimes. This turns that from
+an assertion into a repeatable gate:
+
+```bash
+uv run python docs/research/staffer-delivery/probes/verify_parity.py --node-dir /tmp/dt-spike
+```
+
+It runs both runtimes over the same committed fixtures, hashes each artifact with
+SHA-256 **inside** the runtime that produced it, prints the interpreter, platform and
+dependency versions behind each column, and exits non-zero on any mismatch.
+
+**Run the negative control before trusting a pass.** A comparison that has only ever
+passed cannot distinguish "the runtimes agree" from "the comparison is broken":
+
+```bash
+uv run python docs/research/staffer-delivery/probes/verify_parity.py --mutate --node-dir /tmp/dt-spike
+```
+
+`--mutate` corrupts the native output by one character, so every HTML hash must diverge
+while the canonical hashes stay identical. If `--mutate` reports a pass, the harness is
+broken and its green runs mean nothing.
 
 ## Running
 

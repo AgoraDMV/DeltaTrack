@@ -46,21 +46,43 @@ print("IMPORT OK: deltatrack.compare.xml")
 `);
 const tImport = performance.now() - tImp0;
 
-// Also confirm the previously-failing modules now all import.
+// Re-run the FULL matrix, not only the ten that failed before. Reporting "17/17" while
+// re-testing just the previously-failing ten would combine a fresh result with a
+// remembered one and present the total as one run -- a claim outrunning its evidence.
+const ALL = [
+  "deltatrack", "deltatrack.similarity", "deltatrack.version_stems",
+  "deltatrack.structure_tree", "deltatrack.bill_tree", "deltatrack.diff_bill",
+  "deltatrack.formatters._text", "deltatrack.formatters.view_model",
+  "deltatrack.formatters.text_serializer", "deltatrack.formatters.canonical",
+  "deltatrack.formatters.diff_html", "deltatrack.compare.xml",
+  "deltatrack.parsers.pdf_text", "deltatrack.parsers.pdf_anchors",
+  "deltatrack.parsers.committee_report", "deltatrack.compare.pdf", "deltatrack.diff_pdf",
+];
+const PREVIOUSLY_FAILING = [
+  "deltatrack.structure_tree", "deltatrack.bill_tree", "deltatrack.diff_bill",
+  "deltatrack.formatters.text_serializer", "deltatrack.formatters.canonical",
+  "deltatrack.compare.xml", "deltatrack.parsers.pdf_text", "deltatrack.parsers.pdf_anchors",
+  "deltatrack.compare.pdf", "deltatrack.diff_pdf",
+];
+pyodide.globals.set("_all_mods", ALL.join(","));
 const stillBroken = await pyodide.runPythonAsync(`
 import importlib, json
-mods = ["deltatrack.structure_tree","deltatrack.bill_tree","deltatrack.diff_bill",
-        "deltatrack.formatters.text_serializer","deltatrack.formatters.canonical",
-        "deltatrack.compare.xml","deltatrack.parsers.pdf_text","deltatrack.parsers.pdf_anchors",
-        "deltatrack.compare.pdf","deltatrack.diff_pdf"]
 bad = []
-for m in mods:
-    try: importlib.import_module(m)
-    except Exception as e: bad.append(f"{m}: {type(e).__name__}: {e}")
+for m in _all_mods.split(","):
+    try:
+        importlib.import_module(m)
+    except Exception as e:
+        bad.append(f"{m}: {type(e).__name__}: {e}")
 json.dumps(bad)
 `);
+const bad = JSON.parse(stillBroken);
+const prevOk = PREVIOUSLY_FAILING.filter((m) => !bad.some((b) => b.startsWith(m + ":"))).length;
 console.log(`\nPyodide boot: ${tBoot.toFixed(0)} ms | engine import: ${tImport.toFixed(0)} ms`);
-console.log("Previously-failing modules still broken after stub:", JSON.parse(stillBroken).length === 0 ? "NONE (all 17 import)" : JSON.parse(stillBroken));
+console.log(
+  `Full matrix re-run with the stub present: ${ALL.length - bad.length}/${ALL.length} import ` +
+    `(of which ${prevOk}/${PREVIOUSLY_FAILING.length} previously failed on pypdfium2).`
+);
+if (bad.length) console.log("  still failing:", bad);
 
 // --- real bill comparisons ---------------------------------------------------
 const CASES = [

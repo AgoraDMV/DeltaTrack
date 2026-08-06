@@ -68,6 +68,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"cold start->here: {(time.time() - _T_PROCESS_START) * 1000:.0f} ms")
         print(f"frozen:           {getattr(sys, 'frozen', False)}")
         print(f"python:           {sys.version.split()[0]}")
+        # EXIT NON-ZERO when the native probe failed. Printing a failure string and
+        # returning 0 lets an automated run read a dropped or broken PDFium binary as a
+        # successful experiment, which is the exact failure this self-test exists to
+        # catch. The status string is for a human; the exit code is for the harness.
+        if not pdfium_status.startswith("OK "):
+            print("SELFTEST FAILED: the bundled PDFium binary is missing or unusable.", file=sys.stderr)
+            return 1
         return 0
 
     if len(argv) < 2:

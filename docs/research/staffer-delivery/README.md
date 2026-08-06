@@ -31,7 +31,8 @@ tree, the second question is close to already solved for the XML pipeline:
    and a 4.4 MB standalone HTML report that are **byte-for-byte identical** to the ones
    native CPython produces, across both a Python version gap (3.12.12 native to 3.14.2
    under WASM) and an architecture gap (arm64 to wasm32). No port, no second
-   implementation, no parity-testing regime.
+   implementation, and **no dual-engine parity regime**. (That is not the same as "no
+   parity testing": see [Parity testing is reduced, not eliminated](#parity-testing-is-reduced-not-eliminated).)
 
 2. **One import stands between the XML pipeline and the browser, and it is not a real
    dependency.** Every one of the 10 initial import failures had the same root cause:
@@ -263,7 +264,9 @@ refactor of one module, and it is arguably worth doing on its own merits: it is 
 same seam ADR 0003 already implies.
 
 **Advantages.** One canonical engine, so constraint 8 is satisfied by construction and
-constraint 9 never arises. No install, no admin rights, no Python, no account. Runs in
+constraint 9 never arises (there is no second engine to enforce parity between,
+though runtime-level parity testing still applies). No install, no admin rights, no
+Python, no account. Runs in
 an already-approved browser. Bill content provably never leaves the page. Reuses
 `compare/xml.py` unchanged.
 
@@ -584,7 +587,7 @@ Options C, G and I are shown for completeness though rejected above.
 | Platform-specific work | A (none) | A (none) | A | A | B | E | E | E |
 | **Maintenance** | | | | | | | | |
 | One engine vs many | **A** | **A** | A | **E** | varies | **A** | A | A |
-| Parity testing burden | A (none) | A (none) | A | E | varies | A (none) | A | A |
+| Parity testing burden | B (runtime only) | B (runtime only) | B | E (two engines) | varies | A (none) | A | A |
 | Dependency/API churn | B (Pyodide) | C (Pyodide + shim) | B | C | C | B | C | B |
 | Signing/renewal burden | A | A | A | A | C | E | E | E |
 | **Performance** (measured) | | | | | | | | |
@@ -702,9 +705,47 @@ senate_rewrite: IDENTICAL (4,380,478 bytes)
 ```
 
 **This is the strongest single result in the spike.** Identical bytes across a Python
-minor-version gap and an architecture gap means the WASM channel needs no parity
-regime, and it independently corroborates
+minor-version gap and an architecture gap independently corroborate
 [ADR 0008](../../decisions/0008-deterministic-engine.md)'s determinism claim.
+
+**Reproduce it in one command**, which is the point of
+[`probes/verify_parity.py`](probes/verify_parity.py):
+
+```bash
+uv run python docs/research/staffer-delivery/probes/verify_parity.py --node-dir <dir-with-node_modules/pyodide>
+```
+
+It runs both runtimes over the same committed fixtures, hashes each artifact with
+SHA-256 inside each runtime, prints the interpreter and dependency versions that produced
+each column, and **exits non-zero on any mismatch**. `--mutate` corrupts the native side
+by one character so the harness must report a mismatch; run it that way once before
+trusting a green result, because a comparison that has only ever passed cannot
+distinguish agreement from a broken comparison.
+
+### Parity testing is reduced, not eliminated
+
+An earlier draft of this memo concluded that the shared-Python approach means "no parity
+regime". **That overstated the result and is corrected here.**
+
+What the shared engine removes is a whole *category* of risk: there is no second
+implementation of the differ to drift from the first, so there is no Python-versus-
+JavaScript parity problem to maintain. That is a strong and sufficient reason to prefer
+this architecture over a port.
+
+It does **not** remove the need for parity testing, because native CPython and Pyodide
+can still diverge on:
+
+- **Python version.** The repo pins 3.12; Pyodide 314 ships 3.14. Identical output today
+  is a measurement, not a guarantee across future minor versions.
+- **Dependency versions**, once the browser channel has any beyond the standard library.
+- **Serialization and float/hash behaviour** under a different build.
+- **WASM and browser constraints**: memory ceilings, recursion limits, no threads.
+- **The PDF backend**, which will not be PDFium in the browser and is the largest
+  divergence risk of all.
+
+The standing recommendation is therefore a **small representative parity suite in CI**,
+not an absent one. `verify_parity.py` is already that suite in embryo: XML parity can be
+wired up now, and PDF parity should be added once a backend is selected.
 
 **1d. Package availability.** `micropip.install("pypdfium2")` fails (no Emscripten
 wheel on PyPI). `tomlkit` installs fine but is not needed. The Pyodide distribution

@@ -18,7 +18,14 @@
 <script>
 (function () {
   var logEl = document.getElementById("log");
-  function log(m, c) { logEl.innerHTML += '<span class="' + (c || "") + '">' + m + "</span>\n"; }
+  // textContent on a built node, not innerHTML: these messages carry user-chosen file
+  // names, and nothing here needs markup (CodeQL js/xss-through-dom).
+  function log(m, c) {
+    var span = document.createElement("span");
+    if (c) span.className = c;
+    span.textContent = m;
+    logEl.append(span, "\n");
+  }
 
   log("protocol             : " + location.protocol);
   log("window.origin        : " + window.origin);
