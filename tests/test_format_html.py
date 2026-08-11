@@ -7,14 +7,14 @@ modules; word_diff lives in formatters._text.
 
 import pytest
 
-from formatters._text import word_diff
-from formatters.adapters import xml_dict_to_view
-from formatters.diff_html import format_diff_html
+from deltatrack.formatters._text import word_diff
+from deltatrack.formatters.canonical import view_from_canonical, xml_diff_to_canonical
+from deltatrack.formatters.diff_html import format_diff_html
 
 
 def format_html(diff_dict):
     """Local helper preserving the historical dict -> HTML entry point."""
-    return format_diff_html(xml_dict_to_view(diff_dict))
+    return format_diff_html(view_from_canonical(xml_diff_to_canonical(diff_dict)))
 
 
 class TestWordDiff:
@@ -172,12 +172,15 @@ class TestFormatHtml:
     def test_contains_financial_table(self):
         html = format_html(_sample_diff_dict())
         assert "financial-table" in html
-        assert "$1,000,000" in html
+        # Whole cells (#264): a bare "$1,000,000" also matches the prose body of
+        # the card, and is a prefix of "$1,000,000,000" if the table is wrong.
+        assert '<td class="amount">$1,000,000</td>' in html
+        assert '<td class="amount">$2,000,000</td>' in html
 
     def test_contains_sidebar(self):
         html = format_html(_sample_diff_dict())
         assert "sidebar" in html
-        assert "sidebar-filter" in html
+        assert 'name="change-filter"' in html
 
     def test_contains_change_cards(self):
         html = format_html(_sample_diff_dict())
@@ -218,14 +221,14 @@ class TestFormatHtml:
 
 class TestCliIntegration:
     def test_format_flag_accepted(self):
-        from diff_bill import build_parser
+        from deltatrack.diff_bill import build_parser
 
         parser = build_parser()
         args = parser.parse_args(["compare", "a.xml", "b.xml", "--format", "html"])
         assert args.format == "html"
 
     def test_format_default_is_html(self):
-        from diff_bill import build_parser
+        from deltatrack.diff_bill import build_parser
 
         parser = build_parser()
         args = parser.parse_args(["compare", "a.xml", "b.xml"])
@@ -238,7 +241,7 @@ class TestCliIntegration:
 
         from conftest import HR4366_V1_PATH, HR4366_V2_PATH
 
-        from diff_bill import main
+        from deltatrack.diff_bill import main
 
         out = tmp_path / "report.html"
         monkeypatch.setattr(
@@ -256,7 +259,7 @@ class TestCliIntegration:
 
         from conftest import HR4366_V1_PATH, HR4366_V2_PATH
 
-        from diff_bill import main
+        from deltatrack.diff_bill import main
 
         out = tmp_path / "report.html"
         monkeypatch.setattr(
@@ -277,7 +280,7 @@ class TestCliIntegration:
 
         from conftest import HR4366_V1_PATH, HR4366_V6_PATH
 
-        from diff_bill import main
+        from deltatrack.diff_bill import main
 
         out = tmp_path / "report.html"
         monkeypatch.setattr(

@@ -3,7 +3,7 @@ adapters produce. Field semantics (PDF-only vs XML-only fields) are
 covered by the adapter test suites; renderer behavior is covered by
 test_formatters_diff_html_*."""
 
-from formatters.view_model import ChangeView, DiffView
+from deltatrack.formatters.view_model import ChangeView, DiffView
 
 
 def test_change_view_constructs_with_pdf_only_fields():

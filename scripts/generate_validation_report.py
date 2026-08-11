@@ -6,26 +6,34 @@ the doc cannot drift. Regenerate after changing the parser, fixtures, or jurisdi
 
   uv run python scripts/generate_validation_report.py
 
-Requires the bill XML for each jurisdiction present locally (gitignored; fetch with
-`uv run python scripts/build_validation.py --fetch`).
+All inputs are committed fixtures (ADR 0015): the bill XML lives in `tests/corpus/` and
+the validation JSON in `tests/data/`, so a clean clone has everything. `--fetch` re-obtains
+the upstream sources rather than supplying anything a fresh clone lacks.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from validation_check import validate_jurisdiction  # noqa: E402
-from validation_sources import JURISDICTIONS  # noqa: E402
+from tests.corpus_paths import DATA_DIR  # noqa: E402
+from tests.validation_check import validate_jurisdiction  # noqa: E402
+from tests.validation_sources import JURISDICTIONS  # noqa: E402
 
 OUTPUT = Path("docs/parser-validation.md")
-LEG_BRANCH_FIXTURE = Path("test_data/validation_leg_branch.json")
+LEG_BRANCH_FIXTURE = DATA_DIR / "validation_leg_branch.json"
 
 
 def _leg_branch_summary() -> str:
+    # Committed since ADR 0015, so a clean clone has this. Degrade like the
+    # JURISDICTIONS availability filter below rather than raising FileNotFoundError,
+    # for the partial checkout where it is genuinely absent.
+    if not LEG_BRANCH_FIXTURE.exists():
+        return "- **Legislative Branch** — not fetched (run `uv run python scripts/build_validation.py --fetch`)."
     data = json.loads(LEG_BRANCH_FIXTURE.read_text())
     accounts = data["accounts"]
     bills = sorted({a["bill"] for a in accounts})
@@ -39,7 +47,12 @@ def _leg_branch_summary() -> str:
     )
 
 
+def build_parser() -> argparse.ArgumentParser:
+    return argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+
+
 def main() -> None:
+    build_parser().parse_args()
     available = [j for j in JURISDICTIONS if j.fixture_path.exists() and j.bill_xml_path.exists()]
     missing = [j.slug for j in JURISDICTIONS if j not in available]
 
@@ -96,7 +109,7 @@ bill XML; we check that our parser reads it correctly, by comparing the parser's
 ## Two independent ground-truth sources
 
 {_leg_branch_summary()}
-- **{len(available)} other jurisdictions** — committee-recommended amounts parsed from the
+- **{len(available)} committee-report jurisdictions** — committee-recommended amounts parsed from the
   Senate Appropriations **committee reports** (govinfo `CRPT-…`), compared to what the parser
   extracts from each reported bill. The report is written by committee staff for a different
   purpose than the bill, so it is genuinely independent. (Committee reports, not CRS reports.)
@@ -108,7 +121,7 @@ bill XML; we check that our parser reads it correctly, by comparing the parser's
 
 An account is counted as **recalled** when the report's amount appears in the parser's
 extraction under the correct agency, or as a sum of the account's components (totals the bill
-states only as parts). See `validation_check.validate_jurisdiction`. For the comparative-
+states only as parts). See `tests/validation_check.py::validate_jurisdiction`. For the comparative-
 statement source, rollup totals/subtotals and negative reduction/offset lines (rescissions,
 offsetting collections) are excluded — they are not leaf appropriation accounts.
 

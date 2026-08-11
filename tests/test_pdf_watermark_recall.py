@@ -1,4 +1,4 @@
-"""Watermark-robustness of PDF text extraction (issue #54) — spec + benign-case proof.
+"""Watermark-robustness of PDF text extraction (#515) — spec + benign-case proof.
 
 Draft bills circulate as watermarked PDFs and are the actual product input, but we
 cannot obtain or store a real one (sensitive, and this is a public repo). A watermark
@@ -15,8 +15,15 @@ use a text-layer watermark, and no way to know its angle or style, so a detector
 fit to a guessed example — and a rotation-based attempt was found to collide with the GPO
 production watermark and risk over-stripping landscape tables. The bucket-2 tests below
 are therefore `xfail`: they pin the failure mode as an executable spec and will flip to
-XPASS if stripping is ever implemented (revisit with a real draft sample). See the #54
-discussion and plans/test-coverage-gaps.md.
+XPASS if stripping is ever implemented (revisit with a real draft sample). The decision
+and its blocker live in #515 (text-layer watermark stripping unimplemented, waiting on a
+real watermarked draft sample).
+
+History on the reference: these citations read `#54` until #515. That was the
+pre-migration repository's number for what is now #6 (real draft-PDF extraction recall is
+untested); after the move to AgoraDMV/DeltaTrack, #54 here is the leveled-heading-tree
+epic, closed and unrelated, so the reason pointed a reader at finished work. Every other
+`#54` in this codebase does mean that epic.
 """
 
 from __future__ import annotations
@@ -25,8 +32,10 @@ from pathlib import Path
 
 import pytest
 
-from diff_bill import extract_amounts
-from parsers.pdf_text import extract_clean_pages
+from deltatrack.diff_bill import extract_amounts
+from deltatrack.parsers.pdf_text import extract_clean_pages
+from tests.corpus_paths import DATA_DIR
+from tests.pdf_corpus import cached_pages
 
 reportlab = pytest.importorskip("reportlab")
 from reportlab.lib.pagesizes import letter  # noqa: E402
@@ -34,7 +43,7 @@ from reportlab.pdfgen import canvas  # noqa: E402
 
 # Bucket 2 (text-layer watermark) is an unimplemented, intentionally-scoped-out gap.
 _TEXT_WATERMARK_UNHANDLED = pytest.mark.xfail(
-    reason="text-layer watermark stripping intentionally not implemented (#54); revisit with a real draft sample",
+    reason="text-layer watermark stripping intentionally not implemented (#515); revisit with a real draft sample",
     strict=False,
 )
 
@@ -134,21 +143,25 @@ def test_robust_across_watermark_angles(tmp_path, angle):
 
 # ---- Benign bucket: the real watermarked public bill (image/graphic layer) -------------
 
-_S4795_PDF = Path("test_data/BILLS-118s4795rs.pdf")
+_S4795_PDF = DATA_DIR / "BILLS-118s4795rs.pdf"
+
+
+def test_real_watermark_fixture_committed():
+    """Fail-closed floor (#326): the fixture below is committed, so its absence is a
+    broken checkout. The case used to carry a ``skipif`` on the same path, written when
+    the PDF had to be fetched; a skip is green, so deleting the file would have turned
+    the only real-watermark assertion off silently (epic #288, same shape as #287)."""
+    assert _S4795_PDF.exists(), f"committed watermark fixture absent from checkout: {_S4795_PDF}"
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(
-    not _S4795_PDF.exists(),
-    reason="watermarked Senate PDF not present; run scripts/fetch_test_assets.py",
-)
 def test_real_graphic_watermark_extracts_clean():
     """The real watermarked Senate copy carries a graphic-layer watermark pypdfium2 ignores.
 
     Guards that the angle-based strip does not disturb a bill whose watermark is *not* text:
     body lines extract and no watermark phrase leaks. Provenance: govinfo package
     BILLS-118s4795rs (public domain, 17 U.S.C. 105)."""
-    text = _full_text(extract_clean_pages(_S4795_PDF))
+    text = _full_text(cached_pages(_S4795_PDF))
     assert len(text) > 50_000, "extraction collapsed"
     for token in ("CONFIDENTIAL", "NOT FOR DISTRIBUTION", "DRAFT COPY"):
         assert token not in text

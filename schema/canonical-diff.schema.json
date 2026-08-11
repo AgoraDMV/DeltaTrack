@@ -9,7 +9,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "pattern": "^1\\.[0-9]+$",
+      "pattern": "^2\\.[0-9]+$",
       "description": "Major.minor. Consumers reject unknown majors."
     },
     "full_text": {
@@ -26,6 +26,21 @@
         }
       ],
       "description": "Optional (v1.1+) full bill text per side, for full-document tracked-changes rendering."
+    },
+    "tree": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["v1", "v2"],
+          "additionalProperties": false,
+          "properties": {
+            "v1": { "type": "array", "items": { "$ref": "#/$defs/TreeNode" } },
+            "v2": { "type": "array", "items": { "$ref": "#/$defs/TreeNode" } }
+          }
+        }
+      ],
+      "description": "Optional (v1.3+) per-side leveled structure tree (#108). Each side is an ordered list of root nodes. Requires full_text present (node spans index into it). A leveled TOC is derivable from the tree, and since #462 the renderer builds the navigation from it alone."
     },
     "generator": {
       "type": "object",
@@ -64,6 +79,25 @@
     }
   },
   "$defs": {
+    "TreeNode": {
+      "type": "object",
+      "required": ["label", "level", "own_amounts", "full_text_span", "children"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "level": {
+          "enum": ["division", "title", "major", "agency", "account", "section", "subsection", "grouping", "preamble", "heading"],
+          "description": "Shared GPO vocabulary (docs/bill-structure.md). Leaf level from the tag/kind; interior positional."
+        },
+        "own_amounts": {
+          "type": "array",
+          "items": { "type": "integer" },
+          "description": "Dollar amounts in THIS node's own block only (not its children's)."
+        },
+        "full_text_span": { "$ref": "#/$defs/Offset" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/TreeNode" } }
+      }
+    },
     "VersionInfo": {
       "type": "object",
       "required": ["label", "version_number", "source"],
@@ -84,7 +118,7 @@
         "location",
         "anchor_resolution",
         "text",
-        "amounts",
+        "amount_entries",
         "move"
       ],
       "additionalProperties": false,
@@ -139,15 +173,17 @@
             "new": { "type": ["string", "null"] }
           }
         },
-        "amounts": {
+        "amount_entries": {
           "type": "array",
+          "description": "The change's base-amount changes, and the only money field (v2.0 removed the deprecated changed-only `amounts`, #274). Self-describing and lossless: every changed/added/removed amount, with no reorder cancellation (that is #87/consumer policy). `added` has null old, `removed` has null new, `changed` has both present and differing. Unchanged (old == new) pairs are dropped. Required, so a consumer never has to test for the key: an empty array on a change with no money.",
           "items": {
             "type": "object",
-            "required": ["old", "new"],
+            "required": ["old", "new", "kind"],
             "additionalProperties": false,
             "properties": {
-              "old": { "type": "integer" },
-              "new": { "type": "integer" }
+              "old": { "type": ["integer", "null"] },
+              "new": { "type": ["integer", "null"] },
+              "kind": { "enum": ["changed", "added", "removed"] }
             }
           }
         },

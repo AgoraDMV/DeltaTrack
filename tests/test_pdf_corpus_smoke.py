@@ -15,7 +15,7 @@ from __future__ import annotations
 import pytest
 from pdf_corpus import adjacent_pdf_pairs, cached_pages
 
-from diff_pdf import PageLineRange, PdfDiff, diff_pdfs
+from deltatrack.diff_pdf import PageLineRange, PdfDiff, diff_pdfs
 
 pytestmark = pytest.mark.slow
 

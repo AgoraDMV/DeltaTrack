@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions / where to start
+    url: https://civictechdc.slack.com/archives/C0AT13U25V2
+    about: Ask in the #congressional-tech Slack channel, or come to the biweekly meetup.
+  - name: Biweekly meetup (Civic Tech DC)
+    url: https://luma.com/civic-tech-dc
+    about: The fastest way to get oriented and pick up a first issue alongside someone.

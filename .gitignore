@@ -1,32 +1,125 @@
 .env
 # Private operator/AI notes — threat analysis, exact resource thresholds, etc.
 # Never publish: see docs-for-ai/deployment-security-notes.md
-docs-for-ai/
+# No TRAILING slash, for the reason spelled out on /bills below: a trailing slash matches
+# only a real directory, so a SYMLINKED copy of this tree — the way it is shared between
+# checkouts — was not ignored and showed up as an ordinary untracked entry. That is the
+# worst place in this file for a rule to fail open. Without the slash a symlink and a real
+# directory are both ignored. Deliberately left unanchored: matching at any depth is the
+# fail-safe direction for a tree that must never be published.
+docs-for-ai
 .DS_Store
 __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
-.venv/
-# Git worktrees live inside the repo here; never commit them as gitlinks
-.claude/worktrees/
-bills/*
-!bills/.gitkeep
-# Vendored public-domain (17 U.S.C. 105) govinfo sources for the external-validation suite:
-# the Senate reported-bill XML each validation jurisdiction checks. Pinning the exact bytes
-# keeps the committed validation_*.json fixtures reproducible and lets the suite run in CI.
-# The broader (large) bill corpus stays ignored and is fetched on demand.
-!bills/118-s-*/
-bills/118-s-*/*
-!bills/118-s-*/1_reported-in-senate.xml
+# No trailing slash for the same reason: a virtualenv is commonly symlinked in.
+.venv
+# AI assistant state (Claude Code). Ignore the directory's CONTENTS, then re-admit the
+# few things a team shares on purpose. This is deny-all-then-re-admit, which `/bills` and
+# `tests/data/` above deliberately moved AWAY from -- the polarity is what differs, and it
+# decides the answer. There the COMMITTED set is large and grows (every new fixture needed
+# a re-admit line, the list reached 80, and a forgotten entry failed silently). Here the
+# DISPOSABLE set is what grows: the assistant adds new runtime artifacts over time, while
+# the shared set is small and nearly static. Enumerating the disposable half is the side
+# that goes stale, and it already did -- the per-machine list this replaces carried eleven
+# patterns and still missed `settings.local.json`, which is how #429 was found.
+#
+# `.claude/*` with the GLOB, never `.claude/` with a trailing slash. Git does not descend
+# into an excluded directory, so under the bare-directory form every `!` line below is
+# silently dead: the re-admits look right, and `settings.json` stays ignored anyway. The
+# glob excludes the entries rather than the directory, which keeps negation working. Same
+# class of trap as the trailing-slash note on `/bills` above, in the opposite direction.
+#
+# `settings.local.json` is the local half of the settings pair: one developer's permission
+# allowlist and tool config. It stays ignored by the rule and carries no re-admit -- it
+# must not reach a public repo, and committing it would override other contributors'
+# settings when they pull. `settings.json` is the shared half and is re-admitted.
+#
+# Worktrees live here too and must never be committed as gitlinks; the glob covers them.
+.claude/*
+!.claude/settings.json
+!.claude/agents/
+!.claude/commands/
+!.claude/skills/
+# The bill WORKING directory: tools/fetch_bills.py and tools/fetch_bill_text_archives.py download
+# into it and it can reach hundreds of MB. Nothing in it is a test input — the curated
+# test fixtures live in tests/corpus/ and are tracked normally, so this directory is
+# entirely ignored and entirely disposable (#308, ADR 0015). It used to hold both, which
+# meant every committed fixture needed a hand-written re-admit line here; that list had
+# grown to 80 rules, duplicated tests/corpus_manifest.toml, and failed silently when a
+# contributor forgot an entry.
+# No TRAILING slash (#319): a trailing slash matches only a real directory, and this is
+# commonly SYMLINKED in from another checkout to reuse a downloaded corpus. A symlink is
+# not a directory to git, so `bills/` would leave the link untracked and offered for
+# commit — recording an absolute path from one developer's machine.
+# LEADING slash, though: a pattern with no slash at all is unanchored and matches a path
+# component at ANY depth, so a bare `bills` would silently swallow a future `docs/bills/`
+# or `webapp/bills/` — reintroducing the silent-`git add` failure #308 exists to remove,
+# just somewhere else. `/bills` is anchored to the repo root AND still matches a symlink.
+/bills
+# govinfo BILLS bulk-text ZIP downloads (tools/fetch_bill_text_archives.py --zip-dir);
+# large, re-fetchable. Same anchoring reasoning as above (#319, #308).
+/bills_bulk_text
 reports/*
 !reports/.gitkeep
-plans/
-test_data/*
-!test_data/validation_*.json
-!test_data/pdf/
-# Vendored committee-report HTML (public domain) — the external-validation ground-truth source.
-!test_data/CRPT-*.htm
+# LEADING slash (#319): unanchored, this matched a `plans` component at ANY depth, so a
+# future tools/plans/ or docs/plans/ would have been ignored with no error.
+/plans
+# tests/data/ holds committed fixtures (validation JSON, committee-report HTML/PDF, the
+# PDF goldens and their source prints), so it is tracked by default and only the
+# local-only artifacts are listed here (#308). It used to be deny-all-then-re-admit,
+# which put a .gitignore edit in the path of adding a golden.
 # Persistent PDF extraction cache (developer test-loop speedup; see tests/pdf_corpus.py)
-test_data/extract_cache/
-*.csv
+tests/data/extract_cache/
+# The source appropriations spreadsheet is deliberately not vendored; only the JSON
+# fixture derived from it is committed.
+tests/data/*.xlsx
+# Vendored GPO render chain (public domain, ~2.2MB incl. binary JPGs) — local reference only.
+# Mined into docs/gpo-render-conventions.md; re-fetch from govinfo bulkdata when needed. See DeltaTrack#40.
+# LEADING slash (#319): unanchored, this matched a `reference` component at ANY depth, so a
+# future docs/reference/ or src/deltatrack/reference/ would have been ignored with no error.
+/reference
+# govinfo-derived test corpus for provision-matching research (#170); large, re-derivable.
+# No trailing slash: it is commonly symlinked into a worktree root (see #319 above).
+bills_corpus
+
+# Generated research render (regenerate via probes/build_artifact.py)
+docs/research/provision-matching/paper.html
+
+# Pass 2 (#203) derived mining artifacts — large, re-derivable from bills_corpus/ via the mine_*.py
+# probes; they also embed gitignored corpus text. The miners are committed; these regenerate.
+docs/research/provision-matching/probes/idf_cache.json
+docs/research/provision-matching/probes/candidates_*.json
+docs/research/provision-matching/probes/split_assignment.json
+
+# Pass 2 (#203) labeling artifacts — generated per run from the mined candidate pools; they carry
+# stratum/split (worklist) or in-progress labels, so they are re-derivable and not committed. The
+# self-contained HTML form TEMPLATE is committed; the per-reviewer forms are not.
+docs/research/provision-matching/probes/worklist.json
+docs/research/provision-matching/probes/worklist_sample.md
+docs/research/provision-matching/probes/assignments.json
+docs/research/provision-matching/probes/form_*.html
+!docs/research/provision-matching/probes/form_template.html
+docs/research/provision-matching/probes/labels/
+docs/research/provision-matching/probes/merged_labels.json
+
+# The PDF bake-off's P2 holdout corpus: 88 govinfo documents, 16.4 MB, downloaded by
+# probes/fetch_holdout.py. Same reasoning as /bills and bills_corpus above — bill source
+# material is fetched, not vendored. What makes this safe here specifically is that
+# results/holdout_membership.json (committed, and covered by the spike's frozen
+# PRESERVED-MANIFEST.txt) records the govinfo package id, sha256 and byte count of every
+# one of the 88 files, and the fetcher verifies each download against it. A re-issued or
+# withdrawn package therefore fails loudly instead of being scored as the historical input.
+# No trailing slash, per the #319 symlink reasoning above.
+docs/research/pdf-backend-bakeoff/holdout
+
+# Build artifacts. The project became buildable in #398, so `uv build` now produces
+# these where it never used to. `build/` matters beyond tidiness: some backends copy
+# the package's own .py files into it, and a directory holding Python that is neither
+# a discovered product package nor a listed consumer is a deliberate failure in
+# tests/test_surface_boundary.py -- so an un-ignored build tree would redden the suite
+# for anyone who ran a build.
+dist/
+build/
+*.egg-info/

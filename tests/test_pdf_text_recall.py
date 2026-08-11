@@ -15,7 +15,7 @@ import re
 import pytest
 from pdf_test_cases import PdfTestCase, load_cases
 
-from parsers.pdf_text import normalize_glyphs, page_range_text
+from deltatrack.parsers.pdf_text import normalize_glyphs, page_range_text
 
 _WS = re.compile(r"\s+")
 # Real compounds like `Child-Rescue` that wrap at a line boundary surface as

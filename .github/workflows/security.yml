@@ -5,13 +5,23 @@ name: security
 # direct pushes to them, plus a weekly cron to catch newly-disclosed CVEs in
 # dependencies that haven't changed.
 #
-# To make it truly mandatory, add "pip-audit (production deps)" as a required
-# status check in the branch protection rules for both main and develop.
+# "pip-audit (production deps)" IS a required status check in the branch protection rules
+# for both main and develop, so this job blocks a merge rather than merely reporting.
+# Renaming the job renames the context and silently strands that requirement.
+#
+# `merge_group` reports that required check for pull requests sitting in a merge queue
+# (#416). The queue is enabled on `develop`, so the trigger is live there and fires on
+# every merge; `main` has no queue, where the event never fires.
+# BOTH required checks need this trigger, not just the test suite: a queue waits on every
+# required context, so leaving it off either workflow stalls the queue just as completely.
+# `ci.yml` carries it for `test`.
 on:
   pull_request:
     branches: [main, develop]
   push:
     branches: [main, develop]
+  merge_group:
+    types: [checks_requested]
   schedule:
     - cron: "0 6 * * 1" # Mondays 06:00 UTC
   workflow_dispatch:
@@ -20,20 +30,37 @@ jobs:
   pip-audit:
     name: pip-audit (production deps)
     runs-on: ubuntu-latest
+    # Least-privilege token: this job only checks out and audits dependencies.
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
 
       - name: Set up Python
-        run: uv python install 3.12
+        # No version here: `uv python install` with no argument installs the one named in
+        # `.python-version`, so the repository has a single source of truth that developers
+        # and CI share. Hardcoding it in each workflow let the two drift silently (#442).
+        run: uv python install
 
       # Resolve the production dependency set from uv.lock (excluding the dev
       # group and the project itself) and audit those pinned versions against
       # the PyPI advisory DB. pip-audit exits non-zero if any has a known vuln.
+      #
+      # The audited set is NAMED, not inherited (#367). `--no-dev` alone would resolve
+      # to whatever `[tool.uv] default-groups` happens to contain, so making `web`
+      # opt-in -- which pyproject.toml documents as a supported install and #398 may
+      # well do -- would silently drop fastapi, uvicorn, slowapi and python-multipart
+      # from this audit, taking python-multipart's CVE-2024-53981 floor with them, and
+      # the check would stay green throughout. `--no-default-groups` clears the
+      # inheritance so the two `--group` flags below are the whole scope: this file is
+      # then the only place that can change what gets audited.
       - name: Export production requirements
-        run: uv export --frozen --no-dev --no-emit-project --format requirements-txt -o requirements-prod.txt
+        run: >
+          uv export --frozen --no-default-groups --group web --group fetch
+          --no-emit-project --format requirements-txt -o requirements-prod.txt
 
       - name: Audit dependencies
         run: uvx pip-audit -r requirements-prod.txt

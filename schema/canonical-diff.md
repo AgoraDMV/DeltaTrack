@@ -1,4 +1,4 @@
-# Canonical Diff JSON — v1.2
+# Canonical Diff JSON — v2.0
 
 This document specifies the canonical JSON shape produced when comparing two
 versions of a bill. It is the public contract between the diff engine and any
@@ -8,10 +8,41 @@ XML inputs and a diff produced from PDF inputs share this shape.
 
 ## Versioning
 
-Top-level field: `schema_version: "1.2"`.
+Top-level field: `schema_version: "2.0"`.
 
 ## Changelog
 
+- **2.0** — **Breaking:** removed the deprecated `amounts` field from each change
+  object and from its `required` list (#274). `amount_entries` fully supersedes it.
+  `amounts` held only the `changed`-kind subset, so it structurally could not
+  represent an appropriation that was wholly added or removed; a document carried
+  both lists with nothing saying which was authoritative, and a consumer reading the
+  wrong one saw a fraction of the money and no indication anything was missing. That
+  matters because the export is built to be read by a machine — the report ships
+  prompts telling a staffer to upload `diff.json` to an AI assistant. There is now
+  exactly one money field. Producers no longer write `amounts`; consumers MUST read
+  `amount_entries`, which becomes **required** in the same break — an empty array
+  when a change carries no money, so there is no absent-key case to handle. The
+  pre-1.4 reader fallback is removed with it: diff reports are generated on demand
+  rather than stored, so there are no older documents to read.
+- **1.4** — Added optional `amount_entries` array on each change object (#86):
+  self-describing base-amount changes with an explicit `kind`
+  (`changed`/`added`/`removed`) and a nullable absent side, so whole-item
+  additions and removals — not just changed-value pairs — are representable.
+  The existing `amounts` field is now **deprecated**: it is exactly the
+  `changed`-kind subset of `amount_entries`, kept for back-compat until the next
+  major. No consumer reads `schema_version`, so a consumer reading `amount_entries`
+  MUST fall back to `amounts` when the field is absent (pre-1.4 documents).
+  Additive, backward compatible. *(Superseded by 2.0: `amounts` and the fallback
+  rule are both gone — this entry is history, not a live rule.)*
+- **1.3** — Added optional top-level `tree: { v1, v2 } | null` field: the
+  per-side leveled structure tree (#108). Each side is an ordered list of
+  root `TreeNode`s; each node carries `label`, `level` (the shared GPO
+  vocabulary), `own_amounts` (the dollar figures in its own block), a
+  `full_text_span` into `full_text` (reference, never duplicated text), and
+  nested `children`. Requires `full_text` present (spans index into it). A
+  leveled TOC is derivable from it, and since #462 the renderer builds the
+  navigation from this tree alone. Additive, backward compatible.
 - **1.2** — Added optional `full_text_span: { v1, v2 } | null` field on
   each change object, locating the change's content inside `full_text.v1`
   and `full_text.v2` as character offsets. Renderers use it to project
@@ -24,16 +55,19 @@ Top-level field: `schema_version: "1.2"`.
   compatible with 1.0 (consumers that ignore unknown fields keep working).
 - **1.0** — Initial public contract.
 
-- Consumers SHOULD reject documents whose major version they do not understand.
+- A consumer claiming support for this contract MUST reject a document whose major
+  version it does not support, rather than interpreting it as the current shape. This
+  is an obligation on the consumer: the JSON Schema constrains the document, and cannot
+  enforce what a reader does at runtime.
 - Additive, backward-compatible changes (new optional fields) bump the minor:
   `1.0 → 1.1`.
 - Breaking changes (renamed/removed/restructured fields) bump the major:
-  `1.0 → 2.0`. N-way comparison support is planned as a v2.0 break.
+  `1.0 → 2.0`. N-way comparison support is planned as a later major break.
 
 ## Scope
 
-- **Binary only.** v1.0 represents a single comparison of two bill versions
-  (`v1` and `v2`). N-way comparison is out of scope and will be a v2.0 break.
+- **Binary only.** This contract represents a single comparison of two bill versions
+  (`v1` and `v2`). N-way comparison is out of scope and will be a later major break.
 - **Read-only diff data.** No edit instructions, comments, or annotations.
 - **Semantic, not presentational.** The JSON does not carry pre-rendered
   HTML; renderers are pure functions over this shape.
@@ -42,7 +76,7 @@ Top-level field: `schema_version: "1.2"`.
 
 ```jsonc
 {
-  "schema_version": "1.1",
+  "schema_version": "2.0",
   "generator": { "name": "deltatrack", "version": "0.x" },
   "bill":      { "type": "HR", "number": 4366, "congress": 118 },
   "versions": {
@@ -75,6 +109,32 @@ fragments in `changes[].text` — `full_text` is the document; `text.old`/
 `text.new` are the diff fragments. Consumers using `full_text` for
 rendering should compute the diff at render time over the full strings,
 not try to splice the change fragments into the document.
+
+### `tree` (optional, v1.3+)
+
+Top-level object: the per-side leveled structure tree (#108). Each of `v1`
+and `v2` is an ordered list of root `TreeNode`s in document order. The whole
+field is `null` (or absent) when no tree is available. **Co-presence:** a
+non-null `tree` requires a non-null `full_text` — every node's
+`full_text_span` indexes into `full_text[side]`.
+
+A `TreeNode`:
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `label` | string | The node's own heading text (`""` for an empty-path root). |
+| `level` | enum | Shared GPO vocabulary: `division`, `title`, `major`, `agency`, `account`, `section`, `subsection`, `grouping`, `preamble`, `heading`. Leaf level is typed from the source tag/kind; interior levels are positional (`heading` when an interior container has no typed source). `subsection` nests under its `section` on both pipelines: XML emits every direct non-quoted `<subsection>` (#188), the PDF the catchline-bearing run-in subset (#96). |
+| `own_amounts` | int[] | Dollar amounts in **this node's own block only** (never its children's). The union over all nodes conserves the bill's amounts exactly. |
+| `full_text_span` | Offset \| null | `{ start, end }` char range into `full_text[side]` locating this node; `null` when it can't be located. Reference only — never duplicates the text. |
+| `children` | TreeNode[] | Ordered child nodes. |
+
+The tree is **per-side, independently built, not paired** — cross-version
+node pairing remains the diff engine's job (the `changes` array). A node may
+be both content and container (an account that holds sub-accounts has a
+`full_text_span`/`own_amounts` AND `children`). A leveled section TOC is
+derivable from this tree, and since #462 it is the renderer's only source for
+the navigation: the separate flat `sections` jump-list and the builder that read
+it were removed.
 
 ### `bill`
 
@@ -119,7 +179,7 @@ that need a different order MUST resort.
   },
   "anchor_resolution": "resolved",
   "text":    { "old": "...", "new": "..." },
-  "amounts": [ { "old": 5000000, "new": 5500000 } ],
+  "amount_entries": [ { "old": 5000000, "new": 5500000, "kind": "changed" } ],
   "move":    null,
   "full_text_span": {                            // optional, v1.2+
     "v1": { "start": 4823, "end": 4961 },
@@ -150,7 +210,14 @@ for distinct styling. `""` or `null` when not applicable. **Redundant with
 ### `path`
 
 Breadcrumb arrays per side. Each element is one segment of the bill's
-hierarchical structure (Title → Subtitle → Section → ...).
+hierarchical structure (Title → Subtitle → Section → ...). The array is
+open-ended, so deepening the breadcrumb is **not** a schema change. PDF
+appropriations diffs may now carry a carry-over agency segment
+(`TITLE I > MANAGEMENT DIRECTORATE > OPERATIONS AND SUPPORT`, DeltaTrack#104) and a
+major/department segment above it
+(`TITLE I > DEPARTMENTAL MANAGEMENT > MANAGEMENT DIRECTORATE > OPERATIONS AND
+SUPPORT`, DeltaTrack#105), reaching the depth the XML side already emits; renderers
+join whatever segments are present and need no per-pipeline branch.
 
 | Side | When `null`                                         |
 |------|-----------------------------------------------------|
@@ -206,21 +273,48 @@ Plain text bodies. `null` on the side that doesn't exist (`added`: `old=null`;
 `removed`: `new=null`). Word-level inline diffs are NOT carried in the JSON;
 renderers compute them at render time.
 
-### `amounts`
+### `amount_entries` (v1.4+; the only money field as of v2.0)
 
-Pre-filtered list of `(old, new)` integer pairs representing meaningful base
-amount changes. Filter rule (guaranteed by the producer):
-
-- Both `old` and `new` are present (non-null).
-- `old != new`.
-
-Pairs where one side is `null` (pure annotation insertions) and pairs where
-old equals new are dropped before serialization. Consumers needing the
-unfiltered set must wait for a future field; v1.0 does not expose it.
+Self-describing base-amount changes: every changed, added, or removed amount the
+diff found, in document order, **losslessly**.
 
 ```jsonc
-"amounts": [ { "old": 5000000, "new": 5500000 }, ... ]
+"amount_entries": [
+  { "old": 250000000, "new": 500000000, "kind": "changed" },
+  { "old": 250000000, "new": null,      "kind": "removed" },
+  { "old": null,      "new": 350000000, "kind": "added"   }
+]
 ```
+
+- `kind: "changed"` — both sides present and differing (`old != new`).
+- `kind: "added"` — `old` is `null`; a whole item appeared.
+- `kind: "removed"` — `new` is `null`; a whole item vanished.
+- Unchanged pairs (`old == new`, e.g. only floor-amendment annotations moved) are
+  dropped.
+
+**No reorder cancellation.** On a renumbered list, `match_amounts` emits a shifted
+item's identical value as a net-zero added/removed pair. Distinguishing that from
+two genuinely-distinct equal-value items needs within-list content alignment (#87),
+so the producer reports every entry honestly and leaves reorder handling to the
+consumer. A cross-version consumer (e.g. BillTrax) may apply its own alignment
+policy; any presentation-side collapse is a consumer concern, not baked into the
+contract.
+
+As of v2.0 this is a change object's **only** money field, so there is exactly one
+list to read and no subset to confuse it with. It is also **required**: a change
+with no money carries an empty array rather than omitting the key, so a consumer
+reads it unconditionally and never has to distinguish "no money here" from "this
+producer didn't write the field".
+
+**An amount here need not appear in this change's `text`.** The two fields are
+derived from different renderings of the same section: `text` carries the
+match-normalized body (the form used to pair sections across versions), while
+amounts are extracted from the readable rendering, which keeps section content the
+normalized form truncates (#365). So a consumer that searches `text` for a figure
+listed in `amount_entries` can legitimately fail to find it, and must not treat
+that as a producer error or a reason to drop the amount. To show a reader the text
+an amount came from, use `full_text_span` to index into `full_text`, which is the
+readable rendering; that is the correspondence the report itself renders from.
 
 ### `full_text_span` (optional, v1.2+)
 
@@ -275,7 +369,7 @@ using `null` for absent values. Consumers SHOULD treat missing optional fields
 the same as `null`. This keeps the JSON predictable for schema validation
 while leaving room for additive fields in minor versions.
 
-## Out of scope for v1.0
+## Out of scope for the current contract
 
 - N-way comparison (more than two versions in a single document)
 - Cross-reference pairing (mapping an `"added"` change to a related
@@ -284,4 +378,5 @@ while leaving room for additive fields in minor versions.
 - Inline word-level diff annotations
 - AI-generated summaries, importance scores, or annotations
 
-These may appear in future minor versions (additive) or v2.0 (breaking).
+These may appear in a future minor version (additive) or a future major version
+(breaking).

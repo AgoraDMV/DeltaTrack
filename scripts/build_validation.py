@@ -1,21 +1,17 @@
-"""Build test_data/validation_<slug>.json for each committee-report jurisdiction.
+"""Build tests/data/validation_<slug>.json for each committee-report jurisdiction.
 
 External ground truth for #8: each Senate appropriations committee report is read for its
 3-line account summary blocks (committee-recommendation amounts, in actual dollars), which
 tests/test_validate_extraction.py validates against the reported bill's XML. Mirrors the
 hand-curated validation_leg_branch.json, but generated deterministically from the report.
 
-Sources are fetched from govinfo (both gitignored locally); the JSON fixtures are committed.
-The jurisdiction registry lives in validation_sources.py.
-
-Usage:
-  uv run python scripts/build_validation.py              # build from local report HTML
-  uv run python scripts/build_validation.py --fetch      # fetch missing sources first
-  uv run python scripts/build_validation.py --fetch cjs  # restrict to one slug
+Report HTML and bill XML sources are committed (tracked since ADR 0015); the JSON fixtures are committed.
+The jurisdiction registry lives in tests/validation_sources.py.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 import urllib.request
@@ -27,13 +23,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import re  # noqa: E402
 
-from bill_tree import normalize_bill  # noqa: E402
-from parsers.committee_report import (  # noqa: E402
+from deltatrack.bill_tree import normalize_bill  # noqa: E402
+from deltatrack.parsers.committee_report import (  # noqa: E402
     extract_pre_text,
     parse_comparative_statement,
     parse_summary_blocks,
 )
-from validation_sources import BY_SLUG, JURISDICTIONS, Jurisdiction  # noqa: E402
+from tests.validation_sources import BY_SLUG, JURISDICTIONS, Jurisdiction  # noqa: E402
 
 _GOVINFO = "https://www.govinfo.gov/content/pkg"
 
@@ -65,6 +61,18 @@ def map_account_path(nodes, title, bureau, heading) -> list[str] | None:
     """
     nh = _norm(heading)
     cands = [n for n in nodes if _norm(n.match_path[-1]) == nh]
+    if not cands and any(nh and nh == _norm(e) for n in nodes for e in n.match_path[:-1]):
+        # The heading names an agency/bureau the bill itemizes rather than a leaf account:
+        # it matches an *interior* path element, so no single node carries its amount.
+        # Legislative Branch's "CAPITOL POLICE" is the case — the bill splits it into
+        # SALARIES and GENERAL EXPENSES under a "Capitol Police" agency node that holds no
+        # amount of its own. Stopping here matters because the substring tier below would
+        # otherwise pair it with the only leaf whose name happens to contain the words,
+        # "Capitol Police Buildings, Grounds and Security", which sits under a different
+        # agency (Architect of the Capitol) and is a different account entirely. A wrong
+        # match_path is worse than none: it reads as a real mapping in the fixture and
+        # sends whoever triages the miss to the wrong node.
+        return None
     if not cands:
         cands = [n for n in nodes if nh and (nh in _norm(n.match_path[-1]) or _norm(n.match_path[-1]) in nh)]
     if not cands:
@@ -149,12 +157,18 @@ def build_fixture(j: Jurisdiction) -> dict:
     }
 
 
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--fetch", action="store_true", help="Fetch the upstream govinfo sources first")
+    p.add_argument("slugs", nargs="*", choices=sorted(BY_SLUG), help="Restrict to these jurisdictions (default: all)")
+    return p
+
+
 def main() -> None:
-    args = [a for a in sys.argv[1:] if a != "--fetch"]
-    do_fetch = "--fetch" in sys.argv
-    targets = [BY_SLUG[s] for s in args] if args else JURISDICTIONS
+    args = build_parser().parse_args()
+    targets = [BY_SLUG[s] for s in args.slugs] if args.slugs else JURISDICTIONS
     for j in targets:
-        if do_fetch:
+        if args.fetch:
             fetch_sources(j)
         if not j.report_html_path.exists():
             print(f"skip {j.slug}: {j.report_html_path} not present (use --fetch)")

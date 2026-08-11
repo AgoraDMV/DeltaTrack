@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="billres.xsl"?>
+<!DOCTYPE amendment-doc PUBLIC "-//US Congress//DTDs/amend.dtd//EN" "amend.dtd">
+<amendment-doc amend-degree="first" amend-type="engrossed-amendment"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+<dublinCore>
+<dc:title>113 HR 3547 EAS: </dc:title>
+<dc:publisher>U.S. House of Representatives</dc:publisher>
+<dc:date>2013-12-12</dc:date>
+<dc:format>text/xml</dc:format>
+<dc:language>EN</dc:language>
+<dc:rights>Pursuant to Title 17 Section 105 of the United States Code, this file is not subject to copyright protection and is in the public domain.</dc:rights>
+</dublinCore>
+</metadata>
+<engrossed-amendment-form>
+<congress display="no">113th CONGRESS</congress><session display="no">1st Session</session><legis-num display="no">H.R. 3547</legis-num><current-chamber display="yes">In the Senate of the United States,</current-chamber><action><action-date date="20131212" legis-day="20131211">December 12 (legislative day, December 11), 2013.</action-date></action><legis-type display="yes">Amendments:</legis-type></engrossed-amendment-form><engrossed-amendment-body><section id="idd3612419ab884855b69c27595f25e4f3" section-type="resolved"><text>That the bill from the House of Representatives (H.R. 3547) entitled <quote>An Act to extend the application of certain space launch liability provisions through 2014.</quote>, do pass with the following</text></section><amendment><amendment-instruction blank-lines-after="0"><text>Strike all after the enacting clause and insert the following:</text></amendment-instruction><amendment-block blank-lines-after="1" changed="added" reported-display-style="italic"><section id="id4183555F16C4474EA8063426547500D0" section-type="section-one"><enum>1.</enum><header>Launch liability extension</header><text display-inline="no-display-inline"><external-xref legal-doc="usc" parsable-cite="usc/51/50915">Section 50915(f)</external-xref> of title 51, United States Code, is
+			 amended by striking <quote>December 31, 2013</quote> and inserting
+			 <quote>December 31, 2016</quote>.</text></section></amendment-block></amendment></engrossed-amendment-body><title-amends><official-title-amendment>Amend the title so as to read: <quote>A bill to extend Government liability, subject to appropriation, for certain third-party claims arising from commercial space launches.</quote>.</official-title-amendment></title-amends><attestation><attestation-group><attestor></attestor><role>Secretary</role></attestation-group></attestation><endorsement></endorsement></amendment-doc>
+
+

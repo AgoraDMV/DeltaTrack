@@ -2,15 +2,61 @@
 
 from __future__ import annotations
 
-from parsers.pdf_text import (
+import pytest
+
+from deltatrack.parsers.pdf_text import (
     Line,
     Page,
+    _first_word_right,
+    _merge_print_lines,
+    _page_glyph_sizes,
+    _parse_print_lines,
     normalize_glyphs,
     normalize_raw,
     page_range_text,
+    pdf_full_text,
+    pdf_full_text_print,
     rejoin_soft_hyphens,
     strip_page_chrome,
 )
+from tests.corpus_paths import fixture_path, resolve_bill_file
+from tests.pdf_corpus import cached_pages
+
+_HR8752_V1 = fixture_path("118-hr-8752", "1_reported-in-house.pdf")
+
+
+def _print_page(page_number: int, chrome_stripped: str) -> Page:
+    """Build a Page the way extract_clean_pages does: pre-merge print lines plus
+    the soft-hyphen-merged lines and their constituent ranges."""
+    print_lines = _parse_print_lines(chrome_stripped)
+    merged, ranges = _merge_print_lines(print_lines)
+    return Page(page_number, tuple(merged), tuple(print_lines), tuple(ranges))
+
+
+class TestPdfFullTextPrint:
+    # Two printed lines where a soft hyphen merges line 8 into line 9 for the
+    # diff, but the printed view should keep both lines and the hyphen.
+    _SRC = "8 For acquisition and equip-\n9 ment of public works\n10 Marine Corps as authorized"
+
+    def test_keeps_every_printed_line_and_hyphen(self):
+        text, _ = pdf_full_text_print([_print_page(1, self._SRC)])
+        assert "    8  For acquisition and equip-" in text
+        assert "    9  ment of public works" in text
+        assert "   10  Marine Corps as authorized" in text
+
+    def test_merged_line_offset_spans_its_printed_lines(self):
+        text, offsets = pdf_full_text_print([_print_page(1, self._SRC)])
+        # Merged line 8 absorbed printed line 9, so its span covers both 8 and 9.
+        start, end = offsets[(1, 8)]
+        assert text[start:end] == "    8  For acquisition and equip-\n    9  ment of public works"
+        # Line 10 didn't merge, so its span is just itself.
+        s10, e10 = offsets[(1, 10)]
+        assert text[s10:e10] == "   10  Marine Corps as authorized"
+
+    def test_merged_full_text_collapses_the_hyphen(self):
+        # Contrast: the canonical (merged) text rejoins the word onto one line.
+        text, _ = pdf_full_text([_print_page(1, self._SRC)])
+        assert "    8  For acquisition and equipment of public works" in text
 
 
 def _page(page_number: int, text: str) -> Page:
@@ -87,6 +133,11 @@ class TestStripPageChrome:
         # PDFium floats the running header to the top, after the page number.
         assert strip_page_chrome("•HR 4366 RH\n1 BODY") == "1 BODY"
 
+    def test_strips_running_senate_header_line(self):
+        # Senate prints carry a •S####RS running header/footer in the body column;
+        # unstripped it pollutes the glyph-size sidecar (DeltaTrack#89).
+        assert strip_page_chrome("•S 4795 RS\n1 BODY") == "1 BODY"
+
     def test_strips_verdate_footer_and_watermark_below(self):
         raw = "23 reasons therefor.\nVerDate Sep 11 2014 00:17 Jkt\nSSpencer on DSK PROD with BILLS"
         assert strip_page_chrome(raw) == "23 reasons therefor."
@@ -97,8 +148,160 @@ class TestStripPageChrome:
         raw = "24 training and ad-\npbinns on DSKJLVW7X2PROD with $$_JOB"
         assert strip_page_chrome(raw) == "24 training and ad-"
 
+    def test_strips_unbulleted_running_footer(self):
+        # Some print stages (Placed on Calendar, Senate) carry an UNbulleted running
+        # line `HR 5895 PCS` that PDFium floats to the top. With no bullet the
+        # `•`-anchored header regex misses it, so it survives as body text on nearly
+        # every page (DeltaTrack#140). Strip it as a whole-line match.
+        assert strip_page_chrome("HR 5895 PCS\n1 BODY") == "1 BODY"
+
+    def test_strips_unbulleted_footer_for_all_corpus_stage_codes(self):
+        # The stage codes actually seen unbulleted in the corpus: PCS, RDS, RFS.
+        # Senate bills use the `S <num>` prefix.
+        assert strip_page_chrome("HR 4366 RDS\n1 BODY") == "1 BODY"
+        assert strip_page_chrome("S 1234 RFS\n1 BODY") == "1 BODY"
+
+    def test_keeps_prose_line_with_bill_ref_no_stage_code(self):
+        # A real prose line mentioning the bill mid-sentence (no trailing stage code,
+        # and prefixed by a margin number like all body lines) must NOT be stripped.
+        # The whole-line anchors plus the {2,4}-caps suffix are the guard.
+        assert strip_page_chrome("23 amounts under HR 5895 are appropriated") == (
+            "23 amounts under HR 5895 are appropriated"
+        )
+        assert strip_page_chrome("HR 5895 appropriations bill") == "HR 5895 appropriations bill"
+
     def test_keeps_body_without_chrome_unchanged(self):
         assert strip_page_chrome("1 BODY\n2 MORE") == "1 BODY\n2 MORE"
+
+
+_HR5895_V3 = resolve_bill_file("115-hr-5895", "3_placed-on-calendar-senate.pdf")
+
+
+@pytest.mark.skipif(not _HR5895_V3.exists(), reason="115-hr-5895 v3 PDF not present")
+class TestUnbulletedFooterConsumedOutput:
+    """End-to-end checks on the consumed output (extracted lines / flattened diff
+    stream), not the strip regex in isolation. 115-hr-5895 v3 (Placed on Calendar,
+    Senate) carries the unbulleted `HR 5895 PCS` footer on 181/184 pages (#140)."""
+
+    def test_footer_absent_from_extracted_lines(self):
+        pages = cached_pages(_HR5895_V3)
+        offenders = [(p.page_number, ln.text) for p in pages for ln in p.lines if "HR 5895 PCS" in ln.text]
+        assert offenders == []
+
+    def test_cross_page_word_rejoins_across_footer_seam(self):
+        # p27 ends "...for replace-"; the footer floats to the top of p28 between the
+        # hyphen line and its "ment only," continuation, blocking the cross-page
+        # rejoin. With the footer stripped, the seam stitches back to "replacement".
+        from deltatrack.diff_pdf import _flatten
+
+        pages = cached_pages(_HR5895_V3)
+        flat = _flatten(pages)
+        assert any("airplane for replacement only" in ln.text for ln in flat)
+        assert not any(ln.text == "HR 5895 PCS" for ln in flat)
+
+
+class TestFirstWordRight:
+    """`_first_word_right` finds the first word boundary in a line's content glyphs.
+
+    The load-bearing case (#130, #106 spike): PDFium emits a real space glyph (cp==32)
+    that sits IN the inter-word gap, so every glyph-to-glyph x-gap stays small and a
+    gap-only test never fires — it would return the whole line as one word. The
+    boundary must be the space glyph.
+    """
+
+    @staticmethod
+    def _glyphs(spec, size=11.0, width=6.0, gap=0.5):
+        """Lay `spec` (a string; ' ' becomes a real cp==32 space glyph) left to right
+        as `(bottom, left, right, cp, size)` tuples with a small, non-firing x-gap."""
+        glyphs = []
+        x = 100.0
+        for ch in spec:
+            glyphs.append((0.0, x, x + width, ord(ch), size))
+            x += width + gap
+        return glyphs
+
+    def test_space_glyph_bounds_first_word_despite_small_gap(self):
+        glyphs = self._glyphs("RELATED AGENCIES")
+        # right edge of "RELATED" = the 'D' glyph (index 6), not the whole line.
+        d_right = glyphs[6][2]
+        line_right = glyphs[-1][2]
+        assert d_right < line_right  # sanity: the two differ
+        assert _first_word_right(glyphs) == d_right
+
+    def test_falls_back_to_wide_gap_when_no_space_glyph(self):
+        # No space glyph emitted; a wide x-gap (> 0.25×size) marks the boundary.
+        left = self._glyphs("CORPS")
+        gap_start = left[-1][2] + 5.0  # 5pt > 0.25*11 = 2.75pt
+        right = [(0.0, gap_start, gap_start + 6.0, ord("OF"[i]), 11.0) for i in range(2)]
+        assert _first_word_right(left + right) == left[-1][2]
+
+    def test_skips_leading_space_glyph(self):
+        glyphs = self._glyphs(" RELATED")  # stray leading space
+        assert _first_word_right(glyphs) == glyphs[-1][2]  # 'RELATED' right edge
+
+    def test_none_when_no_content(self):
+        assert _first_word_right([]) is None
+
+
+class TestPageGlyphSizes:
+    """The glyph-size measurement sidecar (#89). Assertions are RELATIVE/structural,
+    predicted from the #89 evidence, not hardcoded point sizes."""
+
+    def _page3_sizes(self):
+        if not _HR8752_V1.exists():
+            pytest.skip("HR 8752 v1 PDF not present")
+        import pypdfium2 as pdfium
+
+        pdf = pdfium.PdfDocument(str(_HR8752_V1))
+        try:
+            tp = pdf[2].get_textpage()  # page 3 (0-based): MANAGEMENT DIRECTORATE ... FPS
+            try:
+                # _page_glyph_sizes now returns {line: (size, LineGeom)}; this class
+                # asserts on size only, so unwrap to {line: size}.
+                return {ln: size for ln, (size, _geom) in _page_glyph_sizes(tp, tp.get_text_range()).items()}
+            finally:
+                tp.close()
+        finally:
+            pdf.close()
+
+    def test_heading_extracts_smaller_than_body(self):
+        sizes = self._page3_sizes()
+        # line 12 FEDERAL PROTECTIVE SERVICE (heading) vs line 13 body prose
+        assert sizes[12] < sizes[13]
+        # line 1 MANAGEMENT DIRECTORATE (heading) vs line 3 "For necessary expenses" body
+        assert sizes[1] < sizes[3]
+
+    def test_distribution_is_bimodal(self):
+        sizes = self._page3_sizes()
+        rounded = sorted({round(s, 1) for s in sizes.values()})
+        # at least two distinct size clusters (body + heading band)
+        assert len(rounded) >= 2
+        # body (most common) is the larger cluster; a smaller heading cluster exists
+        from collections import Counter
+
+        body = Counter(round(s, 1) for s in sizes.values()).most_common(1)[0][0]
+        assert any(s < body - 0.5 for s in rounded)
+
+    def test_margin_numbers_join_to_real_lines(self):
+        # The join is correct only if sidecar line numbers match the string
+        # pipeline's. Numbers found must be a superset of the merged-line numbers.
+        if not _HR8752_V1.exists():
+            pytest.skip("HR 8752 v1 PDF not present")
+        pages = cached_pages(_HR8752_V1)
+        p3 = pages[2]
+        merged_numbers = {ln.line_number for ln in p3.lines if ln.line_number is not None}
+        sizes = self._page3_sizes()
+        missing = merged_numbers - set(sizes)
+        assert not missing, f"merged lines with no size: {missing}"
+
+    def test_sizes_attached_to_lines_after_extract(self):
+        if not _HR8752_V1.exists():
+            pytest.skip("HR 8752 v1 PDF not present")
+        pages = cached_pages(_HR8752_V1)
+        p3 = pages[2]
+        by_num = {ln.line_number: ln for ln in p3.lines}
+        assert by_num[12].glyph_size is not None
+        assert by_num[12].glyph_size < by_num[13].glyph_size
 
 
 class TestPageRangeText:

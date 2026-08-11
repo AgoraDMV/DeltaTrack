@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="billres.xsl"?>
+<!DOCTYPE resolution PUBLIC "-//US Congress//DTDs/res.dtd//EN" "res.dtd">
+<resolution resolution-stage="Reported-in-House" dms-id="HD0A9CB12534343989A7AE4698BAAA80E" public-private="public" resolution-type="house-resolution" star-print="no-star-print" key="H"> 
+<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+<dublinCore>
+<dc:title>119 HRES 137 RH: Designating the House Press Gallery, Rooms H–315, H–316, H–317, H–318, and H–319 in the United States Capitol, as the “Frederick Douglass Press Gallery”.</dc:title>
+<dc:publisher>U.S. House of Representatives</dc:publisher>
+<dc:date>2025-06-06</dc:date>
+<dc:format>text/xml</dc:format>
+<dc:language>EN</dc:language>
+<dc:rights>Pursuant to Title 17 Section 105 of the United States Code, this file is not subject to copyright protection and is in the public domain.</dc:rights>
+</dublinCore>
+</metadata>
+<form>
+<distribution-code display="yes">IV</distribution-code> 
+<calendar display="yes">House Calendar No. 31</calendar> 
+<congress display="yes">119th CONGRESS</congress> 
+<session display="yes">1st Session</session> 
+<legis-num display="yes">H. RES. 137</legis-num> 
+<associated-doc role="report" display="yes">[Report No. 119–150]</associated-doc> 
+<current-chamber>IN THE HOUSE OF REPRESENTATIVES</current-chamber> 
+<action display="yes"> 
+<action-date date="20250214">February 14, 2025</action-date> 
+<action-desc><sponsor name-id="D000032">Mr. Donalds</sponsor> (for himself, <cosponsor name-id="C001072">Mr. Carson</cosponsor>, <cosponsor name-id="H001066">Mr. Horsford</cosponsor>, <cosponsor name-id="H001095">Mr. Hunt</cosponsor>, and <cosponsor name-id="O000086">Mr. Owens</cosponsor>) submitted the following resolution; which was referred to the <committee-name committee-id="HPW00">Committee on Transportation and Infrastructure</committee-name></action-desc> 
+</action> 
+<action display="yes"> 
+<action-date date="20250606">June 6, 2025</action-date> 
+<action-desc>Additional sponsor: <cosponsor name-id="J000307">Mr. James</cosponsor></action-desc> 
+</action> 
+<action display="yes"> 
+<action-date date="20250606">June 6, 2025</action-date> 
+<action-desc>Reported with amendments, referred to the House Calendar, and ordered to be printed</action-desc> 
+<action-instruction>Strike the preamble and insert the part printed in italic</action-instruction> 
+<action-instruction>Strike all after the resolving clause and insert the part printed in italic</action-instruction> 
+</action> 
+<legis-type>RESOLUTION</legis-type> 
+<official-title display="yes">Designating the House Press Gallery, Rooms H–315, H–316, H–317, H–318, and H–319 in the United States Capitol, as the <quote>Frederick Douglass Press Gallery</quote>.</official-title> 
+</form> 
+<preamble reported-display-style="strikethrough" changed="deleted" committee-id="HPW00"> 
+<whereas><text>Whereas Frederick Douglass was born to an enslaved family in 1818;</text></whereas> <whereas><text>Whereas Douglass bravely escaped slavery in 1838, and spent much of his adult life as a journalist in Rochester, New York;</text></whereas> 
+<whereas><text>Whereas Douglass published his first newspaper, The North Star, using his own money in the pre-Civil War era;</text></whereas> <whereas><text>Whereas Douglass was known for fiercely opposing slavery, championing equal rights and women’s rights, and for being a forceful speaker;</text></whereas> 
+<whereas><text>Whereas, during the Civil War, Douglass was a recruiter for the first African-American army regiment;</text></whereas> <whereas><text>Whereas Douglass met twice with President Lincoln, first about the pay and treatment of Black soldiers and then to discuss the President’s desire to assist escaping slaves;</text></whereas> 
+<whereas><text>Whereas after Douglass’ Rochester home was destroyed by fire (which Douglass believed resulted from arson), he moved his family to Anacostia in Washington, DC;</text></whereas> <whereas><text>Whereas, in 1870, Douglass was asked to become editor of the New National Era, which chronicled the progress of Blacks throughout the United States, and he later bought the paper;</text></whereas> 
+<whereas><text>Whereas Douglass was the first Black reporter allowed into the Capitol press galleries, where journalists watch lawmakers on the floors of the Senate and the House of Representatives;</text></whereas> <whereas><text>Whereas Douglass was a member of the congressional press galleries from 1871–1875;</text></whereas> 
+<whereas><text>Whereas Douglass reported on House and Senate legislation regularly to update the African-American community during Reconstruction following the 13th, 14th, and 15th Amendments to the Constitution;</text></whereas> <whereas><text>Whereas Douglass was recorded frequently in the congressional directory and spent a significant amount of time writing and studying from the House Press Gallery;</text></whereas> 
+<whereas><text>Whereas Douglass often visited the Capitol following his time as a member of the congressional press galleries;</text></whereas> <whereas><text>Whereas Douglass delivered the keynote speech at the unveiling of the Emancipation Memorial in Washington’s Lincoln Park;</text></whereas> 
+<whereas><text>Whereas, in 2007, Douglass was recognized by placing a plaque and painting of him in his honor in the House Press Gallery;</text></whereas> <whereas><text>Whereas, in 2012, Congress passed and the President signed <external-xref legal-doc="public-law" parsable-cite="pl/112/174">Public Law 112–174</external-xref>, which directed Frederick Douglass’ statue placement in the Capitol Visitor Center’s Emancipation Hall; and</text></whereas> 
+<whereas><text>Whereas Douglass was a pioneer in journalism who broke through glass ceilings throughout one of the most crucial times in American history, exhibited great perseverance to become an American hero, and became a legend known in the House Press Gallery: Now, therefore, be it</text></whereas></preamble> <preamble reported-display-style="italic" changed="added" committee-id="HPW00"> <whereas><text display-inline="yes-display-inline">Whereas Frederick Douglass was born to an enslaved family in 1818;</text></whereas> 
+<whereas><text>Whereas Douglass bravely escaped slavery in 1838, and spent much of his adult life as a journalist in Rochester, New York;</text></whereas> <whereas><text>Whereas Douglass published his first newspaper, The North Star, using his own money in the pre-Civil War era;</text></whereas> 
+<whereas><text>Whereas Douglass was known for fiercely opposing slavery, championing equal rights and women’s rights, and for being a forceful speaker;</text></whereas> <whereas><text>Whereas, during the Civil War, Douglass was a recruiter for the first African-American Army regiment;</text></whereas> 
+<whereas><text>Whereas Douglass met twice with President Lincoln, first about the pay and treatment of Black soldiers and then to discuss the President’s desire to assist escaping slaves;</text></whereas> <whereas><text>Whereas after Douglass’ Rochester home was destroyed by fire (which Douglass believed resulted from arson), he moved his family to Anacostia in Washington, DC;</text></whereas> 
+<whereas><text>Whereas, in 1870, Douglass was asked to become editor of the New National Era, which chronicled the progress of Blacks throughout the United States, and he later bought the paper;</text></whereas> <whereas><text>Whereas Douglass was the first Black reporter allowed into the Capitol press galleries, where journalists watch lawmakers on the floors of the Senate and the House of Representatives;</text></whereas> 
+<whereas><text>Whereas Douglass was a member of the congressional press galleries from 1871–1875;</text></whereas> <whereas><text>Whereas Douglass reported on House and Senate legislation regularly to update the African-American community during Reconstruction following the 13th, 14th, and 15th Amendments to the Constitution;</text></whereas> 
+<whereas><text>Whereas Douglass was recorded frequently in the congressional directory and spent a significant amount of time writing and studying from the House Press Gallery;</text></whereas> <whereas><text>Whereas Douglass often visited the Capitol following his time as a member of the congressional press galleries;</text></whereas> 
+<whereas><text>Whereas Douglass delivered the keynote speech at the unveiling of the Emancipation Memorial in Washington’s Lincoln Park;</text></whereas> <whereas><text>Whereas, in 2007, Douglass was recognized by placing a plaque and painting of him in his honor in the House Press Gallery;</text></whereas> 
+<whereas><text>Whereas, in 2012, Congress passed and the President signed <external-xref legal-doc="public-law" parsable-cite="pl/112/174">Public Law 112–174</external-xref>, which directed Frederick Douglass’ statue placement in the Capitol Visitor Center’s Emancipation Hall; and</text></whereas> <whereas><text>Whereas Douglass was a pioneer in journalism who broke through glass ceilings throughout one of the most crucial times in American history, exhibited great perseverance to become an American hero, and became a legend known in the House Press Gallery: Now, therefore, be it</text></whereas></preamble> 
+<resolution-body style="traditional" id="H24E6941A215442F4832AE6F08B49FA3C" changed="deleted" reported-display-style="strikethrough"> 
+<section display-inline="yes-display-inline" section-type="undesignated-section" id="H4CA00107BDD640E7A2AB485C203C2CD1"><enum/><text display-inline="yes-display-inline">That the House Press Gallery, Rooms H–315, H–316, H–317, H–318, and H–319 in the United States Capitol, is designated as the <quote>Frederick Douglass Press Gallery</quote>. </text></section> </resolution-body> <resolution-body changed="added" style="traditional" committee-id="HPW00" reported-display-style="italic" id="H37D40925291F44DBAF8FAB6CC69F51C7" display-resolving-clause="no-display-resolving-clause"> <section id="H098C8885CDBB42A0833AC11BA6F90FE9" section-type="undesignated-section" display-inline="yes-display-inline"><enum></enum><text>That the House Press Gallery (Rooms H–315, H–316, H–317, H–318, and H–319 of the United States Capitol) is designated as the <quote>Frederick Douglass Press Gallery</quote>.</text></section> 
+</resolution-body><official-title-amendment>Amend the title so as to read: <quote>Resolution designating the House Press Gallery (Rooms H–315, H–316, H–317, H–318, and H–319 of the United States Capitol) as the <quote>Frederick Douglass Press Gallery</quote>.</quote>.</official-title-amendment> 
+<endorsement display="yes"> 
+<action-date date="20250606">June 6, 2025</action-date> 
+<action-desc>Reported with amendments, referred to the House Calendar, and ordered to be printed</action-desc></endorsement> 
+</resolution> 
+
+

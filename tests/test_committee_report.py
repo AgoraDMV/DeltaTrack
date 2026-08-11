@@ -7,15 +7,15 @@ layout of Senate Report 118-198 so they run in CI without a committed fixture.
 """
 
 import re
-from pathlib import Path
 
 import pytest
 
-from parsers.committee_report import (
+from deltatrack.parsers.committee_report import (
     extract_pre_text,
     parse_comparative_statement,
     parse_summary_blocks,
 )
+from tests.corpus_paths import DATA_DIR
 
 # A real-shape 3-line summary block: ALL-CAPS heading, blank line, then the
 # Appropriations / Budget estimate / Committee recommendation rows in actual dollars.
@@ -385,7 +385,7 @@ def test_parse_comparative_statement_bureau_resets_at_new_title():
 # gross/base decompositions — the summary states the account total the bill appropriates,
 # while the comparative breaks out an emergency or fee-adjusted component on its own line.
 # One is a typo in the report's narrative that its own comparative statement contradicts.
-_REPORT_HTML = Path("test_data/CRPT-118srpt198.htm")
+_REPORT_HTML = DATA_DIR / "CRPT-118srpt198.htm"
 _KNOWN_TABLE_DISAGREEMENTS = {
     "ECONOMIC DEVELOPMENT ASSISTANCE PROGRAMS": (
         "summary 410,000 = base 369,000 + emergency 41,000 (the bill amount); comparative lists the base line."

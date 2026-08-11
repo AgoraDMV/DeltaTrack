@@ -1,41 +1,297 @@
 name: CI
 
+# `develop` is listed under push because it is the integration branch every contributor
+# branches from, and until #412 nothing ran the suite when a commit landed on it. The
+# pull-request run tests the head merged into the base AS THE BASE STOOD WHEN IT RAN, so
+# a green required check can describe a merge that no longer resembles the one being
+# performed: #396's `test` check was seven hours stale when it merged, and the package
+# move in #402 had landed in between. `security.yml` already covered `develop` on push,
+# which is why the branch showed green marks after that merge while the suite was
+# uncollectable. This step is DETECTION, not prevention -- `develop` still goes red, but
+# within minutes and attributed to the merge commit that caused it, instead of surfacing
+# later on an unrelated pull request.
+#
+# Prevention arrived separately: a merge queue is now enabled on `develop`, and it tests
+# the exact merge commit BEFORE it lands. That makes the `develop` push run a re-test of
+# a commit `merge_group` just passed -- verified identical, not merely equivalent: the
+# queue's merge commit reappears verbatim as the push SHA on every merge, batched entries
+# included. KEEP IT ANYWAY. The queue is a branch-protection setting that does not appear
+# in the REST protection payload, is absent from rulesets, and is pinned by no test, so if
+# it is ever switched off nothing else would notice and this run becomes the only verdict
+# on `develop` again. Roughly seven runner-minutes per merge, on free hosted runners, buys
+# insurance against a silent config change. `main` has NO queue, so its push run is not
+# redundant at all -- it is the only test of the promotion merge commit, whose
+# pull-request run tested a preview rather than what landed.
+#
+# A push to a branch that also has an open pull request runs this workflow twice, once
+# per event. Feature branches are unaffected: `develop` and `main` are only pushed to by
+# a merge, which closes the pull request rather than synchronizing it. The one case that
+# does double is the `develop` -> `main` promotion pull request, which is rare and
+# maintainer-initiated, so it is accepted rather than worked around.
+#
+# DO NOT add a `concurrency` group with `cancel-in-progress: true`. Cancelling an
+# in-flight run means a merge commit finishes with no verdict, which is this issue's gap
+# in a new form. `update-examples.yml` uses that setting and is the nearby example likely
+# to be copied. `tests/test_ci_workflow.py` fails if either half of this is undone.
+#
+# `merge_group` reports the required `test` check for pull requests sitting in a merge
+# queue (#416). The queue is ENABLED on `develop`, so this trigger is live and fires on
+# every merge; it is not enabled on `main`, where the event never fires. The trigger
+# landed BEFORE the queue was turned on, deliberately: enabling the queue while the
+# workflows lack this trigger means the required checks are never reported, so nothing
+# merges until someone works out why. `checks_requested` is the only
+# activity type the event has; it is named rather than defaulted so the file says what it
+# responds to. `security.yml` carries the same trigger for the other required check.
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, develop]
+  merge_group:
+    types: [checks_requested]
 
 jobs:
-  test:
+  # The matrix legs report one context PER LEG (`test-suite (3.12)`,
+  # `test-suite (3.12.0)`), so the job that branch protection requires is the
+  # `test` aggregator at the bottom of this file, not the matrix itself. Renaming
+  # this job's id does not strand the required check; deleting the aggregator does.
+  test-suite:
     runs-on: ubuntu-latest
+    # Least-privilege token: this job only checks out and runs the suite.
+    permissions:
+      contents: read
+    strategy:
+      # The two legs test DIFFERENT supported interpreter surfaces, so one leg's failure
+      # must not cancel the other before it reports. With the default `fail-fast: true`,
+      # one failing leg cancels its sibling mid-run and that sibling's verdict is lost --
+      # so a floor-only regression can hide behind an unrelated failure on the newest
+      # patch, which is the leg most likely to fail for reasons unrelated to the floor.
+      # This is diagnostic completeness, NOT permissiveness: a failed leg still fails, and
+      # the `test` aggregator below still demands success from EVERY leg. Same reasoning
+      # as `cancel-in-progress` in this file: never destroy a verdict.
+      # `tests/test_ci_workflow.py` fails if this is undone.
+      fail-fast: false
+      matrix:
+        # "3.12" resolves to the NEWEST patch uv knows, so a lone `uv python install
+        # 3.12` never visits the oldest interpreters `requires-python = ">=3.12"`
+        # promises to support -- and argparse's `parse_known_intermixed_args` re-enters
+        # the public `parse_known_args` on 3.12.0-3.12.7 but not from 3.12.8 on, so the
+        # difference is behavioural, not cosmetic (#426). The "3.12.0" entry pins the
+        # declared floor; "3.12" keeps tracking the newest patch. Ubuntu 24.04's system
+        # Python (3.12.3) sits inside the band only the floor entry exercises.
+        python-version: ["3.12", "3.12.0"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
 
       - name: Set up Python
-        run: uv python install 3.12
+        # The other workflows install the version named in `.python-version` (#442).
+        # This job deliberately overrides it: the matrix exists to run the newest 3.12
+        # AND the declared floor, and one source of truth cannot name two interpreters.
+        # `.python-version` still governs developer environments and the
+        # single-interpreter workflows; the explicit version here, and the `--python`
+        # on `uv sync` below, are what hold the two legs apart (#426).
+        run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync
+        # --python pins the sync to the matrix interpreter. A bare `uv sync` follows
+        # uv's own preference order, so a later .python-version file or a UV_PYTHON
+        # env var would point BOTH legs at the same interpreter and the "3.12.0"
+        # floor leg would stay green while testing nothing.
+        run: uv sync --python ${{ matrix.python-version }}
 
+      # Each check runs even if an earlier one failed (but not after cancellation),
+      # so one push surfaces every problem at once instead of failing fast on the
+      # first gate. The job still goes red if any step fails.
       - name: Lint
+        if: ${{ !cancelled() }}
         run: uv run ruff check .
 
       - name: Check formatting
+        if: ${{ !cancelled() }}
         run: uv run ruff format --check .
 
       - name: Run tests
-        run: uv run pytest -m "not slow" -v
+        if: ${{ !cancelled() }}
+        run: uv run pytest -m "not slow and not browser" -v
+
+      - name: Install Playwright browser
+        if: ${{ !cancelled() }}
+        # Chromium only; --with-deps pulls the OS libraries the browser needs on
+        # the Ubuntu runner. ~hundreds of MB but cached between runs by the image.
+        run: uv run playwright install --with-deps chromium
+
+      - name: Run browser tests
+        if: ${{ !cancelled() }}
+        run: uv run pytest -m browser -v
 
       - name: Run external-validation suite
+        if: ${{ !cancelled() }}
         # The committee-report validation is @slow but self-contained: it runs against the
         # vendored govinfo sources (committee-report HTML + reported-bill XML), so it can gate
-        # CI. The Legislative Branch slow tests need the large enrolled-bill corpus, which is
-        # not vendored, so they stay an on-demand local guard and are not selected here.
+        # CI.
+        #
+        # test_validate_extraction.py runs WHOLE rather than by nodeid. The two names it
+        # used to be selected by are parametrized, so they already pulled in most of the
+        # module -- but seven cases (the TestLegBranchValidation class) were collected by
+        # no CI step. Selecting a module by nodeid is what let the gap open, so it is
+        # selected by path now. All seven assert here since #278 committed the five
+        # remaining Legislative Branch bills: the class validates every curated account
+        # across all the fixture's bills, where CI previously saw only the two committed
+        # ones and silently dropped the rest.
         run: >
           uv run pytest -v -m slow
           tests/test_committee_report.py
-          tests/test_validate_extraction.py::test_report_amounts_recalled
-          tests/test_validate_extraction.py::test_fixture_is_senate_reported_bill
+          tests/test_validate_extraction.py
+
+      - name: Run corpus correctness gates (committed manifest)
+        if: ${{ !cancelled() }}
+        # These six @slow gates parametrize over the committed fixture set in
+        # tests/corpus_manifest.toml (ADR 0015 / #217 / #220): a byte-identical offline
+        # corpus, no fetch. Each module's test_manifest_fixtures_committed floor fails
+        # CLOSED if a manifested bill is uncommitted, so a missing fixture goes red rather
+        # than silently collecting fewer cases. Before this, they ran only locally over a
+        # fetched glob and never in CI (fail open). The last three were migrated in #220 --
+        # listing them here is what actually gives them CI coverage; committing their
+        # fixtures only made them runnable. CORPUS_SWEEP=1 is the opt-in local superset.
+        #
+        # test_financial_callout_whole_item is the seventh, and the odd one out: it is not
+        # manifest-parametrized, it diffs one committed pair (119-hr-1 v1 -> v2) to prove a
+        # wholly-removed appropriation is not rendered silently (#86). It is @slow, so
+        # every other step skipped it and it had never run in CI at all. Committing v2 made
+        # it runnable; naming it here is what makes it run. Its skipif channel is watched by
+        # the content-skip ceiling (CORPUS_GATE_MODULES in tests/conftest.py), so deleting
+        # the fixture goes red instead of quiet.
+        #
+        # test_canonical_baseline is the eighth. It pins the canonical XML diff byte for
+        # byte over the same manifest pairs, which is the XML half of ADR 0020's stated
+        # acceptance criterion for extracting the matching stages: a matching-policy
+        # change that affects one of those pairs moves the baseline. Named here for the
+        # reason every step in this job repeats: the marker makes a gate runnable, naming
+        # its module is what makes it run.
+        #
+        # test_matching_contracts is the ninth, and only PART of it is slow: its ADR 0020
+        # contract cases are fast and run in the fast step above. What runs here is the
+        # corpus measurement its exclusivity rule rests on -- that the current XML
+        # assigner claims every observation exactly once. A rule argued from a corpus
+        # measurement needs that measurement gated, or the argument is prose.
+        #
+        # test_assignment_classification_boundary is the tenth, and split the same way: its
+        # checker self-tests are fast and run above, while the two corpus gates run here --
+        # that the extracted similarity rule agrees with the pre-refactor one on every
+        # path-matched pairing, and that classification returns the correspondence shape it
+        # was handed. Both are the kind of gate this job exists for: a property argued from
+        # the committed manifest, which reports green by absence if no step names it.
+        run: >
+          uv run pytest -v -m slow
+          tests/test_corpus_properties.py
+          tests/test_corpus_tree_properties.py
+          tests/test_diff_validation.py
+          tests/test_node_join_corpus.py
+          tests/test_xml_subsection_nodes.py
+          tests/test_pdf_subsection_recall.py
+          tests/test_manifest_report_fixtures.py
+          tests/test_financial_callout_whole_item.py
+          tests/test_canonical_baseline.py
+          tests/test_matching_contracts.py
+          tests/test_assignment_classification_boundary.py
+
+      - name: Run the packaging gate (build, install, diff from outside the checkout)
+        if: ${{ !cancelled() }}
+        # Its own step rather than folded into the slow suites below, because what it
+        # reports is a different failure: the engine does not INSTALL, as distinct from
+        # the engine computing the wrong answer. A reviewer seeing this step red should
+        # look at pyproject.toml, not at the diff logic.
+        #
+        # Named here for the reason every step in this job spells out: the marker makes a
+        # gate runnable, naming its module is what makes it RUN. Every slow step selects
+        # modules by path, so a new @slow file is collected by none of them -- which is
+        # exactly what happened to this one when it was added, and it sat green-by-absence
+        # through a full CI run before this step existed.
+        #
+        # Its `uv` skip cannot silently fire here: the step invokes `uv run`, so a missing
+        # uv fails the step rather than retiring the gate.
+        run: >
+          uv run pytest -v -m slow
+          tests/test_engine_installs.py
+
+      - name: Run remaining slow suites (committed fixtures)
+        if: ${{ !cancelled() }}
+        # These @slow modules already passed on any fresh clone, in ~20s, against
+        # committed fixtures — and were named by no CI step, so they never ran here.
+        # Committing a fixture makes a gate RUNNABLE; naming its module is what makes it
+        # RUN (the distinction #220 drew for the corpus gates). ~95 assertions, free.
+        #
+        # Their skips are not free: a skip asserts nothing, so every one is declared in
+        # ALLOWED_CI_SLOW_SKIPS (tests/conftest.py) and a NEW one fails the session. Most
+        # entries are a fixture this repo does not commit, i.e. a coverage gap #126 should
+        # shrink — kept separate from the corpus content-skip allowlist for that reason.
+        #
+        # The allowlist covers a module's WHOLE skip surface, not just what this step
+        # collects: the hook runs in every session, so a non-slow case in one of these
+        # modules (test_bill_tree.py has one) is watched in the fast step too.
+        #
+        # Every case CI collects here is watched. Two of these modules glob bills/ instead
+        # of the manifest, so a developer with a fetched corpus collects cases CI never
+        # sees (6 -> 90, 30 -> 432); those are excluded from the ceiling, because no
+        # allowlist calibrated on the committed corpus could name them and the session
+        # would go red locally while CI was green. See is_watched_case in tests/conftest.py.
+        #
+        # Deliberately excluded: test_govinfo_corpus_parity.py, which fetches BILLSTATUS
+        # live and so is not an offline gate. test_financial_callout_whole_item.py was the
+        # other exclusion pending its fixture; that landed in #320, which put it in the
+        # corpus-gate step above and under the #220 ceiling, so it is covered there rather
+        # than here.
+        run: >
+          uv run pytest -v -m slow
+          tests/test_pdf_corpus_smoke.py
+          tests/test_bill_tree.py
+          tests/test_structure_tree.py
+          tests/test_diff_bill.py
+          tests/test_pdf_compare.py
+          tests/test_financial_diff.py
+          tests/test_pipeline_parity.py
+          tests/test_pdf_xml_amount_recall.py
+          tests/test_pdf_xml_prose_recall.py
+          tests/test_front_matter_parity.py
+          tests/test_xml_compare.py
+          tests/test_toc_tree.py
+          tests/test_format_html.py
+          tests/test_manifest_report_fixtures.py
+          tests/test_canonical_tree.py
+          tests/test_reconcile.py
+          tests/test_pdf_watermark_recall.py
+          tests/test_formatters_text_serializer.py
+          tests/test_pdf_xml_withheld_recall.py
+
+  # The required status check on `develop` and `main` is a context named exactly
+  # `test`. The matrix above reports per-leg contexts (`test-suite (3.12)`, ...),
+  # so without this aggregator the first matrix edit silently strands branch
+  # protection: every following pull request would wait on a `test` context that
+  # no longer reports (#426 review). This job reports `test` forever, no matter
+  # how the matrix is renamed or resized, and no branch-protection edit is needed.
+  #
+  # `if: always()` is load-bearing: a skipped or failed dependency would otherwise
+  # skip this job too, and a skipped aggregator reports no verdict at all. The
+  # explicit result check is the other half: `needs.*.result` is "success" only
+  # when EVERY matrix leg succeeded -- a skipped or cancelled leg surfaces as
+  # "skipped"/"cancelled", and without the comparison below those would count as
+  # a pass, making the aggregator a rubber stamp.
+  test:
+    needs: test-suite
+    if: always()
+    runs-on: ubuntu-latest
+    # Least-privilege token: this job only reads the matrix result.
+    permissions:
+      contents: read
+    steps:
+      - name: Require every matrix leg to have succeeded
+        env:
+          MATRIX_RESULT: ${{ needs.test-suite.result }}
+        run: |
+          if [ "$MATRIX_RESULT" != "success" ]; then
+            echo "::error::test-suite matrix result is '$MATRIX_RESULT', not 'success'"
+            exit 1
+          fi
+          echo "All test-suite matrix legs succeeded."

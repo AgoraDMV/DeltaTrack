@@ -8,28 +8,19 @@ Usage: uv run python smoke_test_matching.py
 
 from pathlib import Path
 
-from bill_tree import normalize_bill, normalize_division_title
-from diff_bill import diff_bills
+from deltatrack.bill_tree import normalize_bill
+from deltatrack.diff_bill import diff_bills
+from tests.division_labels import cross_division_mismatches
 
 FRESH_BILLS = [
-    "bills/117-hr-2471",  # Consolidated Appropriations Act, 2022
+    "tests/corpus/117-hr-2471",  # Consolidated Appropriations Act, 2022
     "bills/116-hr-133",  # Consolidated Appropriations Act, 2021
 ]
 
 
 def count_cross_division_mismatches(result):
     """Count changes where old and new display_path have different division titles."""
-    cross_div = 0
-    for c in result.changes:
-        if c.display_path_old and c.display_path_new:
-            old_first = c.display_path_old[0]
-            new_first = c.display_path_new[0]
-            if old_first.startswith("Division") and new_first.startswith("Division"):
-                old_title = normalize_division_title(old_first)
-                new_title = normalize_division_title(new_first)
-                if old_title and new_title and old_title != new_title:
-                    cross_div += 1
-    return cross_div
+    return cross_division_mismatches(result)
 
 
 def main():

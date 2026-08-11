@@ -8,10 +8,19 @@ all get resolved here.
 
 from __future__ import annotations
 
-from diff_pdf import PdfDiff, PdfHunk
-from formatters.adapters import pdf_diff_to_view
-from formatters.view_model import ChangeView, DiffView
-from parsers.pdf_anchors import Anchor
+from deltatrack.diff_pdf import PdfDiff, PdfHunk
+from deltatrack.formatters.canonical import pdf_diff_to_canonical, view_from_canonical
+from deltatrack.formatters.view_model import ChangeView, DiffView
+from deltatrack.parsers.pdf_anchors import Anchor
+
+
+def pdf_diff_to_view(diff: PdfDiff, **meta) -> DiffView:
+    """Route the PdfDiff through canonical -> view, the sole production path.
+
+    Preserves these adapter-contract assertions now that the direct builder is gone.
+    """
+    return view_from_canonical(pdf_diff_to_canonical(diff, **meta))
+
 
 TITLE_I = Anchor(page_number=1, line_number=1, kind="title", text="TITLE I")
 SEC_101 = Anchor(page_number=1, line_number=10, kind="section", text="SEC. 101")
@@ -99,6 +108,48 @@ def test_unanchored_hunk_is_degraded_with_uncategorized_label():
     # Nav label uses the v2 page+line range so the sidebar entry is still useful.
     assert cv.nav_label_html.startswith("(uncategorized) — ")
     assert "p.2" in cv.nav_label_html
+
+
+def test_pdf_change_group_label_from_title():
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=SEC_101,
+        v2_anchor=SEC_101,
+        v1_range=(1, 10, 1, 20),
+        v2_range=(1, 10, 1, 20),
+        v1_text="old",
+        v2_text="new",
+    )
+    diff = _diff(hunks=[hunk], v1_anchors=[TITLE_I, SEC_101], v2_anchors=[TITLE_I, SEC_101])
+    assert pdf_diff_to_view(diff, **_meta()).changes[0].group_label == "TITLE I"
+
+
+def test_removed_change_group_label_from_v1_anchor():
+    hunk = PdfHunk(
+        change_type="removed",
+        v1_anchor=SEC_101,
+        v2_anchor=None,
+        v1_range=(1, 10, 1, 20),
+        v2_range=None,
+        v1_text="goodbye",
+        v2_text="",
+    )
+    diff = _diff(hunks=[hunk], v1_anchors=[TITLE_I, SEC_101], v2_anchors=[])
+    assert pdf_diff_to_view(diff, **_meta()).changes[0].group_label == "TITLE I"
+
+
+def test_unanchored_change_group_label_empty():
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=None,
+        v2_anchor=None,
+        v1_range=(2, 5, 2, 8),
+        v2_range=(2, 5, 2, 8),
+        v1_text="x",
+        v2_text="y",
+    )
+    diff = _diff(hunks=[hunk])
+    assert pdf_diff_to_view(diff, **_meta()).changes[0].group_label == ""
 
 
 def test_citation_html_pre_rendered_with_v1_v2_spans():

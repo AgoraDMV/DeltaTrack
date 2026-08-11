@@ -1,4 +1,4 @@
-"""Parser for `test_data/pdf/<bill>-changes.md` test-case fixtures.
+"""Parser for `tests/data/pdf/<bill>-changes.md` test-case fixtures.
 
 The markdown source of truth is human-edited and contains, for each
 change between two PDF bill versions: a heading-style hierarchy path,
@@ -7,7 +7,7 @@ version, an expected diff description, and extractor notes. This module
 turns each `## Case N — …` block into a `PdfTestCase` for parametrized
 tests to consume.
 
-Default fixture: `test_data/pdf/118hr8752-changes.md` (HR 8752 v1→v2).
+Default fixture: `tests/data/pdf/118hr8752-changes.md` (HR 8752 v1→v2).
 """
 
 from __future__ import annotations
@@ -16,7 +16,9 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-DEFAULT_FIXTURE = Path(__file__).parent.parent / "test_data" / "pdf" / "118hr8752-changes.md"
+from tests.corpus_paths import DATA_DIR
+
+DEFAULT_FIXTURE = DATA_DIR / "pdf" / "118hr8752-changes.md"
 
 Location = tuple[int, int, int, int]
 

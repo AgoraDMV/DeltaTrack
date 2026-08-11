@@ -8,8 +8,8 @@ this step focuses on card structure and body.
 
 from __future__ import annotations
 
-from formatters.diff_html import _build_card
-from formatters.view_model import ChangeView
+from deltatrack.formatters.diff_html import _build_card
+from deltatrack.formatters.view_model import ChangeView
 
 
 def _change(**overrides) -> ChangeView:
@@ -31,7 +31,7 @@ def _change(**overrides) -> ChangeView:
 
 def test_basic_card_structure():
     html = _build_card(_change(old_text="old prose", new_text="new prose"), 0)
-    assert html.startswith('<div class="change-card modified" id="change-0">')
+    assert html.startswith('<div class="change-card modified" id="change-0" data-type="modified" data-financial="0">')
     assert html.rstrip().endswith("</div>")
     assert '<span class="badge badge-modified">modified</span>' in html
     assert "<h3>TITLE I &gt; Customs</h3>" in html
@@ -42,6 +42,14 @@ def test_section_number_renders_as_separate_span():
     assert '<span class="section-number">101</span>' in html
     # The section number must NOT leak into the heading or duplicate.
     assert html.count("101") == 1
+
+
+def test_readable_card_body_shows_spaced_enum_not_run_on():
+    """#76: when the view carries readable text, the card body reads `(a) The …`,
+    not the collapsed match form `(a)The`."""
+    html = _build_card(_change(old_text="(a) The old", new_text="(a) The new"), 0)
+    assert "(a) The" in html
+    assert "(a)The" not in html
 
 
 def test_section_number_html_escaped():

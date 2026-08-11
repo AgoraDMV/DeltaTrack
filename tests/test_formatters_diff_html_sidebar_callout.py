@@ -6,8 +6,8 @@ prefix. Callout: flex-row layout, one row per real amount change.
 
 from __future__ import annotations
 
-from formatters.diff_html import _build_callout, _build_nav_item, _build_sidebar
-from formatters.view_model import ChangeView, DiffView
+from deltatrack.formatters.diff_html import _build_callout, _build_nav_item, _build_sidebar
+from deltatrack.formatters.view_model import ChangeView, DiffView
 
 
 def _change(**overrides) -> ChangeView:
@@ -46,7 +46,7 @@ def _view(changes) -> DiffView:
 
 def test_nav_item_basic():
     item = _build_nav_item(_change(), 0)
-    assert item.startswith('<li class="nav-item" data-type="modified">')
+    assert item.startswith('<li class="nav-item" data-type="modified" data-financial="0">')
     assert 'href="#change-0"' in item
     assert '<span class="badge badge-modified">modified</span>' in item
     assert "TITLE I &gt; Customs" in item
@@ -70,7 +70,7 @@ def test_nav_item_degraded_adds_unanchored_class():
         _change(degraded=True, nav_label_html="(uncategorized) — p.2 L5"),
         0,
     )
-    assert '<li class="nav-item unanchored" data-type="modified">' in item
+    assert '<li class="nav-item unanchored" data-type="modified" data-financial="0">' in item
 
 
 def test_sidebar_emits_one_li_per_change():
@@ -80,10 +80,28 @@ def test_sidebar_emits_one_li_per_change():
     assert sidebar.index('href="#change-0"') < sidebar.index('href="#change-1"')
 
 
-def test_sidebar_filter_input_present():
+def test_sidebar_filter_radios_present():
     sidebar = _build_sidebar(_view([]))
-    assert 'id="sidebar-filter"' in sidebar
+    assert 'name="change-filter"' in sidebar  # text search moved to the action bar
     assert "<ul></ul>" in sidebar  # empty when no changes
+
+
+def test_sidebar_groups_changes_by_section():
+    sidebar = _build_sidebar(
+        _view(
+            [
+                _change(group_label="TITLE I"),
+                _change(group_label="TITLE I", change_type="added"),
+                _change(group_label="TITLE II"),
+                _change(group_label=""),  # falls into Uncategorized
+            ]
+        )
+    )
+    assert sidebar.count('<details class="nav-group">') == 3  # collapsed (no open attr)
+    assert '<summary class="disclosure">TITLE I <span class="nav-group__count">(2)</span></summary>' in sidebar
+    assert '<summary class="disclosure">TITLE II <span class="nav-group__count">(1)</span></summary>' in sidebar
+    assert '<summary class="disclosure">Uncategorized <span class="nav-group__count">(1)</span></summary>' in sidebar
+    assert sidebar.count("<li ") == 4  # every change still rendered
 
 
 # ---------- Callout ---------------------------------------------------------
@@ -100,7 +118,9 @@ def test_callout_real_change_uses_flex_row_with_delta_class():
     assert callout.rstrip().endswith("</div>")
     assert '<div class="row">' in callout
     assert '<span class="label">Amount:</span>' in callout
-    assert "$1,000 &rarr; $1,500" in callout
+    # Closing </span>: an unterminated pair still matches when only the new side
+    # is off by a magnitude ("$1,000 &rarr; $1,500,000" contains it) — #264.
+    assert "<span>$1,000 &rarr; $1,500</span>" in callout
     # Delta has a semantic class for color.
     assert '<span class="delta increase">' in callout
     assert "(+$500)" in callout
@@ -115,13 +135,27 @@ def test_callout_decrease_uses_decrease_class_and_negative_sign():
 def test_callout_multiple_pairs_emit_multiple_rows():
     callout = _build_callout(_change(amount_pairs=((1000, 1500), (2000, 3000))))
     assert callout.count('<div class="row">') == 2
-    assert "$1,000 &rarr; $1,500" in callout
-    assert "$2,000 &rarr; $3,000" in callout
+    assert "<span>$1,000 &rarr; $1,500</span>" in callout
+    assert "<span>$2,000 &rarr; $3,000</span>" in callout
+
+
+def test_callout_net_zero_renders_neutral():
+    """An added amount cancelled by an equal removal nets to $0, and that Net row
+    must read neutral rather than coloured as an increase or a decrease.
+
+    The behaviour is otherwise only exercised by a slow, corpus-gated case
+    (test_financial_callout_whole_item.py::test_sec_20004_callout_nets_to_zero),
+    which also asserts the amount but not the class. Assert both here so the
+    neutral styling is pinned without needing the bill corpus.
+    """
+    callout = _build_callout(_change(amount_entries=((None, 500000, "added"), (500000, None, "removed"))))
+    assert '<div class="row net">' in callout
+    assert '<span class="delta neutral">$0</span>' in callout
 
 
 def test_card_includes_callout_when_amounts_present():
     """The card builder integrates the callout below the body."""
-    from formatters.diff_html import _build_card
+    from deltatrack.formatters.diff_html import _build_card
 
     html = _build_card(
         _change(old_text="x", new_text="y", amount_pairs=((1000, 1500),)),
@@ -134,7 +168,7 @@ def test_card_includes_callout_when_amounts_present():
 
 
 def test_card_omits_callout_when_no_amount_pairs():
-    from formatters.diff_html import _build_card
+    from deltatrack.formatters.diff_html import _build_card
 
     html = _build_card(_change(old_text="x", new_text="y"), 0)
     assert "financial-callout" not in html

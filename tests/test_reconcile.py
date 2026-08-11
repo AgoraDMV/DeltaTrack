@@ -3,7 +3,8 @@
 import pytest
 from conftest import make_node_diff as _node
 
-from diff_bill import reconcile_moves
+from deltatrack.diff_bill import reconcile_moves
+from tests.corpus_paths import fixture_path
 
 
 class TestReconcileMoves:
@@ -116,6 +117,41 @@ class TestReconcileMoves:
         assert m.text_diff is not None
         assert len(m.text_diff) > 0
 
+    def test_empty_text_produces_no_move(self):
+        """A section with no text has no evidence it moved anywhere (#357).
+
+        difflib scores two empty sequences as a perfect 1.0, so before this every empty
+        removed node matched every empty added node at the maximum score and the greedy
+        claim loop paired them by iteration order. The resulting record asserts a
+        relationship between two sections whose only shared property is being empty.
+        """
+        changes = [
+            _node("removed", old_path=("sec. 1",), old_text=""),
+            _node("removed", old_path=("sec. 2",), old_text=""),
+            _node("added", new_path=("title i", "sec. 101"), new_text=""),
+            _node("added", new_path=("title i", "sec. 102"), new_text=""),
+        ]
+
+        result = reconcile_moves(changes)
+
+        assert [c.change_type for c in result] == ["removed", "removed", "added", "added"]
+
+    def test_empty_against_non_empty_still_produces_no_move(self):
+        """The empty side carries no evidence either way round.
+
+        Scores 0.0 today, so this is already true — pinned because the fix skips empty
+        texts rather than scoring them, and a future rewrite that reintroduces scoring
+        should not be free to pair these.
+        """
+        changes = [
+            _node("removed", old_path=("sec. 1",), old_text=""),
+            _node("added", new_path=("sec. 2",), new_text="For acquisition and construction, $2,022,775,000."),
+        ]
+
+        result = reconcile_moves(changes)
+
+        assert [c.change_type for c in result] == ["removed", "added"]
+
     def test_greedy_best_pairs_first(self):
         """Three removed, two added. Best similarity pairs claimed, leftover stays removed."""
         text_a = "For military construction of army facilities, $2,022,775,000, to remain available."
@@ -142,8 +178,8 @@ class TestReconcileMoves:
 
 @pytest.mark.slow
 class TestReconcileIntegration:
-    HR2882_V4 = "bills/118-hr-2882/4_engrossed-amendment-senate.xml"
-    HR2882_V5 = "bills/118-hr-2882/5_engrossed-amendment-house.xml"
+    HR2882_V4 = "tests/corpus/118-hr-2882/4_engrossed-amendment-senate.xml"
+    HR2882_V5 = "tests/corpus/118-hr-2882/5_engrossed-amendment-house.xml"
 
     @staticmethod
     def _skip_if_missing(*paths):
@@ -158,8 +194,8 @@ class TestReconcileIntegration:
     def test_udall_sections_moved(self):
         from pathlib import Path
 
-        from bill_tree import normalize_bill
-        from diff_bill import diff_bills
+        from deltatrack.bill_tree import normalize_bill
+        from deltatrack.diff_bill import diff_bills
 
         self._skip_if_missing(self.HR2882_V4, self.HR2882_V5)
 
@@ -177,3 +213,41 @@ class TestReconcileIntegration:
             m = sec2[0]
             assert m.display_path_new is not None
             assert "sec." in " ".join(m.display_path_new).lower()
+
+    def test_no_move_record_links_two_empty_sections(self):
+        """No move record on a real bill pair links two text-free sections (#357).
+
+        118-hr-4366 v4 -> v5 is chosen because it carries both halves of the condition:
+        text-free section nodes (a section whose subsections all became their own nodes
+        keeps the SEC. heading and an empty body, #188) and enough renumbering to drive
+        move detection. Before the fix this pair emitted 21 empty-against-empty records
+        out of 115.
+
+        The two floors below are the point: an assertion that no record is empty-empty
+        passes vacuously on a pair with no empty nodes, or with no moves at all, and a
+        gate that cannot distinguish "fixed" from "never applicable" is not a gate.
+        """
+        from pathlib import Path
+
+        from deltatrack.bill_tree import normalize_bill
+        from deltatrack.diff_bill import diff_bills
+
+        old_path = fixture_path("118-hr-4366", "4_engrossed-amendment-senate.xml")
+        new_path = fixture_path("118-hr-4366", "5_engrossed-amendment-house.xml")
+        self._skip_if_missing(str(old_path), str(new_path))
+
+        old = normalize_bill(Path(old_path))
+        new = normalize_bill(Path(new_path))
+
+        empty_nodes = [n for n in old.nodes + new.nodes if not n.body_text.strip()]
+        assert empty_nodes, "pair has no text-free nodes, so the assertion below cannot fire"
+
+        result = diff_bills(old, new)
+        moved = [c for c in result.changes if c.change_type == "moved"]
+        assert moved, "pair produced no move records at all, so the assertion below cannot fire"
+
+        empty_moves = [c for c in moved if not (c.old_text or "").strip() and not (c.new_text or "").strip()]
+        assert empty_moves == [], (
+            f"{len(empty_moves)} of {len(moved)} move records link two text-free sections: "
+            f"{[c.match_path for c in empty_moves[:5]]}"
+        )

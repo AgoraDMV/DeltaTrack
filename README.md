@@ -1,32 +1,47 @@
 # DeltaTrack
 
-Downloads U.S. bill text from Congress.gov and compares versions structurally. Shows what changed between versions: added, removed, modified, and moved sections, with optional financial change filtering.
+Downloads U.S. bill text from official government data (GPO govinfo) and compares versions structurally. Shows what changed between versions: added, removed, modified, and moved sections, with optional financial change filtering.
 
 Works on any bill type (HR, S, HJRES, etc.), not just appropriations.
 
-**See it in action:** [Committee vs. Floor](https://agoradmv.github.io/DeltaTrack/hr4366_committee_vs_floor.html) | [House vs. Senate](https://agoradmv.github.io/DeltaTrack/hr4366_house_vs_senate.html) (example reports for HR 4366, 118th Congress)
+**See it in action:** [browse the example reports](https://agoradmv.github.io/DeltaTrack/) — real output for HR 8752 and HR 4366 (118th Congress), including [a Senate rewrite at full scale](https://agoradmv.github.io/DeltaTrack/hr4366_house_vs_senate_xml_diff.html). Every one is rendered by the same pipeline the tool runs for you.
+
+## Why not a generic differ?
+
+A generic XML or PDF differ reports which document nodes or lines of text changed.
+That output is mostly formatting noise (renumbered lines, page headers, reflow)
+and has no sense of a bill's structure. DeltaTrack parses each version into the
+bill's own sections and diffs those, so on any bill type you see what actually
+changed (added, removed, modified, and moved sections) without the noise, even
+when no dollar amounts move. For appropriations bills it adds a structured money
+model on top, producing an account-level table of paired old → new amounts. See
+[docs/decisions/0001-structured-money-diff.md](docs/decisions/0001-structured-money-diff.md)
+for the rationale and a reproducible comparison.
 
 ## Prerequisites
 
-- **Python 3.12+** - Download from https://www.python.org/downloads/ if you don't have it. To check, open a terminal (Terminal on Mac, Command Prompt on Windows) and type `python3 --version`.
-- **uv** (Python package manager) - Open a terminal and run:
+- **uv** (Python package manager) - the only thing you need to install. Open a terminal (Terminal on Mac, Command Prompt on Windows) and run:
   - Mac/Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`
   - Windows: `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
+- **Python 3.12** - you do not need to install this. uv downloads the version pinned in `.python-version` the first time you run the setup step below, so whatever `python3 --version` reports on your machine is not what the tool runs.
 
 ## Quickstart
 
 Generate an HTML report comparing two versions of a bill:
 
 ```bash
-# 1. Install dependencies (run this once, from the project folder)
-uv sync
+# 1. Install dependencies and activate environment (run this once, from the project folder)
+# Source the script rather than running it, so the Python environment change sticks.
+# Keep the leading ./: a bare `source init` searches PATH before the current
+# directory, so wherever /usr/sbin is on PATH it finds the system init instead.
+source ./init
 
 # 2. Download all versions of a bill
 #    Example: HR 4366 from the 118th Congress (2023-2024)
-uv run python fetch_bills.py download 118 hr 4366
+./tools/fetch_bills.py download 118 hr 4366
 
 # 3. Generate an HTML report comparing two versions
-uv run python diff_bill.py compare \
+./diff_bill.py compare \
   bills/118-hr-4366/1_reported-in-house.xml \
   bills/118-hr-4366/2_engrossed-in-house.xml \
   --format html -o reports/hr4366_v1_vs_v2.html
@@ -34,51 +49,105 @@ uv run python diff_bill.py compare \
 
 Open the HTML file in any browser to view the comparison. No additional software needed. Reports are saved to the `reports/` folder.
 
-The tool works without an API key using a free demo key (limited to 30 requests per hour). For heavier use, get a free key at https://api.congress.gov/sign-up/ and save it in a file called `.env` in the project folder:
+**No API key required.** By default the tool downloads from **govinfo bulk data** (GPO), which is keyless and has no rate limit. The Congress.gov API is available as an alternate source via `--source api`; it needs a free key — get one at https://api.congress.gov/sign-up/ and save it in a file called `.env` in the project folder. (A key is also used for `download-all` over a year range, whose bill *discovery* uses the Congress.gov committee API even when the text comes from govinfo.)
 
 ```
 CONGRESS_API_KEY=your_key_here
 ```
 
+## Command reference
+
+The product commands are the executable `.py` scripts in the project root — `diff_bill.py` and `diff_pdf.py`. Each is a thin wrapper over the diff engine, which lives in `src/deltatrack/` and is installed into the virtualenv rather than read from the working tree ([#398](https://github.com/AgoraDMV/DeltaTrack/issues/398)); `python -m deltatrack.diff_bill` also works. The bill-downloading commands live in `tools/`, which holds the acquisition tooling rather than the product ([#367](https://github.com/AgoraDMV/DeltaTrack/issues/367)). Run either after `source ./init`. `versions`, `download`, and `download-all` default to the keyless **govinfo** source — pass `--source api` for the Congress.gov API. `download` and `download-all` default to **XML** — pass `--format pdf` or `--format both` for PDFs.
+
+| Command | What it does |
+|---------|--------------|
+| `./tools/fetch_bills.py versions <congress> <type> <number>` | List a bill's available text versions (`--source govinfo\|api`, default govinfo) |
+| `./tools/fetch_bills.py download <congress> <type> <number>` | Download a bill's versions (XML by default; `--format pdf\|both`, `--version N`, `--source govinfo\|api`) |
+| `./tools/fetch_bills.py download-all --start_year <Y> --end_year <Y>` | Download all appropriations bills in a year range (or `--file <csv>` for a specific set; `--source govinfo\|api`) |
+| `./tools/fetch_bills.py search "<terms>" [--congress N] [--type hr] [--appropriations]` | Find bills by title over a local BILLSTATUS index (keyless, offline; **requires the index** — fetch it first with `fetch-index`, see below) |
+| `./tools/fetch_bills.py fetch-index --congress <N> [--type hr]` | Download just the scoped BILLSTATUS ZIP(s) that `search` reads (keyless; tens of MB, not the multi-GB full bulk set) — the lightweight on-ramp for `search` |
+| `./diff_bill.py compare <old.xml> <new.xml>` | Diff two XML versions (HTML by default; `--format json`, `--financial`, `--filter`, `-o`) |
+| `./diff_bill.py compare <slug> <n_old> <n_new>` | Diff two versions of a downloaded bill by ordinal, resolved under `--bills-dir` (default `bills/`); a bare `<slug>` lists that bill's local versions |
+| `./diff_pdf.py <old.pdf> <new.pdf> -o <out.html>` | Diff two PDF versions into the same HTML report |
+| `./tools/fetch_bill_archives.py` | Bulk-build a full bill-metadata index (all of 112–119) from govinfo archives — **see the warning below** |
+| `./tools/fetch_bill_text_archives.py --from-congress <n> --to-congress <n>` | Bulk-download bill text from govinfo into `bills/` (no API key; `--min-versions 2` keeps only bills comparable across versions) |
+
+Environment setup is `source ./init` (installs dependencies and activates the virtualenv). Use `source` so the environment change sticks; it is not a runnable command. Keep the leading `./`: a bare `source init` searches `PATH` before the current directory, so wherever `/usr/sbin` is on `PATH` (most Linux distributions) it finds the system `init` and fails.
+
+> **`tools/fetch_bill_archives.py` is an advanced bulk tool.** Run with no arguments it immediately downloads every GovInfo BILLSTATUS archive for congresses 112–119 (hundreds of MB) with no prompt, extracts them, and writes a `bills/bills.csv` metadata index. The congress range is hardcoded and there are no CLI flags yet (tracked in [#10](https://github.com/AgoraDMV/DeltaTrack/issues/10)). Reach for it only when you specifically need a bulk bill index.
+
+To run the web comparison app locally: `uvicorn web.app:app --reload --port 8077` (see [docs/web-compare.md](docs/web-compare.md)).
+
 ## Downloading Bills
 
 ```bash
 # List available text versions
-uv run python fetch_bills.py versions 118 hr 4366
+./tools/fetch_bills.py versions 118 hr 4366
 
-# Download all versions of a bill
-uv run python fetch_bills.py download 118 hr 4366
+# Download all versions of a bill (XML by default; add --format pdf or --format both for PDFs)
+./tools/fetch_bills.py download 118 hr 4366
 
 # Download a specific version (1-indexed)
-uv run python fetch_bills.py download 118 hr 4366 --version 2
+./tools/fetch_bills.py download 118 hr 4366 --version 2
 
 # Download all appropriations bills for a year range
-uv run python fetch_bills.py download-all 2024 2026
+./tools/fetch_bills.py download-all --start_year 2024 --end_year 2026
+
+# Or batch-download a specific set of bills from a CSV you create with an 'id' column
+./tools/fetch_bills.py download-all --file your_bills.csv
 ```
 
 Files are saved to `bills/<congress>-<type>-<number>/`.
 
+### Finding a bill by title
+
+If you don't know the bill number, search bill titles over a local index (keyless, offline — no network at search time):
+
+```bash
+# 1. Fetch just the BILLSTATUS ZIP for the congress (and optionally type) you want (tens of MB)
+./tools/fetch_bills.py fetch-index --congress 118 --type hr
+
+# 2. Search it — any bill type/congress; --appropriations is an optional facet, not a required filter
+./tools/fetch_bills.py search "military construction" --congress 118 --appropriations
+```
+
+Each match prints as `<congress>-<type>-<number>\t<title>`; feed the number back into `download`. The exit status follows `grep`, so scripts and agents can branch without parsing output: **0** matches found, **1** searched but nothing matched, **2** no index to search.
+
+The index is read from BILLSTATUS ZIPs in `bills/`, which are **not** part of a fresh clone. Fetch just the slice you need with `./tools/fetch_bills.py fetch-index --congress <N> [--type <hr>]` (keyless; tens of MB for one congress/type, vs the multi-GB full set; omit `--type` to pull every type for the congress); for a full multi-congress metadata index there is the heavier `./tools/fetch_bill_archives.py` (described below). Both resolve `--billstatus-dir` (default `bills/`) relative to the current directory, so run either from the project root. Until an index exists, `search` exits 2 with a "no BILLSTATUS index" message. `--appropriations` narrows results to bills referred to the House/Senate Appropriations committee; it never gates a plain title search.
+
 ## Comparing Bills
 
 ```bash
-# Compare two versions (JSON output)
-uv run python diff_bill.py compare bills/118-hr-4366/1_reported-in-house.xml bills/118-hr-4366/6_enrolled-bill.xml
+# Compare two versions (prints an HTML report to stdout by default)
+./diff_bill.py compare bills/118-hr-4366/1_reported-in-house.xml bills/118-hr-4366/6_enrolled-bill.xml
+
+# Or address the versions by ordinal: bill first, then n (resolved under bills/)
+./diff_bill.py compare 118-hr-4366 1 6
+
+# Which ordinal is which? A bare slug lists the versions you have locally
+./diff_bill.py compare 118-hr-4366
 
 # Only sections with dollar amount changes
-uv run python diff_bill.py compare old.xml new.xml --financial
+./diff_bill.py compare old.xml new.xml --financial
 
 # Filter to a specific section
-uv run python diff_bill.py compare old.xml new.xml --filter "military construction"
+./diff_bill.py compare old.xml new.xml --filter "military construction"
 
 # Include unchanged sections
-uv run python diff_bill.py compare old.xml new.xml --include-unchanged
+./diff_bill.py compare old.xml new.xml --include-unchanged
 
-# Save to file
-uv run python diff_bill.py compare old.xml new.xml -o diff.json
+# Save the engine's internal diff dictionary (output defaults to HTML, so request json explicitly)
+./diff_bill.py compare old.xml new.xml --format json -o internal-diff.json
 
 # Generate a standalone HTML report
-uv run python diff_bill.py compare old.xml new.xml --format html -o reports/report.html
+./diff_bill.py compare old.xml new.xml --format html -o reports/report.html
 ```
+
+**Building something against the output?** `--format json` emits the engine's current
+*internal* diff dictionary, not the versioned canonical JSON that is the published
+interchange contract between the engine and its consumers. Use the canonical document
+instead: [`schema/canonical-diff.md`](schema/canonical-diff.md) specifies it, and the HTML
+report's **Export and share → Download `diff.json`** button produces one.
 
 ### HTML report
 
@@ -117,6 +186,20 @@ The tool focuses on substantive changes and ignores formatting differences betwe
 
 Floor amendment annotations like "(increased by $2,000,000)" appear in engrossed versions after floor votes. These annotations reference the budget request baseline, not the previous bill version, so the base amount in the text is the authoritative appropriation. The tool strips the annotations before comparing amounts across versions, then flags their presence with an informational badge in the HTML report so readers can see where the floor acted.
 
+## Comparing PDF versions
+
+Some bill versions are only available as PDF — pre-publication committee prints, chair's marks, and markup amendments are posted as PDF before the authoritative XML exists (see [ADR 0010](docs/decisions/0010-pdf-pipeline-pre-publication.md)). For those, use `diff_pdf.py`, the PDF-native counterpart to `diff_bill.py`:
+
+```bash
+# download defaults to XML, so request the PDFs explicitly
+./tools/fetch_bills.py download 118 hr 4366 --format pdf
+
+# Generate the same standalone HTML report from two PDFs
+./diff_pdf.py bills/118-hr-4366/1_reported-in-house.pdf bills/118-hr-4366/2_engrossed-in-house.pdf -o reports/hr4366.html
+```
+
+`diff_pdf.py` runs the same pipeline as the web app (full-bill view, in-page search, section navigation, embedded export) and writes the same HTML report described above. Output goes to stdout unless `-o` is given. Prefer `diff_bill.py` on XML whenever the published XML exists; it extracts structure and amounts exactly rather than reconstructing them from a rendered page.
+
 ## Output Structure
 
 ```
@@ -148,60 +231,47 @@ A bill goes through several versions as it moves through the legislative process
 
 ## Architecture
 
-Four modules:
+The shared data model the whole project rests on — the bill hierarchy, the glossary, and how the XML and PDF paths reconstruct it — is documented in [docs/bill-structure.md](docs/bill-structure.md). Start there.
 
-- **`fetch_bills.py`** - Downloads bill XML and PDF from Congress.gov API v3 (`--format xml|pdf|both`, default `xml`). CLI commands: `versions`, `download`, `download-all`.
-- **`bill_tree.py`** - Normalizes bill XML into a `BillTree` of `BillNode` objects. Handles divisions, titles, and flat sections, plus structural containers within titles (subtitle, part, chapter, subchapter). Captures preamble sections that sit alongside divisions or titles.
-- **`diff_bill.py`** - Compares two `BillTree`s. Uses division-aware matching for omnibus bills (resolves cross-division path collisions by normalized division title). Detects false matches via text similarity, reconciles moved sections, and extracts dollar amounts (stripping floor amendment annotations before comparison, flagging their presence separately).
-- **`formatters/diff_html.py`** - Generates standalone HTML reports from diff output (via adapters that feed both XML and PDF diffs through one renderer) with sidebar navigation, financial summary table, and word-level inline diffs.
+The engine is the `deltatrack` package under `src/`, installed rather than imported off
+disk (see [ADR 0017](docs/decisions/0017-installable-engine-package.md)). Both the XML and
+the PDF path run parse → diff → canonical JSON → one renderer, entered through
+`src/deltatrack/compare/`.
+
+[docs/architecture.md](docs/architecture.md) is the code map: the stage-by-stage pipeline
+tour, where the two paths converge, a suggested reading order, and the risk map of where
+a bug does the most damage.
+
+## Design decisions
+
+The reasoning behind non-obvious architectural choices (why a structured money diff, why a single PDF engine, why govinfo bulk data) lives in [docs/decisions/](docs/decisions/).
 
 ## Testing
 
 ```bash
-uv run pytest -m "not slow"                     # Fast unit tests (~1s, no XML files needed)
-uv run pytest                                    # All tests (needs bills/ XML files)
+uv run pytest -m "not slow and not browser"     # Fast unit tests (~1s, no XML files needed)
+uv run pytest                                    # All tests (nearly all run on committed fixtures; see TESTING.md)
 uv run pytest tests/test_bill_tree.py            # Normalization tests
 uv run pytest tests/test_diff_bill.py            # Diff/matching tests
 uv run pytest tests/test_financial_diff.py       # Financial filtering tests
 uv run pytest tests/test_reconcile.py            # Section move detection tests
 uv run pytest tests/test_format_html.py          # HTML report formatter tests
-uv run pytest tests/test_corpus_properties.py    # Corpus-wide property tests
-uv run pytest tests/test_validate_extraction.py  # External validation tests
+uv run pytest tests/test_corpus_properties.py       # Corpus-wide property tests (committed manifest)
+uv run pytest tests/test_corpus_tree_properties.py  # Corpus tree-structure invariants (committed manifest)
+uv run pytest tests/test_diff_validation.py         # Cross-version diff validation (committed manifest)
+uv run pytest tests/test_validate_extraction.py     # External validation tests
 ```
 
-Tests that require real bill XML files are marked `@pytest.mark.slow`. The fast suite (`-m "not slow"`) runs entirely on inline XML and mocked data, needs no downloads, and finishes quickly. CI runs it automatically on every PR. The slow suite adds corpus-wide property checks, cross-version diff validation, and external ground-truth validation against real bills.
+Tests that require real bill files are marked `@pytest.mark.slow`. The fast suite (`-m "not slow and not browser"`) runs entirely on inline XML and mocked data, needs no downloads, and finishes quickly. The corpus correctness gates (corpus-wide property checks and cross-version diff validation) run against a committed fixture set named in `tests/corpus_manifest.toml` -- no download needed, and reproducible everywhere. Every pull request runs the full CI gate set: lint, formatting, the fast and browser tests, external ground-truth validation, and every slow gate that can run offline -- see [What CI checks](CONTRIBUTING.md#what-ci-checks).
 
-The diff engine is fully deterministic: no LLM and no API key. The only API key (`CONGRESS_API_KEY`) is used by `fetch_bills.py` to download bills, not by the diff itself.
+The diff engine is fully deterministic: no LLM and no API key. `tools/fetch_bills.py` downloads bills keyless by default (govinfo bulk data); a `CONGRESS_API_KEY` is only needed for `--source api` or `download-all` year-range discovery, never by the diff itself.
 
 See [TESTING.md](TESTING.md) for how the test suite is organized, how diff accuracy is validated, what each validation layer proves, and where the known gaps are.
 
-Integration tests use real XML files from `bills/` and skip if not present. To run the full suite including validation tests, download the required bills:
+Nearly every slow suite asserts against fixtures committed to the repo, so a fresh clone needs no downloads. The one check that still wants a network is the live-network parity gate, and [TESTING.md](TESTING.md#what-still-wants-a-download) lists them with the fetch commands. That list moves whenever fixture coverage changes, so it lives in one place rather than being mirrored here.
 
-```bash
-source .env  # load API key
-uv run python fetch_bills.py download 118 hr 4366
-uv run python fetch_bills.py download 118 hr 2882
-uv run python fetch_bills.py download 118 hr 8282
-uv run python fetch_bills.py download 118 hr 8752
-uv run python fetch_bills.py download 118 hr 8774
-uv run python fetch_bills.py download 118 hr 4820
-uv run python fetch_bills.py download 117 hr 2471
-uv run python fetch_bills.py download 117 hr 4432
-uv run python fetch_bills.py download 117 hr 4502
-uv run python fetch_bills.py download 116 hr 1865
-uv run python fetch_bills.py download 116 hr 133
-uv run python fetch_bills.py download 115 hr 5895
-uv run python fetch_bills.py download 115 hr 1625
-uv run python fetch_bills.py download 115 hr 244
-uv run python fetch_bills.py download 114 hr 2029
-uv run python fetch_bills.py download 113 hr 83
-uv run python fetch_bills.py download 113 hr 3547
-```
+The validation tests compare extracted line items across Legislative Branch bills (both chambers, multiple fiscal years) against amounts from a curated appropriations spreadsheet. The corpus property tests (`test_corpus_properties.py`) check dollar coverage, path uniqueness, and section coverage across the committed corpus (`tests/corpus_manifest.toml`); `CORPUS_SWEEP=1` extends them across both trees (the committed fixtures plus every locally-fetched bill in `bills/`). See [TESTING.md](TESTING.md) for what each validation layer proves and where the gaps are.
 
-These fetch XML, which covers the XML-based tests. The PDF comparison tests (`test_pdf_*`) also need each bill's PDF rendering. Add `--format both` to any download to fetch the PDF alongside the XML, for example:
+## Contributing
 
-```bash
-uv run python fetch_bills.py download 118 hr 4366 --format both
-```
-
-The validation tests compare extracted line items across Legislative Branch bills (both chambers, multiple fiscal years) against amounts from a curated appropriations spreadsheet. The corpus property tests (`test_corpus_properties.py`) check dollar coverage, path uniqueness, and character coverage across all downloaded bills. See [TESTING.md](TESTING.md) for what each validation layer proves and where the gaps are.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to set up a dev environment, find and claim work on the project board, run the CI gates locally, and open a pull request. New contributors and reviewers both have a path there.

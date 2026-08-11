@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="billres.xsl"?>
+<!DOCTYPE bill PUBLIC "-//US Congress//DTDs/bill.dtd//EN" "bill.dtd">
+<bill bill-stage="Introduced-in-House" dms-id="H941D3010201142FDB84008D7A716875B" public-private="public" key="H" bill-type="olc"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+<dublinCore>
+<dc:title>118 HR 2882 IH: Udall Foundation Reauthorization Act of 2023</dc:title>
+<dc:publisher>U.S. House of Representatives</dc:publisher>
+<dc:date>2023-04-26</dc:date>
+<dc:format>text/xml</dc:format>
+<dc:language>EN</dc:language>
+<dc:rights>Pursuant to Title 17 Section 105 of the United States Code, this file is not subject to copyright protection and is in the public domain.</dc:rights>
+</dublinCore>
+</metadata>
+<form>
+<distribution-code display="yes">I</distribution-code><congress display="yes">118th CONGRESS</congress><session display="yes">1st Session</session><legis-num display="yes">H. R. 2882</legis-num><current-chamber>IN THE HOUSE OF REPRESENTATIVES</current-chamber><action display="yes"><action-date date="20230426">April 26, 2023</action-date><action-desc><sponsor name-id="C001133">Mr. Ciscomani</sponsor> (for himself and <cosponsor name-id="S001218">Ms. Stansbury</cosponsor>) introduced the following bill; which was referred to the <committee-name committee-id="HED00">Committee on Education and the Workforce</committee-name>, and in addition to the Committee on <committee-name committee-id="HII00">Natural Resources</committee-name>, for a period to be subsequently determined by the Speaker, in each case for consideration of such provisions as fall within the jurisdiction of the committee concerned</action-desc></action><legis-type>A BILL</legis-type><official-title display="yes">To reauthorize the Morris K. Udall and Stewart L. Udall Trust Fund, and for other purposes.</official-title></form><legis-body id="H961C4AC2894741CC8E9B3C4E391A5187" style="OLC"> 
+<section id="HBC2BC9F2F1D345FBA251451E6689B361" section-type="section-one"><enum>1.</enum><header>Short title</header><text display-inline="no-display-inline">This Act may be cited as the <quote><short-title>Udall Foundation Reauthorization Act of 2023</short-title></quote>.</text></section> <section id="HBB9666F537BC4E53ADCFF78F67021081"><enum>2.</enum><header>Reauthorization of the Udall Foundation Trust Fund</header><text display-inline="no-display-inline">Section 13 of the Morris K. Udall and Stewart L. Udall Foundation Act (<external-xref legal-doc="usc" parsable-cite="usc/20/5609">20 U.S.C. 5609</external-xref>) is amended—</text>
+<paragraph id="H40C4926B77254A9CACD7FE863A2D815B"><enum>(1)</enum><text>in subsection (a), by striking <quote>2023</quote> and inserting <quote>2028</quote>;</text></paragraph> <paragraph id="H2F2337A8221A4BACB3B4F9B7D63AB9EE"><enum>(2)</enum><text>in subsection (b), in the matter preceding paragraph (1), by striking <quote>2023</quote> and inserting <quote>2028</quote>; and</text></paragraph>
+<paragraph id="HC3B5D83739F1403DB07D3ABA1FB393E4"><enum>(3)</enum><text>in subsection (c), by striking <quote>5-fiscal year period</quote> and all that follows through the period at the end and inserting <quote>5-fiscal year period beginning with fiscal year 2024.</quote>.</text></paragraph></section> </legis-body></bill>
+

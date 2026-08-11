@@ -1,0 +1,33 @@
+# Dependabot version updates (#47). Complements the pip-audit gate in
+# security.yml rather than duplicating it: pip-audit BLOCKS merges on known CVEs
+# in the production set; Dependabot opens fix PRs and keeps versions current —
+# including GitHub Actions, which nothing else watches.
+#
+# target-branch matters: without it Dependabot targets the default branch's
+# releases against `main`-style flow. This repo's PRs land on `develop`, so both
+# ecosystems point there explicitly.
+#
+# Grouping keeps the noise to roughly one PR per ecosystem per week; majors stay
+# ungrouped so a breaking bump gets its own review.
+version: 2
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      python-minor-patch:
+        update-types: ["minor", "patch"]
+      dev-dependencies:
+        dependency-type: "development"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns: ["*"]

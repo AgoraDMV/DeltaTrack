@@ -1,31 +1,120 @@
+[build-system]
+# The project is genuinely installable as of #398. Without this table `uv sync` treats
+# the repo as a virtual project and installs only the dependencies, never the engine --
+# which under the `src/` layout below means `import deltatrack` fails outright, so the
+# absence would be loud rather than silent.
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# Explicit rather than relying on hatchling inferring `src/deltatrack` from the project
+# name. The inference is real and would work today, but it is a convention doing
+# load-bearing work invisibly: renaming the distribution would silently ship an empty
+# wheel. Naming the directory means a mismatch is a build error instead.
+packages = ["src/deltatrack"]
+
+[tool.hatch.build.targets.sdist]
+# Scope the source distribution the same way. Left unconfigured, hatchling's sdist is
+# everything git tracks: measured at 345 files and 30 MB, carrying `tests/corpus/` (a
+# 4.7 MB enrolled bill among them), `tests/data/` PDFs, and `.github/`. Nothing publishes
+# today, so that was latent rather than live -- but `uv build` with no arguments produces
+# it, and the corpus is a test fixture set, not something a consumer of the engine should
+# be made to download.
+#
+# Includes the two command wrappers and the license alongside the package: an sdist is
+# meant to rebuild the wheel, and the wrappers are how the documented commands are
+# invoked. Not a substitute for a checkout -- the tests and fixtures are deliberately out,
+# so an sdist cannot run the suite. Anyone who needs that clones the repository.
+include = [
+    "src/deltatrack",
+    "diff_bill.py",
+    "diff_pdf.py",
+    "pyproject.toml",
+    "README.md",
+    "LICENSE",
+]
+
 [project]
 name = "deltatrack"
 version = "0.1.0"
-description = "Download U.S. bill text from Congress.gov and compare versions structurally"
+# Describes the ENGINE, which is what this distribution contains. The previous wording
+# led with downloading bill text; that is `tools/`, which is not in the wheel and whose
+# HTTP client is in an excluded dependency group, so an installed `deltatrack` cannot do
+# it. Harmless while nothing could be built, but #398 turned this string into published
+# metadata, where it would be the first thing a consumer read and the first thing that
+# did not work.
+description = "Compare two versions of a U.S. bill structurally, including account-level appropriations amounts"
 requires-python = ">=3.12"
+# The ENGINE's dependencies, and nothing else (#367). Installing DeltaTrack to diff two
+# bill versions should not install a web server or an HTTP client; those belong to the
+# delivery channel and the acquisition tooling, which are separate surfaces in the layout
+# and separate groups below. This list is what a consumer of the engine actually gets.
 dependencies = [
-    "httpx>=0.28",
-    "pypdfium2>=5.8.0",
-    "python-dotenv>=1.0",
-    # Web service (server/) — wraps the diff engine as a FastAPI app served by uvicorn.
-    "fastapi>=0.115",
-    "uvicorn[standard]>=0.32",
-    "python-multipart>=0.0.18",  # 0.0.18 fixes CVE-2024-53981 (multipart DoS); also the floor pip-audit checks
+    "pypdfium2>=5.12.1",
 ]
 
 [dependency-groups]
-dev = [
-    "pre-commit>=4.0",
-    "pytest>=8.0",
-    "pytest-cov>=6.0",
-    "pytest-xdist>=3.6",
-    "reportlab>=4.5.1",
-    "respx>=0.22",
-    "ruff>=0.11",
+# Web delivery channel (web/) — wraps the diff engine as a FastAPI app served by uvicorn.
+web = [
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.52.1",
+    "python-multipart>=0.0.18",  # 0.0.18 fixes CVE-2024-53981 (multipart DoS); also the floor pip-audit checks
+    "slowapi>=0.1.9",  # per-IP rate limiting on /api/compare (#64); chosen over a hand-rolled counter on the issue thread
 ]
+# Bill-acquisition tooling (tools/) — downloading bill text from govinfo / Congress.gov.
+fetch = [
+    "httpx>=0.28",
+    "python-dotenv>=1.0",
+]
+dev = [
+    "jsonschema>=4.21",  # canonical-diff schema validation tests; importorskip silently skips without it
+    "pre-commit>=4.6.1",
+    "pytest>=9.1.1",
+    "pytest-cov>=6.0",
+    "pytest-playwright>=0.5",
+    "pytest-xdist>=3.6",
+    "pyyaml>=6.0",  # tests/test_ci_workflow.py parses ci.yml; transitive today, declared so CI cannot lose it
+    "reportlab>=5.0.0",
+    "respx>=0.22",
+    "ruff==0.16.1",  # pinned exactly so local `ruff format` matches CI (format output varies by version)
+    "tomlkit>=0.13",  # scripts/update_manifest_with_reports.py rewrites corpus_manifest.toml in place; a load-and-dump through a plain TOML writer deletes the file's documentation comments
+    "xmldiff>=3.0",  # off-the-shelf baseline for scripts/compare_differs.py; see docs/decisions/0001
+]
+
+[tool.uv]
+# All three groups install by default, so `uv sync`, CI, and the test suite behave
+# exactly as before this split. The separation that matters is what a CONSUMER of the
+# engine gets, which is `[project.dependencies]` above -- groups are development-time
+# only and are never published.
+#
+# Making `web` opt-in instead would be worse than doing nothing: tests/test_server_static
+# and tests/test_pdf_compare guard their imports with `pytest.importorskip("fastapi")`,
+# so a default sync without it would turn them into silent skips -- a green run that
+# checks nothing, which is the failure mode epic #288 exists to close.
+#
+# To install the engine alone: `uv sync --no-group web --no-group fetch`.
+default-groups = ["dev", "web", "fetch"]
 
 [tool.ruff]
 line-length = 120
+# Every import root, mirroring pytest's `pythonpath` plus the installed package (#367,
+# #398). Without `tools`, isort reads the fetch scripts' sibling imports as third-party
+# and demands they be grouped with httpx, which would sort the cluster's own modules in
+# among external packages. `src` does the same for `deltatrack`, and `.` for the `tests`
+# and `scripts` namespace packages the dev-only modules live in (#401).
+src = ["src", ".", "tools"]
+# Research reproducibility scripts are frozen artifacts (hardcoded paths, ad-hoc
+# one-liners) that reproduce a study's numbers, not maintained source. Exclude them
+# from lint/format so they stay verbatim. Applies to future studies' probes too.
+#
+# The `.md` rule is the same principle one level up: `ruff format` reformats Python inside
+# fenced code blocks, and a study's write-up quotes its own probes verbatim. Formatting
+# those quotes edits a finished research document to satisfy a style rule it was never written
+# against, and several of these files are hashed into a frozen preservation manifest, so a
+# whitespace change there reads as tampering. Scoped to markdown deliberately: the probes
+# are excluded wholesale, but `validation/*.py` and any future maintained research module
+# stay linted.
+extend-exclude = ["docs/research/**/probes", "docs/research/**/*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
@@ -36,16 +125,63 @@ unfixable = ["F401"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# Tests live in tests/ but import the source modules at the repo root.
-pythonpath = ["."]
+# Notably absent: `src`. NOT for wheel fidelity, which this does not buy (#438). `uv sync`
+# creates an EDITABLE install pointed straight at `src/`, so an ordinary run already reports
+# on the working tree: a module left out of the wheel, or a packaging config that drifts
+# from the layout, passes here exactly as it would with `src` listed. That is the gap
+# `tests/test_engine_installs.py` exists to close, by building a real wheel into a throwaway
+# environment -- read its docstring before reasoning about what the suite covers.
+#
+# What excluding `src` preserves is ONE import-resolution story shared by every consumer.
+# The root command wrappers, the tools and the tests all reach `deltatrack` through the
+# installed distribution. Add `src` and pytest alone resolves the engine off disk, which
+# makes the suite the only consumer with its own rules: in a worktree with no environment
+# the tests would quietly pass against that worktree while `./diff_bill.py` beside them
+# imports another checkout or fails outright. A split brain is worse than a hard stop, so
+# the wrong-tree case is rejected in `tests/conftest.py` rather than papered over (#435).
+#
+# `.` stays and does not weaken that. It is what makes `tests.*` and `scripts.*` resolve
+# as namespace packages, which is how the dev-only modules are reached now that they sit
+# beside what they serve rather than at the root (#401): the fixture-path resolver and the
+# validation pair in `tests/`, the example renderer in `scripts/`. That adds no third
+# import root and no new flat-namespace collision, because neither directory is itself on
+# the path -- only the root above them is. And `deltatrack` is not at the root to be found,
+# so no amount of `.` makes an uninstalled engine importable. Verified by
+# `tests/test_engine_installs.py`, which is what would catch this claim going stale.
+#
+# `tools/` is a second root rather than a package (#367): the bill-fetching scripts are
+# run directly (`./tools/fetch_bills.py …`), which puts only their own directory on
+# sys.path, so they must resolve each other by bare name. Listing it here makes the tests
+# resolve them the same way, which is why that move needed no test-import changes at all.
+pythonpath = [".", "tools"]
+# Run in parallel by default (pytest-xdist). "auto" = one worker per CPU core.
+# The suite is dominated by a few heavy PDF/corpus cases, so wall-time collapses
+# toward the long pole instead of summing every test (#168). The session-scoped
+# fixtures re-run per worker (separate processes) but hold no cross-worker state;
+# the on-disk extraction cache writes to a per-writer temp file + atomic rename, so
+# concurrent workers can't corrupt it. addopts is prepended to every invocation,
+# including CI's explicit `pytest -m ...` commands, so they parallelize too without
+# changing which tests are selected. Override with `-n0` to run serially (e.g. for a
+# clean --pdb debugging session).
+# -rs prints the REASON for every skip in the summary. Without it a plain run ends in
+# a bare "44 skipped", which reads as routine and hides a gate that stopped asserting:
+# a fixture that went missing looks exactly like one deliberately left uncommitted.
+# Two live gaps stayed invisible behind that bare count (a headline financial gate
+# skipping on an uncommitted bill version, and a floor gate running on 2 of 8 bills).
+addopts = ["-n", "auto", "-rs"]
 markers = [
     "slow: tests that require real bill XML files (deselect with '-m not slow')",
+    "browser: end-to-end tests that drive a real browser via Playwright (run with '-m browser'; need 'playwright install chromium')",
+    "network: tests that fetch from a live external service (skipped unless '--run-network'; also deselectable with '-m not network')",
 ]
 
 [tool.coverage.run]
 # Coverage measures the diff engine, not the tests or fetch tooling.
+# A directory glob rather than a file list: the whole tools/ tree is acquisition
+# tooling, so a script added there is out of scope automatically instead of silently
+# joining the engine's coverage the way a stale filename list would let it.
 omit = [
     "tests/*",
-    "fetch_bills.py",
-    "render_examples.py",
+    "tools/*",
+    "scripts/render_examples.py",
 ]

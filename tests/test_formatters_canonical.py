@@ -8,28 +8,30 @@ One consumer:
   view_from_canonical(canonical)          -> DiffView
 
 The producers are tested against the canonical JSON shape directly. The
-consumer is tested for round-trip parity against the existing
-xml_dict_to_view / pdf_diff_to_view adapters, so the existing HTML
-renderer keeps working unchanged.
+consumer (view_from_canonical) is tested via the adapter-contract suites
+(test_formatters_adapters_{xml,pdf}.py), which now route through canonical.
 """
 
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
-from diff_pdf import PdfDiff, PdfHunk
-from formatters.adapters import pdf_diff_to_view, xml_dict_to_view
-from formatters.canonical import (
+from deltatrack.diff_pdf import PdfDiff, PdfHunk
+from deltatrack.formatters.canonical import (
     pdf_diff_to_canonical,
     view_from_canonical,
     xml_diff_to_canonical,
 )
-from parsers.pdf_anchors import Anchor
+from deltatrack.parsers.pdf_anchors import Anchor
 
-SCHEMA_VERSION = "1.2"
+# Local pin (guard against unintended bumps). 2.0 removed the deprecated `amounts`
+# field (#274), leaving `amount_entries` (added in 1.4, #86) as the only money field;
+# 1.3 added the optional `tree` field (#108).
+SCHEMA_VERSION = "2.0"
 
 
 # ---------- XML producer ------------------------------------------------------
@@ -87,7 +89,8 @@ def test_xml_modified_change_canonical_fields():
     assert c["location"] is None
     assert c["anchor_resolution"] == "resolved"
     assert c["text"] == {"old": "old prose", "new": "new prose"}
-    assert c["amounts"] == []
+    assert c["amount_entries"] == []
+    assert "amounts" not in c, "the deprecated changed-only money field was removed in 2.0 (#274)"
     assert c["move"] is None
 
 
@@ -138,7 +141,34 @@ def test_xml_moved_change_emits_relocated_move():
     assert c["move"] == {"kind": "relocated", "body_unchanged": True}
 
 
-def test_xml_amounts_filtered_to_real_changes():
+def test_xml_same_parent_label_change_emits_renumbered_move():
+    # #188 review fix: a subsection (or section) whose match key IS its label
+    # reconciles a rename/renumber as a move — same parent, different tail is a
+    # "renumbered" identifier change, not a relocation (mirrors _pdf_move).
+    change = {
+        "change_type": "moved",
+        "display_path_old": ["TITLE V", "sec. 5", "(a) In general"],
+        "display_path_new": ["TITLE V", "sec. 5", "(b) In general"],
+        "old_text": "same body",
+        "new_text": "same body",
+        "section_number": "Sec. 5",
+    }
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[change]))
+    assert canonical["changes"][0]["move"] == {
+        "kind": "renumbered",
+        "old_label": "(a) In general",
+        "new_label": "(b) In general",
+        "body_unchanged": True,
+    }
+
+
+def test_xml_amount_entries_drop_unchanged_and_keep_whole_item_moves():
+    """Unchanged (2000, 2000) is dropped; whole-item added/removed are kept (#86).
+
+    Pre-#274 this asserted the changed-only `amounts` field, which by construction
+    reported ONLY the (1000, 1500) pair and silently lost the other two — the
+    incompleteness 2.0 removed the field over.
+    """
     change = {
         "change_type": "modified",
         "display_path_old": ["X"],
@@ -151,7 +181,37 @@ def test_xml_amounts_filtered_to_real_changes():
         },
     }
     canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[change]))
-    assert canonical["changes"][0]["amounts"] == [{"old": 1000, "new": 1500}]
+    assert canonical["changes"][0]["amount_entries"] == [
+        {"old": 1000, "new": 1500, "kind": "changed"},
+        {"old": 5000, "new": None, "kind": "removed"},
+        {"old": None, "new": 500, "kind": "added"},
+    ]
+    assert "amounts" not in canonical["changes"][0]
+
+
+def test_xml_zeroing_surfaces_as_real_amount_change():
+    """A line zeroed to $0 is a real change and must reach canonical output (#60).
+
+    Guards the end-to-end "visible, not silent" guarantee: ($5,000 -> $0) survives
+    the real-change filter (is-not-None, not truthiness), while an unchanged ($0 -> $0)
+    is correctly dropped.
+    """
+    change = {
+        "change_type": "modified",
+        "display_path_old": ["X"],
+        "display_path_new": ["X"],
+        "old_text": "a",
+        "new_text": "b",
+        "section_number": "",
+        "financial": {
+            "paired_amounts": [(5000, 0), (0, 0), (0, 7500)],
+        },
+    }
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[change]))
+    assert canonical["changes"][0]["amount_entries"] == [
+        {"old": 5000, "new": 0, "kind": "changed"},
+        {"old": 0, "new": 7500, "kind": "changed"},
+    ]
 
 
 def test_xml_unchanged_changes_are_dropped():
@@ -219,6 +279,97 @@ SEC_201 = Anchor(page_number=5, line_number=1, kind="section", text="SEC. 201")
 
 def _pdf_meta() -> dict:
     return dict(bill_type="hr", bill_number=4366, congress=118, v1_label="Reported", v2_label="Engrossed")
+
+
+# Agency-level anchors for the #104 carry-over agency breadcrumb (slice B).
+AGENCY = Anchor(page_number=1, line_number=5, kind="agency", text="MANAGEMENT DIRECTORATE")
+ACCOUNT = Anchor(page_number=1, line_number=6, kind="account", text="OPERATIONS AND SUPPORT")
+
+
+def test_pdf_agency_breadcrumb_flows_into_canonical_path_without_schema_change():
+    # #104 deepens the PDF breadcrumb to TITLE > agency > account. The canonical
+    # path is an arbitrary-depth array already, so the deeper chain flows through
+    # pdf_diff_to_canonical with NO converter change and NO schema_version bump
+    # (decision: the bump in the issue is phantom work; PathArray is open-ended).
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=ACCOUNT,
+        v2_anchor=ACCOUNT,
+        v1_range=(1, 6, 1, 9),
+        v2_range=(1, 6, 1, 9),
+        v1_text="old",
+        v2_text="new",
+    )
+    anchors = (TITLE_I, AGENCY, ACCOUNT)
+    diff = PdfDiff(hunks=(hunk,), v1_anchors=anchors, v2_anchors=anchors)
+    canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
+    c = canonical["changes"][0]
+    assert c["path"]["v2"] == ["TITLE I", "MANAGEMENT DIRECTORATE", "OPERATIONS AND SUPPORT"]
+    assert canonical["schema_version"] == SCHEMA_VERSION  # PDF breadcrumb change adds no bump of its own
+
+
+# Major/department-level anchor for the #105 breadcrumb (slice C).
+MAJOR = Anchor(page_number=1, line_number=3, kind="major", text="DEPARTMENTAL MANAGEMENT")
+
+
+def test_pdf_major_breadcrumb_flows_into_canonical_path_without_schema_change():
+    # #105 deepens the PDF breadcrumb to TITLE > major > agency > account. Like #104,
+    # this is a deeper path array, not a new schema shape: it flows through
+    # pdf_diff_to_canonical with NO converter change and NO schema_version bump (the
+    # canonical `path` is open-ended; the bump in the issue's cross-cutting note is
+    # phantom work, settled by slice B — see the agency test above).
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=ACCOUNT,
+        v2_anchor=ACCOUNT,
+        v1_range=(1, 6, 1, 9),
+        v2_range=(1, 6, 1, 9),
+        v1_text="old",
+        v2_text="new",
+    )
+    anchors = (TITLE_I, MAJOR, AGENCY, ACCOUNT)
+    diff = PdfDiff(hunks=(hunk,), v1_anchors=anchors, v2_anchors=anchors)
+    canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
+    c = canonical["changes"][0]
+    assert c["path"]["v2"] == [
+        "TITLE I",
+        "DEPARTMENTAL MANAGEMENT",
+        "MANAGEMENT DIRECTORATE",
+        "OPERATIONS AND SUPPORT",
+    ]
+    assert canonical["schema_version"] == SCHEMA_VERSION  # PDF breadcrumb change adds no bump of its own
+
+
+def test_pdf_division_breadcrumb_flows_into_canonical_path_without_schema_change():
+    # #107 prepends the division as the leftmost breadcrumb segment for omnibus bills.
+    # Like #104/#105 this is just a deeper path array, so it flows through
+    # pdf_diff_to_canonical with NO converter change and NO schema_version bump.
+    div = "Division A: ENERGY AND WATER DEVELOPMENT AND RELATED AGENCIES APPROPRIATIONS ACT, 2019"
+    title = replace(TITLE_I, division=div)
+    major = replace(MAJOR, division=div)
+    agency = replace(AGENCY, division=div)
+    account = replace(ACCOUNT, division=div)
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=account,
+        v2_anchor=account,
+        v1_range=(1, 6, 1, 9),
+        v2_range=(1, 6, 1, 9),
+        v1_text="old",
+        v2_text="new",
+    )
+    anchors = (title, major, agency, account)
+    diff = PdfDiff(hunks=(hunk,), v1_anchors=anchors, v2_anchors=anchors)
+    canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
+    c = canonical["changes"][0]
+    assert c["path"]["v2"] == [
+        div,
+        "TITLE I",
+        "DEPARTMENTAL MANAGEMENT",
+        "MANAGEMENT DIRECTORATE",
+        "OPERATIONS AND SUPPORT",
+    ]
+    assert canonical["schema_version"] == SCHEMA_VERSION  # PDF breadcrumb change adds no bump of its own
 
 
 def test_pdf_envelope_marks_source_pdf_and_version_number_null():
@@ -313,6 +464,25 @@ def test_pdf_degraded_hunk_marks_anchor_resolution_and_nulls_paths():
     assert c["location"]["v1"]["start_page"] == 2
 
 
+def test_pdf_front_matter_anchor_resolves_to_front_matter_path():
+    # A synthesized preamble anchor (issue #33) resolves cleanly rather than
+    # degrading: anchor_resolution is "resolved" and the path is "Front Matter".
+    front_matter = Anchor(page_number=1, line_number=1, kind="preamble", text="Front Matter")
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=front_matter,
+        v2_anchor=front_matter,
+        v1_range=(1, 1, 2, 5),
+        v2_range=(1, 1, 2, 3),
+        v1_text="Union Calendar No. 456",
+        v2_text="Union Calendar No. 460",
+    )
+    diff = PdfDiff(hunks=(hunk,), v1_anchors=(front_matter,), v2_anchors=(front_matter,))
+    c = pdf_diff_to_canonical(diff, **_pdf_meta())["changes"][0]
+    assert c["anchor_resolution"] == "resolved"
+    assert c["path"] == {"v1": ["Front Matter"], "v2": ["Front Matter"]}
+
+
 def test_pdf_renumbered_move_emits_kind_and_labels():
     hunk = PdfHunk(
         change_type="moved",
@@ -350,7 +520,10 @@ def test_pdf_relocated_move_when_anchor_text_unchanged():
     assert canonical["changes"][0]["move"] == {"kind": "relocated", "body_unchanged": True}
 
 
-def test_pdf_amounts_filtered_to_real_changes():
+def test_pdf_change_carries_no_deprecated_amounts_field():
+    """#274: the export has exactly one money field. A second, changed-only list with
+    nothing saying which is authoritative is what let a consumer read a fraction of
+    the money and report it confidently."""
     hunk = PdfHunk(
         change_type="modified",
         v1_anchor=SEC_101,
@@ -363,52 +536,33 @@ def test_pdf_amounts_filtered_to_real_changes():
     )
     diff = PdfDiff(hunks=(hunk,), v1_anchors=(SEC_101,), v2_anchors=(SEC_101,))
     canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
-    assert canonical["changes"][0]["amounts"] == [{"old": 1000, "new": 1500}]
+    change = canonical["changes"][0]
+    money_fields = sorted(k for k in change if "amount" in k)
+    assert money_fields == ["amount_entries"], f"expected one money field, got {money_fields}"
 
 
-# ---------- Round-trip parity ------------------------------------------------
-
-
-def test_xml_round_trip_preserves_view_for_renderer():
-    """xml_diff_to_canonical -> view_from_canonical reproduces the same DiffView
-    that xml_dict_to_view would produce directly. This means the existing HTML
-    renderer keeps working unchanged when fed canonical JSON."""
-    diff_dict = _xml_diff_dict(
-        changes=[
-            {
-                "change_type": "modified",
-                "display_path_old": ["TITLE I", "Customs"],
-                "display_path_new": ["TITLE I", "Customs"],
-                "section_number": "101",
-                "old_text": "old",
-                "new_text": "new",
-                "financial": {"paired_amounts": [(1000, 1500)]},
-            },
-            {
-                "change_type": "moved",
-                "display_path_old": ["OLD"],
-                "display_path_new": ["NEW"],
-                "old_text": "same",
-                "new_text": "same",
-                "section_number": "",
-            },
-        ]
+def test_pdf_amount_entries_categorize_added_removed():
+    """#86: amount_entries carries the full categorized set (changed/added/removed),
+    losslessly. Since #274 it is the only money field on a change."""
+    hunk = PdfHunk(
+        change_type="modified",
+        v1_anchor=SEC_101,
+        v2_anchor=SEC_101,
+        v1_range=(1, 1, 1, 5),
+        v2_range=(1, 1, 1, 5),
+        v1_text="x",
+        v2_text="y",
+        amount_pairs=((1000, 1500), (2000, 2000), (None, 500), (5000, None)),
     )
-    direct = xml_dict_to_view(diff_dict)
-    via_canonical = view_from_canonical(xml_diff_to_canonical(diff_dict))
-    assert via_canonical == direct
-
-
-def test_pdf_round_trip_preserves_view_for_renderer():
-    hunks = (
-        PdfHunk("modified", SEC_101, SEC_101, (1, 10, 1, 20), (2, 5, 2, 8), "old", "new"),
-        PdfHunk("moved", SEC_101, SEC_201, (1, 10, 1, 20), (5, 1, 5, 12), "same body", "same body"),
-        PdfHunk("modified", None, None, (3, 1, 3, 4), (3, 1, 3, 4), "x", "y"),
-    )
-    diff = PdfDiff(hunks=hunks, v1_anchors=(TITLE_I, SEC_101), v2_anchors=(TITLE_I, SEC_201))
-    direct = pdf_diff_to_view(diff, **_pdf_meta())
-    via_canonical = view_from_canonical(pdf_diff_to_canonical(diff, **_pdf_meta()))
-    assert via_canonical == direct
+    diff = PdfDiff(hunks=(hunk,), v1_anchors=(SEC_101,), v2_anchors=(SEC_101,))
+    change = pdf_diff_to_canonical(diff, **_pdf_meta())["changes"][0]
+    # Unchanged (2000, 2000) dropped; the rest categorized in order.
+    assert change["amount_entries"] == [
+        {"old": 1000, "new": 1500, "kind": "changed"},
+        {"old": None, "new": 500, "kind": "added"},
+        {"old": 5000, "new": None, "kind": "removed"},
+    ]
+    assert "amounts" not in change, "removed in 2.0 (#274)"
 
 
 # ---------- Schema validation -------------------------------------------------
@@ -451,6 +605,55 @@ def test_xml_canonical_validates_against_json_schema():
         ]
     )
     canonical = xml_diff_to_canonical(diff_dict)
+    jsonschema.validate(canonical, _load_schema())
+
+
+def _schema_probe_change() -> dict:
+    """One financial change, for the schema rejection tests below."""
+    return {
+        "change_type": "modified",
+        "display_path_old": ["A"],
+        "display_path_new": ["A"],
+        "old_text": "x",
+        "new_text": "y",
+        "section_number": "",
+        "financial": {"paired_amounts": [(100, 200)]},
+    }
+
+
+def test_schema_rejects_a_change_carrying_the_removed_amounts_field():
+    """The 2.0 guard, tested in the direction that can actually regress (#274).
+
+    Validating produced output only proves the producer is well behaved: if the
+    schema file silently lost `additionalProperties: false`, every other test here
+    would stay green while the field it removes became legal again. This asserts
+    the rejection itself.
+    """
+    jsonschema = pytest.importorskip("jsonschema")
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[_schema_probe_change()]))
+    canonical["changes"][0]["amounts"] = [{"old": 100, "new": 200}]
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(canonical, _load_schema())
+
+
+def test_schema_requires_amount_entries_on_every_change():
+    """Counterpart to the above: `amount_entries` is required, not merely allowed.
+
+    Optional-and-sole would still leave a consumer distinguishing "no money on this
+    change" from "field absent"; the producer always writes it, so the schema says so.
+    """
+    jsonschema = pytest.importorskip("jsonschema")
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[_schema_probe_change()]))
+    del canonical["changes"][0]["amount_entries"]
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(canonical, _load_schema())
+
+
+def test_schema_accepts_the_unmodified_producer_output():
+    """Both rejections above must come from the specific defect, not a schema that
+    rejects everything: the same probe document validates untouched."""
+    jsonschema = pytest.importorskip("jsonschema")
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[_schema_probe_change()]))
     jsonschema.validate(canonical, _load_schema())
 
 
@@ -553,6 +756,207 @@ def test_xml_search_state_advances_so_repeated_phrases_dont_collide():
     assert s2["v2"]["start"] == 11  # the second "shared"
 
 
+def test_xml_full_text_span_resolved_structurally_by_element_id():
+    """With full_text_spans, the change is anchored by its element_id, not by
+    searching the (now readable) full_text for the normalized change text."""
+    change = {
+        "change_type": "modified",
+        "display_path_old": ["A"],
+        "display_path_new": ["A"],
+        "old_text": "(a)The old",  # normalized form, NOT present verbatim in readable full_text
+        "new_text": "(a)The new",
+        "section_number": "",
+        "element_id_old": "E1",
+        "element_id_new": "E1",
+    }
+    full_text = {"v1": "SEC. 1.  (a) The old", "v2": "SEC. 1.  (a) The new"}
+    full_text_spans = {"v1": {"E1": (9, 20)}, "v2": {"E1": (9, 20)}}
+    canonical = xml_diff_to_canonical(
+        _xml_diff_dict(changes=[change]), full_text=full_text, full_text_spans=full_text_spans
+    )
+    span = canonical["changes"][0]["full_text_span"]
+    assert span["v1"] == {"start": 9, "end": 20}
+    assert span["v2"] == {"start": 9, "end": 20}
+
+
+# ---------- #76: cards show the readable full_text slice ----------------------
+
+
+def _modified_change_with_id(**overrides) -> dict:
+    change = {
+        "change_type": "modified",
+        "display_path_old": ["A"],
+        "display_path_new": ["A"],
+        "old_text": "(a)The old",  # collapsed body form
+        "new_text": "(a)The new",
+        "section_number": "",
+        "element_id_old": "E1",
+        "element_id_new": "E1",
+    }
+    change.update(overrides)
+    return change
+
+
+# v1/v2 readable full_text with element_id spans pointing at the readable body.
+_READABLE_FULL_TEXT = {"v1": "SEC. 1.  (a) The old", "v2": "SEC. 1.  (a) The new"}
+_READABLE_SPANS = {"v1": {"E1": (9, 20)}, "v2": {"E1": (9, 20)}}
+
+
+def test_reader_rejects_a_pre_2_0_document_instead_of_rendering_it_moneyless():
+    """A 1.x document parses fine here but has no `amount_entries` at all (#274).
+
+    Without this guard the reader degrades to "every change has no money" — silently,
+    which is exactly the failure the 2.0 break removes. The schema has always said
+    consumers reject unknown majors; nothing enforced it until now.
+    """
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[_schema_probe_change()]))
+    canonical["schema_version"] = "1.4"
+    canonical["changes"][0]["amounts"] = [{"old": 100, "new": 200}]
+    del canonical["changes"][0]["amount_entries"]
+    with pytest.raises(ValueError, match="schema_version"):
+        view_from_canonical(canonical)
+
+
+def test_reader_accepts_a_current_document():
+    """The guard must not reject everything: current output still reads, with money."""
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[_schema_probe_change()]))
+    assert canonical["schema_version"] == SCHEMA_VERSION
+    assert view_from_canonical(canonical).changes[0].amount_entries == ((100, 200, "changed"),)
+
+
+def test_card_prefers_readable_full_text_slice():
+    """A modified card shows the readable slice (`(a) The old`), not the collapsed body."""
+    canonical = xml_diff_to_canonical(
+        _xml_diff_dict(changes=[_modified_change_with_id()]),
+        full_text=_READABLE_FULL_TEXT,
+        full_text_spans=_READABLE_SPANS,
+    )
+    cv = view_from_canonical(canonical).changes[0]
+    assert cv.old_text == "(a) The old"
+    assert cv.new_text == "(a) The new"
+
+
+def test_card_falls_back_to_body_when_no_full_text():
+    """Without full_text the card keeps the prior collapsed body text."""
+    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[_modified_change_with_id()]))
+    cv = view_from_canonical(canonical).changes[0]
+    assert cv.old_text == "(a)The old"
+    assert cv.new_text == "(a)The new"
+
+
+def test_card_added_slices_v2_only():
+    change = {
+        "change_type": "added",
+        "display_path_old": None,
+        "display_path_new": ["A"],
+        "old_text": None,
+        "new_text": "(a)The new",
+        "section_number": "",
+        "element_id_old": "",
+        "element_id_new": "E1",
+    }
+    canonical = xml_diff_to_canonical(
+        _xml_diff_dict(changes=[change]),
+        full_text=_READABLE_FULL_TEXT,
+        full_text_spans={"v1": {}, "v2": {"E1": (9, 20)}},
+    )
+    cv = view_from_canonical(canonical).changes[0]
+    assert cv.old_text == ""
+    assert cv.new_text == "(a) The new"
+
+
+def test_card_removed_slices_v1_only():
+    change = {
+        "change_type": "removed",
+        "display_path_old": ["A"],
+        "display_path_new": None,
+        "old_text": "(a)The old",
+        "new_text": None,
+        "section_number": "",
+        "element_id_old": "E1",
+        "element_id_new": "",
+    }
+    canonical = xml_diff_to_canonical(
+        _xml_diff_dict(changes=[change]),
+        full_text=_READABLE_FULL_TEXT,
+        full_text_spans={"v1": {"E1": (9, 20)}, "v2": {}},
+    )
+    cv = view_from_canonical(canonical).changes[0]
+    assert cv.old_text == "(a) The old"
+    assert cv.new_text == ""
+
+
+def test_card_modified_both_or_neither_on_asymmetric_span():
+    """If only one side of a modified change resolves a span, both fall back to body —
+    avoiding a spurious readable-vs-collapsed whitespace diff."""
+    canonical = xml_diff_to_canonical(
+        _xml_diff_dict(changes=[_modified_change_with_id()]),
+        full_text=_READABLE_FULL_TEXT,
+        full_text_spans={"v1": {"E1": (9, 20)}, "v2": {}},  # v2 unresolved
+    )
+    cv = view_from_canonical(canonical).changes[0]
+    assert cv.old_text == "(a)The old"
+    assert cv.new_text == "(a)The new"
+
+
+def test_card_pdf_source_is_not_sliced():
+    """The slice is gated on source=='xml'; PDF full_text (line-number gutters) is never
+    sliced into a card even when a span resolves."""
+    canonical = xml_diff_to_canonical(
+        _xml_diff_dict(changes=[_modified_change_with_id()]),
+        full_text=_READABLE_FULL_TEXT,
+        full_text_spans=_READABLE_SPANS,
+    )
+    canonical["versions"]["v1"]["source"] = "pdf"
+    cv = view_from_canonical(canonical).changes[0]
+    assert cv.old_text == "(a)The old"
+    assert cv.new_text == "(a)The new"
+
+
+def test_xml_full_text_spans_never_serialized_and_schema_valid():
+    """full_text_spans is a build-time anchor input only — it must not leak into the
+    canonical JSON, and the result must still validate against the schema."""
+    jsonschema = pytest.importorskip("jsonschema")
+    change = {
+        "change_type": "modified",
+        "display_path_old": ["A"],
+        "display_path_new": ["A"],
+        "old_text": "x",
+        "new_text": "y",
+        "section_number": "",
+        "element_id_old": "E1",
+        "element_id_new": "E1",
+    }
+    canonical = xml_diff_to_canonical(
+        _xml_diff_dict(changes=[change]),
+        full_text={"v1": "x here", "v2": "y here"},
+        full_text_spans={"v1": {"E1": (0, 1)}, "v2": {"E1": (0, 1)}},
+    )
+    assert "full_text_spans" not in canonical
+    jsonschema.validate(canonical, _load_schema())
+
+
+def test_xml_full_text_span_null_when_id_absent_and_search_misses():
+    """Degenerate fallback: an empty/absent element_id falls back to substring search,
+    which misses because the target is normalized while full_text is readable -> null."""
+    change = {
+        "change_type": "modified",
+        "display_path_old": ["A"],
+        "display_path_new": ["A"],
+        "old_text": "(a)The body",
+        "new_text": "(a)The body",
+        "section_number": "",
+        "element_id_old": "",
+        "element_id_new": "",
+    }
+    full_text = {"v1": "SEC. 1.  (a) The body", "v2": "SEC. 1.  (a) The body"}
+    full_text_spans = {"v1": {}, "v2": {}}
+    canonical = xml_diff_to_canonical(
+        _xml_diff_dict(changes=[change]), full_text=full_text, full_text_spans=full_text_spans
+    )
+    assert canonical["changes"][0]["full_text_span"] == {"v1": None, "v2": None}
+
+
 def test_pdf_full_text_span_uses_line_offsets():
     hunk = PdfHunk(
         change_type="modified",
@@ -610,3 +1014,23 @@ def test_pdf_canonical_validates_against_json_schema():
     diff = PdfDiff(hunks=hunks, v1_anchors=(SEC_101,), v2_anchors=(SEC_101, SEC_201))
     canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
     jsonschema.validate(canonical, _load_schema())
+
+
+def test_pdf_version_numbers_default_to_none_and_pass_through_when_given():
+    """A PDF upload has no legislative ordinal; a numbered corpus file does (#42).
+
+    Both directions matter. The None default is what makes the renderer drop the
+    "vN: " prefix for uploads, so it is load-bearing rather than incidental: if it
+    started defaulting to a number, every uploaded report would head itself with an
+    index the uploader never supplied. The pass-through is what lets a published PDF
+    example head itself the same way the XML example of the same pair does.
+    """
+    diff = PdfDiff(hunks=(), v1_anchors=(), v2_anchors=())
+
+    upload = pdf_diff_to_canonical(diff, **_pdf_meta())
+    assert upload["versions"]["v1"]["version_number"] is None
+    assert upload["versions"]["v2"]["version_number"] is None
+
+    numbered = pdf_diff_to_canonical(diff, **_pdf_meta(), v1_version_number=1, v2_version_number=2)
+    assert numbered["versions"]["v1"]["version_number"] == 1
+    assert numbered["versions"]["v2"]["version_number"] == 2

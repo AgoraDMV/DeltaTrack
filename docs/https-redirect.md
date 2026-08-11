@@ -35,7 +35,7 @@ ProxyPass        /.well-known  !
 ProxyPass        /  http://127.0.0.1:8077/
 ProxyPassReverse /  http://127.0.0.1:8077/
 
-# Upload cap — keep aligned with MAX_UPLOAD_BYTES in server/app.py (150 MB)
+# Upload cap — keep aligned with MAX_UPLOAD_BYTES in web/app.py (150 MB)
 LimitRequestBody 157286400
 
 # Security headers
@@ -66,7 +66,7 @@ Expect `301` and `Location: https://deltatrack.agoradmv.org/index.html`.
 
 | Mechanism | Why |
 |---|---|
-| `webapp/.htaccess` | Apache proxies everything to uvicorn; never reads disk |
+| `web/webapp/.htaccess` | Apache proxies everything to uvicorn; never reads disk |
 | App middleware alone | Only redirects when forwarded headers signal cleartext |
 
 The `RewriteRule` at the top of this block is the reliable fix.

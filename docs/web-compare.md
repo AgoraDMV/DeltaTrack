@@ -1,4 +1,4 @@
-# Public web compare (`webapp/` + `server/`)
+# Public web compare (`web/`)
 
 Brief map of the live home page, how it relates to the Python CLI, and where to change things.
 
@@ -6,7 +6,7 @@ Brief map of the live home page, how it relates to the Python CLI, and where to 
 
 HTTP→HTTPS: see **[docs/https-redirect.md](https-redirect.md)** — Apache `RewriteRule`
 before `ProxyPass` + ISPConfig **Force HTTPS**. App middleware is a backstop only.
-`webapp/.htaccess` is not used (Apache proxies all traffic to uvicorn).
+`web/webapp/.htaccess` is not used (Apache proxies all traffic to uvicorn).
 
 ---
 
@@ -15,11 +15,11 @@ before `ProxyPass` + ISPConfig **Force HTTPS**. App middleware is a backstop onl
 | Path | Status | What it does |
 |---|---|---|
 | **Browser-only** (`index.html`, left card) | Coming soon | Future WebAssembly build — PDFs never leave the device. Not wired up yet. |
-| **Process on our server** (`compare.html`, right card) | **Available now** | User uploads start + end PDFs; server runs the Python PDF diff and returns a standalone HTML report in a new tab. Stateless — PDFs are not stored. |
+| **Process on our server** (`compare.html`, right card) | **Available now** (interim) | User uploads start + end PDFs; server runs the Python PDF diff and returns a standalone HTML report in a new tab. Stateless — PDFs are not stored. 
 
-Sample without uploading: `compare.html?example=1` loads a bundled report from `webapp/sample/example.html`.
+Sample without uploading: `compare.html?example=1` loads a bundled report from `web/webapp/sample/example.html`.
 
-The CLI path ([README](../README.md)) is separate: download Congress.gov **XML**, run `diff_bill.py compare … --format html` locally. Same HTML *renderer* family, different input pipeline (XML vs PDF).
+The CLI path ([README](../README.md)) is separate: download govinfo **XML**, run `diff_bill.py compare … --format html` locally. Same HTML *renderer* family, different input pipeline (XML vs PDF).
 
 ---
 
@@ -28,7 +28,7 @@ The CLI path ([README](../README.md)) is separate: download Congress.gov **XML**
 Past development was command-line first. The [README](../README.md) quickstart compares **XML** files:
 
 ```bash
-uv run python fetch_bills.py download 118 hr 4366
+uv run python tools/fetch_bills.py download 118 hr 4366
 
 uv run python diff_bill.py compare \
   bills/118-hr-4366/1_reported-in-house.xml \
@@ -36,18 +36,18 @@ uv run python diff_bill.py compare \
   --format html -o reports/hr4366_v1_vs_v2.html
 ```
 
-The public upload page does the **same kind of output** (standalone HTML via `format_diff_html`) but on **PDF** inputs. There is no `diff_pdf.py compare` subcommand — the web service calls the same steps as `server/pdf_compare.py` / `render_examples.py` → `render_pdf_diff()`.
+The public upload page does the **same kind of output** (standalone HTML via `format_diff_html`) but on **PDF** inputs. There is no `diff_pdf.py compare` subcommand — the web service calls the same steps as `src/deltatrack/compare/pdf.py` / `render_examples.py` → `render_pdf_diff()`.
 
 Local equivalent of uploading two PDFs to the site:
 
 ```bash
 # Fetch PDFs alongside XML (README Testing section)
-uv run python fetch_bills.py download 118 hr 4366 --format both
+uv run python tools/fetch_bills.py download 118 hr 4366 --format both
 
 # Same pipeline as POST /api/compare?output=html
 uv run python -c "
 from pathlib import Path
-from server.pdf_compare import compare_pdfs_html
+from compare.pdf import compare_pdfs_html
 
 start = Path('bills/118-hr-4366/1_reported-in-house.pdf')
 end   = Path('bills/118-hr-4366/2_engrossed-in-house.pdf')
@@ -61,39 +61,39 @@ print('Wrote reports/hr4366_pdf_v1_vs_v2.html')
 "
 ```
 
-Or regenerate a committed corpus example (if the bill is listed in `EXAMPLES_TO_RENDER` inside `render_examples.py`):
+Or regenerate every published example at once. No download step: `render_examples.py` reads the committed corpus under `tests/corpus/`, so it works on a fresh clone.
 
 ```bash
-uv run python fetch_bills.py download 118 hr 8752 --format both
-uv run python render_examples.py   # writes examples/hr8752_pdf_diff.html
+uv run python scripts/render_examples.py   # rewrites examples/*.html and examples/index.html
 ```
 
 | | README quickstart (XML) | Web upload / `compare_pdfs_html` (PDF) |
 |---|---|---|
-| Input | Congress.gov XML on disk | User PDF bytes (upload) |
-| Diff engine | `diff_bill.py` | `diff_pdf.py` |
-| HTML renderer | `format_diff_html` via `xml_dict_to_view` | `format_diff_html` via `pdf_diff_to_view` |
-| CLI entrypoint | `diff_bill.py compare … --format html` | `server/pdf_compare.py` (HTTP) or snippet above |
+| Input | govinfo XML on disk | User PDF bytes (upload) |
+| Diff engine | `src/deltatrack/diff_bill.py` | `src/deltatrack/diff_pdf.py` |
+| HTML renderer | `format_diff_html` via `view_from_canonical` | `format_diff_html` via `view_from_canonical` |
+| CLI entrypoint | `diff_bill.py compare … --format html` | `src/deltatrack/compare/pdf.py` (HTTP) or snippet above |
 
-XML and PDF paths can disagree on section boundaries and change counts for the same bill pair; compare like with like when validating.
+XML and PDF paths can disagree on section boundaries and change counts for the same bill pair; compare like with like when validating. To inspect both diffs for the same two versions side by side, `scripts/serve_compare.py` serves them in two panes (see [TESTING.md](../TESTING.md#comparing-the-two-pipelines-by-eye)).
 
 ---
 
 ## Request flow (server path)
 
 ```
-Browser (webapp/compare.html)
+Browser (web/webapp/compare.html)
   │  POST /api/compare?output=html  (multipart: start_pdf, end_pdf)
   ▼
-server/app.py                    ← FastAPI: upload guards, concurrency, timeout
+web/app.py                    ← FastAPI: per-IP rate limit, upload guards, concurrency, timeout
   ▼
-server/pdf_compare.py            ← thin wrapper (bytes in → HTML out)
-  │  extract_clean_pages()       parsers/pdf_text.py
-  │  diff_pdfs()                 diff_pdf.py
-  │  pdf_diff_to_view()          formatters/adapters.py
-  │  format_diff_html()          formatters/diff_html.py
+src/deltatrack/compare/pdf.py ← thin wrapper (bytes in → HTML out)
+  │  extract_clean_pages()       src/deltatrack/parsers/pdf_text.py
+  │  diff_pdfs()                 src/deltatrack/diff_pdf.py
+  │  pdf_diff_to_canonical()     src/deltatrack/formatters/canonical.py
+  │  view_from_canonical()       src/deltatrack/formatters/canonical.py
+  │  format_diff_html()          src/deltatrack/formatters/diff_html.py
   ▼
-Standalone HTML report           ← opened in new tab by webapp/js/compare.js
+Standalone HTML report           ← opened in new tab by web/webapp/js/compare.js
 ```
 
 This is the same PDF engine as `render_examples.py` → `render_pdf_diff()` — not a reimplementation. The web layer only handles HTTP upload, labels from filenames, and returning HTML.
@@ -106,19 +106,19 @@ JSON output (`?output=json`) still exists for tests and tooling; the compare UI 
 
 | Path | Role |
 |---|---|
-| `webapp/index.html` | Landing — two path cards |
-| `webapp/compare.html` | PDF upload UI |
-| `webapp/js/compare.js` | Upload, validation, fetch, open report tab |
-| `webapp/css/styles.css` | Upload/landing styles (report CSS is inlined by Python) |
-| `webapp/sample/example.html` | Bundled sample report for `?example=1` |
-| `server/app.py` | FastAPI app: `/api/compare` + static mount of `webapp/` |
-| `server/pdf_compare.py` | In-process call into `diff_pdf` + `format_diff_html` |
+| `web/webapp/index.html` | Landing — two path cards |
+| `web/webapp/compare.html` | PDF upload UI |
+| `web/webapp/js/compare.js` | Upload, validation, fetch, open report tab |
+| `web/webapp/css/styles.css` | Upload/landing styles (report CSS is inlined by Python) |
+| `web/webapp/sample/example.html` | Bundled sample report for `?example=1` |
+| `web/app.py` | FastAPI app: `/api/compare` + static mount of `web/webapp/` |
+| `src/deltatrack/compare/pdf.py` | In-process call into `diff_pdf` + `format_diff_html` |
 
 Run locally:
 
 ```bash
 uv sync
-uvicorn server.app:app --reload --port 8077
+uvicorn web.app:app --reload --port 8077
 # → http://127.0.0.1:8077/
 ```
 
@@ -130,20 +130,23 @@ Production ops (hosting, limits, systemd) live in gitignored `docs-for-ai/deploy
 
 **Diff accuracy or report content** — edit the Python engine, not the web UI:
 
-- `diff_pdf.py`, `parsers/`, `formatters/diff_html.py`, `formatters/adapters.py`
+- `src/deltatrack/diff_pdf.py`, `src/deltatrack/parsers/`, `src/deltatrack/formatters/diff_html.py`, `src/deltatrack/formatters/canonical.py`
 - Re-run PDF tests: `uv run pytest tests/test_pdf_*`
-- Regenerate committed examples if output shape changes: `uv run python render_examples.py`
+- Regenerate committed examples if output shape changes: `uv run python scripts/render_examples.py`
 
-**Upload / API behavior** — `server/app.py`, `server/pdf_compare.py`
+**Upload / API behavior** — `web/app.py`, `src/deltatrack/compare/pdf.py`
 
 - Keep **150 MB** cap aligned in three places: Apache `LimitRequestBody`, `MAX_UPLOAD_BYTES` in `app.py`, `MAX_BYTES` in `compare.js`
 - Keep `MAX_CONCURRENT_DIFFS` and `DIFF_TIMEOUT_S` in mind on the 8 GB host
+- `COMPARE_RATE_LIMIT_PER_MINUTE` caps one client at **10 requests/minute** (429 + `Retry-After: 60` past that). It lives only in `app.py` — nothing else to keep aligned. It is a slowapi *default* limit on ASGI middleware, not a per-route decorator, so a new API route inherits the same budget unless it opts out with `@limiter.exempt`.
 
-**Upload page copy or UX** — `webapp/compare.html`, `webapp/js/compare.js`, `webapp/css/styles.css`
+  **Adding a CDN in front of Apache breaks the rate-limit key — change the key first.** `_rate_limit_key` reads the *last entry of the last* `X-Forwarded-For` header: that entry is the address the outermost proxy accepted the connection from, and everything to its left is client-supplied and spoofable. It is the real client only while Apache *is* the outermost proxy. Behind a CDN the rightmost entry becomes the CDN edge address, collapsing every user behind that edge into one shared bucket. Pick the new key as part of the CDN change rather than discovering the problem from other people's 429s. Either candidate works — the CDN's own client-IP header, or the *n*th-from-right `X-Forwarded-For` entry for a validated, fixed chain depth — but only once the origin makes that value unspoofable: Apache has to accept the header solely from the CDN, or overwrite any copy an untrusted client sends. A key a direct caller can set for itself is worse than the shared bucket, since it removes the limit rather than over-applying it.
 
-**Landing page / two-path messaging** — `webapp/index.html`
+**Upload page copy or UX** — `web/webapp/compare.html`, `web/webapp/js/compare.js`, `web/webapp/css/styles.css`
 
-**Sample report** — replace `webapp/sample/example.html` after renderer changes (copy from `examples/*_pdf_diff.html` or regenerate)
+**Landing page / two-path messaging** — `web/webapp/index.html`
+
+**Sample report** — replace `web/webapp/sample/example.html` after renderer changes (copy from `examples/*_pdf_diff.html` or regenerate)
 
 **Do not** duplicate diff logic in JavaScript; the web app should stay a thin client over `POST /api/compare`.
 

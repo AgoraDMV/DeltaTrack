@@ -16,16 +16,16 @@ from pathlib import Path
 
 import pytest
 
-from bill_tree import normalize_bill, normalize_division_title
-from diff_bill import (
+from deltatrack.bill_tree import normalize_bill
+from deltatrack.diff_bill import (
     _normalize_text,
-    _text_similarity,
     compute_financial_change,
     diff_bills,
     extract_amounts,
 )
-
-BILLS_DIR = Path(__file__).parent.parent / "bills"
+from deltatrack.similarity import MOVE_THRESHOLD, SIMILARITY_THRESHOLD, text_similarity
+from tests.conftest import assert_manifest_committed, manifest_version_pairs
+from tests.division_labels import cross_division_mismatches
 
 
 @lru_cache(maxsize=None)
@@ -107,33 +107,37 @@ class TestControlledDiff:
     def test_no_false_matches(self, hr4366_v1_v2_diff):
         """No modified section should have similarity below the split threshold."""
         for c in _changes_by_type(hr4366_v1_v2_diff, "modified"):
-            sim = _text_similarity(
+            sim = text_similarity(
                 _normalize_text(c.old_text or ""),
                 _normalize_text(c.new_text or ""),
             )
-            assert sim >= 0.4, f"False match not caught (sim={sim:.2f}): {c.match_path}"
+            assert sim >= SIMILARITY_THRESHOLD, f"False match not caught (sim={sim:.2f}): {c.match_path}"
 
     def test_no_dead_zone_cases(self, hr4366_v1_v2_diff):
         """In this controlled diff, all modified sections should have high similarity."""
         for c in _changes_by_type(hr4366_v1_v2_diff, "modified"):
-            sim = _text_similarity(
+            sim = text_similarity(
                 _normalize_text(c.old_text or ""),
                 _normalize_text(c.new_text or ""),
             )
-            assert sim >= 0.6, f"Unexpected dead-zone case (sim={sim:.2f}): {c.match_path}"
+            assert sim >= MOVE_THRESHOLD, f"Unexpected dead-zone case (sim={sim:.2f}): {c.match_path}"
 
     def test_summary_baseline(self, hr4366_v1_v2_diff):
         """Regression baseline for summary counts.
 
-        Current values (2026-04-15): added=7, modified=16, unchanged=148, moved=1.
-        Recorded as a baseline; a change here flags a parser/matching regression
-        to investigate.
+        Current values: added=7, modified=17, unchanged=187, moved=1. Front matter
+        (#48) adds three nodes: the masthead is modified ("A BILL" -> "AN ACT" on
+        passing the chamber) and the official title + enacting clause are unchanged,
+        so modified 16->17 and unchanged 148->150. #188's subsection nodes add 37
+        per side, all textually identical v1->v2, so unchanged 150->187 while every
+        real-change count stays put. A change here flags a parser/matching
+        regression to investigate.
         """
         s = hr4366_v1_v2_diff.summary
         assert s["added"] == 7
         assert s["removed"] == 0
-        assert s["modified"] == 16
-        assert s["unchanged"] == 148
+        assert s["modified"] == 17
+        assert s["unchanged"] == 187
         assert s["moved"] == 1
 
     # -- Financial validation --
@@ -148,7 +152,8 @@ class TestControlledDiff:
         financially_changed = []
         for c in hr4366_v1_v2_diff.changes:
             if c.old_text and c.new_text:
-                fc = compute_financial_change(c.old_text, c.new_text)
+                # Same source the report's amount table reads (#365).
+                fc = compute_financial_change(c.amount_source_old, c.amount_source_new)
                 if fc and fc.amounts_changed:
                     financially_changed.append(c.match_path)
 
@@ -162,7 +167,8 @@ class TestControlledDiff:
         annotated = []
         for c in hr4366_v1_v2_diff.changes:
             if c.old_text and c.new_text:
-                fc = compute_financial_change(c.old_text, c.new_text)
+                # Same source the report's amount table reads (#365).
+                fc = compute_financial_change(c.amount_source_old, c.amount_source_new)
                 if fc and fc.has_amendment_annotations:
                     annotated.append(c.match_path)
 
@@ -274,11 +280,11 @@ class TestStructureExpansion:
         """
         dead_zone = []
         for c in _changes_by_type(hr4366_v1_v6_diff, "modified"):
-            sim = _text_similarity(
+            sim = text_similarity(
                 _normalize_text(c.old_text or ""),
                 _normalize_text(c.new_text or ""),
             )
-            if sim < 0.6:
+            if sim < MOVE_THRESHOLD:
                 dead_zone.append((sim, c.match_path))
 
         # Should not grow; currently 1
@@ -292,7 +298,7 @@ class TestStructureExpansion:
 
 @pytest.mark.slow
 class TestDeadZoneBaseline:
-    """Documents the 0.4-0.6 similarity gap with real examples.
+    """Documents the gap between the two similarity cutoffs, with real examples.
 
     115-hr-5895 (Energy & Water / Legislative Branch / MilCon-VA, FY2019)
     v4 (engrossed-amendment-senate) -> v5 (enrolled-bill) has the most
@@ -303,7 +309,7 @@ class TestDeadZoneBaseline:
     """
 
     def test_dead_zone_sections_documented(self, hr5895_v4_v5_diff):
-        """Document sections in the 0.4-0.6 dead zone.
+        """Document sections between the split and move cutoffs.
 
         These are classified as "modified" but have low text similarity,
         meaning they might be better classified as removed+added or as moved
@@ -311,11 +317,11 @@ class TestDeadZoneBaseline:
         """
         dead_zone = []
         for c in _changes_by_type(hr5895_v4_v5_diff, "modified"):
-            sim = _text_similarity(
+            sim = text_similarity(
                 _normalize_text(c.old_text or ""),
                 _normalize_text(c.new_text or ""),
             )
-            if 0.4 <= sim < 0.6:
+            if SIMILARITY_THRESHOLD <= sim < MOVE_THRESHOLD:
                 dead_zone.append((sim, c.match_path))
 
         # Baseline: 5 cases. Allow range for parser improvements.
@@ -324,14 +330,14 @@ class TestDeadZoneBaseline:
         )
 
     def test_move_threshold_respected(self, hr5895_v4_v5_diff):
-        """All moved sections must have text similarity >= the move threshold (0.6)."""
+        """All moved sections must have text similarity >= MOVE_THRESHOLD."""
         for c in _changes_by_type(hr5895_v4_v5_diff, "moved"):
             if c.old_text and c.new_text:
-                sim = _text_similarity(
+                sim = text_similarity(
                     _normalize_text(c.old_text),
                     _normalize_text(c.new_text),
                 )
-                assert sim >= 0.6, f"Moved section below threshold (sim={sim:.2f}): {c.match_path}"
+                assert sim >= MOVE_THRESHOLD, f"Moved section below threshold (sim={sim:.2f}): {c.match_path}"
 
     def test_move_detection_baseline(self, hr5895_v4_v5_diff):
         """Regression baseline for move detection.
@@ -345,25 +351,19 @@ class TestDeadZoneBaseline:
     def test_cross_division_mismatches(self, hr5895_v4_v5_diff):
         """Baseline for cross-division mismatches using normalized titles.
 
-        Current: 1 (a single moved section). Uses normalize_division_title
-        to compare division content, not letter, so division relabeling
-        (e.g., Division C -> Division F for the same subcommittee) is not
-        counted as a mismatch.
+        Current: 1 (a single moved section). Compares division content rather than
+        letter, so division relabeling (e.g., Division C -> Division F for the same
+        subcommittee) is not counted as a mismatch.
         """
-        cross_div = 0
-        for c in hr5895_v4_v5_diff.changes:
-            if c.display_path_old and c.display_path_new:
-                old_first = c.display_path_old[0]
-                new_first = c.display_path_new[0]
-                if old_first.startswith("Division") and new_first.startswith("Division"):
-                    old_title = normalize_division_title(old_first)
-                    new_title = normalize_division_title(new_first)
-                    if old_title and new_title and old_title != new_title:
-                        cross_div += 1
+        cross_div = cross_division_mismatches(hr5895_v4_v5_diff)
 
-        # Baseline: 1. Only 3 true cross-division mismatches exist across
-        # the entire corpus (all are "moved" pairings).
-        assert cross_div <= 5, f"Cross-division mismatches increased: {cross_div} (baseline: 1)"
+        # Baseline: 10 (was 1 before #188). The subsection carve leaves each
+        # section's own body as its distinctive lead-in, so nine identical-text
+        # provisions that were previously LOST as removed+added pairs now
+        # reconcile as cross-division moves — each verified sim=1.00 "moved"
+        # (recovered relocations, not mismatches). A further increase is a
+        # regression to investigate.
+        assert cross_div <= 12, f"Cross-division mismatches increased: {cross_div} (baseline: 10)"
 
     def test_summary_baseline(self, hr5895_v4_v5_diff):
         """Regression baseline.
@@ -382,18 +382,34 @@ class TestDeadZoneBaseline:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
+def test_manifest_fixtures_committed():
+    """Fail-closed completeness floor for the diff-validation gates (#217, ADR 0015).
+
+    The hand-curated classes above (via conftest session fixtures) and TestCorpusDiffSmoke
+    below run against the committed manifest. This guard always runs (no env var) and
+    fails — not skips — if any manifested fixture is absent, so a fresh CI checkout
+    missing a committed bill goes red instead of running these slow assertions green
+    over an empty/partial set.
+    """
+    assert_manifest_committed(_adjacent_version_pairs(), "diff-validation")
+
+
 def _adjacent_version_pairs():
-    """Discover all adjacent version pairs across the bill corpus."""
-    pairs = []
-    for bill_dir in sorted(BILLS_DIR.iterdir()):
-        if not bill_dir.is_dir():
-            continue
-        versions = sorted(bill_dir.glob("*.xml"))
-        for i in range(len(versions) - 1):
-            old, new = versions[i], versions[i + 1]
-            label = f"{bill_dir.name}/{old.stem}->{new.stem}"
-            pairs.append(pytest.param(old, new, id=label))
-    return pairs
+    """Adjacent committed-XML version pairs from the corpus manifest (every adjacent
+    pair across all locally-fetched bills under CORPUS_SWEEP)."""
+    return [
+        pytest.param(old, new, id=f"{old.parent.name}/{old.stem}->{new.stem}") for old, new in manifest_version_pairs()
+    ]
+
+
+def _skip_pair_if_absent(old_path: Path, new_path: Path) -> None:
+    """Skip (not error) a manifest pair whose fixture is absent from a partial local
+    checkout, keeping collected = passed + skipped constant. test_manifest_fixtures_
+    committed turns any such absence red in CI."""
+    for p in (old_path, new_path):
+        if not p.exists():
+            pytest.skip(f"manifest fixture not present locally: {p.parent.name}/{p.name}")
 
 
 @pytest.mark.slow
@@ -407,21 +423,23 @@ class TestCorpusDiffSmoke:
 
     def test_no_crash(self, old_path, new_path):
         """Diff pipeline should not crash on any version pair."""
+        _skip_pair_if_absent(old_path, new_path)
         result = _cached_diff(old_path, new_path)
         assert result is not None
         assert len(result.changes) > 0
 
     def test_no_false_matches(self, old_path, new_path):
-        """No modified section should have similarity below the split threshold (0.4)."""
+        """No modified section should have similarity below SIMILARITY_THRESHOLD."""
+        _skip_pair_if_absent(old_path, new_path)
         result = _cached_diff(old_path, new_path)
 
         for c in result.changes:
             if c.change_type == "modified" and c.old_text and c.new_text:
-                sim = _text_similarity(
+                sim = text_similarity(
                     _normalize_text(c.old_text),
                     _normalize_text(c.new_text),
                 )
-                assert sim >= 0.4, f"False match leaked through (sim={sim:.2f}): {c.match_path}"
+                assert sim >= SIMILARITY_THRESHOLD, f"False match leaked through (sim={sim:.2f}): {c.match_path}"
 
     def test_unique_element_id_pairs(self, old_path, new_path):
         """Every change should have a unique (element_id_old, element_id_new) pair.
@@ -430,6 +448,7 @@ class TestCorpusDiffSmoke:
         divisions. Element IDs are always unique per XML element, so they serve
         as the correct uniqueness key for pairings.
         """
+        _skip_pair_if_absent(old_path, new_path)
         result = _cached_diff(old_path, new_path)
 
         id_pairs = Counter((c.element_id_old, c.element_id_new) for c in result.changes)
@@ -439,7 +458,47 @@ class TestCorpusDiffSmoke:
 
     def test_summary_counts_non_negative(self, old_path, new_path):
         """All summary counts should be non-negative."""
+        _skip_pair_if_absent(old_path, new_path)
         result = _cached_diff(old_path, new_path)
 
         for key, value in result.summary.items():
             assert value >= 0, f"Negative summary count {key}={value}"
+
+    def test_amount_source_never_hides_a_change(self, old_path, new_path):
+        """Reading amounts from the display rendering is strictly additive (#365).
+
+        The safety property behind #365: the amount-change table extracts from
+        ``display_text``, so the switch may SURFACE an amount change, never hide one.
+
+        The gap it was measuring is closed. ``display_text`` used to be a strict superset
+        of the ``body_text`` the matching key uses, because ``_extract_section_text``
+        truncated a section at its lead-in; #422 removed that truncation, so on today's
+        corpus the two renderings agree and this finds nothing. It is kept as a
+        one-directional safety net over every bill: it costs nothing to run, and it is
+        the check that would catch either rendering starting to drop content again.
+
+        This is the invariant that must hold for every bill, which is why it lives here
+        rather than beside the single pinned instance in test_financial_diff.py: a
+        regression that only shows up on the eighteenth corpus pair is exactly what a
+        one-pair assertion cannot see. The count of newly surfaced changes is deliberately
+        not pinned here — it legitimately varies per pair, and pinning it would turn a
+        corpus addition into a test failure.
+        """
+        _skip_pair_if_absent(old_path, new_path)
+        result = _cached_diff(old_path, new_path)
+
+        def changed(fc):
+            return fc is not None and fc.amounts_changed
+
+        hidden = [
+            c.match_path
+            for c in result.changes
+            if changed(compute_financial_change(c.old_text, c.new_text))
+            and not changed(compute_financial_change(c.amount_source_old, c.amount_source_new))
+        ]
+
+        assert hidden == [], (
+            f"Reading amounts from display_text hid an amount change that body_text saw, "
+            f"on {len(hidden)} section(s): {hidden[:5]}. The switch is only safe while it "
+            f"is additive; a section here means display_text lost content body_text kept."
+        )

@@ -21,16 +21,17 @@ internal-only tests cannot detect. Two jurisdictions, two external sources:
 """
 
 import json
-from pathlib import Path
 
 import pytest
 
-from bill_tree import normalize_bill
-from diff_bill import extract_amounts
+from deltatrack.bill_tree import normalize_bill
+from deltatrack.diff_bill import extract_amounts
+from tests.conftest import uncommitted_bill_files
+from tests.corpus_paths import DATA_DIR
 
 pytestmark = pytest.mark.slow
 
-FIXTURE_PATH = Path("test_data/validation_leg_branch.json")
+FIXTURE_PATH = DATA_DIR / "validation_leg_branch.json"
 
 
 def _load_fixture():
@@ -61,8 +62,7 @@ class TestLegBranchValidation:
             version = account["version"]
             if bill not in trees:
                 # Find the enrolled bill XML
-                bill_dir = Path("bills") / bill
-                xml_path = bill_dir / version
+                xml_path = resolve_bill_file(bill, version)
                 if xml_path.exists():
                     trees[bill] = normalize_bill(xml_path)
         if not trees:
@@ -71,20 +71,50 @@ class TestLegBranchValidation:
             )
         return trees
 
-    def test_all_bills_loaded(self, fixture_data, bill_trees):
-        """Every downloaded bill referenced in the fixture should parse.
+    def test_fixture_bills_committed(self, fixture_data):
+        """Completeness floor (#167, #278): every fixture-referenced bill version must be
+        committed to git.
 
-        Skips (rather than fails) for bills not present locally, so a fresh
-        clone without the corpus is green. Download the corpus with
-        fetch_bills.py (see README) to exercise full validation.
+        The bill_trees fixture loads a bill only ``if xml_path.exists()``, so a renamed
+        or absent version filename makes that bill silently absent — its accounts then
+        skip in test_all_nodes_found/test_all_amounts_match (``if tree is None: continue``)
+        and validation quietly shrinks. The #10 BILLSTATUS-ordering rename (115-hr-1625
+        enrolled 7_->6_) is exactly the class of change that would drop ~40 Leg-Branch
+        accounts unnoticed; this floor fails loud instead.
+
+        Unconditional since #278: all seven referenced bills are now committed, so this
+        needs no env var and fails closed everywhere, including CI. It used to assert only
+        under REQUIRE_CORPUS=1, which CI never set — a guard that never ran. Asks git
+        whether each file is TRACKED, not merely present (#308/#327): a fixture written into
+        tests/corpus/ but never staged exists on the author's machine and is absent in CI,
+        and only the git question catches that before the push.
+        """
+        referenced = {f"{a['bill']}/{a['version']}" for a in fixture_data["accounts"]}
+        missing = uncommitted_bill_files(referenced)
+        assert not missing, (
+            f"{len(missing)} of {len(referenced)} fixture-referenced bill version(s) are not "
+            f"committed (missing on disk, or present but untracked): {missing}. Each bill "
+            "tests/data/validation_leg_branch.json names must be committed under tests/corpus/, "
+            "or its accounts silently drop out of validation. Re-fetch with "
+            "./tools/fetch_bills.py download <congress> <type> <number> --format both and copy the "
+            "file into tests/corpus/<id>/ if it is gone; `git add` it if present but untracked."
+        )
+
+    def test_all_bills_loaded(self, fixture_data, bill_trees):
+        """Every bill referenced in the fixture must load and parse to a non-empty tree.
+
+        Fails rather than skips on an absent bill (#278): all seven are committed, so
+        "not downloaded" is no longer a reachable state — test_fixture_bills_committed
+        fails first if one is missing. A skip here would assert nothing about the bills
+        that DID load, which is the fail-open channel #220's skip ceiling exists to close.
         """
         expected_bills = set(a["bill"] for a in fixture_data["accounts"])
         missing = expected_bills - set(bill_trees.keys())
-        if missing:
-            pytest.skip(
-                f"{len(missing)} bill(s) not downloaded: {sorted(missing)}. "
-                "Run fetch_bills.py download for each (see README)."
-            )
+        assert not missing, (
+            f"{len(missing)} fixture-referenced bill(s) did not load: {sorted(missing)}. "
+            "They are committed fixtures, so this means the file was renamed or removed "
+            "(see test_fixture_bills_committed) — not that the corpus needs downloading."
+        )
         # Every loaded bill must parse to a non-empty tree.
         for bill, tree in bill_trees.items():
             assert tree.nodes, f"{bill} loaded but produced no nodes"
@@ -103,7 +133,14 @@ class TestLegBranchValidation:
         assert missing == [], f"{len(missing)} nodes not found:\n" + "\n".join(f"  {m}" for m in missing[:10])
 
     def test_all_amounts_match(self, fixture_data, bill_trees):
-        """Every fixture amount should appear in the node's extracted amounts."""
+        """Every fixture amount should appear in the node's SUBTREE amounts.
+
+        The ground truth pins a budget line's amount to a match_path; since #188
+        the amount may sit one level deeper, in a subsection node whose match_path
+        extends the pinned one (verified: 3 fixtures moved to a subsection child,
+        none disappeared). The subtree — the pinned node plus its prefix
+        descendants — is the unit that owns the line.
+        """
         mismatches = []
         for account in fixture_data["accounts"]:
             tree = bill_trees.get(account["bill"])
@@ -111,10 +148,10 @@ class TestLegBranchValidation:
                 continue
             path = tuple(account["match_path"])
             expected = account["expected_amount"]
-            node = next((n for n in tree.nodes if n.match_path == path), None)
-            if node is None:
+            subtree = [n for n in tree.nodes if n.match_path[: len(path)] == path]
+            if not any(n.match_path == path for n in subtree):
                 continue  # caught by test_all_nodes_found
-            extracted = extract_amounts(node.body_text)
+            extracted = [a for n in subtree for a in extract_amounts(n.body_text)]
             if expected not in extracted:
                 mismatches.append(
                     f"{account['fy']} {account['chamber']}: {account['excel_name']} "
@@ -152,8 +189,9 @@ class TestLegBranchValidation:
 # *rises* (a regression) and is lowered intentionally when extraction improves. Run
 # `uv run python scripts/generate_validation_report.py` to refresh the doc and these counts.
 
-from validation_check import validate_jurisdiction  # noqa: E402
-from validation_sources import JURISDICTIONS  # noqa: E402
+from tests.corpus_paths import resolve_bill_file  # noqa: E402
+from tests.validation_check import validate_jurisdiction  # noqa: E402
+from tests.validation_sources import JURISDICTIONS  # noqa: E402
 
 # Max accounts whose report amount is not recalled from the bill, per jurisdiction. These
 # are confirmed report-vs-bill structural differences, not parser errors (see the doc).
@@ -185,9 +223,33 @@ _MAX_UNVALIDATED = {
     # (amount correctly extracted under the right agency), 2 absent (Coast Guard mandatory
     # health-care accrual, fee-funded USCIS Operations and Support).
     "homeland_security": 5,
+    # Legislative Branch FY2025: 2 unvalidated, both arithmetic the recall check cannot do,
+    # each confirmed against the bill XML rather than inferred from the fixture's `bureau`
+    # (which carries the nearest preceding report heading, not the account's actual bureau):
+    #   - CAPITOL POLICE $832,556,000 — the report states the agency rollup; the bill itemizes
+    #     it as SALARIES $620,401,000 + GENERAL EXPENSES $212,155,000 under a "capitol police"
+    #     agency node that holds no amount of its own, so no single mapped node's components
+    #     sum to it. `match_path` is null by design here (see map_account_path's rollup guard).
+    #   - Copyright Office SALARIES AND EXPENSES $60,238,000 — the report states the net
+    #     appropriation; the bill states gross $106,133,000 less $45,895,000 in offsetting fee
+    #     receipts. _component_sum only adds, so a net-of-offset figure is out of its reach.
+    # Scope caveat: this bill's top-level match_path element is the title itself, so unlike
+    # the other jurisdictions "under the correct agency" here means "anywhere in this bill"
+    # (one agency, 107 amounts). The three generic "SALARIES AND EXPENSES" accounts rest on
+    # that weaker channel because the report's account names are not unique and the fixture's
+    # `bureau` cannot break the tie; mapping them by amount instead would make the check
+    # circular, so the depth is accepted and recorded rather than engineered away.
+    "legislative_branch": 2,
 }
 
-_REPORT_JURISDICTIONS = [j for j in JURISDICTIONS if j.fixture_path.exists()]
+# Parameterize over the registry directly, NOT `[j for j in JURISDICTIONS if
+# j.fixture_path.exists()]`. Filtering by existence dropped a subcommittee from the run when
+# its committed fixture went missing (a .gitignore edit, a cleanup, a rename in
+# validation_sources.py) — no error, no skip, just one fewer collected case (#294). The
+# registry is the declared source of truth, so a missing fixture now fails loudly under its
+# own slug rather than vanishing; the fast-tier floor
+# tests/test_corpus_manifest.py::test_all_report_fixtures_committed names them all at once.
+_REPORT_JURISDICTIONS = list(JURISDICTIONS)
 
 
 @pytest.mark.slow
@@ -210,8 +272,17 @@ def test_report_amounts_recalled(jur):
 @pytest.mark.parametrize("jur", _REPORT_JURISDICTIONS, ids=lambda j: j.slug)
 def test_fixture_is_senate_reported_bill(jur):
     accounts = json.loads(jur.fixture_path.read_text())["accounts"]
-    # Floor guards against a trivially-empty fixture. MilCon-VA is the smallest jurisdiction
-    # (19 summary-block accounts), so the floor sits below that.
-    assert len(accounts) >= 15
+    # Per-jurisdiction truncation floor (#294), from the registry rather than a flat >= 15.
+    # The old shared floor was sized for the smallest jurisdiction (MilCon-VA, 19 accounts),
+    # so Labor-HHS could lose 108 of its 123 and still pass — and a truncated fixture passes
+    # the recall test *more* easily (fewer accounts => fewer possible failures). The declared
+    # count fails loud on any shrink; refresh Jurisdiction.min_accounts when a rebuild
+    # legitimately changes it.
+    assert jur.min_accounts > 0, f"{jur.slug}: min_accounts unset in validation_sources.py"
+    assert len(accounts) >= jur.min_accounts, (
+        f"{jur.slug}: fixture has {len(accounts)} accounts, below the declared floor of "
+        f"{jur.min_accounts} (truncated fixture?). If the shrink is intentional, lower "
+        "min_accounts in validation_sources.py."
+    )
     assert {a["chamber"] for a in accounts} == {"senate"}
     assert {(a["bill"], a["version"]) for a in accounts} == {(jur.bill_id, jur.version)}

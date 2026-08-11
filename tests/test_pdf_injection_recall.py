@@ -20,11 +20,17 @@ from __future__ import annotations
 import pytest
 from recall_text import normalize_for_recall
 
-from diff_pdf import PdfDiff, diff_pdfs
-from formatters.adapters import pdf_diff_to_view
-from formatters.diff_html import format_diff_html
-from parsers.pdf_anchors import extract_anchors
-from parsers.pdf_text import Line, Page
+from deltatrack.diff_pdf import PdfDiff, diff_pdfs
+from deltatrack.formatters.canonical import pdf_diff_to_canonical, view_from_canonical
+from deltatrack.formatters.diff_html import format_diff_html
+from deltatrack.parsers.pdf_anchors import extract_anchors
+from deltatrack.parsers.pdf_text import Line, Page
+
+
+def pdf_diff_to_view(diff: PdfDiff, **meta):
+    """Route the PdfDiff through canonical -> view, the sole production path."""
+    return view_from_canonical(pdf_diff_to_canonical(diff, **meta))
+
 
 # ---- Injection helpers (operate on the frozen Page/Line dataclasses) ---------
 
@@ -200,7 +206,7 @@ class TestInjectionRecall:
 
 from types import SimpleNamespace  # noqa: E402
 
-from diff_bill import extract_amounts  # noqa: E402
+from deltatrack.diff_bill import extract_amounts  # noqa: E402
 
 # Distinctive (non-round) amounts so the deletion check can assert the value is genuinely
 # gone from v2 without colliding with a real figure in the bill. The ZZQ sentinel words

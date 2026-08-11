@@ -1,0 +1,97 @@
+name: Corpus filename parity
+
+# Weekly check that the bill filenames committed to this repo are still the ones govinfo
+# enumeration would produce today (#342). Bill files are named `<index>_<version-type>`
+# from govinfo's publication metadata, and the corpus gates use those names as keys, so a
+# naming or ordering change upstream silently mis-keys fixtures rather than breaking
+# anything loudly. #10 (the publication-ordering migration) already renamed corpus files
+# once; nothing was watching for the next time.
+#
+# NOT a pull-request gate, on purpose: a PR should not go red because a third-party
+# service is unreachable, and an upstream naming change is not something a contributor's
+# PR caused or can fix.
+#
+# NO DOWNLOAD STEP, also on purpose, and this is the part that is easy to "fix" into
+# uselessness. fetch_bills names each file from the same enumeration call the gate
+# compares against, so fetching the corpus here and then checking it would compare a
+# value with itself: green every week forever, including the week naming changed. The
+# check only means something against the committed fixtures, whose names were frozen in
+# git when each bill was fetched.
+
+on:
+  schedule:
+    # Mondays 06:17 UTC. Off the hour because scheduled workflows queue at popular times.
+    - cron: "17 6 * * 1"
+  # Lets a maintainer run it on demand, which is also how the first run after a change to
+  # this file should be verified rather than waiting a week for the schedule.
+  workflow_dispatch:
+
+# Scheduled runs read this file from the repository's DEFAULT branch only (currently
+# `develop`) and ignore every other branch. Nothing signals it if that assumption breaks,
+# so if the default branch changes, re-check that this still fires.
+
+concurrency:
+  group: corpus-parity
+  cancel-in-progress: false
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write # only to report a failure, below
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python
+        # No version here: `uv python install` with no argument installs the one named in
+        # `.python-version`, so the repository has a single source of truth that developers
+        # and CI share. Hardcoding it in each workflow let the two drift silently (#442).
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Check corpus filenames against live govinfo enumeration
+        id: parity
+        # --run-network opts into the `network` marker (#278); the gate is skipped
+        # without it. No API key: govinfo's bulkdata endpoint is keyless.
+        run: uv run pytest -v -m slow --run-network tests/test_govinfo_corpus_parity.py
+
+      - name: Report a failure as an issue
+        if: failure() && steps.parity.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        # A weekly job's failure has to land somewhere a person actually looks. GitHub
+        # emails scheduled-workflow failures to whoever last edited the cron expression,
+        # which is not a reliable owner, so this files into the tracker instead.
+        #
+        # Reuses an existing open report rather than filing a new one each week: a
+        # genuine upstream rename stays broken until someone re-fetches the corpus, and a
+        # duplicate every Monday would train everyone to ignore it.
+        run: |
+          set -uo pipefail
+          title='Corpus filenames diverge from govinfo enumeration'
+          body="The weekly parity check found bill filenames on disk that govinfo enumeration no longer produces, which means the corpus gates are keying on stale names. Run log: $RUN_URL
+
+          The failure names each stale stem. Re-download the affected bill with \`tools/fetch_bills.py download <congress> <type> <number> --format both\`, or add the stem to \`_ACCEPTED_EXTRA_STEMS\` in \`tests/test_govinfo_corpus_parity.py\` if it is legitimate (a Public Law text, for instance).
+
+          A failure here can also mean govinfo was unreachable rather than that anything changed. Check the log before re-fetching.
+
+          Filed automatically by \`.github/workflows/corpus-parity.yml\` (#342)."
+
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" \
+              --body "Still failing as of the weekly run: $RUN_URL"
+            exit 0
+          fi
+          # --type needs a recent gh. If the runner's is older, file without it rather
+          # than letting the reporting step die and lose the failure entirely.
+          gh issue create --repo "$GITHUB_REPOSITORY" --type Task --title "$title" --body "$body" \
+            || gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"

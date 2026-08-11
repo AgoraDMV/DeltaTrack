@@ -1,6 +1,6 @@
 """Tests for formatters._text, the shared text-rendering helpers."""
 
-from formatters._text import fmt_dollar, word_diff
+from deltatrack.formatters._text import fmt_dollar, word_diff
 
 
 def test_fmt_dollar_basic():

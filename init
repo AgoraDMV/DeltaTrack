@@ -1,0 +1,29 @@
+#!/bin/bash
+# Guarded with `if` rather than `set -e`: this script is sourced, so `set -e` would
+# leave errexit switched on in the caller's own shell after it returns.
+#
+# Activation is gated on the venv existing, not on `uv sync` succeeding. A failed
+# sync must not activate a venv it never created -- that reported a consequence
+# ("no such file or directory") over the cause. But this is also the per-shell
+# activate command, so a sync that fails with a working venv already on disk
+# (uv missing from PATH, a network hiccup) must still leave the caller activated.
+#
+# Say so when that happens: a persistent failure (an unresolvable dependency after
+# a pyproject change) reads exactly like a transient one once uv's own error has
+# scrolled past, and silently activating a stale venv at status 0 is how a wrong
+# environment goes unnoticed. Status stays 0 so `source ./init && ...` keeps
+# working offline, so the warning is the only signal there is.
+#
+# The rc is unset before the last command of each branch, so the script's exit
+# status is the activation's, and nothing but VIRTUAL_ENV lands in the caller.
+uv sync
+_init_sync_rc=$?
+if [ -f .venv/bin/activate ]; then
+    [ "$_init_sync_rc" -eq 0 ] || echo "init: uv sync failed -- activating the existing .venv, whose dependencies may be stale" >&2
+    unset _init_sync_rc
+    source .venv/bin/activate
+else
+    unset _init_sync_rc
+    echo "init: no .venv/ here -- run this from the project folder, resolve any error above, then re-run \`source ./init\`" >&2
+    false
+fi

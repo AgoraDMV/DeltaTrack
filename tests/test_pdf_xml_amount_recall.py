@@ -30,8 +30,8 @@ from __future__ import annotations
 import pytest
 from pdf_corpus import cached_pages, dual_format_versions, full_text
 
-from bill_tree import normalize_bill
-from diff_bill import extract_amounts
+from deltatrack.bill_tree import normalize_bill
+from deltatrack.diff_bill import extract_amounts
 
 pytestmark = pytest.mark.slow
 
