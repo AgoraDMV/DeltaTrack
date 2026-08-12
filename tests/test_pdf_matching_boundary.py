@@ -223,8 +223,9 @@ def test_split_population_exists_and_carries_money_on_both_sides() -> None:
 
     import difflib
 
-    from deltatrack.diff_pdf import _block_key, _flatten, _group_into_blocks
+    from deltatrack.diff_pdf import _block_key
     from deltatrack.parsers.pdf_anchors import extract_anchors
+    from deltatrack.parsers.pdf_blocks import _flatten, _group_into_blocks
 
     v1_blocks = _group_into_blocks(_flatten(cached_pages(old)), extract_anchors(cached_pages(old)))
     v2_blocks = _group_into_blocks(_flatten(cached_pages(new)), extract_anchors(cached_pages(new)))

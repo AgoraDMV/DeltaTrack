@@ -6,7 +6,8 @@ sequence, never a filtered or re-sorted view"*, calling the alternative "a genui
 hazard", because such an address "looks valid and points at the wrong node".
 
 For PDF that rule had nothing to attach to. The sequence a later slice would index —
-``diff_pdf._group_into_blocks``' output — is nowhere stated as the emitted sequence, and
+``parsers.pdf_blocks._group_into_blocks``' output — is nowhere stated as the emitted
+sequence, and
 nothing asserts it is complete, ordered, or stable. This module states it and pins it, so
 that slice 3's ``PdfObservation`` has a rule to be built against rather than a convention
 to infer.
@@ -36,8 +37,8 @@ from __future__ import annotations
 
 import pytest
 
-from deltatrack.diff_pdf import _Block, _flatten, _group_into_blocks
 from deltatrack.parsers.pdf_anchors import breadcrumb_for, extract_anchors
+from deltatrack.parsers.pdf_blocks import _Block, _flatten, _group_into_blocks
 from deltatrack.structure_tree import TreeNode, build_pdf_tree
 from tests.corpus_paths import FIXTURES_DIR
 from tests.pdf_corpus import cached_pages
