@@ -3,16 +3,22 @@
 from __future__ import annotations
 
 from deltatrack.diff_pdf import (
-    _Block,
     _block_key,
-    _group_into_blocks,
     _hunk_for_added,
     _hunk_for_removed,
-    _IndexedLine,
-    _rejoin_cross_page_hyphens,
     diff_pdfs,
 )
 from deltatrack.parsers.pdf_anchors import Anchor
+
+# Observation production moved to `parsers.pdf_blocks` in ADR 0020 slice 1; the matching
+# helpers above stayed in `diff_pdf`. Imported from their owning modules rather than
+# through `diff_pdf`'s re-export, so this file states the boundary it is testing across.
+from deltatrack.parsers.pdf_blocks import (
+    _Block,
+    _group_into_blocks,
+    _IndexedLine,
+    _rejoin_cross_page_hyphens,
+)
 from deltatrack.parsers.pdf_text import Line, Page
 
 
