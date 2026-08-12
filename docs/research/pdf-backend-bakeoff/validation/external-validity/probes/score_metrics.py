@@ -700,23 +700,34 @@ def _score_m3(m3_bucket: dict, rows: dict, adjudication: dict) -> None:
         m3_bucket["neither_arm_emitted"] += 1
 
 
+def _arm_rates(counts: dict, adjudicated_headings: int) -> dict:
+    """Counts -> rates for one arm. THE REPORTED DENOMINATOR IS THE ONE THE RATE USED.
+
+    Each denominator is bound to a local and then consumed twice -- once by `rate` and once by
+    the reported field. Spelling them separately let the label drift from the computation, and
+    a reported denominator that is not the one divided by is unfalsifiable: it publishes I10
+    while the arithmetic does something else. `x27`'s F4 fault injection found exactly that.
+    """
+    recall_denominator = adjudicated_headings
+    precision_denominator = counts["emitted_occurrences"]
+    return {
+        **counts,
+        "M1_recall": rate(counts["m1_recall_matched"], recall_denominator),
+        "M1_recall_denominator": recall_denominator,
+        "M1_recall_denominator_rule": "I10 -- the ADJUDICATED enumeration, never the emitted one",
+        "M1_precision": rate(counts["m1_precision_matched"], precision_denominator),
+        "M1_precision_denominator": precision_denominator,
+        "M1_precision_denominator_rule": "every emitted occurrence, INCLUDING one the A30 bridge refused",
+        "M2_exactness": rate(counts["m2_exact"], counts["m2_denominator"]),
+        "M4_parent_agreement": rate(counts["m4_agree"], counts["m4_denominator"]),
+        "M5_role_agreement": rate(counts["m5_agree"], counts["m5_denominator"]),
+    }
+
+
 def _finalize_estimand_bucket(bucket: dict) -> dict:
     """Turn accumulated counts into rates. Every denominator is content-bearing, or VACUOUS."""
     out = dict(bucket)
-    out["arms"] = {}
-    for arm in ARMS:
-        counts = bucket["arms"][arm]
-        out["arms"][arm] = {
-            **counts,
-            "M1_recall": rate(counts["m1_recall_matched"], bucket["adjudicated_headings"]),
-            "M1_recall_denominator": bucket["adjudicated_headings"],
-            "M1_recall_denominator_rule": "I10 -- the ADJUDICATED enumeration, never the emitted one",
-            "M1_precision": rate(counts["m1_precision_matched"], counts["emitted_occurrences"]),
-            "M1_precision_denominator": counts["emitted_occurrences"],
-            "M2_exactness": rate(counts["m2_exact"], counts["m2_denominator"]),
-            "M4_parent_agreement": rate(counts["m4_agree"], counts["m4_denominator"]),
-            "M5_role_agreement": rate(counts["m5_agree"], counts["m5_denominator"]),
-        }
+    out["arms"] = {arm: _arm_rates(bucket["arms"][arm], bucket["adjudicated_headings"]) for arm in ARMS}
     m3 = dict(bucket["m3"])
     m3["X_CORRECTS_minus_X_REGRESSES"] = (
         m3[M3B.HeadingOutcome.X_CORRECTS.value] - m3[M3B.HeadingOutcome.X_REGRESSES.value]
@@ -750,16 +761,9 @@ def _pool_estimand(documents: list[dict]) -> dict:
                 "m5_unreadable_excluded",
             )
         }
-        arms[arm] = {
-            **counts,
-            "M1_recall": rate(counts["m1_recall_matched"], adjudicated),
-            "M1_recall_denominator": adjudicated,
-            "M1_precision": rate(counts["m1_precision_matched"], counts["emitted_occurrences"]),
-            "M1_precision_denominator": counts["emitted_occurrences"],
-            "M2_exactness": rate(counts["m2_exact"], counts["m2_denominator"]),
-            "M4_parent_agreement": rate(counts["m4_agree"], counts["m4_denominator"]),
-            "M5_role_agreement": rate(counts["m5_agree"], counts["m5_denominator"]),
-        }
+        # The SAME rate builder as the per-document path, so pooled and per-document figures
+        # cannot be computed by two expressions that drift apart.
+        arms[arm] = _arm_rates(counts, adjudicated)
     m3 = {
         field_name: sum(d["m3"][field_name] for d in documents)
         for field_name in ("denominator", "no_reference_excluded", "neither_arm_emitted")

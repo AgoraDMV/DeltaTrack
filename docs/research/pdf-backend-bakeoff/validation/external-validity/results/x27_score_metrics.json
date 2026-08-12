@@ -52,8 +52,10 @@
       "m5_unreadable_excluded": 0,
       "M1_recall": 1.0,
       "M1_recall_denominator": 5,
+      "M1_recall_denominator_rule": "I10 -- the ADJUDICATED enumeration, never the emitted one",
       "M1_precision": 1.0,
       "M1_precision_denominator": 5,
+      "M1_precision_denominator_rule": "every emitted occurrence, INCLUDING one the A30 bridge refused",
       "M2_exactness": 1.0,
       "M4_parent_agreement": 1.0,
       "M5_role_agreement": 1.0
@@ -74,8 +76,10 @@
       "m5_unreadable_excluded": 0,
       "M1_recall": 1.0,
       "M1_recall_denominator": 5,
+      "M1_recall_denominator_rule": "I10 -- the ADJUDICATED enumeration, never the emitted one",
       "M1_precision": 1.0,
       "M1_precision_denominator": 5,
+      "M1_precision_denominator_rule": "every emitted occurrence, INCLUDING one the A30 bridge refused",
       "M2_exactness": 0.8,
       "M4_parent_agreement": 0.6,
       "M5_role_agreement": 1.0
@@ -116,8 +120,10 @@
       "m5_unreadable_excluded": 0,
       "M1_recall": 1.0,
       "M1_recall_denominator": 23,
+      "M1_recall_denominator_rule": "I10 -- the ADJUDICATED enumeration, never the emitted one",
       "M1_precision": 1.0,
       "M1_precision_denominator": 23,
+      "M1_precision_denominator_rule": "every emitted occurrence, INCLUDING one the A30 bridge refused",
       "M2_exactness": 1.0,
       "M4_parent_agreement": 1.0,
       "M5_role_agreement": 1.0
@@ -138,8 +144,10 @@
       "m5_unreadable_excluded": 0,
       "M1_recall": 1.0,
       "M1_recall_denominator": 23,
+      "M1_recall_denominator_rule": "I10 -- the ADJUDICATED enumeration, never the emitted one",
       "M1_precision": 1.0,
       "M1_precision_denominator": 23,
+      "M1_precision_denominator_rule": "every emitted occurrence, INCLUDING one the A30 bridge refused",
       "M2_exactness": 0.9565217391304348,
       "M4_parent_agreement": 0.782608695652174,
       "M5_role_agreement": 1.0
@@ -490,8 +498,10 @@
     "m5_unreadable_excluded": 0,
     "M1_recall": "VACUOUS",
     "M1_recall_denominator": 0,
+    "M1_recall_denominator_rule": "I10 -- the ADJUDICATED enumeration, never the emitted one",
     "M1_precision": 0.0,
     "M1_precision_denominator": 1,
+    "M1_precision_denominator_rule": "every emitted occurrence, INCLUDING one the A30 bridge refused",
     "M2_exactness": "VACUOUS",
     "M4_parent_agreement": "VACUOUS",
     "M5_role_agreement": "VACUOUS"
@@ -605,10 +615,40 @@
   },
   {
    "test": "M0-any is the UNION of the two components, never their sum",
-   "expected": true,
-   "observed": true,
+   "expected": [
+    7,
+    6,
+    9,
+    9
+   ],
+   "observed": [
+    7,
+    6,
+    9,
+    9
+   ],
    "pass": true,
    "fails_when": "M0-any was formed by addition, which double-counts a line that is both text- and segmentation-discordant and can push the reported rate above 1.0"
+  },
+  {
+   "test": "...and on this fixture the SUM is a different number, so the check can decide",
+   "expected": [
+    13,
+    false
+   ],
+   "observed": [
+    13,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the union and the sum agree on this fixture too, so the check above passed on a coincidence rather than on the rule"
+  },
+  {
+   "test": "M0-any on the REAL frame equals the union recomputed independently here",
+   "expected": 100,
+   "observed": 100,
+   "pass": true,
+   "fails_when": "the scorer's M0-any disagrees with the union of the committed per-line flags"
   },
   {
    "test": "BOTH separately named M0b quantities are emitted, and no bare 'M0b' exists",
@@ -743,11 +783,47 @@
    "fails_when": "M3 reports a regression that no committed text disagreement accounts for, i.e. the outcome came from somewhere other than the two arms' emitted text"
   },
   {
-   "test": "an UNMATCHABLE emitted occurrence stays in the PRECISION denominator",
-   "expected": true,
-   "observed": true,
+   "test": "I10 -- recall divides by the ADJUDICATED count even when the emitted count differs",
+   "expected": [
+    2,
+    1,
+    0.5
+   ],
+   "observed": [
+    2,
+    1,
+    0.5
+   ],
    "pass": true,
-   "fails_when": "an occurrence the A30 bridge refused was dropped, shrinking the denominator invisibly and making precision look better for the arm that failed hardest"
+   "fails_when": "recall is scored against the EMITTED set: with 2 printed headings and 1 emitted this would report 1.0, a perfect recall for an architecture that missed half of them"
+  },
+  {
+   "test": "an UNMATCHABLE emitted occurrence stays in the PRECISION denominator",
+   "expected": [
+    2,
+    1,
+    0.5
+   ],
+   "observed": [
+    2,
+    1,
+    0.5
+   ],
+   "pass": true,
+   "fails_when": "an occurrence the A30 bridge refused was dropped, shrinking the denominator invisibly and reporting 1.0 for an arm that emitted a heading it could not place"
+  },
+  {
+   "test": "the REPORTED denominator is the one the rate actually divided by",
+   "expected": [
+    2,
+    2
+   ],
+   "observed": [
+    2,
+    2
+   ],
+   "pass": true,
+   "fails_when": "the published denominator is a separate expression from the one used in the division, so the label can state I10 while the arithmetic does something else"
   },
   {
    "test": "M7 declares itself a self-signature and NOT a correctness measure",

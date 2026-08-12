@@ -217,11 +217,19 @@ def make_stimulus(
     page: int = 1,
     region: int = 0,
     ngid: int = 10,
+    extra_unmatchable_emitted: int = 0,
+    extra_unresolvable_adjudications: int = 0,
 ):
     """One synthetic stimulus with a chosen oracle text and chosen H / X emissions.
 
     `include_line_state=False` proves M3's INSULATION structurally: the record carries no
     segmentation label at all, so a scorer that consulted one could not run.
+
+    `extra_unmatchable_emitted` and `extra_unresolvable_adjudications` exist because the
+    DEVELOPMENT window is degenerate for two denominators: every occurrence there is MATCHABLE
+    and the adjudicated and emitted counts happen to be equal, so a scorer that dropped
+    refusals from a denominator would score identically. The fault matrix found both. These
+    make the two denominators DIFFER, so the checks below can distinguish them.
     """
     line_key = [page, region * BF.REGION_SIZE]
     candidates = {f"{line_key[0]}:{line_key[1]}": [[ngid, 100.0], [ngid + 1, 180.0]]}
@@ -246,7 +254,16 @@ def make_stimulus(
             "breadcrumb": ["TITLE I", "MAJOR", emitted_parent, text] if emitted_parent else [text],
         }
 
-    bid = hashlib.sha256(f"{document}|{page}|{region}|{oracle_text}|{h_text}|{x_text}".encode()).hexdigest()[:16]
+    def unmatchable_occurrence(text):
+        """A production occurrence the A30 bridge REFUSED. It has no key and can never match."""
+        row = occurrence(text)
+        row.update({"occurrence_key": None, "match_status": "UNMATCHED", "unmatched_reason": "SYNTHETIC_REFUSAL"})
+        return row
+
+    bid = hashlib.sha256(
+        f"{document}|{page}|{region}|{oracle_text}|{h_text}|{x_text}|"
+        f"{extra_unmatchable_emitted}|{extra_unresolvable_adjudications}".encode()
+    ).hexdigest()[:16]
     record = {
         "document": document,
         "document_sha256": SYNTH_SHA,
@@ -263,7 +280,11 @@ def make_stimulus(
         "bbox_pdf_points": SYNTH_BBOX,
         "region_line_bijection": [line_key],
         "identity_candidates": candidates,
-        "architecture_occurrences": {"H": [occurrence(h_text)], "X": [occurrence(x_text)]},
+        "architecture_occurrences": {
+            arm: [occurrence(text)]
+            + [unmatchable_occurrence(f"{text} REFUSED {i}") for i in range(extra_unmatchable_emitted)]
+            for arm, text in (("H", h_text), ("X", x_text))
+        },
     }
     if include_line_state:
         # Present but deliberately DISCORDANT: M3 must ignore it entirely.
@@ -276,10 +297,16 @@ def make_stimulus(
         "start_physical_line": 1,
         "start_x_px": OG.pdf_x_to_pixel(100.0, SYNTH_BBOX[0], SYNTH_DPI),
     }
+    # An adjudicated heading the A38.7 resolver REFUSES: its reported physical line does not
+    # exist in the region. It stays in the recall denominator and can never match (I10).
+    unresolvable = [
+        {**heading, "text": f"{oracle_text} UNRESOLVABLE {i}", "start_physical_line": 99 + i}
+        for i in range(extra_unresolvable_adjudications)
+    ]
     key = {"schema": "oracle_key/3", "n_stimuli": 1, "stimuli": {bid: record}}
     adjudicated = {ns: {} for ns in BO.ADJUDICATION_NAMESPACES}
     for route in record["adjudication_routes"]:
-        adjudicated[route][bid] = {"id": bid, "headings": [dict(heading)]}
+        adjudicated[route][bid] = {"id": bid, "headings": [dict(heading)] + [dict(u) for u in unresolvable]}
     return key, adjudicated
 
 
@@ -287,6 +314,89 @@ def m3_outcome_through_scorer(oracle_text: str, h_text: str, x_text: str, **kwar
     """Run one synthetic stimulus through the LIVE `score_estimand` and return its M3 row."""
     key, adjudicated = make_stimulus(oracle_text, h_text, x_text, **kwargs)
     return SM.score_estimand(key, adjudicated, SM.ESTIMAND_D)["pooled"]["m3"]
+
+
+def make_m0_frame(spec: list[tuple[bool, bool, bool]]) -> dict:
+    """A synthetic frame with chosen per-line discordance. `spec` is (text_d, seg_d, both_absent).
+
+    WHY THIS EXISTS. On the DEVELOPMENT window M0b is ZERO, so the two components do not
+    overlap and `union` and `sum` are the SAME NUMBER -- a scorer that added them would score
+    identically and the union check would pass on a coincidence. The fault matrix's F1 proved
+    exactly that. This builds material where a line is BOTH text- and segmentation-discordant,
+    so the two readings differ and the check can actually decide between them.
+
+    Every committed field is built CONSISTENTLY with its flags, because `validate_frame`
+    independently recomputes each one and would refuse otherwise.
+    """
+    lines, per_region = [], {}
+    for ordinal, (text_d, seg_d, both_absent) in enumerate(spec):
+        region_ordinal = ordinal // BF.REGION_SIZE
+        state = "BOTH_ABSENT" if both_absent else ("TEXT_DIFFERS" if text_d else "SAME")
+        lines.append(
+            {
+                "key": [1, ordinal],
+                "baseline": 700.0 - ordinal,
+                "bbox": [72.0, 700.0 - ordinal, 300.0, 710.0 - ordinal],
+                "gids": [ordinal],
+                "identity_candidates": [{"ngid": ordinal, "x0": 72.0}],
+                "region_ordinal": region_ordinal,
+                "in_m0_risk_set": not both_absent,
+                "line_state": {
+                    "state": state,
+                    "h_text": "" if both_absent else "A",
+                    "x_text": "" if both_absent else ("B" if text_d else "A"),
+                    "h_signature": [] if both_absent else [1],
+                    "x_signature": [] if both_absent else ([2] if seg_d else [1]),
+                    "text_discordance": bool(text_d),
+                    "segmentation_discordance": bool(seg_d),
+                    "common_gids": [ordinal],
+                    "diagnostics": {"SEGMENTATION_DEFINED": True},
+                },
+            }
+        )
+        bucket = per_region.setdefault(region_ordinal, {"keys": [], "text": False, "seg": False})
+        bucket["keys"].append([1, ordinal])
+        bucket["text"] = bucket["text"] or bool(text_d)
+        bucket["seg"] = bucket["seg"] or bool(seg_d)
+
+    regions = []
+    for region_ordinal, bucket in sorted(per_region.items()):
+        reasons = [
+            r for r, on in (("TEXT_DISCORDANCE", bucket["text"]), ("SEGMENTATION_DISCORDANCE", bucket["seg"])) if on
+        ]
+        regions.append(
+            {
+                "page_number": 1,
+                "region_ordinal": region_ordinal,
+                "neutral_line_keys": bucket["keys"],
+                "short_trailing": len(bucket["keys"]) < BF.REGION_SIZE,
+                "line_count": len(bucket["keys"]),
+                "d_frame": bool(reasons),
+                "d_reasons": reasons,
+                "discordant_lines": {"TEXT_DISCORDANCE": [], "SEGMENTATION_DISCORDANCE": []},
+                "anchor_evidence": {"differ": False, "H": [], "X": []},
+                "c_frame": False,
+            }
+        )
+    empty_m9 = {
+        "derive_size_bands_returns_a_band": True,
+        "coverage": 1.0,
+        "coverage_floor": 0.85,
+        "coverage_meets_floor": True,
+        "n_lines_total": len(lines),
+        "n_margin_numbered_lines": len(lines),
+        "n_margin_numbered_with_glyph_size": len(lines),
+    }
+    return {
+        "document": "SYNTH-M0/1",
+        "document_sha256": SYNTH_SHA,
+        "population": BF.P_HEAD,
+        "region_size": BF.REGION_SIZE,
+        "pages": [{"page_number": 1, "neutral_lines": lines, "regions": regions}],
+        "counts": {"neutral_lines": len(lines)},
+        "m9": {"H": dict(empty_m9), "X": dict(empty_m9)},
+        "architecture_occurrences": {"H": [], "X": []},
+    }
 
 
 # ------------------------------------------------------------------------- the M0 block
@@ -304,14 +414,50 @@ def part_m0(frame: dict, s1: dict) -> dict:
         "BOTH_ABSENT lines are absent from this material (so the control is vacuous), or the "
         "risk set and the both-absent count do not partition the committed lines",
     )
+    # THE UNION, ON MATERIAL WHERE UNION AND SUM DIFFER. This window's M0b is zero, so the two
+    # readings coincide there and a scorer that added the components would score identically.
+    # The synthetic frame below carries lines that are BOTH text- and segmentation-discordant,
+    # which is the only shape that can tell the two apart.
+    overlap_frame = make_m0_frame(
+        [(True, False, False)] * 3 + [(False, True, False)] * 2 + [(True, True, False)] * 4 + [(False, False, True)] * 2
+    )
+    overlap = SM.m0_document(overlap_frame)
     check(
         "M0-any is the UNION of the two components, never their sum",
-        True,
-        doc["M0_any_discordant_lines"] <= doc["M0a_text_discordant_lines"] + doc["M0b_segmentation_discordant_lines"]
-        and doc["M0_any_discordant_lines"]
-        >= max(doc["M0a_text_discordant_lines"], doc["M0b_segmentation_discordant_lines"]),
+        (7, 6, 9, 9),
+        (
+            overlap["M0a_text_discordant_lines"],
+            overlap["M0b_segmentation_discordant_lines"],
+            overlap["M0_any_discordant_lines"],
+            overlap["risk_set"],
+        ),
         "M0-any was formed by addition, which double-counts a line that is both text- and "
         "segmentation-discordant and can push the reported rate above 1.0",
+    )
+    check(
+        "...and on this fixture the SUM is a different number, so the check can decide",
+        (13, False),
+        (
+            overlap["M0a_text_discordant_lines"] + overlap["M0b_segmentation_discordant_lines"],
+            overlap["M0a_text_discordant_lines"] + overlap["M0b_segmentation_discordant_lines"]
+            == overlap["M0_any_discordant_lines"],
+        ),
+        "the union and the sum agree on this fixture too, so the check above passed on a "
+        "coincidence rather than on the rule",
+    )
+    check(
+        "M0-any on the REAL frame equals the union recomputed independently here",
+        len(
+            [
+                ln
+                for page in frame["pages"]
+                for ln in page["neutral_lines"]
+                if ln["in_m0_risk_set"]
+                and (ln["line_state"]["text_discordance"] or ln["line_state"]["segmentation_discordance"])
+            ]
+        ),
+        doc["M0_any_discordant_lines"],
+        "the scorer's M0-any disagrees with the union of the committed per-line flags",
     )
     check(
         "BOTH separately named M0b quantities are emitted, and no bare 'M0b' exists",
@@ -452,12 +598,45 @@ def part_join(key: dict, adjudicated: dict) -> dict:
         "M3 reports a regression that no committed text disagreement accounts for, i.e. the "
         "outcome came from somewhere other than the two arms' emitted text",
     )
+    # THE TWO DENOMINATORS, ON MATERIAL WHERE THEY DIFFER. In this window every occurrence is
+    # MATCHABLE and the adjudicated and emitted counts are both 23, so I10 and its violation
+    # produce the same number and a dropped refusal subtracts zero. The fault matrix's F4 and
+    # F16 proved both blind spots. These two fixtures separate them.
+    recall_key, recall_adj = make_stimulus("A HEADING", "A HEADING", "A HEADING", extra_unresolvable_adjudications=1)
+    recall = SM.score_estimand(recall_key, recall_adj, SM.ESTIMAND_D)["pooled"]
+    check(
+        "I10 -- recall divides by the ADJUDICATED count even when the emitted count differs",
+        (2, 1, 0.5),
+        (
+            recall["adjudicated_headings"],
+            recall["arms"]["H"]["emitted_occurrences"],
+            recall["arms"]["H"]["M1_recall"],
+        ),
+        "recall is scored against the EMITTED set: with 2 printed headings and 1 emitted this "
+        "would report 1.0, a perfect recall for an architecture that missed half of them",
+    )
+    precision_key, precision_adj = make_stimulus("A HEADING", "A HEADING", "A HEADING", extra_unmatchable_emitted=1)
+    precision = SM.score_estimand(precision_key, precision_adj, SM.ESTIMAND_D)["pooled"]
     check(
         "an UNMATCHABLE emitted occurrence stays in the PRECISION denominator",
-        True,
-        pooled["arms"]["H"]["M1_precision_denominator"] == pooled["arms"]["H"]["emitted_occurrences"],
-        "an occurrence the A30 bridge refused was dropped, shrinking the denominator "
-        "invisibly and making precision look better for the arm that failed hardest",
+        (2, 1, 0.5),
+        (
+            precision["arms"]["H"]["emitted_occurrences"],
+            precision["arms"]["H"]["emitted_unmatchable"],
+            precision["arms"]["H"]["M1_precision"],
+        ),
+        "an occurrence the A30 bridge refused was dropped, shrinking the denominator invisibly "
+        "and reporting 1.0 for an arm that emitted a heading it could not place",
+    )
+    check(
+        "the REPORTED denominator is the one the rate actually divided by",
+        (recall["adjudicated_headings"], precision["arms"]["H"]["emitted_occurrences"]),
+        (
+            recall["arms"]["H"]["M1_recall_denominator"],
+            precision["arms"]["H"]["M1_precision_denominator"],
+        ),
+        "the published denominator is a separate expression from the one used in the division, "
+        "so the label can state I10 while the arithmetic does something else",
     )
     return {
         "C": {"n_stimuli": c["n_stimuli"], "pooled": c["pooled"]},
