@@ -1,0 +1,68 @@
+{
+  "pairs": [
+    {
+      "bill": "115-hr-5895",
+      "pair": "3_placed-on-calendar-senate->4_engrossed-amendment-senate",
+      "candidates": 51,
+      "ties": 6,
+      "legacy_links": 44,
+      "ordinal_links": 44,
+      "symmetric_difference": 0
+    },
+    {
+      "bill": "118-hr-2882",
+      "pair": "1_introduced-in-house->4_engrossed-amendment-senate",
+      "candidates": 1,
+      "ties": 0,
+      "legacy_links": 1,
+      "ordinal_links": 1,
+      "symmetric_difference": 0
+    },
+    {
+      "bill": "118-hr-2882",
+      "pair": "4_engrossed-amendment-senate->5_engrossed-amendment-house",
+      "candidates": 3,
+      "ties": 0,
+      "legacy_links": 3,
+      "ordinal_links": 3,
+      "symmetric_difference": 0
+    },
+    {
+      "bill": "118-hr-4366",
+      "pair": "3_placed-on-calendar-senate->4_engrossed-amendment-senate",
+      "candidates": 45,
+      "ties": 10,
+      "legacy_links": 34,
+      "ordinal_links": 34,
+      "symmetric_difference": 0
+    },
+    {
+      "bill": "118-hr-4366",
+      "pair": "4_engrossed-amendment-senate->5_engrossed-amendment-house",
+      "candidates": 93,
+      "ties": 7,
+      "legacy_links": 62,
+      "ordinal_links": 62,
+      "symmetric_difference": 0
+    },
+    {
+      "bill": "118-hr-8752",
+      "pair": "1_reported-in-house->2_engrossed-in-house",
+      "candidates": 1,
+      "ties": 0,
+      "legacy_links": 1,
+      "ordinal_links": 1,
+      "symmetric_difference": 0
+    }
+  ],
+  "totals": {
+    "legacy": 145,
+    "ordinal": 145,
+    "symmetric_difference": 0,
+    "ties": 23
+  },
+  "monotonic": {
+    "ok": 23,
+    "checked": 23
+  }
+}
