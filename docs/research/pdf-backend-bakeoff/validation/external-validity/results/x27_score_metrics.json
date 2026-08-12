@@ -1515,6 +1515,13 @@
    "fails_when": "validation is reachable only by calling it directly, so the result-bearing path can score a frame the validator would have refused"
   },
   {
+   "test": "N15 anchors and `d_reasons` moved consistently, `differ` alone stale, is REFUSED",
+   "expected": "FRAME_ANCHOR_EVIDENCE_INCONSISTENT",
+   "observed": "FRAME_ANCHOR_EVIDENCE_INCONSISTENT",
+   "pass": true,
+   "fails_when": "`differ` is never checked against the anchors themselves, only against `d_reasons` -- so the one field the section 8 event and M0c actually read can go stale unnoticed"
+  },
+  {
    "test": "N14 a region with NO d_reasons exists, so the invariant can be isolated",
    "expected": true,
    "observed": true,

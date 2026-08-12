@@ -790,7 +790,7 @@ def part_cross_engine_i13(scored_failing: dict, scored_passing: dict) -> dict:
             sorted(
                 f"{path}::{row['document']}"
                 for path, row in rows
-                if row["cross_engine_qualification"] != SM.PDFIUM_CONDITIONED_FRAME
+                if row.get("cross_engine_qualification") != SM.PDFIUM_CONDITIONED_FRAME
             ),
         ),
         "a result computed on a PDFium-conditioned frame is published without the "
@@ -802,7 +802,9 @@ def part_cross_engine_i13(scored_failing: dict, scored_passing: dict) -> dict:
         (
             unlabelled_result_rows(scored_passing),
             all(
-                row["cross_engine_qualification"] is None and row["pdfium_conditioned_frame"] is False
+                "cross_engine_qualification" in row
+                and row["cross_engine_qualification"] is None
+                and row.get("pdfium_conditioned_frame") is False
                 for _path, row in document_result_rows(scored_passing)
             ),
         ),
@@ -1631,6 +1633,29 @@ def part_negative(key: dict, adjudicated: dict, frame: dict, manifest: dict) -> 
         refusal(lambda: SM.score(frames=[stale], adjudicated=adjudicated, key=key)),
         "validation is reachable only by calling it directly, so the result-bearing path can "
         "score a frame the validator would have refused",
+    )
+
+    # N15 -- ISOLATE the `differ` clause. N13 above is caught by the recomputation disagreeing
+    # with `d_reasons`, so it does not on its own prove the check against `differ` is live: a
+    # scorer comparing only recomputed-vs-d_reasons would still pass it. Here H/X and
+    # `d_reasons` are moved together and CONSISTENTLY, leaving `differ` as the sole stale
+    # field -- and `differ` is exactly what the section 8 event and M0c read.
+    differ_only = copy.deepcopy(frame)
+    _p4, victim4 = region_with_anchors(differ_only)
+    ev = victim4["anchor_evidence"]
+    if ev["differ"]:
+        ev["X"] = list(ev["H"])
+        victim4["d_reasons"] = [r for r in victim4["d_reasons"] if r != "ANCHOR_DISCORDANCE"]
+    else:
+        ev["X"] = [*ev["X"], [99, 99, "account", "PLANTED", None]]
+        victim4["d_reasons"] = [*victim4["d_reasons"], "ANCHOR_DISCORDANCE"]
+    victim4["d_frame"] = bool(victim4["d_reasons"])
+    check(
+        "N15 anchors and `d_reasons` moved consistently, `differ` alone stale, is REFUSED",
+        SM.FRAME_ANCHOR_EVIDENCE_INCONSISTENT,
+        refusal(lambda: SM.validate_frame(differ_only)),
+        "`differ` is never checked against the anchors themselves, only against `d_reasons` -- "
+        "so the one field the section 8 event and M0c actually read can go stale unnoticed",
     )
 
     # N14 -- D membership must be exactly "some predicate fired". The victim is a region with
