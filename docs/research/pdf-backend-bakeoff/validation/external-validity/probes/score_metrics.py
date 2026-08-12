@@ -70,6 +70,7 @@ FRAME_MISSING_FIELD = "FRAME_MISSING_FIELD"
 FRAME_STATE_INCONSISTENT = "FRAME_STATE_INCONSISTENT"
 FRAME_RISK_SET_INCONSISTENT = "FRAME_RISK_SET_INCONSISTENT"
 FRAME_ANCHOR_EVIDENCE_INCONSISTENT = "FRAME_ANCHOR_EVIDENCE_INCONSISTENT"
+FRAME_D_MEMBERSHIP_INCONSISTENT = "FRAME_D_MEMBERSHIP_INCONSISTENT"
 DISCORDANT_LINE_OUTSIDE_D_FRAME = "DISCORDANT_LINE_OUTSIDE_D_FRAME"
 DUPLICATE_DOCUMENT_FRAME = "DUPLICATE_DOCUMENT_FRAME"
 STIMULUS_MISSING_OCCURRENCES = "STIMULUS_MISSING_OCCURRENCES"
@@ -228,16 +229,48 @@ def validate_frame(frame: dict) -> dict:
                     )
 
         for region in page["regions"]:
-            differs = region["anchor_evidence"]["differ"]
+            evidence = region["anchor_evidence"]
             declared = "ANCHOR_DISCORDANCE" in region["d_reasons"]
-            if differs != declared:
+
+            # THE SECTION 8 EVENT RESTS ON THIS PREDICATE, so it is recomputed from the
+            # SERIALIZED ANCHOR VALUES rather than read off a flag. A41's approved event is
+            # "the document has >= 1 region whose emitted H/X anchor sets differ", derived from
+            # `differ`; checking `differ` only against `d_reasons` compares two fields that a
+            # single edit sets together, so a frame whose flag and reason were both flipped
+            # would pass while contradicting the anchors it claims to summarise -- and the
+            # reported Clopper-Pearson bound would move with it.
+            #
+            # The recomputation is `neutral_identity.anchor_discordance`'s own rule (set
+            # inequality over whole emitted Anchor values, per section 5.8), applied to the
+            # committed `H` / `X` lists. Lists of lists arrive from JSON, so both sides are
+            # normalised through `_hashable` before the comparison.
+            recomputed = {_hashable(a) for a in evidence.get("H", [])} != {_hashable(a) for a in evidence.get("X", [])}
+            if recomputed != evidence["differ"] or recomputed != declared:
                 raise ScoreInputError(
                     FRAME_ANCHOR_EVIDENCE_INCONSISTENT,
                     {
                         "document": frame["document"],
                         "page": page["page_number"],
                         "region": region["region_ordinal"],
-                        "differ": differs,
+                        "committed_differ": evidence["differ"],
+                        "recomputed_from_H_and_X": recomputed,
+                        "d_reasons": region["d_reasons"],
+                        "n_H": len(evidence.get("H", [])),
+                        "n_X": len(evidence.get("X", [])),
+                    },
+                )
+
+            # D membership must be exactly "some predicate fired". A region carrying reasons
+            # but not flagged would be a D-frame member missing from the census; one flagged
+            # with no reason would be a member no predicate put there.
+            if region["d_frame"] != bool(region["d_reasons"]):
+                raise ScoreInputError(
+                    FRAME_D_MEMBERSHIP_INCONSISTENT,
+                    {
+                        "document": frame["document"],
+                        "page": page["page_number"],
+                        "region": region["region_ordinal"],
+                        "d_frame": region["d_frame"],
                         "d_reasons": region["d_reasons"],
                     },
                 )
@@ -1121,6 +1154,80 @@ def cross_engine_block(cross_engine: dict | None) -> dict:
     }
 
 
+#: The per-document RESULT SURFACES I13 qualifies. RQ1's comparative resolution (M0, M9 and the
+#: D estimand feeding M3) and RQ2's absolute claims (M7 and the C estimand feeding M1/M4) are all
+#: "results computed on" a document, so all of them carry the label.
+#:
+#: Named as a path list rather than discovered, because a silent miss is the failure mode: a
+#: surface added later and not labelled would publish an unqualified result off a
+#: PDFium-conditioned frame. `x27` walks the FINISHED payload independently and requires every
+#: per-document row it finds to be labelled, so omitting a path here turns that control red.
+CROSS_ENGINE_LABELLED_PATHS = (
+    ("m0", "per_document"),
+    ("m7", "per_document"),
+    ("m9", "per_document"),
+    ("estimands", ESTIMAND_C, "per_document"),
+    ("estimands", ESTIMAND_D, "per_document"),
+    # RQ1's inferential surface: the per-document event vector feeding the bound, and every
+    # paired difference. A qualified document qualifies the rows it contributes to these too.
+    ("section8", "per_document"),
+    ("section8_paired", "*", "per_document"),
+)
+
+#: The two headline claims I13 qualifies together once more than a third of sampled documents fail.
+HEADLINE_KEYS = ("RQ1", "RQ2")
+
+
+def _dig_all(node, path: tuple) -> list:
+    """Every node reachable by `path`. `"*"` expands across a list, so one declared path can
+    name the same surface inside every element of a list of blocks."""
+    if not path:
+        return [node]
+    step, rest = path[0], path[1:]
+    if step == "*":
+        return [found for item in node for found in _dig_all(item, rest)] if isinstance(node, list) else []
+    if not isinstance(node, dict) or step not in node:
+        return []
+    return _dig_all(node[step], rest)
+
+
+def apply_cross_engine_labels(payload: dict) -> dict:
+    """I13 -- ATTACH `PDFIUM-CONDITIONED FRAME` to every applicable result. Never blocks.
+
+    A detached `document_labels` map is NOT I13. The frozen consequence is that a document
+    below 0.95 (or with any sampled page below 0.75) labels **every RQ1 and RQ2 result computed
+    on it**, and a map beside the results leaves the labelling to whoever renders them -- which
+    is to say, to nobody. The label therefore travels ON each per-document row.
+
+    Every labelled row carries BOTH fields unconditionally: an unlabelled row and a row labelled
+    `None` are different statements, and only the second says "this document was checked and
+    passed". A missing field would be indistinguishable from a surface nobody remembered to
+    qualify.
+
+    NON-BLOCKING, STRUCTURALLY. This function only adds reporting fields. It writes nothing that
+    any decision reads, and `decision_blocking` stays False -- A27.6 keeps cross-engine out of
+    the Rule 3 gate vector entirely, so a failure here may qualify a sentence and never a choice.
+    """
+    block = payload.get("cross_engine") or {}
+    labels = block.get("document_labels") or {}
+    headline = block.get("headline_qualification")
+
+    for path in CROSS_ENGINE_LABELLED_PATHS:
+        for rows in _dig_all(payload, path):
+            if not isinstance(rows, list):
+                continue
+            for row in rows:
+                if not isinstance(row, dict) or "document" not in row:
+                    continue
+                qualification = labels.get(row["document"])
+                row["cross_engine_qualification"] = qualification
+                row["pdfium_conditioned_frame"] = qualification == PDFIUM_CONDITIONED_FRAME
+
+    payload["headline_qualifications"] = {key: headline for key in HEADLINE_KEYS}
+    payload["cross_engine_qualification_is_decision_blocking"] = False
+    return payload
+
+
 def control_block(key: dict, adjudicated: dict, control_fixtures: dict | None) -> dict:
     """The N-A / N-B / N-C controls, reported as FACTS. No gate is applied here.
 
@@ -1182,8 +1289,13 @@ def score(
     Rule 1 and Rule 3 all belong to `decide_architecture`, and every block above says so in
     its own output rather than leaving it to be remembered.
 
-    M6 IS ABSENT. Not disabled, not zero, not empty -- absent, per A20 and section 5's
-    "M0-M9 minus M6".
+    M6 IS ABSENT. Not disabled, not zero, not empty, and NOT a key holding a null or a status
+    string -- absent, per A20 and section 5's "M0-M9 minus M6". An `m6: None` key with an
+    `m6_status` beside it was the previous spelling and it was wrong: a struck metric that still
+    occupies a slot in the result-bearing payload is a metric a consumer can read, iterate over,
+    or render as "M6: not measured", which is a claim about M6. The explanation belongs to A41
+    and to this module's prose, never to `metrics.json`. `x27` asserts the absence end to end
+    against this payload rather than against the module's symbol table.
     """
     BO = _build_oracle()
     validate_frames(frames)
@@ -1196,12 +1308,9 @@ def score(
     m9 = m9_block(frames)
     events = document_events(frames)
 
-    return {
+    payload = {
         "schema": "metrics/1",
         "implements": "section 6 (M0-M9 MINUS M6) and the section 8 contract (A27.5)",
-        "m6": None,
-        "m6_status": "STRUCK by A20 -- deferred to a separate validation study; no M6 output "
-        "and no M6 acceptance condition exists",
         "n_documents": len(frames),
         "documents": [frame["document"] for frame in frames],
         "m0": m0_block(frames, s1),
@@ -1238,6 +1347,8 @@ def score(
         "decision_taken_here": False,
         "decision_owner": "decide_architecture",
     }
+    # I13 -- APPLIED, not merely reported. See `apply_cross_engine_labels`.
+    return apply_cross_engine_labels(payload)
 
 
 def write_metrics(payload: dict, out_path: Path | None = None) -> Path:

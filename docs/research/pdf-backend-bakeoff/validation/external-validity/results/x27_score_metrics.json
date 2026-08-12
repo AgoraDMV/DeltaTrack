@@ -231,8 +231,7 @@
     }
    ],
    "n_documents_with_margin_line_loss": 1
-  },
-  "m6_present": false
+  }
  },
  "section8": {
   "zero_event_14": {
@@ -563,7 +562,32 @@
   }
  },
  "negative_attacks": {
-  "n_control_stimuli": 20
+  "n_control_stimuli": 20,
+  "section8_event_predicate": {
+   "event": "document has >= 1 region whose emitted H/X anchor sets differ (A41, approved)",
+   "recomputed_from": "the serialized anchor_evidence H and X values",
+   "attacks": [
+    "N12 flag+reason flipped together",
+    "N13 anchors mutated, flag stale",
+    "N14 d_frame orphaned"
+   ]
+  }
+ },
+ "cross_engine_i13": {
+  "labelled_surfaces": [
+   "estimands.C.per_document",
+   "estimands.D.per_document",
+   "m0.per_document",
+   "m7.per_document",
+   "m9.per_document",
+   "section8.per_document",
+   "section8_paired[0].per_document",
+   "section8_paired[1].per_document"
+  ],
+  "n_result_rows": 8,
+  "headline_1_of_4": null,
+  "headline_2_of_4": "PDFIUM-CONDITIONED FRAME",
+  "decision_blocking": false
  },
  "execution_boundary": {
   "execution_boundary_state": "ABSENT",
@@ -573,15 +597,15 @@
   "adequacy",
   "controls",
   "cross_engine",
+  "cross_engine_qualification_is_decision_blocking",
   "decision_owner",
   "decision_taken_here",
   "documents",
   "estimands",
   "estimands_pooled_together",
+  "headline_qualifications",
   "implements",
   "m0",
-  "m6",
-  "m6_status",
   "m7",
   "m9",
   "n_documents",
@@ -876,13 +900,6 @@
    },
    "pass": true,
    "fails_when": "the scorer computed a different margin-line comparison from the frozen one -- a coverage numerator or a geometric approximation instead of the ruled count"
-  },
-  {
-   "test": "M6 IS ABSENT from every scorer surface",
-   "expected": [],
-   "observed": [],
-   "pass": true,
-   "fails_when": "an M6 computation exists, which A20 struck and section 5 excludes ('M0-M9 minus M6')"
   },
   {
    "test": "the section 8 event is derived PER DOCUMENT, one record each",
@@ -1470,6 +1487,55 @@
    "fails_when": "the control population is not the frozen 8/8/4 set, so the Rule 3 blockers are not the ones the study froze"
   },
   {
+   "test": "N11 the material carries a region with committed anchors, so N12/N13 are not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no region carries an anchor value here, so the two attacks below would mutate nothing"
+  },
+  {
+   "test": "N12 flipping `differ` AND `d_reasons` together, with H/X unchanged, is REFUSED",
+   "expected": "FRAME_ANCHOR_EVIDENCE_INCONSISTENT",
+   "observed": "FRAME_ANCHOR_EVIDENCE_INCONSISTENT",
+   "pass": true,
+   "fails_when": "the two committed fields are only checked against each other, so one edit setting both passes -- and the section 8 event, and the bound derived from it, move with it"
+  },
+  {
+   "test": "N13 mutating H/X while `differ` stays stale is REFUSED",
+   "expected": "FRAME_ANCHOR_EVIDENCE_INCONSISTENT",
+   "observed": "FRAME_ANCHOR_EVIDENCE_INCONSISTENT",
+   "pass": true,
+   "fails_when": "the committed flag is trusted over the anchor values it claims to summarise, so a drifted or hand-edited frame is scored as though the flag were still true"
+  },
+  {
+   "test": "N13 ...and the same stale frame is refused through the REAL `score` entrypoint",
+   "expected": "FRAME_ANCHOR_EVIDENCE_INCONSISTENT",
+   "observed": "FRAME_ANCHOR_EVIDENCE_INCONSISTENT",
+   "pass": true,
+   "fails_when": "validation is reachable only by calling it directly, so the result-bearing path can score a frame the validator would have refused"
+  },
+  {
+   "test": "N14 a region with NO d_reasons exists, so the invariant can be isolated",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "every region here already carries a reason, so promoting one would collide with I9 and the control below would pass on the wrong refusal"
+  },
+  {
+   "test": "N14 `d_frame` disagreeing with `bool(d_reasons)` is REFUSED",
+   "expected": "FRAME_D_MEMBERSHIP_INCONSISTENT",
+   "observed": "FRAME_D_MEMBERSHIP_INCONSISTENT",
+   "pass": true,
+   "fails_when": "a region is a D-frame member with no predicate that put it there, or carries a predicate while absent from the census -- either way the D census stops describing the discordances being reported"
+  },
+  {
+   "test": "N14 ...and the UNMUTATED frame still validates, so these gates refuse only faults",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "fails_when": "validation refuses clean input, making every control above meaningless"
+  },
+  {
    "test": "the execution boundary is still ABSENT",
    "expected": "ABSENT",
    "observed": "ABSENT",
@@ -1491,19 +1557,158 @@
    "fails_when": "the scorer can write its canonical artifact while the boundary is ABSENT, so the one-way gate does not cover the component that produces the study's numbers"
   },
   {
+   "test": "the payload really carries per-document RESULT rows, so the scan is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no per-document result surface was discovered, so 'every row is labelled' passed on an empty set"
+  },
+  {
+   "test": "EVERY per-document result row on a FAILING document carries PDFIUM-CONDITIONED FRAME",
+   "expected": [
+    [],
+    []
+   ],
+   "observed": [
+    [],
+    []
+   ],
+   "pass": true,
+   "fails_when": "a result computed on a PDFium-conditioned frame is published without the qualification I13 attaches to it -- a detached label map is not I13"
+  },
+  {
+   "test": "a PASSING document labels every row None, which is a different statement from absent",
+   "expected": [
+    [],
+    true
+   ],
+   "observed": [
+    [],
+    true
+   ],
+   "pass": true,
+   "fails_when": "a passing document leaves rows unlabelled, so 'checked and passed' is indistinguishable from 'nobody qualified this surface'"
+  },
+  {
+   "test": "NEGATIVE -- omitting ONE result surface from the label list is DETECTED",
+   "expected": [
+    "m9.per_document::118-hr-8752/1"
+   ],
+   "observed": [
+    "m9.per_document::118-hr-8752/1"
+   ],
+   "pass": true,
+   "fails_when": "dropping a surface from the scorer's label list goes unnoticed, so the labelling check only ever covered the surfaces that happened to be listed"
+  },
+  {
+   "test": "...and restoring the list re-labels it, so the control is not stuck red",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the label list did not restore, so every later check runs against a mutated scorer"
+  },
+  {
+   "test": "exactly 1/4 failing does NOT qualify the headlines; 2/4 DOES, and it qualifies BOTH",
+   "expected": [
+    null,
+    "PDFIUM-CONDITIONED FRAME"
+   ],
+   "observed": [
+    null,
+    "PDFIUM-CONDITIONED FRAME"
+   ],
+   "pass": true,
+   "fails_when": "the headline rule is not '> 1/3 of sampled documents', so a frame-wide conditioning either goes unreported or is reported when it should not be"
+  },
+  {
+   "test": "...and BOTH headlines carry it, never only one",
+   "expected": {
+    "RQ1": "PDFIUM-CONDITIONED FRAME",
+    "RQ2": "PDFIUM-CONDITIONED FRAME"
+   },
+   "observed": {
+    "RQ1": "PDFIUM-CONDITIONED FRAME",
+    "RQ2": "PDFIUM-CONDITIONED FRAME"
+   },
+   "pass": true,
+   "fails_when": "only one headline is qualified, so the other publishes a frame-wide PDFium conditioning as though it were unconditioned"
+  },
+  {
+   "test": "the qualification is NEVER decision-blocking",
+   "expected": [
+    false,
+    false,
+    false
+   ],
+   "observed": [
+    false,
+    false,
+    false
+   ],
+   "pass": true,
+   "fails_when": "a cross-engine failure blocks the architecture decision, which A27.6 forbids -- it qualifies a sentence, never a choice"
+  },
+  {
+   "test": "...and qualifying changes NOTHING a decision reads",
+   "expected": [
+    false,
+    "decide_architecture",
+    1.0,
+    {
+     "loser": "H",
+     "fires": true,
+     "h": 277,
+     "x": 370,
+     "deficit": 93
+    }
+   ],
+   "observed": [
+    false,
+    "decide_architecture",
+    1.0,
+    {
+     "loser": "H",
+     "fires": true,
+     "h": 277,
+     "x": 370,
+     "deficit": 93
+    }
+   ],
+   "pass": true,
+   "fails_when": "the cross-engine verdict moved a measured quantity or a decision field, so it is acting as a gate rather than as a reporting qualification"
+  },
+  {
    "test": "the entrypoint runs end to end and takes NO decision",
    "expected": [
     false,
-    null,
     "decide_architecture"
    ],
    "observed": [
     false,
-    null,
     "decide_architecture"
    ],
    "pass": true,
-   "fails_when": "the scorer takes an architecture decision, or emits an M6 value A20 struck"
+   "fails_when": "the scorer takes an architecture decision"
+  },
+  {
+   "test": "M6 IS ABSENT from the result-bearing payload -- no key, at any depth",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the payload carries an M6 surface, which A20 struck and section 5 excludes ('M0-M9 minus M6'). A key holding null still says something about M6"
+  },
+  {
+   "test": "...and the scan CAN see one, so the absence above is not vacuous",
+   "expected": [
+    "m6",
+    "m9.per_document[0].M6_planted"
+   ],
+   "observed": [
+    "m6",
+    "m9.per_document[0].M6_planted"
+   ],
+   "pass": true,
+   "fails_when": "the M6 scan cannot detect a planted M6 key, so it would report absence on a payload that carried one"
   },
   {
    "test": "section 8's paired block is present, unweighted, with per-document detail",

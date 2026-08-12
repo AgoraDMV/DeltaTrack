@@ -34,6 +34,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -683,13 +684,220 @@ def part_m7_m9_m6(frame: dict) -> dict:
         "the scorer computed a different margin-line comparison from the frozen one -- a "
         "coverage numerator or a geometric approximation instead of the ruled count",
     )
-    check(
-        "M6 IS ABSENT from every scorer surface",
-        [],
-        sorted(n for n in dir(SM) if "m6" in n.lower() and not n.startswith("_")),
-        "an M6 computation exists, which A20 struck and section 5 excludes ('M0-M9 minus M6')",
+    return {"m7_pooled": m7["pooled"], "m9": m9}
+
+
+def m6_surfaces(node, path: str = "") -> list[str]:
+    """Every path in a finished payload whose KEY names M6. Recursive, structure-agnostic.
+
+    Deliberately not a check against `dir(score_metrics)`. A module-symbol scan cannot see an
+    `m6: None` key sitting in the result-bearing payload -- which is what the previous spelling
+    emitted, and which a consumer can read, iterate, or render as "M6: not measured". That is a
+    statement about M6, and A20 struck M6.
+
+    Walking the FINISHED payload also means a future surface reintroducing M6 anywhere -- nested
+    inside an estimand, a per-document row, a control record -- is caught wherever it appears,
+    rather than only at the top level a hand-written key list would cover.
+    """
+    found = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            here = f"{path}.{key}" if path else str(key)
+            if re.fullmatch(r"(?i)m_?6.*", str(key)):
+                found.append(here)
+            found.extend(m6_surfaces(value, here))
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            found.extend(m6_surfaces(value, f"{path}[{index}]"))
+    return found
+
+
+# ------------------------------------------------------------------- I13, cross-engine
+#
+# The scorer names the surfaces it labels in `CROSS_ENGINE_LABELLED_PATHS`. The scan below
+# DISCOVERS per-document result rows in the finished payload instead, so a surface added to the
+# payload and forgotten in that list is found here rather than published unqualified.
+
+#: Per-document surfaces that are NOT RQ1/RQ2 results, kept in the PROBE so the scorer cannot
+#: quietly grow an exclusion for something it simply forgot to label.
+#:
+#:   `m0.s1_liveness`  -- S1 is a Rule 3 gate INPUT (A27.6), not a result computed on a document.
+#:   `cross_engine`    -- the qualification's own source measurement; labelling it with itself
+#:                        would be circular.
+NON_RESULT_DOCUMENT_SURFACES = ("m0.s1_liveness.per_document", "cross_engine.per_document")
+
+
+def document_result_rows(node, path: str = "") -> list[tuple[str, dict]]:
+    """Every `(path, row)` in a finished payload that is a per-document RESULT row."""
+    found = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            here = f"{path}.{key}" if path else str(key)
+            if key == "per_document" and isinstance(value, list):
+                if not any(here.startswith(skip) for skip in NON_RESULT_DOCUMENT_SURFACES):
+                    found.extend((here, row) for row in value if isinstance(row, dict) and "document" in row)
+                continue
+            found.extend(document_result_rows(value, here))
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            found.extend(document_result_rows(value, f"{path}[{index}]"))
+    return found
+
+
+def unlabelled_result_rows(payload: dict) -> list[str]:
+    """Result rows carrying no I13 label at all. The omission this control exists to catch."""
+    return sorted(
+        f"{path}::{row['document']}"
+        for path, row in document_result_rows(payload)
+        if "cross_engine_qualification" not in row
     )
-    return {"m7_pooled": m7["pooled"], "m9": m9, "m6_present": False}
+
+
+def synthetic_cross_engine(rows: list[tuple[str, bool]]) -> dict:
+    """A `cross_engine_control/1`-shaped artifact. `rows` is [(document, passed), ...]."""
+    return {
+        "schema": "cross_engine_control/1",
+        "per_document": [
+            {
+                "document": document,
+                "passed": passed,
+                "qualification": None if passed else SM.PDFIUM_CONDITIONED_FRAME,
+                "decision_blocking": False,
+            }
+            for document, passed in rows
+        ],
+        "n_documents": len(rows),
+        "decision_blocking": False,
+    }
+
+
+def part_cross_engine_i13(scored_failing: dict, scored_passing: dict) -> dict:
+    print("\n== I13: the cross-engine qualification is APPLIED, not merely reported ==")
+
+    rows = document_result_rows(scored_failing)
+    surfaces = sorted({path for path, _row in rows})
+    check(
+        "the payload really carries per-document RESULT rows, so the scan is not vacuous",
+        True,
+        len(rows) >= 5 and len(surfaces) >= 5,
+        "no per-document result surface was discovered, so 'every row is labelled' passed on an empty set",
+    )
+    check(
+        "EVERY per-document result row on a FAILING document carries PDFIUM-CONDITIONED FRAME",
+        ([], []),
+        (
+            unlabelled_result_rows(scored_failing),
+            sorted(
+                f"{path}::{row['document']}"
+                for path, row in rows
+                if row["cross_engine_qualification"] != SM.PDFIUM_CONDITIONED_FRAME
+            ),
+        ),
+        "a result computed on a PDFium-conditioned frame is published without the "
+        "qualification I13 attaches to it -- a detached label map is not I13",
+    )
+    check(
+        "a PASSING document labels every row None, which is a different statement from absent",
+        ([], True),
+        (
+            unlabelled_result_rows(scored_passing),
+            all(
+                row["cross_engine_qualification"] is None and row["pdfium_conditioned_frame"] is False
+                for _path, row in document_result_rows(scored_passing)
+            ),
+        ),
+        "a passing document leaves rows unlabelled, so 'checked and passed' is "
+        "indistinguishable from 'nobody qualified this surface'",
+    )
+
+    # THE OMISSION CONTROL. Drop one declared surface from the scorer's own path list and
+    # require the independent scan to find the resulting unlabelled rows. This is what makes
+    # the check above sensitive to a FUTURE surface nobody remembered to label.
+    original = SM.CROSS_ENGINE_LABELLED_PATHS
+    dropped = tuple(p for p in original if p != ("m9", "per_document"))
+    try:
+        SM.CROSS_ENGINE_LABELLED_PATHS = dropped
+        omitted = SM.apply_cross_engine_labels(copy.deepcopy(strip_labels(scored_failing)))
+    finally:
+        SM.CROSS_ENGINE_LABELLED_PATHS = original
+    check(
+        "NEGATIVE -- omitting ONE result surface from the label list is DETECTED",
+        ["m9.per_document::" + DOC_NAME],
+        unlabelled_result_rows(omitted),
+        "dropping a surface from the scorer's label list goes unnoticed, so the labelling "
+        "check only ever covered the surfaces that happened to be listed",
+    )
+    check(
+        "...and restoring the list re-labels it, so the control is not stuck red",
+        [],
+        unlabelled_result_rows(SM.apply_cross_engine_labels(copy.deepcopy(strip_labels(scored_failing)))),
+        "the label list did not restore, so every later check runs against a mutated scorer",
+    )
+
+    # HEADLINES. More than 1/3 of sampled documents failing qualifies BOTH RQ1 and RQ2.
+    one_of_four = SM.cross_engine_block(synthetic_cross_engine([("a", False), ("b", True), ("c", True), ("d", True)]))
+    two_of_four = SM.cross_engine_block(synthetic_cross_engine([("a", False), ("b", False), ("c", True), ("d", True)]))
+    check(
+        "exactly 1/4 failing does NOT qualify the headlines; 2/4 DOES, and it qualifies BOTH",
+        (None, SM.PDFIUM_CONDITIONED_FRAME),
+        (one_of_four["headline_qualification"], two_of_four["headline_qualification"]),
+        "the headline rule is not '> 1/3 of sampled documents', so a frame-wide conditioning "
+        "either goes unreported or is reported when it should not be",
+    )
+    both = SM.apply_cross_engine_labels({"cross_engine": two_of_four})
+    check(
+        "...and BOTH headlines carry it, never only one",
+        {"RQ1": SM.PDFIUM_CONDITIONED_FRAME, "RQ2": SM.PDFIUM_CONDITIONED_FRAME},
+        both["headline_qualifications"],
+        "only one headline is qualified, so the other publishes a frame-wide PDFium "
+        "conditioning as though it were unconditioned",
+    )
+
+    # NON-BLOCKING. A27.6 keeps cross-engine out of the Rule 3 gate vector entirely.
+    check(
+        "the qualification is NEVER decision-blocking",
+        (False, False, False),
+        (
+            scored_failing["cross_engine"]["decision_blocking"],
+            scored_failing["cross_engine_qualification_is_decision_blocking"],
+            "x09" in " ".join(MC.GATE_VECTOR).lower() or "cross" in " ".join(MC.GATE_VECTOR).lower(),
+        ),
+        "a cross-engine failure blocks the architecture decision, which A27.6 forbids -- it "
+        "qualifies a sentence, never a choice",
+    )
+    check(
+        "...and qualifying changes NOTHING a decision reads",
+        (
+            scored_passing["decision_taken_here"],
+            scored_passing["decision_owner"],
+            scored_passing["section8"]["clopper_pearson_upper_95"],
+            scored_passing["m9"]["per_document"][0]["margin_line_loss"],
+        ),
+        (
+            scored_failing["decision_taken_here"],
+            scored_failing["decision_owner"],
+            scored_failing["section8"]["clopper_pearson_upper_95"],
+            scored_failing["m9"]["per_document"][0]["margin_line_loss"],
+        ),
+        "the cross-engine verdict moved a measured quantity or a decision field, so it is "
+        "acting as a gate rather than as a reporting qualification",
+    )
+    return {
+        "labelled_surfaces": surfaces,
+        "n_result_rows": len(rows),
+        "headline_1_of_4": one_of_four["headline_qualification"],
+        "headline_2_of_4": two_of_four["headline_qualification"],
+        "decision_blocking": False,
+    }
+
+
+def strip_labels(payload: dict) -> dict:
+    """A copy with every I13 label removed, so relabelling can be exercised from a clean state."""
+    clean = copy.deepcopy(payload)
+    for _path, row in document_result_rows(clean):
+        row.pop("cross_engine_qualification", None)
+        row.pop("pdfium_conditioned_frame", None)
+    return clean
 
 
 # ---------------------------------------------------------------------------- section 8
@@ -1360,6 +1568,106 @@ def part_negative(key: dict, adjudicated: dict, frame: dict, manifest: dict) -> 
         manifest["counts"],
         "the control population is not the frozen 8/8/4 set, so the Rule 3 blockers are not the ones the study froze",
     )
+
+    # ---- N11-N13: THE SECTION 8 EVENT PREDICATE, attacked at its source.
+    #
+    # A41's approved event is "the document has >= 1 region whose emitted H/X anchor sets
+    # differ". Everything section 8 reports rests on it, so these attacks go at the committed
+    # anchor evidence itself and run through the REAL `validate_frame` and `score` paths -- not
+    # a copied predicate, which could only ever agree with itself.
+
+    def region_with_anchors(candidate):
+        for page in candidate["pages"]:
+            for region in page["regions"]:
+                if region["anchor_evidence"]["H"] or region["anchor_evidence"]["X"]:
+                    return page, region
+        return None, None
+
+    _page, sample = region_with_anchors(frame)
+    check(
+        "N11 the material carries a region with committed anchors, so N12/N13 are not vacuous",
+        True,
+        sample is not None,
+        "no region carries an anchor value here, so the two attacks below would mutate nothing",
+    )
+
+    # N12 -- flip BOTH the flag and the reason, leave H and X untouched. The old check compared
+    # `differ` against `d_reasons` only; a single edit setting both is invisible to it.
+    flipped = copy.deepcopy(frame)
+    _p, victim = region_with_anchors(flipped)
+    victim["anchor_evidence"]["differ"] = not victim["anchor_evidence"]["differ"]
+    if "ANCHOR_DISCORDANCE" in victim["d_reasons"]:
+        victim["d_reasons"] = [r for r in victim["d_reasons"] if r != "ANCHOR_DISCORDANCE"]
+    else:
+        victim["d_reasons"] = [*victim["d_reasons"], "ANCHOR_DISCORDANCE"]
+    victim["d_frame"] = bool(victim["d_reasons"])
+    check(
+        "N12 flipping `differ` AND `d_reasons` together, with H/X unchanged, is REFUSED",
+        SM.FRAME_ANCHOR_EVIDENCE_INCONSISTENT,
+        refusal(lambda: SM.validate_frame(flipped)),
+        "the two committed fields are only checked against each other, so one edit setting "
+        "both passes -- and the section 8 event, and the bound derived from it, move with it",
+    )
+
+    # N13 -- mutate the ANCHORS and leave `differ` stale. The flag now summarises anchors that
+    # are no longer there.
+    stale = copy.deepcopy(frame)
+    _p2, victim2 = region_with_anchors(stale)
+    was = victim2["anchor_evidence"]["differ"]
+    if was:
+        victim2["anchor_evidence"]["X"] = list(victim2["anchor_evidence"]["H"])
+    else:
+        victim2["anchor_evidence"]["X"] = [*victim2["anchor_evidence"]["X"], [99, 99, "account", "PLANTED", None]]
+    check(
+        "N13 mutating H/X while `differ` stays stale is REFUSED",
+        SM.FRAME_ANCHOR_EVIDENCE_INCONSISTENT,
+        refusal(lambda: SM.validate_frame(stale)),
+        "the committed flag is trusted over the anchor values it claims to summarise, so a "
+        "drifted or hand-edited frame is scored as though the flag were still true",
+    )
+    check(
+        "N13 ...and the same stale frame is refused through the REAL `score` entrypoint",
+        SM.FRAME_ANCHOR_EVIDENCE_INCONSISTENT,
+        refusal(lambda: SM.score(frames=[stale], adjudicated=adjudicated, key=key)),
+        "validation is reachable only by calling it directly, so the result-bearing path can "
+        "score a frame the validator would have refused",
+    )
+
+    # N14 -- D membership must be exactly "some predicate fired". The victim is a region with
+    # NO reasons, promoted to d_frame: a region that already carried a discordant line would
+    # trip I9 first, and the control would pass on a refusal it did not cause.
+    orphan = copy.deepcopy(frame)
+    victim3 = next(
+        (r for page in orphan["pages"] for r in page["regions"] if not r["d_frame"] and not r["d_reasons"]),
+        None,
+    )
+    check(
+        "N14 a region with NO d_reasons exists, so the invariant can be isolated",
+        True,
+        victim3 is not None,
+        "every region here already carries a reason, so promoting one would collide with I9 "
+        "and the control below would pass on the wrong refusal",
+    )
+    victim3["d_frame"] = True
+    check(
+        "N14 `d_frame` disagreeing with `bool(d_reasons)` is REFUSED",
+        SM.FRAME_D_MEMBERSHIP_INCONSISTENT,
+        refusal(lambda: SM.validate_frame(orphan)),
+        "a region is a D-frame member with no predicate that put it there, or carries a "
+        "predicate while absent from the census -- either way the D census stops describing "
+        "the discordances being reported",
+    )
+    check(
+        "N14 ...and the UNMUTATED frame still validates, so these gates refuse only faults",
+        None,
+        refusal(lambda: SM.validate_frame(frame)),
+        "validation refuses clean input, making every control above meaningless",
+    )
+    out["section8_event_predicate"] = {
+        "event": "document has >= 1 region whose emitted H/X anchor sets differ (A41, approved)",
+        "recomputed_from": "the serialized anchor_evidence H and X values",
+        "attacks": ["N12 flag+reason flipped together", "N13 anchors mutated, flag stale", "N14 d_frame orphaned"],
+    }
     return out
 
 
@@ -1436,28 +1744,53 @@ def main() -> int:
     negative = part_negative(key, adjudicated, frame, manifest)
     boundary = part_boundary()
 
-    # The whole entrypoint, end to end, on the committed material.
-    payload = SM.score(
-        frames=[frame],
-        adjudicated=adjudicated,
-        key=key,
-        s1={
-            "fires": s1["fires"],
-            "advance_scale": s1["advance_scale"],
-            "sabotaged_arm": "X",
-            "per_document": [{"document": DOC_NAME, **s1}],
-            "n_documents": 1,
-            "n_firing": int(s1["fires"]),
-        },
-        cross_engine=None,
-        control_fixtures=manifest,
-        strata_filled=6,
-    )
+    # The whole entrypoint, end to end, on the committed material. Scored TWICE against a REAL
+    # cross-engine artifact -- once with the document FAILING and once PASSING -- because I13's
+    # whole content is what changes between those two runs, and `None` could never show it.
+    s1_artifact = {
+        "fires": s1["fires"],
+        "advance_scale": s1["advance_scale"],
+        "sabotaged_arm": "X",
+        "per_document": [{"document": DOC_NAME, **s1}],
+        "n_documents": 1,
+        "n_firing": int(s1["fires"]),
+    }
+
+    def score_with(cross_engine):
+        return SM.score(
+            frames=[frame],
+            adjudicated=adjudicated,
+            key=key,
+            s1=s1_artifact,
+            cross_engine=cross_engine,
+            control_fixtures=manifest,
+            strata_filled=6,
+        )
+
+    payload = score_with(synthetic_cross_engine([(DOC_NAME, False)]))
+    payload_passing = score_with(synthetic_cross_engine([(DOC_NAME, True)]))
+    cross_engine_i13 = part_cross_engine_i13(payload, payload_passing)
+
     check(
         "the entrypoint runs end to end and takes NO decision",
-        (False, None, "decide_architecture"),
-        (payload["decision_taken_here"], payload["m6"], payload["decision_owner"]),
-        "the scorer takes an architecture decision, or emits an M6 value A20 struck",
+        (False, "decide_architecture"),
+        (payload["decision_taken_here"], payload["decision_owner"]),
+        "the scorer takes an architecture decision",
+    )
+    # M6 ABSENCE, asserted END TO END against the real payload rather than the module's symbol
+    # table. A symbol scan cannot see an `m6: None` key sitting in `metrics.json`.
+    check(
+        "M6 IS ABSENT from the result-bearing payload -- no key, at any depth",
+        [],
+        m6_surfaces(payload),
+        "the payload carries an M6 surface, which A20 struck and section 5 excludes "
+        "('M0-M9 minus M6'). A key holding null still says something about M6",
+    )
+    check(
+        "...and the scan CAN see one, so the absence above is not vacuous",
+        ["m6", "m9.per_document[0].M6_planted"],
+        sorted(m6_surfaces({**payload, "m6": None, "m9": {"per_document": [{"M6_planted": 1}]}})),
+        "the M6 scan cannot detect a planted M6 key, so it would report absence on a payload that carried one",
     )
     check(
         "section 8's paired block is present, unweighted, with per-document detail",
@@ -1513,6 +1846,7 @@ def main() -> int:
         "section8": s8,
         "section5_controls": controls,
         "negative_attacks": negative,
+        "cross_engine_i13": cross_engine_i13,
         "execution_boundary": boundary,
         "metrics_payload_shape": sorted(payload),
         "forward_ambiguities": STOPS,
