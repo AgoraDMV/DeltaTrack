@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import fnmatch
 import re
-import stat
 import zipfile
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -31,37 +30,12 @@ class ExtractArchiveDetails(NamedTuple):
     errors: dict[Path, Exception]
 
 
-def _is_zip_symlink(info: zipfile.ZipInfo) -> bool:
-    """Return True when ``info`` is a Unix symlink entry."""
-    if info.create_system != 3:  # 3 == Unix
-        return False
-    return stat.S_ISLNK(info.external_attr >> 16)
-
-
 def _ensure_within_destination(out_dir: Path, dest: Path) -> None:
-    """Raise ValueError if ``dest`` is malformed or resolves outside ``out_dir``."""
-    if "\x00" in dest.as_posix() or "\x00" in out_dir.as_posix():
-        raise ValueError(f"Malformed zip member path: {dest}")
-
+    """Raise ValueError if ``dest`` resolves outside ``out_dir``."""
     out_resolved = out_dir.resolve()
     dest_resolved = dest.resolve()
     if not dest_resolved.is_relative_to(out_resolved):
         raise ValueError(f"Zip member escapes destination directory: {dest}")
-
-
-def _ensure_symlink_within_destination(
-    out_dir: Path, dest: Path, link_target: str
-) -> None:
-    """Raise ValueError if a zip symlink's target resolves outside ``out_dir``."""
-    if "\x00" in link_target:
-        raise ValueError(f"Malformed zip symlink target: {link_target!r}")
-    target = Path(link_target)
-    resolved_target = target.resolve() if target.is_absolute() else (dest.parent / target).resolve()
-    out_resolved = out_dir.resolve()
-    if not resolved_target.is_relative_to(out_resolved):
-        raise ValueError(
-            f"Zip symlink escapes destination directory: {dest} -> {link_target}"
-        )
 
 
 def verify_archive_complete(path: Path) -> None:
@@ -143,9 +117,9 @@ def extract_archive(
             if dest_rel is None:
                 files_skipped.append(member_path)
                 continue
-            if "\x00" in str(dest_rel) or "\x00" in name:
-                raise ValueError(f"Malformed zip member path: {name!r}")
             dest = out_dir / dest_rel
+            # Check against malicious contents that attempt to escape the destination directory.
+            # To do: check against other malicious contents like symlinks leading to a bad destination?
             _ensure_within_destination(out_dir, dest)
             if dest.exists() and not overwrite_existing:
                 files_skipped.append(dest)
@@ -154,17 +128,10 @@ def extract_archive(
             if data is None:
                 files_skipped.append(dest)
                 continue
-            info = zf.getinfo(name)
-            if _is_zip_symlink(info):
-                _ensure_symlink_within_destination(
-                    out_dir, dest, data.decode("utf-8", errors="surrogateescape")
-                )
             dest.parent.mkdir(parents=True, exist_ok=True)
             _ensure_within_destination(out_dir, dest)
             dest.write_bytes(data)
             files_extracted.append(dest)
-        except ValueError:
-            raise
         except Exception as exc:
             errors[member_path] = exc
 

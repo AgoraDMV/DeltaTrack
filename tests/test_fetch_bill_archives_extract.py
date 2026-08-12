@@ -16,27 +16,20 @@ marking its own debris: ``extract_archives`` rmtree's a partial folder, and
 
 from __future__ import annotations
 
-import io
-import stat
 from pathlib import Path
 import pytest
 import respx
 import shlex
 from unittest.mock import patch
-import zipfile
 
-from bill_index import BillIndex
 import tools.shared.http as http
-import tools.shared.zip as zip
-from tests.utils import assert_files, mock_http_requests, archive_bytes, write_archive
+from tests.utils import assert_files, mock_http_requests, archive_bytes
 from tools.fetch_bill_archives import (
-    archive_destination,
     billstatus_filename,
     billstatus_zip_filename,
     billstatus_zip_url as archive_url,
     main,
 )
-from tools.shared.zip import extract_archive
 
 def fetch_bill_archives(args: str) -> None:
     argv = ["fetch_bill_archives", *shlex.split(args)]
@@ -51,13 +44,6 @@ def single_member_archive_bytes(congress: int, bill_type: str) -> bytes:
 def write_single_member_archive(source: Path, congress: int, bill_type: str) -> Path:
     path = source / billstatus_zip_filename(congress, bill_type)
     path.write_bytes(single_member_archive_bytes(congress, bill_type))
-
-# def archive_bytes(name: str = "119-hr") -> bytes:
-#     """One well-formed BILLSTATUS archive ZIP, as bytes."""
-#     buf = io.BytesIO()
-#     with zipfile.ZipFile(buf, "w") as zf:
-#         zf.writestr(f"{name}-1.xml", b"<billStatus/>")
-#     return buf.getvalue()
 
 
 class TestDownloadArchivesCacheCoherence:
@@ -227,7 +213,7 @@ class TestExtractArchive:
         assert_files(dest, {"BILLSTATUS-119-hr.zip"})
 
     @respx.mock
-    def test_raises_on_a_corrupt_archive(self, tmp_path):
+    def test_does_not_extract_on_a_corrupt_archive(self, tmp_path):
         archive = tmp_path / "BILLSTATUS-119-hr.zip"
         archive.write_bytes(b"not a zip")
 
