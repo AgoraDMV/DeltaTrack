@@ -35,6 +35,7 @@ GOVINFO_BILL_FILENAME_RE = re.compile(
     r"^BILLSTATUS-(\d+)([a-z]+)(\d+)\.xml$",
     re.IGNORECASE,
 )
+GOVINFO_BILLSTATUS_FILENAME_FORMAT = "BILLSTATUS-{congress}{bill_type}{number}.xml"
 
 def parse_billstatus_filename(filename: str) -> tuple[int, str, int]: # (congress, bill_type, number)
     """``BILLSTATUS-119hr1.xml`` → ``(119, "hr", 1)``."""
@@ -50,6 +51,12 @@ def archive_destination(destination: Path, congress: int, bill_type: str) -> Pat
 
 def billstatus_zip_url(congress: int, bill_type: str) -> str:
     return GOVINFO_BILLSTATUS_ZIP_URL_FORMAT.format(congress=congress, bill_type=bill_type)
+
+def billstatus_zip_filename(congress: int, bill_type: str) -> str:
+    return BILLSTATUS_ZIP_FORMAT.format(congress=congress, bill_type=bill_type)
+
+def billstatus_filename(congress: int, bill_type: str, number: int) -> str:
+    return GOVINFO_BILLSTATUS_FILENAME_FORMAT.format(congress=congress, bill_type=bill_type, number=number)
 
 def enumerate_congresses(from_congress: int, to_congress: int) -> list[int]:
     return list(range(from_congress, to_congress + 1) if from_congress <= to_congress else range(from_congress, to_congress - 1, -1))
@@ -153,14 +160,20 @@ def convert_archives(
 
     for i, path in enumerate(zip_paths):
         print(f"  {i + 1}/{len(zip_paths)}: extracting {path.name}...", file=sys.stderr)
-        extract_archive(
-            path,
-            out_dir=out_dir,
-            files=GOVINFO_BILL_FILENAME_RE,
-            overwrite_existing=overwrite_existing,
-            file_handler=handle_file,
-            file_content_handler=handle_content,
-        )
+        try:
+            extract_archive(
+                path,
+                out_dir=out_dir,
+                files=GOVINFO_BILL_FILENAME_RE,
+                overwrite_existing=overwrite_existing,
+                file_handler=handle_file,
+                file_content_handler=handle_content,
+            )
+        except Exception as exc:
+            if not path.exists():
+                print(f"  {path.name} not found, skipping", file=sys.stderr)
+            else:
+                print(f"  error extracting {path.name}: {exc}", file=sys.stderr)
 
     if bill_index is not None and records:
         bill_index.add_bills(records, mode="merge")
@@ -187,15 +200,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    args = build_parser().parse_args()
-    bill_types = [t.lower() for t in args.types]
-    if "all" in bill_types:
-        bill_types = list(BILL_TYPES.keys())
-
+    args = build_parser().parse_args()    
     download_archives(
         args.from_congress,
         args.to_congress,
-        bill_types,
+        args.types,
         args.zip_dir,
         overwrite_existing=args.overwrite_existing,
     )
@@ -204,7 +213,7 @@ def main() -> None:
         args.out_dir,
         from_congress=args.from_congress,
         to_congress=args.to_congress,
-        bill_types=bill_types,
+        bill_types=args.types,
         overwrite_existing=args.overwrite_existing,
         bill_index_path=args.bill_index_file,
     )

@@ -96,6 +96,8 @@ def write_error(error: Exception, path: Path) -> Path:
     error_path.write_text(str(error), encoding="utf-8")
     return error_path
 
+def download_temp_path(destination: Path) -> Path:
+    return destination.with_suffix(destination.suffix + ".part")
 
 def cached_file_download(
     client: httpx.Client,
@@ -116,7 +118,7 @@ def cached_file_download(
         return False
 
     destination.parent.mkdir(parents=True, exist_ok=True)
-    temp_path = destination.with_suffix(destination.suffix + ".part")
+    temp_path = download_temp_path(destination)
     if temp_path.exists():
         temp_path.unlink()
 
