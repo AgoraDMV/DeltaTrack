@@ -1,0 +1,761 @@
+{
+  "113-hr-3547/1_introduced-in-house->2_engrossed-in-house": {
+    "baseline": {
+      "digest": "48ea6adde2bbfda9",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "similarity +0.05": {
+      "digest": "48ea6adde2bbfda9",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "similarity -0.05": {
+      "digest": "48ea6adde2bbfda9",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "move +0.05": {
+      "digest": "48ea6adde2bbfda9",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "move -0.05": {
+      "digest": "48ea6adde2bbfda9",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    }
+  },
+  "113-hr-3547/2_engrossed-in-house->3_received-in-senate": {
+    "baseline": {
+      "digest": "4fe9763da04ff69c",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "similarity +0.05": {
+      "digest": "4fe9763da04ff69c",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "similarity -0.05": {
+      "digest": "4fe9763da04ff69c",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "move +0.05": {
+      "digest": "4fe9763da04ff69c",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "move -0.05": {
+      "digest": "4fe9763da04ff69c",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    }
+  },
+  "113-hr-3547/3_received-in-senate->4_engrossed-amendment-senate": {
+    "baseline": {
+      "digest": "f5f46bac2da519ee",
+      "changes": 5,
+      "summary": {
+        "removed": 3,
+        "added": 2
+      }
+    },
+    "similarity +0.05": {
+      "digest": "f5f46bac2da519ee",
+      "changes": 5,
+      "summary": {
+        "removed": 3,
+        "added": 2
+      }
+    },
+    "similarity -0.05": {
+      "digest": "f5f46bac2da519ee",
+      "changes": 5,
+      "summary": {
+        "removed": 3,
+        "added": 2
+      }
+    },
+    "move +0.05": {
+      "digest": "f5f46bac2da519ee",
+      "changes": 5,
+      "summary": {
+        "removed": 3,
+        "added": 2
+      }
+    },
+    "move -0.05": {
+      "digest": "f5f46bac2da519ee",
+      "changes": 5,
+      "summary": {
+        "removed": 3,
+        "added": 2
+      }
+    }
+  },
+  "114-hr-2029/1_reported-in-house->3_referred-in-senate": {
+    "baseline": {
+      "digest": "d14dccf26787f497",
+      "changes": 26,
+      "summary": {
+        "modified": 11,
+        "added": 15
+      }
+    },
+    "similarity +0.05": {
+      "digest": "d14dccf26787f497",
+      "changes": 26,
+      "summary": {
+        "modified": 11,
+        "added": 15
+      }
+    },
+    "similarity -0.05": {
+      "digest": "d14dccf26787f497",
+      "changes": 26,
+      "summary": {
+        "modified": 11,
+        "added": 15
+      }
+    },
+    "move +0.05": {
+      "digest": "d14dccf26787f497",
+      "changes": 26,
+      "summary": {
+        "modified": 11,
+        "added": 15
+      }
+    },
+    "move -0.05": {
+      "digest": "d14dccf26787f497",
+      "changes": 26,
+      "summary": {
+        "modified": 11,
+        "added": 15
+      }
+    }
+  },
+  "114-hr-2029/3_referred-in-senate->4_reported-in-senate": {
+    "baseline": {
+      "digest": "b8bfc5f537795a56",
+      "changes": 163,
+      "summary": {
+        "modified": 5,
+        "added": 158
+      }
+    },
+    "similarity +0.05": {
+      "digest": "b8bfc5f537795a56",
+      "changes": 163,
+      "summary": {
+        "modified": 5,
+        "added": 158
+      }
+    },
+    "similarity -0.05": {
+      "digest": "b8bfc5f537795a56",
+      "changes": 163,
+      "summary": {
+        "modified": 5,
+        "added": 158
+      }
+    },
+    "move +0.05": {
+      "digest": "b8bfc5f537795a56",
+      "changes": 163,
+      "summary": {
+        "modified": 5,
+        "added": 158
+      }
+    },
+    "move -0.05": {
+      "digest": "b8bfc5f537795a56",
+      "changes": 163,
+      "summary": {
+        "modified": 5,
+        "added": 158
+      }
+    }
+  },
+  "115-hr-5895/1_reported-in-house->2_engrossed-in-house": {
+    "baseline": {
+      "digest": "08c20c4420d39753",
+      "changes": 336,
+      "summary": {
+        "modified": 18,
+        "added": 317,
+        "removed": 1
+      }
+    },
+    "similarity +0.05": {
+      "digest": "08c20c4420d39753",
+      "changes": 336,
+      "summary": {
+        "modified": 18,
+        "added": 317,
+        "removed": 1
+      }
+    },
+    "similarity -0.05": {
+      "digest": "08c20c4420d39753",
+      "changes": 336,
+      "summary": {
+        "modified": 18,
+        "added": 317,
+        "removed": 1
+      }
+    },
+    "move +0.05": {
+      "digest": "08c20c4420d39753",
+      "changes": 336,
+      "summary": {
+        "modified": 18,
+        "added": 317,
+        "removed": 1
+      }
+    },
+    "move -0.05": {
+      "digest": "08c20c4420d39753",
+      "changes": 336,
+      "summary": {
+        "modified": 18,
+        "added": 317,
+        "removed": 1
+      }
+    }
+  },
+  "115-hr-5895/2_engrossed-in-house->3_placed-on-calendar-senate": {
+    "baseline": {
+      "digest": "24f19d1cd007055a",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "similarity +0.05": {
+      "digest": "24f19d1cd007055a",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "similarity -0.05": {
+      "digest": "24f19d1cd007055a",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "move +0.05": {
+      "digest": "24f19d1cd007055a",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "move -0.05": {
+      "digest": "24f19d1cd007055a",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    }
+  },
+  "115-hr-5895/3_placed-on-calendar-senate->4_engrossed-amendment-senate": {
+    "baseline": {
+      "digest": "bcb22e77737c4c3e",
+      "changes": 467,
+      "summary": {
+        "removed": 93,
+        "added": 120,
+        "modified": 194,
+        "moved": 60
+      }
+    },
+    "similarity +0.05": {
+      "digest": "bcb22e77737c4c3e",
+      "changes": 467,
+      "summary": {
+        "removed": 93,
+        "added": 120,
+        "modified": 194,
+        "moved": 60
+      }
+    },
+    "similarity -0.05": {
+      "digest": "36c1330f3da2d15e",
+      "changes": 466,
+      "summary": {
+        "modified": 199,
+        "added": 119,
+        "removed": 92,
+        "moved": 56
+      }
+    },
+    "move +0.05": {
+      "digest": "bcb22e77737c4c3e",
+      "changes": 467,
+      "summary": {
+        "removed": 93,
+        "added": 120,
+        "modified": 194,
+        "moved": 60
+      }
+    },
+    "move -0.05": {
+      "digest": "bcb22e77737c4c3e",
+      "changes": 467,
+      "summary": {
+        "removed": 93,
+        "added": 120,
+        "modified": 194,
+        "moved": 60
+      }
+    }
+  },
+  "117-hr-4502/1_reported-in-house->2_engrossed-in-house": {
+    "baseline": {
+      "digest": "d36d2a95ead658f5",
+      "changes": 1500,
+      "summary": {
+        "modified": 49,
+        "added": 1451
+      }
+    },
+    "similarity +0.05": {
+      "digest": "d36d2a95ead658f5",
+      "changes": 1500,
+      "summary": {
+        "modified": 49,
+        "added": 1451
+      }
+    },
+    "similarity -0.05": {
+      "digest": "d36d2a95ead658f5",
+      "changes": 1500,
+      "summary": {
+        "modified": 49,
+        "added": 1451
+      }
+    },
+    "move +0.05": {
+      "digest": "d36d2a95ead658f5",
+      "changes": 1500,
+      "summary": {
+        "modified": 49,
+        "added": 1451
+      }
+    },
+    "move -0.05": {
+      "digest": "d36d2a95ead658f5",
+      "changes": 1500,
+      "summary": {
+        "modified": 49,
+        "added": 1451
+      }
+    }
+  },
+  "118-hr-2882/1_introduced-in-house->4_engrossed-amendment-senate": {
+    "baseline": {
+      "digest": "c9f4858d9b579675",
+      "changes": 5,
+      "summary": {
+        "removed": 1,
+        "added": 3,
+        "moved": 1
+      }
+    },
+    "similarity +0.05": {
+      "digest": "c9f4858d9b579675",
+      "changes": 5,
+      "summary": {
+        "removed": 1,
+        "added": 3,
+        "moved": 1
+      }
+    },
+    "similarity -0.05": {
+      "digest": "c9f4858d9b579675",
+      "changes": 5,
+      "summary": {
+        "removed": 1,
+        "added": 3,
+        "moved": 1
+      }
+    },
+    "move +0.05": {
+      "digest": "c9f4858d9b579675",
+      "changes": 5,
+      "summary": {
+        "removed": 1,
+        "added": 3,
+        "moved": 1
+      }
+    },
+    "move -0.05": {
+      "digest": "c9f4858d9b579675",
+      "changes": 5,
+      "summary": {
+        "removed": 1,
+        "added": 3,
+        "moved": 1
+      }
+    }
+  },
+  "118-hr-2882/4_engrossed-amendment-senate->5_engrossed-amendment-house": {
+    "baseline": {
+      "digest": "fcffe3ea7dd910ca",
+      "changes": 1794,
+      "summary": {
+        "modified": 2,
+        "moved": 3,
+        "added": 1789
+      }
+    },
+    "similarity +0.05": {
+      "digest": "fcffe3ea7dd910ca",
+      "changes": 1794,
+      "summary": {
+        "modified": 2,
+        "moved": 3,
+        "added": 1789
+      }
+    },
+    "similarity -0.05": {
+      "digest": "fcffe3ea7dd910ca",
+      "changes": 1794,
+      "summary": {
+        "modified": 2,
+        "moved": 3,
+        "added": 1789
+      }
+    },
+    "move +0.05": {
+      "digest": "fcffe3ea7dd910ca",
+      "changes": 1794,
+      "summary": {
+        "modified": 2,
+        "moved": 3,
+        "added": 1789
+      }
+    },
+    "move -0.05": {
+      "digest": "fcffe3ea7dd910ca",
+      "changes": 1794,
+      "summary": {
+        "modified": 2,
+        "moved": 3,
+        "added": 1789
+      }
+    }
+  },
+  "118-hr-4366/1_reported-in-house->2_engrossed-in-house": {
+    "baseline": {
+      "digest": "76565e0f663c1528",
+      "changes": 26,
+      "summary": {
+        "modified": 17,
+        "added": 8,
+        "removed": 1
+      }
+    },
+    "similarity +0.05": {
+      "digest": "76565e0f663c1528",
+      "changes": 26,
+      "summary": {
+        "modified": 17,
+        "added": 8,
+        "removed": 1
+      }
+    },
+    "similarity -0.05": {
+      "digest": "76565e0f663c1528",
+      "changes": 26,
+      "summary": {
+        "modified": 17,
+        "added": 8,
+        "removed": 1
+      }
+    },
+    "move +0.05": {
+      "digest": "76565e0f663c1528",
+      "changes": 26,
+      "summary": {
+        "modified": 17,
+        "added": 8,
+        "removed": 1
+      }
+    },
+    "move -0.05": {
+      "digest": "76565e0f663c1528",
+      "changes": 26,
+      "summary": {
+        "modified": 17,
+        "added": 8,
+        "removed": 1
+      }
+    }
+  },
+  "118-hr-4366/2_engrossed-in-house->3_placed-on-calendar-senate": {
+    "baseline": {
+      "digest": "1ff51c465d9f6733",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "similarity +0.05": {
+      "digest": "1ff51c465d9f6733",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "similarity -0.05": {
+      "digest": "1ff51c465d9f6733",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "move +0.05": {
+      "digest": "1ff51c465d9f6733",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    },
+    "move -0.05": {
+      "digest": "1ff51c465d9f6733",
+      "changes": 2,
+      "summary": {
+        "modified": 2
+      }
+    }
+  },
+  "118-hr-4366/3_placed-on-calendar-senate->4_engrossed-amendment-senate": {
+    "baseline": {
+      "digest": "90c7be84dd223fb8",
+      "changes": 720,
+      "summary": {
+        "removed": 27,
+        "added": 558,
+        "modified": 99,
+        "moved": 36
+      }
+    },
+    "similarity +0.05": {
+      "digest": "445485fceda51ab7",
+      "changes": 720,
+      "summary": {
+        "removed": 27,
+        "added": 558,
+        "modified": 96,
+        "moved": 39
+      }
+    },
+    "similarity -0.05": {
+      "digest": "44bfc3cc113d2c0e",
+      "changes": 720,
+      "summary": {
+        "removed": 27,
+        "added": 558,
+        "modified": 100,
+        "moved": 35
+      }
+    },
+    "move +0.05": {
+      "digest": "bdb90354fbee9551",
+      "changes": 721,
+      "summary": {
+        "removed": 28,
+        "added": 559,
+        "modified": 99,
+        "moved": 35
+      }
+    },
+    "move -0.05": {
+      "digest": "90c7be84dd223fb8",
+      "changes": 720,
+      "summary": {
+        "removed": 27,
+        "added": 558,
+        "modified": 99,
+        "moved": 36
+      }
+    }
+  },
+  "118-hr-4366/4_engrossed-amendment-senate->5_engrossed-amendment-house": {
+    "baseline": {
+      "digest": "6813cf1e12149131",
+      "changes": 1283,
+      "summary": {
+        "modified": 277,
+        "moved": 64,
+        "added": 869,
+        "removed": 73
+      }
+    },
+    "similarity +0.05": {
+      "digest": "6a66fa3ce12751bb",
+      "changes": 1283,
+      "summary": {
+        "modified": 275,
+        "moved": 66,
+        "added": 869,
+        "removed": 73
+      }
+    },
+    "similarity -0.05": {
+      "digest": "981359ebf753d89e",
+      "changes": 1284,
+      "summary": {
+        "modified": 278,
+        "moved": 62,
+        "added": 870,
+        "removed": 74
+      }
+    },
+    "move +0.05": {
+      "digest": "39572c0d8cd5d529",
+      "changes": 1286,
+      "summary": {
+        "modified": 277,
+        "moved": 61,
+        "added": 872,
+        "removed": 76
+      }
+    },
+    "move -0.05": {
+      "digest": "c257132ca66a3b8e",
+      "changes": 1281,
+      "summary": {
+        "modified": 277,
+        "moved": 66,
+        "added": 867,
+        "removed": 71
+      }
+    }
+  },
+  "118-hr-8752/1_reported-in-house->2_engrossed-in-house": {
+    "baseline": {
+      "digest": "88359ee0e9542c04",
+      "changes": 37,
+      "summary": {
+        "modified": 18,
+        "removed": 2,
+        "moved": 1,
+        "added": 16
+      }
+    },
+    "similarity +0.05": {
+      "digest": "88359ee0e9542c04",
+      "changes": 37,
+      "summary": {
+        "modified": 18,
+        "removed": 2,
+        "moved": 1,
+        "added": 16
+      }
+    },
+    "similarity -0.05": {
+      "digest": "88359ee0e9542c04",
+      "changes": 37,
+      "summary": {
+        "modified": 18,
+        "removed": 2,
+        "moved": 1,
+        "added": 16
+      }
+    },
+    "move +0.05": {
+      "digest": "88359ee0e9542c04",
+      "changes": 37,
+      "summary": {
+        "modified": 18,
+        "removed": 2,
+        "moved": 1,
+        "added": 16
+      }
+    },
+    "move -0.05": {
+      "digest": "88359ee0e9542c04",
+      "changes": 37,
+      "summary": {
+        "modified": 18,
+        "removed": 2,
+        "moved": 1,
+        "added": 16
+      }
+    }
+  },
+  "118-hr-8774/1_reported-in-house->2_engrossed-in-house": {
+    "baseline": {
+      "digest": "d4aeb90971cda465",
+      "changes": 33,
+      "summary": {
+        "modified": 22,
+        "removed": 3,
+        "added": 8
+      }
+    },
+    "similarity +0.05": {
+      "digest": "d4aeb90971cda465",
+      "changes": 33,
+      "summary": {
+        "modified": 22,
+        "removed": 3,
+        "added": 8
+      }
+    },
+    "similarity -0.05": {
+      "digest": "ab4d0421c93317a7",
+      "changes": 32,
+      "summary": {
+        "modified": 23,
+        "removed": 2,
+        "added": 7
+      }
+    },
+    "move +0.05": {
+      "digest": "d4aeb90971cda465",
+      "changes": 33,
+      "summary": {
+        "modified": 22,
+        "removed": 3,
+        "added": 8
+      }
+    },
+    "move -0.05": {
+      "digest": "d4aeb90971cda465",
+      "changes": 33,
+      "summary": {
+        "modified": 22,
+        "removed": 3,
+        "added": 8
+      }
+    }
+  }
+}
