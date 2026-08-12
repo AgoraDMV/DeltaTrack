@@ -514,15 +514,44 @@ The pairs that *do* respond — 118-hr-4366 v3→v4 and v4→v5, 115-hr-5895 v3�
 by no output-preserving gate at all. On 118-hr-4366 v4→v5 a ±0.05 move on `MOVE_THRESHOLD`
 swings `moved` between 61 and 66 and `removed` between 71 and 76, and nothing reddens.
 
-> **A ±0.05 change to either PDF matching cutoff passes the entire test suite.**
+### 6.2.1 Confirmed by mutating production and running the real suite
+
+The measurement above is a replica's. A second review objected, correctly, that "the entire
+test suite passes" is stronger than a replica can support — a claim that outran its run. So
+it was run properly (`probes/mutate_production_and_run_suite.py`).
+
+Each cutoff is rebound **inside `diff_pdf`**, not in `deltatrack.similarity`. That is
+deliberate: `similarity` serves both pipelines, so editing it there would redden the XML
+canonical baseline, and the red would say nothing about PDF. Rebinding after `diff_pdf`'s
+import block also lands *before* `_reconcile_moves` is defined, so its
+`threshold: float = MOVE_THRESHOLD` default argument picks the new value up — the probe
+prints the live values each run to prove the injection reached both sites.
+
+| run | live `(similarity, move, _reconcile_moves default)` | result |
+|---|---|---|
+| baseline | `0.4  0.6  (0.6,)` | **3227 passed** |
+| `SIMILARITY_THRESHOLD` → 0.45 | `0.45  0.6  (0.6,)` | **3227 passed — green** |
+| `SIMILARITY_THRESHOLD` → 0.35 | `0.35  0.6  (0.6,)` | **3227 passed — green** |
+| `MOVE_THRESHOLD` → 0.65 | `0.4  0.65  (0.65,)` | **3227 passed — green** |
+| `MOVE_THRESHOLD` → 0.55 | `0.4  0.55  (0.55,)` | **3227 passed — green** |
+
+> **Four production mutations, each changing real corpus output, and the suite stayed green
+> on all four. Not one test in 3227 detected any of them.**
+
+**One test is deselected, and the reason is itself a finding.** `tests/test_engine_installs.py`
+builds a wheel and asserts the engine resolves from the installed environment; the
+`PYTHONPATH` this harness needs (the worktree has no `uv sync`) lets the checkout answer
+instead, so it fails identically with and without a mutation. It is a packaging gate and
+cannot detect a matching cutoff. Worth noting that it caught its own fallback correctly —
+which is more than the PDF gates managed.
 
 This is the blocking finding. ADR 0020's implementation rule — "Introduce the contracts
 behaviour-preservingly before changing matching policy, with canonical JSON byte-identical
 across the corpus on both pipelines as the acceptance criterion. That is enforcement, not
 convention: a matching-policy change necessarily breaks a byte-identical gate" — is
-currently **false for PDF**. The enforcement it relies on does not exist, and a PDF
-extraction slice claiming behaviour preservation today would be citing gates that provably
-cannot fail.
+currently **false for PDF**, and now measured at the artifact rather than argued. The
+enforcement it relies on does not exist, and a PDF extraction slice claiming behaviour
+preservation today would be citing gates shown incapable of failing.
 
 ### 6.3 What to build first
 
