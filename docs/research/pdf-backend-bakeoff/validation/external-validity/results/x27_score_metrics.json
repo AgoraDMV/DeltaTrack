@@ -1,0 +1,1447 @@
+{
+ "population": "SYNTHETIC + DEVELOPMENT -- no holdout opened, nothing adjudicated, no confirmatory artifact created",
+ "contract": "section 6 (M0-M9 minus M6) and the section 8 contract (A27.5), as implemented by probes/score_metrics.py",
+ "question": "does score_metrics compute the frozen quantities from committed artifacts, and does each of HARNESS-PLAN section 5's ELEVEN controls actually fire?",
+ "document": "118-hr-8752/1",
+ "document_sha256": "d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0",
+ "page_limit": 16,
+ "note": "PAGE_LIMIT is a machinery demonstration window, not a census",
+ "synthetic_adjudication": "DERIVED from the committed oracle key so the A38.7 join resolves back exactly. A KNOWN-ANSWER FIXTURE about the SCORER. It is not an adjudication, is not evidence about either architecture, and is never written to results/oracle_adjudicated.json",
+ "artifacts_created": "NONE of frames.json, oracle_key.json, oracle_blind.json, oracle_adjudicated.json, metrics.json, scores.json, EXECUTION-START.json",
+ "section5_control_rows": 11,
+ "section5_control_row_note": "HARNESS-PLAN section 5's control table has ELEVEN data rows. A40.6 changes the metric->fixture MAPPING (M1 -> N-B + N-C; M2 -> N-A; M3 -> N-A) and adds no twelfth control.",
+ "m0": {
+  "document": "118-hr-8752/1",
+  "risk_set": 387,
+  "both_absent": 46,
+  "M0a_text_discordant_lines": 100,
+  "M0b_segmentation_discordant_lines": 0,
+  "M0_any_discordant_lines": 100,
+  "M0a_text_rate": 0.25839793281653745,
+  "M0b_rate_on_defined": 0.0,
+  "m0c": {
+   "unit": "region",
+   "anchor_discordant_regions": 1,
+   "regions": 63,
+   "M0c_rate": 0.015873015873015872,
+   "pooled_with_line_rates": false,
+   "why_not_pooled": "M0c's denominator is REGIONS and M0a/M0b's is LINES; combining them yields a rate with no denominator"
+  },
+  "reportable": true
+ },
+ "join_m1_m5": {
+  "C": {
+   "n_stimuli": 8,
+   "pooled": {
+    "adjudicated_headings": 5,
+    "adjudicated_unresolved": 0,
+    "arms": {
+     "H": {
+      "emitted_occurrences": 5,
+      "emitted_unmatchable": 0,
+      "m1_recall_matched": 5,
+      "m1_precision_matched": 5,
+      "m2_denominator": 5,
+      "m2_exact": 5,
+      "m4_denominator": 5,
+      "m4_agree": 5,
+      "m4_unreadable_excluded": 0,
+      "m5_denominator": 5,
+      "m5_agree": 5,
+      "m5_out_of_scope_excluded": 0,
+      "m5_unreadable_excluded": 0,
+      "M1_recall": 1.0,
+      "M1_recall_denominator": 5,
+      "M1_precision": 1.0,
+      "M1_precision_denominator": 5,
+      "M2_exactness": 1.0,
+      "M4_parent_agreement": 1.0,
+      "M5_role_agreement": 1.0
+     },
+     "X": {
+      "emitted_occurrences": 5,
+      "emitted_unmatchable": 0,
+      "m1_recall_matched": 5,
+      "m1_precision_matched": 5,
+      "m2_denominator": 5,
+      "m2_exact": 4,
+      "m4_denominator": 5,
+      "m4_agree": 3,
+      "m4_unreadable_excluded": 0,
+      "m5_denominator": 5,
+      "m5_agree": 5,
+      "m5_out_of_scope_excluded": 0,
+      "m5_unreadable_excluded": 0,
+      "M1_recall": 1.0,
+      "M1_recall_denominator": 5,
+      "M1_precision": 1.0,
+      "M1_precision_denominator": 5,
+      "M2_exactness": 0.8,
+      "M4_parent_agreement": 0.6,
+      "M5_role_agreement": 1.0
+     }
+    },
+    "m3": {
+     "denominator": 5,
+     "no_reference_excluded": 0,
+     "neither_arm_emitted": 0,
+     "X_CORRECTS": 0,
+     "X_REGRESSES": 1,
+     "BOTH_CLEAN": 4,
+     "BOTH_DIRTY": 0,
+     "UNSCORABLE": 0,
+     "rule1_applied_here": false
+    }
+   }
+  },
+  "D": {
+   "n_stimuli": 45,
+   "pooled": {
+    "adjudicated_headings": 23,
+    "adjudicated_unresolved": 0,
+    "arms": {
+     "H": {
+      "emitted_occurrences": 23,
+      "emitted_unmatchable": 0,
+      "m1_recall_matched": 23,
+      "m1_precision_matched": 23,
+      "m2_denominator": 23,
+      "m2_exact": 23,
+      "m4_denominator": 23,
+      "m4_agree": 23,
+      "m4_unreadable_excluded": 0,
+      "m5_denominator": 23,
+      "m5_agree": 23,
+      "m5_out_of_scope_excluded": 0,
+      "m5_unreadable_excluded": 0,
+      "M1_recall": 1.0,
+      "M1_recall_denominator": 23,
+      "M1_precision": 1.0,
+      "M1_precision_denominator": 23,
+      "M2_exactness": 1.0,
+      "M4_parent_agreement": 1.0,
+      "M5_role_agreement": 1.0
+     },
+     "X": {
+      "emitted_occurrences": 23,
+      "emitted_unmatchable": 0,
+      "m1_recall_matched": 23,
+      "m1_precision_matched": 23,
+      "m2_denominator": 23,
+      "m2_exact": 22,
+      "m4_denominator": 23,
+      "m4_agree": 18,
+      "m4_unreadable_excluded": 0,
+      "m5_denominator": 23,
+      "m5_agree": 23,
+      "m5_out_of_scope_excluded": 0,
+      "m5_unreadable_excluded": 0,
+      "M1_recall": 1.0,
+      "M1_recall_denominator": 23,
+      "M1_precision": 1.0,
+      "M1_precision_denominator": 23,
+      "M2_exactness": 0.9565217391304348,
+      "M4_parent_agreement": 0.782608695652174,
+      "M5_role_agreement": 1.0
+     }
+    },
+    "m3": {
+     "denominator": 23,
+     "no_reference_excluded": 0,
+     "neither_arm_emitted": 0,
+     "X_CORRECTS": 0,
+     "X_REGRESSES": 1,
+     "BOTH_CLEAN": 22,
+     "BOTH_DIRTY": 0,
+     "UNSCORABLE": 0,
+     "rule1_applied_here": false
+    }
+   }
+  },
+  "h_vs_x_text_disagreements": [
+   {
+    "page_number": 2,
+    "line_number": 8,
+    "H": "DEPARTMENTAL MANAGEMENT, INTELLIGENCE, SITUATIONAL AWARENESS, AND OVERSIGHT",
+    "X": "DEPARTMENTAL MANAGEMENT, INTEL\ufffd LIGENCE, SITUATIONAL AWARENESS, AND OVERSIGHT"
+   }
+  ],
+  "what_this_fixture_licenses": "the oracle is H's own text, so H is clean by construction and X_REGRESSES counts arm disagreement, NOT architecture quality. Nothing here is evidence about H versus X."
+ },
+ "m7_m9_m6": {
+  "m7_pooled": {
+   "H": {
+    "emitted_occurrences": 33,
+    "display_split_headings": 0,
+    "incidence": 0.0
+   },
+   "X": {
+    "emitted_occurrences": 33,
+    "display_split_headings": 0,
+    "incidence": 0.0
+   }
+  },
+  "m9": {
+   "quantity": "count of Page.lines where line_number is not None (A39.1)",
+   "tolerance": "NONE -- any strictly positive deficit fires",
+   "diagnostics_excluded_from_the_clause": [
+    "n_margin_numbered_with_glyph_size",
+    "margin_numbered_line_keys"
+   ],
+   "rule0_applied_here": false,
+   "rule0_owner": "decide_architecture (section 7.2 rule 0, outcomes by A27.4)",
+   "per_document": [
+    {
+     "document": "118-hr-8752/1",
+     "arms": {
+      "H": {
+       "derive_size_bands_returns_a_band": true,
+       "coverage": 1.0,
+       "coverage_floor": 0.85,
+       "coverage_meets_floor": true,
+       "n_lines_total": 293,
+       "n_margin_numbered_lines": 277,
+       "n_margin_numbered_with_glyph_size": 277
+      },
+      "X": {
+       "derive_size_bands_returns_a_band": true,
+       "coverage": 1.0,
+       "coverage_floor": 0.85,
+       "coverage_meets_floor": true,
+       "n_lines_total": 387,
+       "n_margin_numbered_lines": 370,
+       "n_margin_numbered_with_glyph_size": 370
+      }
+     },
+     "margin_line_loss": {
+      "loser": "H",
+      "fires": true,
+      "h": 277,
+      "x": 370,
+      "deficit": 93
+     }
+    }
+   ],
+   "n_documents_with_margin_line_loss": 1
+  },
+  "m6_present": false
+ },
+ "section8": {
+  "zero_event_14": {
+   "estimand": "pi = P(a document from the target population exhibits >= 1 heading-level H/X discordance)",
+   "unit": "document",
+   "independent_unit_rule": "8.3 -- the document, never the heading",
+   "n_documents": 14,
+   "events": 0,
+   "observed_rate": 0.0,
+   "clopper_pearson_upper_95": 0.19263617565013536,
+   "procedure": "exact one-sided 95 % Clopper-Pearson upper bound on the DOCUMENT unit",
+   "per_document": [
+    {
+     "document": "doc-0",
+     "event": false
+    },
+    {
+     "document": "doc-1",
+     "event": false
+    },
+    {
+     "document": "doc-10",
+     "event": false
+    },
+    {
+     "document": "doc-11",
+     "event": false
+    },
+    {
+     "document": "doc-12",
+     "event": false
+    },
+    {
+     "document": "doc-13",
+     "event": false
+    },
+    {
+     "document": "doc-2",
+     "event": false
+    },
+    {
+     "document": "doc-3",
+     "event": false
+    },
+    {
+     "document": "doc-4",
+     "event": false
+    },
+    {
+     "document": "doc-5",
+     "event": false
+    },
+    {
+     "document": "doc-6",
+     "event": false
+    },
+    {
+     "document": "doc-7",
+     "event": false
+    },
+    {
+     "document": "doc-8",
+     "event": false
+    },
+    {
+     "document": "doc-9",
+     "event": false
+    }
+   ],
+   "per_heading_probability_reported": false,
+   "zero_event": true,
+   "zero_event_form": "1 - 0.05**(1/N)",
+   "bootstrap_reported": false,
+   "bootstrap_refusal_reason": "ZERO_EVENTS_BOOTSTRAP_REFUSED",
+   "statement": "no heading-level discordance was observed on 14 documents"
+  },
+  "nonzero_3_of_14": {
+   "estimand": "pi = P(a document from the target population exhibits >= 1 heading-level H/X discordance)",
+   "unit": "document",
+   "independent_unit_rule": "8.3 -- the document, never the heading",
+   "n_documents": 14,
+   "events": 3,
+   "observed_rate": 0.21428571428571427,
+   "clopper_pearson_upper_95": 0.4656566121942177,
+   "procedure": "exact one-sided 95 % Clopper-Pearson upper bound on the DOCUMENT unit",
+   "per_heading_probability_reported": false,
+   "zero_event": false,
+   "bootstrap_reported": true,
+   "bootstrap": {
+    "reported": true,
+    "statistic": [
+     "section8",
+     "document-heading-discordance",
+     "P-head"
+    ],
+    "resamples": 10000,
+    "namespace": "bootstrap-document",
+    "seed": 20260807,
+    "unit": "document",
+    "n_documents": 14,
+    "events": 3,
+    "observed_rate": 0.21428571428571427,
+    "endpoint_indices": [
+     249,
+     9749
+    ],
+    "interval": [
+     0.0,
+     0.42857142857142855
+    ],
+    "gating": false
+   }
+  }
+ },
+ "section5_controls": {
+  "1_s1_liveness": {
+   "fires": true,
+   "advance_scale": 1.25,
+   "dead_comparator_blocks_m0": true
+  },
+  "2_m3_weld_space": {
+   "weld": {
+    "denominator": 1,
+    "no_reference_excluded": 0,
+    "neither_arm_emitted": 0,
+    "X_CORRECTS": 1,
+    "X_REGRESSES": 0,
+    "BOTH_CLEAN": 0,
+    "BOTH_DIRTY": 0,
+    "UNSCORABLE": 0,
+    "rule1_applied_here": false
+   },
+   "mirror": {
+    "denominator": 1,
+    "no_reference_excluded": 0,
+    "neither_arm_emitted": 0,
+    "X_CORRECTS": 0,
+    "X_REGRESSES": 1,
+    "BOTH_CLEAN": 0,
+    "BOTH_DIRTY": 0,
+    "UNSCORABLE": 0,
+    "rule1_applied_here": false
+   },
+   "half_repair": {
+    "denominator": 1,
+    "no_reference_excluded": 0,
+    "neither_arm_emitted": 0,
+    "X_CORRECTS": 0,
+    "X_REGRESSES": 0,
+    "BOTH_CLEAN": 0,
+    "BOTH_DIRTY": 1,
+    "UNSCORABLE": 0,
+    "rule1_applied_here": false
+   }
+  },
+  "3_m3_insulation": {
+   "insulated": {
+    "denominator": 1,
+    "no_reference_excluded": 0,
+    "neither_arm_emitted": 0,
+    "X_CORRECTS": 0,
+    "X_REGRESSES": 0,
+    "BOTH_CLEAN": 1,
+    "BOTH_DIRTY": 0,
+    "UNSCORABLE": 0,
+    "rule1_applied_here": false
+   },
+   "without_line_state": {
+    "denominator": 1,
+    "no_reference_excluded": 0,
+    "neither_arm_emitted": 0,
+    "X_CORRECTS": 0,
+    "X_REGRESSES": 0,
+    "BOTH_CLEAN": 1,
+    "BOTH_DIRTY": 0,
+    "UNSCORABLE": 0,
+    "rule1_applied_here": false
+   },
+   "real_boundary_split": {
+    "denominator": 1,
+    "no_reference_excluded": 0,
+    "neither_arm_emitted": 0,
+    "X_CORRECTS": 0,
+    "X_REGRESSES": 1,
+    "BOTH_CLEAN": 0,
+    "BOTH_DIRTY": 0,
+    "UNSCORABLE": 0,
+    "rule1_applied_here": false
+   }
+  },
+  "4_delete_agency_anchors": {
+   "agency_anchors_deleted": 7,
+   "m1_recall_matched": [
+    23,
+    17,
+    6
+   ],
+   "m4_agree": [
+    23,
+    6,
+    17
+   ]
+  },
+  "5_shift_baselines": {
+   "occurrences_shifted": 18,
+   "m1_recall_matched": [
+    23,
+    5
+   ],
+   "m4_agree": [
+    23,
+    5
+   ]
+  },
+  "6_inject_report_page": {
+   "clean": {
+    "H": {
+     "emitted_occurrences": 33,
+     "display_split_headings": 0,
+     "incidence": 0.0
+    },
+    "X": {
+     "emitted_occurrences": 33,
+     "display_split_headings": 0,
+     "incidence": 0.0
+    }
+   },
+   "after_injection": {
+    "H": {
+     "emitted_occurrences": 34,
+     "display_split_headings": 1,
+     "incidence": 0.029411764705882353
+    },
+    "X": {
+     "emitted_occurrences": 33,
+     "display_split_headings": 0,
+     "incidence": 0.0
+    }
+   },
+   "instances": [
+    "R E P O R T"
+   ]
+  },
+  "7_m0_denominator": {
+   "risk_set": 387,
+   "both_absent": 46,
+   "inflated_denominator": 433
+  },
+  "8_vacuity": {
+   "pooled": {
+    "emitted_occurrences": 1,
+    "emitted_unmatchable": 0,
+    "m1_recall_matched": 0,
+    "m1_precision_matched": 0,
+    "m2_denominator": 0,
+    "m2_exact": 0,
+    "m4_denominator": 0,
+    "m4_agree": 0,
+    "m4_unreadable_excluded": 0,
+    "m5_denominator": 0,
+    "m5_agree": 0,
+    "m5_out_of_scope_excluded": 0,
+    "m5_unreadable_excluded": 0,
+    "M1_recall": "VACUOUS",
+    "M1_recall_denominator": 0,
+    "M1_precision": 0.0,
+    "M1_precision_denominator": 1,
+    "M2_exactness": "VACUOUS",
+    "M4_parent_agreement": "VACUOUS",
+    "M5_role_agreement": "VACUOUS"
+   }
+  },
+  "9_section8_independence": {
+   "document_bound_14": 0.19263617565013536,
+   "heading_bound_600": 0.004980443380361299,
+   "ratio": 38.67851934824342
+  },
+  "10_section8_zero_event": {
+   "zero_event": {
+    "estimand": "pi = P(a document from the target population exhibits >= 1 heading-level H/X discordance)",
+    "unit": "document",
+    "independent_unit_rule": "8.3 -- the document, never the heading",
+    "n_documents": 14,
+    "events": 0,
+    "observed_rate": 0.0,
+    "clopper_pearson_upper_95": 0.19263617565013536,
+    "procedure": "exact one-sided 95 % Clopper-Pearson upper bound on the DOCUMENT unit",
+    "per_heading_probability_reported": false,
+    "zero_event": true,
+    "zero_event_form": "1 - 0.05**(1/N)",
+    "bootstrap_reported": false,
+    "bootstrap_refusal_reason": "ZERO_EVENTS_BOOTSTRAP_REFUSED",
+    "statement": "no heading-level discordance was observed on 14 documents"
+   }
+  },
+  "11_section8_pairing": {
+   "unweighted": -12.0,
+   "weighted_would_be": -39.1764705882353,
+   "paired": {
+    "quantity": "fixture",
+    "unit": "document",
+    "n_documents": 3,
+    "weighting": "UNWEIGHTED mean over documents -- never weighted by heading count",
+    "mean_difference_X_minus_H": -12.0,
+    "per_document": [
+     {
+      "document": "doc-A",
+      "H": 10.0,
+      "X": 12.0,
+      "difference_X_minus_H": 2.0
+     },
+     {
+      "document": "doc-B",
+      "H": 10.0,
+      "X": 12.0,
+      "difference_X_minus_H": 2.0
+     },
+     {
+      "document": "doc-C",
+      "H": 100.0,
+      "X": 60.0,
+      "difference_X_minus_H": -40.0
+     }
+    ]
+   }
+  }
+ },
+ "negative_attacks": {
+  "n_control_stimuli": 20
+ },
+ "execution_boundary": {
+  "execution_boundary_state": "ABSENT",
+  "forbidden_artifacts_present": []
+ },
+ "metrics_payload_shape": [
+  "adequacy",
+  "controls",
+  "cross_engine",
+  "decision_owner",
+  "decision_taken_here",
+  "documents",
+  "estimands",
+  "estimands_pooled_together",
+  "implements",
+  "m0",
+  "m6",
+  "m6_status",
+  "m7",
+  "m9",
+  "n_documents",
+  "schema",
+  "section8",
+  "section8_paired",
+  "why_estimands_are_separate"
+ ],
+ "forward_ambiguities": [
+  {
+   "id": "R1_AGREEMENT_DENOMINATOR",
+   "status": "OPEN -- reported, NOT resolved here",
+   "question": "5.6 requires R1 heading-text agreement >= 0.90 and role agreement >= 0.80, but no frozen source states the DENOMINATOR: occurrence keys resolved in BOTH the primary and the repeat, or their UNION. The two differ exactly when a repeat disagrees about a heading's PRESENCE, which is a reliability failure the intersection reading cannot see.",
+   "why_not_settled_here": "choosing would fix the sensitivity of a Rule 3 gate after the protocol froze. A38.8 recorded three readings of Rule 0's margin-line clause and chose none; the same discipline applies. The scorer computes no R1 agreement, so no unfrozen choice has been made on a result-bearing path.",
+   "owner": "a pre-execution amendment, then decide_architecture (A27.6 Rule 3)"
+  }
+ ],
+ "tests": [
+  {
+   "test": "the risk set EXCLUDES BOTH_ABSENT and the two partition the neutral lines",
+   "expected": [
+    true,
+    433
+   ],
+   "observed": [
+    true,
+    433
+   ],
+   "pass": true,
+   "fails_when": "BOTH_ABSENT lines are absent from this material (so the control is vacuous), or the risk set and the both-absent count do not partition the committed lines"
+  },
+  {
+   "test": "M0-any is the UNION of the two components, never their sum",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "M0-any was formed by addition, which double-counts a line that is both text- and segmentation-discordant and can push the reported rate above 1.0"
+  },
+  {
+   "test": "BOTH separately named M0b quantities are emitted, and no bare 'M0b' exists",
+   "expected": [
+    true,
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "a single 'M0b' is emitted, so a reader cannot tell the full-risk-set rate from the one section 5 permits calling 'the fraction of comparable groupings that disagree'"
+  },
+  {
+   "test": "M0c is reported on its OWN denominator and is NOT pooled with the line rates",
+   "expected": [
+    false,
+    "region"
+   ],
+   "observed": [
+    false,
+    "region"
+   ],
+   "pass": true,
+   "fails_when": "M0c is combined with M0a/M0b, producing a rate whose denominator is part lines and part regions"
+  },
+  {
+   "test": "the pooled figures are count-pooled and carry their content-bearing denominator",
+   "expected": [
+    387,
+    100
+   ],
+   "observed": [
+    387,
+    100
+   ],
+   "pass": true,
+   "fails_when": "pooling averaged per-document rates, which weights a 40-line document like a 4,000-line one and leaves the pooled figure with no real denominator"
+  },
+  {
+   "test": "each estimand reads the route its PURPOSE mandates (A36.4)",
+   "expected": [
+    "ai",
+    "human"
+   ],
+   "observed": [
+    "ai",
+    "human"
+   ],
+   "pass": true,
+   "fails_when": "C metrics read the human answer, or D decisions read the AI answer -- either makes the oracle source depend on architecture disagreement"
+  },
+  {
+   "test": "both estimands are non-empty, so nothing below is vacuous",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "an estimand drew no stimuli here, so its metrics passed on an empty population"
+  },
+  {
+   "test": "the estimands are reported SEPARATELY and never pooled together (A36.3)",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "C and D were merged into one denominator, which is exactly what 'never pooled' forbids"
+  },
+  {
+   "test": "every synthetic adjudication RESOLVED through the frozen A38.7 geometry",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": "the forward pdf_x -> pixel map and the frozen inverse disagree, so the known-answer fixture cannot establish anything about the join"
+  },
+  {
+   "test": "M1 recall is PERFECT on the known answer, for the arm it was derived from",
+   "expected": 1.0,
+   "observed": 1.0,
+   "pass": true,
+   "fails_when": "the join failed to match an occurrence to the adjudication derived FROM it, so the matching key is not doing what A27.1/A30.1 specify"
+  },
+  {
+   "test": "M1 recall's denominator is the ADJUDICATED enumeration (I10)",
+   "expected": 23,
+   "observed": 23,
+   "pass": true,
+   "fails_when": "recall is scored against the EMITTED set, which cannot fall below 1.0 by construction and would report a perfect recall for an architecture that emitted nothing"
+  },
+  {
+   "test": "M2, M4 and M5 are perfect on the known answer",
+   "expected": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "observed": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "pass": true,
+   "fails_when": "a metric disagrees with the committed values it was derived from, so it is measuring something other than what it claims"
+  },
+  {
+   "test": "M3 finds H clean on EVERY heading, the oracle being H's own text",
+   "expected": [
+    23,
+    0,
+    0
+   ],
+   "observed": [
+    23,
+    0,
+    0
+   ],
+   "pass": true,
+   "fails_when": "M3 invents a defect against an oracle that IS the extractor's own text, or it scores a correction where the reference was taken from the arm being corrected"
+  },
+  {
+   "test": "every X_REGRESSES is explained by a REAL H-vs-X text disagreement in this material",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "fails_when": "M3 reports a regression that no committed text disagreement accounts for, i.e. the outcome came from somewhere other than the two arms' emitted text"
+  },
+  {
+   "test": "an UNMATCHABLE emitted occurrence stays in the PRECISION denominator",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "an occurrence the A30 bridge refused was dropped, shrinking the denominator invisibly and making precision look better for the arm that failed hardest"
+  },
+  {
+   "test": "M7 declares itself a self-signature and NOT a correctness measure",
+   "expected": [
+    false,
+    "none -- a self-signature"
+   ],
+   "observed": [
+    false,
+    "none -- a self-signature"
+   ],
+   "pass": true,
+   "fails_when": "M7 is presented as heading correctness, which it cannot be: it has no oracle"
+  },
+  {
+   "test": "M7 prints the matching INSTANCES, not only a count",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "only counts are reported, so a detector firing on the wrong headings is indistinguishable from one firing on the right ones"
+  },
+  {
+   "test": "M9 records the A39.1 margin-line FACT and does NOT apply Rule 0",
+   "expected": [
+    false,
+    "NONE -- any strictly positive deficit fires"
+   ],
+   "observed": [
+    false,
+    "NONE -- any strictly positive deficit fires"
+   ],
+   "pass": true,
+   "fails_when": "the scorer applies Rule 0, which belongs to decide_architecture, or it invented a tolerance A39.1 explicitly refuses"
+  },
+  {
+   "test": "the margin-line quantity is the A39.1 count, matching `margin_line_loss` exactly",
+   "expected": {
+    "loser": "H",
+    "fires": true,
+    "h": 277,
+    "x": 370,
+    "deficit": 93
+   },
+   "observed": {
+    "loser": "H",
+    "fires": true,
+    "h": 277,
+    "x": 370,
+    "deficit": 93
+   },
+   "pass": true,
+   "fails_when": "the scorer computed a different margin-line comparison from the frozen one -- a coverage numerator or a geometric approximation instead of the ruled count"
+  },
+  {
+   "test": "M6 IS ABSENT from every scorer surface",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "an M6 computation exists, which A20 struck and section 5 excludes ('M0-M9 minus M6')"
+  },
+  {
+   "test": "the section 8 event is derived PER DOCUMENT, one record each",
+   "expected": [
+    1,
+    "<class 'str'>"
+   ],
+   "observed": [
+    1,
+    "<class 'str'>"
+   ],
+   "pass": true,
+   "fails_when": "the event vector is not one row per document, so the independent unit is not the document 8.3 requires"
+  },
+  {
+   "test": "zero events: the frozen closed form, and NO bootstrap interval",
+   "expected": [
+    0.1926,
+    false,
+    "1 - 0.05**(1/N)",
+    false
+   ],
+   "observed": [
+    0.1926,
+    false,
+    "1 - 0.05**(1/N)",
+    false
+   ],
+   "pass": true,
+   "fails_when": "a bootstrap is reported at zero events -- 8.1 measured it degenerate at [0.0, 0.0] -- or the closed form is not 1 - 0.05**(1/N)"
+  },
+  {
+   "test": "the zero-event WORDING is an observation, never a claim about the true rate",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the report claims the true rate is zero, which is precisely the inference the bound exists to refuse"
+  },
+  {
+   "test": "non-zero events: the bootstrap IS reported, alongside the exact bound",
+   "expected": [
+    true,
+    true,
+    "document"
+   ],
+   "observed": [
+    true,
+    true,
+    "document"
+   ],
+   "pass": true,
+   "fails_when": "the permitted non-zero bootstrap is suppressed, or it resamples something other than documents"
+  },
+  {
+   "test": "the exact bound is above the observed rate and below 1",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the Clopper-Pearson upper bound is not an upper bound on the observed rate"
+  },
+  {
+   "test": "the bisection solver AGREES with the frozen zero-event closed form",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the closed form and the general procedure are different statistics, so the study would quote one at zero events and another everywhere else"
+  },
+  {
+   "test": "C1 S1 FIRES on DEVELOPMENT: sabotage RAISES M0",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "advances x 1.25 does not raise the discordance count, which means M0 cannot detect a change it certainly should -- the comparator is not live and M0 is not reportable"
+  },
+  {
+   "test": "C1 a DEAD comparator makes M0 NOT REPORTABLE, and a live one does not",
+   "expected": [
+    true,
+    null,
+    false,
+    "S1_NOT_LIVE"
+   ],
+   "observed": [
+    true,
+    null,
+    false,
+    "S1_NOT_LIVE"
+   ],
+   "pass": true,
+   "fails_when": "M0 is reported as a finding while the comparator that proves it can move is dead"
+  },
+  {
+   "test": "C2 `FAMILYHOUSING` vs `FAMILY HOUSING` reaches M3 as X_CORRECTS",
+   "expected": [
+    1,
+    0,
+    1
+   ],
+   "observed": [
+    1,
+    0,
+    1
+   ],
+   "pass": true,
+   "fails_when": "the weld does not reach M3 as a correction, so the primary comparative metric cannot see the failure class the seam choice actually governs"
+  },
+  {
+   "test": "C2 ...and the MIRROR is X_REGRESSES, so the metric has a direction",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "fails_when": "the same defect scores as a correction whichever arm carries it, i.e. M3 is symmetric and cannot support a directional claim"
+  },
+  {
+   "test": "C2 a HALF repair is BOTH_DIRTY, never a correction (A3)",
+   "expected": [
+    1,
+    0
+   ],
+   "observed": [
+    1,
+    0
+   ],
+   "pass": true,
+   "fails_when": "fixing one of two welds counts as a correction, inflating X_CORRECTS with labels that are still wrong"
+  },
+  {
+   "test": "C3 a split-only (segmentation) difference fabricates NO weld or split",
+   "expected": [
+    1,
+    0,
+    0
+   ],
+   "observed": [
+    1,
+    0,
+    0
+   ],
+   "pass": true,
+   "fails_when": "a segmentation label leaked into M3 and manufactured a boundary defect against a clean oracle -- M3 consumes projected text and the oracle ONLY"
+  },
+  {
+   "test": "C3 M3 scores identically with NO segmentation label present at all",
+   "expected": {
+    "denominator": 1,
+    "no_reference_excluded": 0,
+    "neither_arm_emitted": 0,
+    "X_CORRECTS": 0,
+    "X_REGRESSES": 0,
+    "BOTH_CLEAN": 1,
+    "BOTH_DIRTY": 0,
+    "UNSCORABLE": 0,
+    "rule1_applied_here": false
+   },
+   "observed": {
+    "denominator": 1,
+    "no_reference_excluded": 0,
+    "neither_arm_emitted": 0,
+    "X_CORRECTS": 0,
+    "X_REGRESSES": 0,
+    "BOTH_CLEAN": 1,
+    "BOTH_DIRTY": 0,
+    "UNSCORABLE": 0,
+    "rule1_applied_here": false
+   },
+   "pass": true,
+   "fails_when": "removing the segmentation label changed M3's answer, which proves it was reading one"
+  },
+  {
+   "test": "C3 ...while a REAL inserted boundary is still caught, so insulation is not blindness",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "fails_when": "M3 ignores a genuine printed-boundary violation, so the insulation above was bought by making the metric insensitive"
+  },
+  {
+   "test": "C4 the mutation really deleted agency anchors, so the control is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no agency anchor was present to delete, so the comparison below tested nothing"
+  },
+  {
+   "test": "C4 M4 falls FURTHER than M1 when agency anchors are deleted",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "M4 does not fall further than M1, which would mean the parent metric is insensitive to the hierarchy being destroyed -- it would be tracking presence, not structure"
+  },
+  {
+   "test": "C5 the shift really moved occurrences, so the control is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no occurrence could be shifted, so the comparison below tested nothing"
+  },
+  {
+   "test": "C5 M4 FALLS when heading baselines shift one line-height",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "M4 does not fall when every heading is attributed to the wrong printed line, which would mean the parent metric is not anchored to source position at all"
+  },
+  {
+   "test": "C5 ...and M1 falls with it, because the source-position key no longer matches",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the matching key survived a one-line shift, so it is not the source position A27.1 fixes -- it must be matching on text"
+  },
+  {
+   "test": "C6 the clean material carries NO display-split heading, so injection is detectable",
+   "expected": [
+    0,
+    0
+   ],
+   "observed": [
+    0,
+    0
+   ],
+   "pass": true,
+   "fails_when": "the material already contains letter-spaced headings, so a rise after injection would not prove the injected one was seen"
+  },
+  {
+   "test": "C6 M7 DETECTS the injected `R E P O R T`, by instance and not only by count",
+   "expected": [
+    1,
+    [
+     "R E P O R T"
+    ]
+   ],
+   "observed": [
+    1,
+    [
+     "R E P O R T"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "M7 does not detect a letter-spaced heading, so phase 2's flip condition 1 cannot be evaluated on fresh data at all"
+  },
+  {
+   "test": "C6 ...and the OTHER arm is unaffected, so M7 is per-architecture",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": "injecting into one arm moved the other's incidence, so M7 is not measured per architecture as section 6 requires"
+  },
+  {
+   "test": "C6 the signature threshold is the frozen >= 3 single-character tokens",
+   "expected": [
+    true,
+    false,
+    3
+   ],
+   "observed": [
+    true,
+    false,
+    3
+   ],
+   "pass": true,
+   "fails_when": "the threshold drifted from section 6's frozen `>= 3 single-character tokens`"
+  },
+  {
+   "test": "C7 a BOTH_ABSENT line appears in NO M0 denominator",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "an M0 rate is computed over a denominator that includes jointly-absent lines, making the reported rate a function of how much page furniture GPO put on the page"
+  },
+  {
+   "test": "C7 ...and the wrong denominator would give a DIFFERENT number, so this is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the two denominators happen to agree on this material, so the control above passed for the wrong reason"
+  },
+  {
+   "test": "C7 a frame smuggling a BOTH_ABSENT line into the risk set is REFUSED, not scored",
+   "expected": "FRAME_RISK_SET_INCONSISTENT",
+   "observed": "FRAME_RISK_SET_INCONSISTENT",
+   "pass": true,
+   "fails_when": "the scorer accepts a frame whose committed risk-set flag contradicts the state that produced it, so a hand-edited or drifted frame would be silently scored"
+  },
+  {
+   "test": "C8 a zero denominator yields VACUOUS, and a real zero yields 0.0",
+   "expected": [
+    "VACUOUS",
+    0.0,
+    0.5
+   ],
+   "observed": [
+    "VACUOUS",
+    0.0,
+    0.5
+   ],
+   "pass": true,
+   "fails_when": "a zero-denominator metric is printed as a rate -- 0.0 is indistinguishable from perfect agreement, and 1.0 from perfect success on nothing"
+  },
+  {
+   "test": "C8 an estimand with ZERO adjudicated headings reports M1 recall VACUOUS",
+   "expected": [
+    "VACUOUS",
+    0
+   ],
+   "observed": [
+    "VACUOUS",
+    0
+   ],
+   "pass": true,
+   "fails_when": "recall over an empty adjudicated enumeration is printed as a number, which reads as agreement about a population that was never observed"
+  },
+  {
+   "test": "C8 ...while PRECISION still has its content-bearing denominator and is not VACUOUS",
+   "expected": 0.0,
+   "observed": 0.0,
+   "pass": true,
+   "fails_when": "a genuinely zero precision was reported VACUOUS, which would hide a real failure behind a refusal to report"
+  },
+  {
+   "test": "C8 VACUOUS is a string, so it cannot be averaged or summed by accident",
+   "expected": "<class 'str'>",
+   "observed": "<class 'str'>",
+   "pass": true,
+   "fails_when": "the vacuity sentinel is numeric, so it can silently enter an arithmetic mean"
+  },
+  {
+   "test": "C9 the DOCUMENT bound and the HEADING bound are 8.1's own 0.1926 vs 0.00498",
+   "expected": [
+    0.1926,
+    0.00498,
+    39
+   ],
+   "observed": [
+    0.1926,
+    0.00498,
+    39
+   ],
+   "pass": true,
+   "fails_when": "the two units give the same bound, i.e. headings were treated as iid trials and the 39x difference 8.1 measured has been erased"
+  },
+  {
+   "test": "C9 the scorer reports the DOCUMENT bound, on the document unit",
+   "expected": [
+    "document",
+    0.1926361757
+   ],
+   "observed": [
+    "document",
+    0.1926361757
+   ],
+   "pass": true,
+   "fails_when": "the reported bound is the heading-unit one, which overstates precision 39-fold"
+  },
+  {
+   "test": "C9 a HEADING-as-trials vector is REFUSED, not silently scored",
+   "expected": "DUPLICATE_DOCUMENT_IDENTITY",
+   "observed": "DUPLICATE_DOCUMENT_IDENTITY",
+   "pass": true,
+   "fails_when": "600 heading rows over 14 documents are accepted as 600 independent trials, which is exactly the estimand error section 8 exists to prevent"
+  },
+  {
+   "test": "C9 no per-heading probability is reported anywhere",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "a per-heading probability is published, which section 8 forbids outright"
+  },
+  {
+   "test": "C10 NO bootstrap is reported at zero events",
+   "expected": [
+    false,
+    false,
+    "ZERO_EVENTS_BOOTSTRAP_REFUSED"
+   ],
+   "observed": [
+    false,
+    false,
+    "ZERO_EVENTS_BOOTSTRAP_REFUSED"
+   ],
+   "pass": true,
+   "fails_when": "a bootstrap interval is reported at zero events -- 8.1 measured every resample of all-zero clusters is zero, so the interval is [0.0, 0.0] and carries no information"
+  },
+  {
+   "test": "C10 the closed form is EXACTLY `1 - 0.05**(1/N)`, for every N",
+   "expected": [
+    0.95,
+    0.7763932022500211,
+    0.19263617565013536,
+    0.09503385285530419,
+    0.004980443380361299
+   ],
+   "observed": [
+    0.95,
+    0.7763932022500211,
+    0.19263617565013536,
+    0.09503385285530419,
+    0.004980443380361299
+   ],
+   "pass": true,
+   "fails_when": "the zero-event bound is not the frozen closed form section 8.3 fixed verbatim"
+  },
+  {
+   "test": "C10 the closed form comes from its SINGLE owner, `methodology_contracts`",
+   "expected": [
+    0.7763932022500211,
+    0.19263617565013536,
+    0.004980443380361299
+   ],
+   "observed": [
+    0.7763932022500211,
+    0.19263617565013536,
+    0.004980443380361299
+   ],
+   "pass": true,
+   "fails_when": "the scorer spells the closed form itself, so the study carries two copies of one frozen number and they can drift"
+  },
+  {
+   "test": "C10 the A37 helper is called with NO custom statistic id (A38.10)",
+   "expected": [
+    false,
+    1
+   ],
+   "observed": [
+    false,
+    1
+   ],
+   "pass": true,
+   "fails_when": "the bootstrap accepts a caller-supplied statistic id, which would let a scorer draw a different resample sequence for the same frozen statistic"
+  },
+  {
+   "test": "C11 the paired mean is UNWEIGHTED over documents",
+   "expected": -12.0,
+   "observed": -12.0,
+   "pass": true,
+   "fails_when": "the paired mean is weighted by heading count, which re-imports the heading-as-unit assumption 8.1 measured to be worth a factor of 39"
+  },
+  {
+   "test": "C11 ...and the weighted mean is a DIFFERENT number, so the control is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the two means agree on this fixture, so the control above passed for the wrong reason"
+  },
+  {
+   "test": "C11 per-document detail is MANDATORY and travels with the mean",
+   "expected": [
+    3,
+    true
+   ],
+   "observed": [
+    3,
+    true
+   ],
+   "pass": true,
+   "fails_when": "the paired comparison is collapsed to one number, which section 8.3 forbids"
+  },
+  {
+   "test": "C11 there is NO weight parameter to supply",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a caller can pass weights, so the frozen unweighted rule is an obligation rather than a gate"
+  },
+  {
+   "test": "C11 a duplicated document REFUSES rather than being weighted twice",
+   "expected": "DUPLICATE_PAIRED_DOCUMENT",
+   "observed": "DUPLICATE_PAIRED_DOCUMENT",
+   "pass": true,
+   "fails_when": "one document appearing twice is silently double-weighted, which is a heading-level table entering a document-level statistic"
+  },
+  {
+   "test": "N1 NO control stimulus reaches a C or D denominator",
+   "expected": [
+    true,
+    "set()"
+   ],
+   "observed": [
+    true,
+    "set()"
+   ],
+   "pass": true,
+   "fails_when": "a negative control entered an estimand, so the study's own falsification material would be counted as positive evidence about an architecture"
+  },
+  {
+   "test": "N2 a control FORCED into an estimand is refused by the scorer",
+   "expected": "CONTROL_IN_ESTIMAND",
+   "observed": "CONTROL_IN_ESTIMAND",
+   "pass": true,
+   "fails_when": "membership alone lets a control into a denominator, so the exclusion rests on the oracle key being well-formed rather than on a gate the scorer enforces"
+  },
+  {
+   "test": "N3 a committed discordance flag contradicting its own inputs is REFUSED",
+   "expected": "FRAME_STATE_INCONSISTENT",
+   "observed": "FRAME_STATE_INCONSISTENT",
+   "pass": true,
+   "fails_when": "the scorer trusts a serialized boolean it can independently recompute, so a hand-edited or drifted frame is scored as though it were sound"
+  },
+  {
+   "test": "N4 I9 -- a discordant line whose region is not in the D-frame is REFUSED",
+   "expected": "DISCORDANT_LINE_OUTSIDE_D_FRAME",
+   "observed": "DISCORDANT_LINE_OUTSIDE_D_FRAME",
+   "pass": true,
+   "fails_when": "the discordances being reported and the D-frame census describing them have drifted into two different eligibility sets, and nothing notices"
+  },
+  {
+   "test": "N5 two emitted occurrences claiming ONE source position are REFUSED",
+   "expected": "AMBIGUOUS_EMITTED_OCCURRENCE_KEY",
+   "observed": "AMBIGUOUS_EMITTED_OCCURRENCE_KEY",
+   "pass": true,
+   "fails_when": "the join silently keeps whichever duplicate iteration order reached last, so the matched set depends on dict ordering"
+  },
+  {
+   "test": "N6 an unknown adjudicated role RAISES rather than shrinking the M5 denominator",
+   "expected": "UnknownRole",
+   "observed": "UnknownRole",
+   "pass": true,
+   "fails_when": "an unmapped role becomes UNSCORABLE, quietly SHRINKING the M5 denominator -- and a smaller denominator reads as a cleaner result rather than as a defect"
+  },
+  {
+   "test": "N7 M4 agrees on the immediate parent and DISAGREES with a grandparent",
+   "expected": [
+    1.0,
+    0.0
+   ],
+   "observed": [
+    1.0,
+    0.0
+   ],
+   "pass": true,
+   "fails_when": "M4 accepts any ancestor as the parent, which is the 'hierarchy is right' claim being satisfied by a heading that is merely somewhere underneath"
+  },
+  {
+   "test": "N8 a missing MANDATED route refuses -- there is no fallback to the other namespace",
+   "expected": "ANSWER_MISSING_FOR_REQUIRED_ROUTE",
+   "observed": "ANSWER_MISSING_FOR_REQUIRED_ROUTE",
+   "pass": true,
+   "fails_when": "C metrics fall back to the human answer, making C a mixed oracle whose source is chosen by architecture disagreement"
+  },
+  {
+   "test": "N9 an UNRESOLVABLE adjudicated heading counts against recall, never vanishing",
+   "expected": [
+    1,
+    1,
+    0.0
+   ],
+   "observed": [
+    1,
+    1,
+    0.0
+   ],
+   "pass": true,
+   "fails_when": "a heading the A38.7 resolver refused is dropped from the denominator, so recall is computed only over the headings that happened to resolve"
+  },
+  {
+   "test": "N10 the frozen 8 / 8 / 4 control population is intact",
+   "expected": {
+    "N-A": 8,
+    "N-B": 8,
+    "N-C": 4
+   },
+   "observed": {
+    "N-A": 8,
+    "N-B": 8,
+    "N-C": 4
+   },
+   "pass": true,
+   "fails_when": "the control population is not the frozen 8/8/4 set, so the Rule 3 blockers are not the ones the study froze"
+  },
+  {
+   "test": "the execution boundary is still ABSENT",
+   "expected": "ABSENT",
+   "observed": "ABSENT",
+   "pass": true,
+   "fails_when": "the boundary moved during a scorer implementation slice, which would make every subsequent scoring-rule change a DEVIATION rather than an amendment"
+  },
+  {
+   "test": "NO canonical/execution artifact exists",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a canonical artifact was created before execution was authorised"
+  },
+  {
+   "test": "`write_metrics` REFUSES to write results/metrics.json before a VALID boundary",
+   "expected": "CONFIRMATORY_WRITE_BEFORE_EXECUTION",
+   "observed": "CONFIRMATORY_WRITE_BEFORE_EXECUTION",
+   "pass": true,
+   "fails_when": "the scorer can write its canonical artifact while the boundary is ABSENT, so the one-way gate does not cover the component that produces the study's numbers"
+  },
+  {
+   "test": "the entrypoint runs end to end and takes NO decision",
+   "expected": [
+    false,
+    null,
+    "decide_architecture"
+   ],
+   "observed": [
+    false,
+    null,
+    "decide_architecture"
+   ],
+   "pass": true,
+   "fails_when": "the scorer takes an architecture decision, or emits an M6 value A20 struck"
+  },
+  {
+   "test": "section 8's paired block is present, unweighted, with per-document detail",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "the paired comparison is weighted or collapsed, which section 8.3 forbids"
+  }
+ ],
+ "failures": []
+}
