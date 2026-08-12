@@ -14,6 +14,7 @@ are snapshots under `results/`, not maintained invariants.
 uv run python docs/research/pdf-matching-convergence/probes/pdf_stage_census.py
 uv run python docs/research/pdf-matching-convergence/probes/pdf_observation_census.py
 uv run python docs/research/pdf-matching-convergence/probes/pdf_threshold_sensitivity.py
+uv run python docs/research/pdf-matching-convergence/probes/pdf_tiebreak_equivalence.py
 ```
 
 ---
@@ -381,9 +382,31 @@ blocks: the strings differ in 8,045 cases, and `raw.split() == normalized.split(
 **9,976 of 9,976** — the word sequences `text_similarity` actually consumes are identical.
 The normalization cannot reach this measure.
 
-So sharing is genuinely available. It is still **RESEARCH FIRST**, because sharing means
-making `_greedy_move_links` generic over the population type, which is a change to the XML
-side — and this thread must not make one to accommodate a hypothetical PDF need. Record the
+**The tiebreak is the part that could still have differed, and it does not.** An earlier
+revision of this section argued the two orderings were identical from the fact that
+`removed_idx`/`added_idx` ascend, so local→absolute is monotonic. That answers the wrong
+question. PDF's tiebreak is a position in the **emitted hunk list**, which interleaves hunks
+from five producers; XML's is a position in the unmatched-**observation** stream. #590
+measured that substituting ADR 0019 ordinals for XML's `(ri, ai)` moves the selected
+correspondence on 3 of 27 pairs — so on XML the legacy key is policy, and the same could
+have been true here.
+
+Measured on PDF: selecting under `(sim, old_block_ordinal, new_block_ordinal)` instead of
+`(sim, removed_hunk_index, added_hunk_index)` yields the **identical 145 links, symmetric
+difference 0**, across all 23 score ties. And it is structural rather than a corpus
+coincidence: on all 23 non-empty side-sequences the hunk-list order is already the
+block-ordinal order, because the hunk list is emitted by a monotonic walk over the two
+aligned block sequences. The two keys induce the same total order by construction.
+
+So PDF and XML differ here in a way worth recording: **the legacy positional tiebreak is
+policy on XML and inert on PDF.** XML's pairing stream comes from iterating `match_path`
+groups, which is not document order; PDF's comes from a document-order alignment walk. A
+shared assignment implementation therefore has one less way to silently change PDF results
+than it has to change XML's.
+
+Sharing is genuinely available. It is still **RESEARCH FIRST**, because sharing means making
+`_greedy_move_links` generic over the population type, which is a change to the XML side —
+and this thread must not make one to accommodate a hypothetical PDF need. Record the
 finding; propose the change from the XML thread when a second consumer actually exists.
 
 ### 5.4 Not shareable — **CHANGE, do not**
@@ -504,6 +527,50 @@ assertion needs.
 **Gate 4 — a split-population case.** No committed fixture exercises a below-0.4 split. 224
 occur on the corpus, 23 with money on both sides. Add at least one, and prefer a real one
 from 118-hr-4366 v4→v5 (11 of the 23) over a synthetic `Page`.
+
+### 6.4 Three more controls, each with its falsifying mutation named
+
+A second independent review of this same question (a differently-trained model, given the
+same brief and the same repository) proposed a control set built the right way round: each
+control states the concrete mutation that must turn it red. Three of its cases cover
+decision sites gates 1–4 reach only incidentally, and they are adopted here. Cross-model
+review is the repository's own practice for consequential calls, and the value showed up
+exactly where a single reviewer is weakest — in the controls for one's own conclusions.
+
+**Gate 5 — the ordinal addresses the complete population.** Fixture emits observations
+`A, B, C, D` where `B` is later excluded from retrieval. Assert the ordinals stay
+`A=0, B=1, C=2, D=3`. **Mutation: assign ordinals after filtering. Required: red.** This is
+the control §4.2a's finding needs and gates 1–4 do not supply — a canonical digest is blind
+to a renumbering that happens to preserve the output, which is precisely how the filtered-view
+hazard would survive slice 2.
+
+**Gate 6 — the positional `replace` rule is pinned.** Construct a `replace` region where
+global best-similarity pairing would cross (`old1↔new2`, `old2↔new1`) but legacy behaviour
+pairs positionally (`old1↔new1`, `old2↔new2`). **Mutation: replace the positional rule with
+global best-similarity assignment. Required: red.** This is the sharpest available test of
+§9's claim about the `replace` zip, and the specific guard against a future "reuse the XML
+assignment helper" changing PDF policy at the one site where the two genuinely disagree. No
+committed fixture constructs a crossing case today.
+
+**Gate 7 — greedy competition is pinned, four ways.** Two removals against two additions with
+competing scores. **Mutations, one at a time: remove exclusivity; change settlement ordering;
+let each candidate independently pick its best partner; change tie handling. Required: at
+least one changes the frozen link set.** §3.3 measures that competition is live (16 contested
+removals, 17 contested additions, 23 ties) but nothing currently pins how it resolves.
+
+Note what §5.3's tiebreak measurement does and does not do for gate 7. It shows the *legacy
+positional key* is inert on PDF, so that particular substitution needs no guard. It says
+nothing about the other three mutations, and exclusivity in particular is unpinned: 49 of 194
+candidates lose to it.
+
+**A rule for running all seven.** Once a gate is frozen and its preservation artifact is in
+place, do not modify the apparatus in response to a surprising result. If a new
+implementation disagrees with frozen legacy evidence, record the disagreement, identify which
+invariant failed, and decide whether the implementation or the methodology is wrong — do not
+quietly move a threshold, a fixture or an expected output to make the migration green. This
+is the confirmatory-execution discipline the PDF backend bake-off already runs under
+(`docs/research/pdf-backend-bakeoff/PRE-REGISTRATION-CONFIRMATORY.md`); it applies here for
+the same reason, and it is the second reviewer's contribution.
 
 ---
 
@@ -645,6 +712,8 @@ evidence-based rule instead is a behaviour change.
   definitions of one canonical `change_type`. → slice 6.
 - **Q3.** Is PDF emission deterministic **across processes and platforms**? §4.1 establishes
   in-process only; the glyph-size sidecar reads FFI floats. → before any stored PDF ordinal.
+  This is the surviving half of what a second review called its only hard ADR-level blocker;
+  the in-process half is measured and closed.
 - **Q4.** Are any of the 23 both-sided-money splits wrong? Unadjudicated, like XML's 27. This
   is the ground-truth work, not the refactor's. → informs whether slice 5 should be followed
   by a policy change.
