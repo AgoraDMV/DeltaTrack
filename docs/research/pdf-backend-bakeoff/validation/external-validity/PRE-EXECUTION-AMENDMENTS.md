@@ -4670,20 +4670,28 @@ decision, no confirmatory or scoring artifact, and no execution marker.
 
 ```json
 {"id": "A41", "class": "SUBSTANTIVE",
- "commits": ["1a18710", "7876631"],
+ "commits": ["1a18710", "7876631", "7ba2d42", "1de88a4", "68b4573"],
  "confirmatory_output_at_time": "none",
  "affects_membership": false, "affects_scoring_rule": true,
  "files_touched": ["probes/score_metrics.py", "probes/x27_score_metrics.py"],
- "supersedes_text_in": "A38's 'score_metrics.py and decide_architecture.py remain unstarted' ONLY; no metric, denominator, matching rule, threshold, normalisation, hierarchy rule, statistical rule or decision rule is introduced or changed",
+ "supersedes_text_in": "A38's 'score_metrics.py and decide_architecture.py remain unstarted' ONLY. No PREVIOUSLY FROZEN metric, denominator, matching rule, threshold, normalisation, hierarchy rule or decision rule changes. A41 DOES introduce two pre-execution RANGE CHOICES, both stated below, needed to make A27.5's section 8 contract executable at all.",
  "status": "PROPOSED -- awaiting external review"}
 ```
 
 **Why `affects_scoring_rule` is `true`, when A31's was `false`.** A31 implemented frame rules that
 A19/A22/A23/A27 had already spelled out completely, so nothing was left for the implementation to
-settle. That is *not* quite the case here. Two clauses of section 8 are frozen in what they require
-but not in what they range over, and this component had to make both executable to compute anything
-at all. They are named in full below rather than buried in the code, because a reviewer who does not
-know a choice was made cannot decline it. Everything else in section 6 was already determined.
+settle. That is *not* the case here. Two clauses of section 8 are frozen in **what they require**
+but not in **what they range over**, and this component had to make both executable to compute
+anything at all. They are named in full below rather than buried in the code, because a reviewer who
+does not know a choice was made cannot decline it. Everything else in section 6 was already
+determined.
+
+**The earlier spelling of `supersedes_text_in` was self-contradictory and is corrected above.** It
+claimed that "no ... statistical rule is introduced or changed" while the section immediately
+following it introduced two choices about the statistical rule's range. Both statements cannot be
+true, and the reassuring one was the one a reviewer would have read first. The distinction that
+actually holds is between a **previously frozen rule changing** — none does — and a **frozen rule
+whose range was never fixed being pinned before execution** — which is exactly what A41 does, twice.
 
 ### What was implemented
 
@@ -4703,29 +4711,52 @@ importable without `pymupdf` and cannot silently re-acquire the dependency A38 r
 `build_oracle.resolve_adjudicated_occurrence` (the A38.7 occurrence join) and
 `build_oracle.select_answer` (A36.4's purpose→route table).
 
-**M6 is ABSENT** — not disabled, not zero, not empty. A control asserts no M6 surface exists.
+**M6 is ABSENT** — not disabled, not zero, not empty, and **not a key holding a null**. A struck
+metric occupying a slot in the result-bearing payload is one a consumer can read, iterate, or render
+as "M6: not measured", which is a statement about M6. The explanation belongs here, never to
+`metrics.json`. A control asserts the absence end to end against the payload.
 
 **Rule 0, Rule 1 and Rule 3 are not applied.** Each block records the fact and names
 `decide_architecture` as the owner in its own output, rather than leaving the boundary to be
 remembered.
 
-### The two clauses that were under-determined, and what was chosen
+### The two range choices — both APPROVED by external review
 
-**1. What derives the section 8 EVENT.** 8.3 fixes the event as "a document exhibits ≥ 1
-heading-level discordance" but does not name the committed predicate that decides it. The choice
-taken is **section 5.8's own frozen anchor-set predicate** — a region where the arms' emitted anchor
-sets differ — aggregated to the document, read from the committed
-`regions[].anchor_evidence.differ`. M0a and M0b are deliberately **not** used: they are LINE-level,
-and a text difference inside a paragraph is not a heading discordance. This can move the reported
-bound, which is why it is declared here rather than left in the code.
+**1. What derives the section 8 EVENT. APPROVED.** 8.3 fixes the event as "a document exhibits ≥ 1
+heading-level discordance" but does not name the committed predicate that decides it. The approved
+choice is **section 5.8's own frozen anchor-set discordance predicate** — a region where the arms'
+emitted anchor sets differ — **aggregated per document**. M0a and M0b are deliberately **not** used:
+they are LINE-level, and a text difference inside a paragraph is not a heading discordance.
 
-**2. Which quantities are PAIRED.** 8.3 fixes that paired comparisons are per-document differences
-with an **unweighted** mean and **mandatory** per-document detail, but does not enumerate the
-quantities. The scorer pairs the per-arm, per-document M9 quantities it actually holds
-(margin-numbered lines recovered, and `_coverage`). The frozen constraint is on the *form* of the
-pairing, and the form is what `paired_differences` enforces: there is **no weight parameter** on the
-function at all, so the heading-count weighting section 8 forbids is unspellable rather than merely
-unused.
+This can move the reported bound, so it is declared here rather than left in the code — and, since
+the correction pass, it is no longer merely declared. `validate_frame` **recomputes** the predicate
+from the serialized complete `anchor_evidence["H"]` and `["X"]` values and requires agreement with
+both `differ` and the presence of `ANCHOR_DISCORDANCE` in `d_reasons`; `d_frame == bool(d_reasons)`
+is enforced on the same path. Checking `differ` against `d_reasons` alone compared two fields that a
+single edit sets together, so a frame contradicting the anchors it summarised would have passed with
+the bound moving silently behind it.
+
+**2. Which quantities are PAIRED. APPROVED, for the two numeric M9 quantities ONLY** —
+**margin-numbered lines recovered** and **`_coverage`**. 8.3 fixes that paired comparisons are
+per-document differences with an **unweighted** mean and **mandatory** per-document detail, but does
+not enumerate the quantities.
+
+**Why those two and nothing else.** They are the only per-arm quantities that are **numeric and
+always defined for every document**, which is what a paired difference over a fixed document set
+requires:
+
+- **M1–M5 are excluded** because their denominators vary per document and can be `VACUOUS` (I11).
+  Pairing them would demand a NEW rule for what a difference means when one arm's denominator is
+  zero — drop the document, treat it as zero, or carry the vacuity through — and inventing one here
+  would be exactly the post-freeze scoring decision A41 must not take.
+- **M9's boolean viability facts are excluded** (`derive_size_bands_returns_a_band`,
+  `coverage_meets_floor`). They are not differences to average; they are **Rule 0's** inputs, and
+  Rule 0 belongs to `decide_architecture`. Pairing them here would move a decision input into a
+  reporting statistic.
+
+The frozen constraint is on the *form* of the pairing, and the form is what `paired_differences`
+enforces: there is **no weight parameter** on the function at all, so the heading-count weighting
+section 8 forbids is unspellable rather than merely unused.
 
 ### One ambiguity recorded OPEN rather than resolved
 
@@ -4740,7 +4771,35 @@ readings of Rule 0's margin-line clause and chose none.
 
 ### Controls
 
-`x27_score_metrics.py` — **82/82**, SYNTHETIC + DEVELOPMENT only.
+`x27_score_metrics.py` — **100/100**, SYNTHETIC + DEVELOPMENT only.
+
+**Corrections after external review (commits `7ba2d42`, `1de88a4`, `68b4573`).** Three findings,
+each closed by making the property executable rather than asserted:
+
+- **M6 was not genuinely absent.** The payload carried `m6: None` beside an `m6_status` string, and
+  the control scanned the module's symbol table — which could never have seen a payload key. Both
+  keys are gone, the explanation lives here and in module prose, and the control now walks the
+  FINISHED payload recursively and is proven able to find a planted M6 key at depth.
+- **The event predicate was not independently validated** — see choice 1 above.
+- **I13 was reported, not enforced.** A detached `document_labels` map left the labelling to whoever
+  rendered the results. `PDFIUM-CONDITIONED FRAME` now travels ON every per-document row of every
+  RQ1/RQ2 surface (M0, M7, M9, both estimands, the section 8 event vector, every paired block), and
+  **both** headlines carry the > ⅓ qualification. Rows on a passing document are labelled `None`
+  rather than left bare: "checked and passed" and "nobody qualified this surface" are different
+  statements. It remains a **reporting qualification only** — asserted three ways: the flag, the
+  absence of cross-engine from `GATE_VECTOR`, and equality of every decision-read quantity between a
+  failing and a passing run.
+
+The scorer NAMES its labelled surfaces; `x27` DISCOVERS per-document result rows independently, so a
+surface added later and forgotten turns the scan red — proven by dropping `m9.per_document` from the
+list and requiring the scan to find it.
+
+**Eight targeted faults, all red → restored green** (`C1a`–`C3d`), scoped to the corrected paths.
+Two of them found controls that were not proving what they appeared to: `N13` alone never exercised
+the check against `differ` (the recomputation-vs-`d_reasons` clause caught it first), so **`N15`**
+moves the anchors and `d_reasons` together and consistently, leaving `differ` as the sole stale
+field; and two I13 controls indexed a label directly, so removing the labelling crashed the probe
+instead of turning a control red.
 
 All **ELEVEN** of HARNESS-PLAN section 5's control rows fire. The table has eleven data rows;
 **A40.6 changes the metric→fixture MAPPING** (M1 → N-B + N-C, M2 → N-A, M3 → N-A) **and adds no
