@@ -1,0 +1,205 @@
+{
+  "113-hr-3547/1_introduced-in-house->2_engrossed-in-house": {
+    "bytes": 5353,
+    "changes": 2,
+    "declined": false,
+    "sha256": "0f3fce584623c4936c2732c3eb6807fb8f791c2c5f861f45018d3b2a4627888d",
+    "summary": {
+      "modified": 2
+    }
+  },
+  "113-hr-3547/2_engrossed-in-house->3_received-in-senate": {
+    "bytes": 4943,
+    "changes": 2,
+    "declined": false,
+    "sha256": "0d3d88fc7cbcae77ac3b93a2a5e66104045be748629481b5b0a6c3df39f5a293",
+    "summary": {
+      "modified": 2
+    }
+  },
+  "113-hr-3547/3_received-in-senate->4_engrossed-amendment-senate": {
+    "bytes": 6084,
+    "changes": 5,
+    "declined": false,
+    "sha256": "677c1c5868ceb62637c0fd3909ac0dd6fe2cddfa2780eca055d1522dd2dc8122",
+    "summary": {
+      "added": 2,
+      "removed": 3
+    }
+  },
+  "113-hr-3547/4_engrossed-amendment-senate->6_enrolled-bill": {
+    "declined": true,
+    "message": "This document has no printed line numbers, so DeltaTrack can't diff it accurately yet \u2014 enrolled bills and public-law prints are typeset this way. Use the XML version of the bill instead."
+  },
+  "114-hr-2029/1_reported-in-house->3_referred-in-senate": {
+    "bytes": 289018,
+    "changes": 26,
+    "declined": false,
+    "sha256": "1f391fdfee56c672939db84dfaca9cab67bb3f91acc611913e10f43d70e33996",
+    "summary": {
+      "added": 15,
+      "modified": 11
+    }
+  },
+  "114-hr-2029/3_referred-in-senate->4_reported-in-senate": {
+    "bytes": 533618,
+    "changes": 163,
+    "declined": false,
+    "sha256": "618be1c6a7c3a7f7488d1973edb42b36d02a6e26df3a469171a4f369a9fb3b40",
+    "summary": {
+      "added": 158,
+      "modified": 5
+    }
+  },
+  "114-hr-2029/4_reported-in-senate->7_enrolled-bill": {
+    "declined": true,
+    "message": "This document has no printed line numbers, so DeltaTrack can't diff it accurately yet \u2014 enrolled bills and public-law prints are typeset this way. Use the XML version of the bill instead."
+  },
+  "115-hr-5895/1_reported-in-house->2_engrossed-in-house": {
+    "bytes": 793563,
+    "changes": 336,
+    "declined": false,
+    "sha256": "b4e7c996a80ec4c9a4fa865e8379b3be2d899ab301491d79831e247533e66dd6",
+    "summary": {
+      "added": 317,
+      "modified": 18,
+      "removed": 1
+    }
+  },
+  "115-hr-5895/2_engrossed-in-house->3_placed-on-calendar-senate": {
+    "bytes": 638054,
+    "changes": 2,
+    "declined": false,
+    "sha256": "f00eb2800b50aee522e254799bfdbf0312142fa0fcf7142322b432be079e7beb",
+    "summary": {
+      "modified": 2
+    }
+  },
+  "115-hr-5895/3_placed-on-calendar-senate->4_engrossed-amendment-senate": {
+    "bytes": 1464643,
+    "changes": 467,
+    "declined": false,
+    "sha256": "405a368c8b556729e49bea0a9008ae565fe5778a1c009eb2f817c3d2797d6d55",
+    "summary": {
+      "added": 120,
+      "modified": 194,
+      "moved": 60,
+      "removed": 93
+    }
+  },
+  "115-hr-5895/4_engrossed-amendment-senate->5_enrolled-bill": {
+    "declined": true,
+    "message": "This document has no printed line numbers, so DeltaTrack can't diff it accurately yet \u2014 enrolled bills and public-law prints are typeset this way. Use the XML version of the bill instead."
+  },
+  "117-hr-2471/1_introduced-in-house->6_enrolled-bill": {
+    "declined": true,
+    "message": "This document has no printed line numbers, so DeltaTrack can't diff it accurately yet \u2014 enrolled bills and public-law prints are typeset this way. Use the XML version of the bill instead."
+  },
+  "117-hr-4502/1_reported-in-house->2_engrossed-in-house": {
+    "bytes": 4106619,
+    "changes": 1500,
+    "declined": false,
+    "sha256": "b3104855e5487305b0d575a5f608a418fbdc43c358ee26180d4b2cf5ab03e8de",
+    "summary": {
+      "added": 1451,
+      "modified": 49
+    }
+  },
+  "118-hr-2882/1_introduced-in-house->4_engrossed-amendment-senate": {
+    "bytes": 10251,
+    "changes": 5,
+    "declined": false,
+    "sha256": "6474f0bac7fe8fe4b69506c9ae34401cdd42ddcde4e2128d6b166583b3e5cf5e",
+    "summary": {
+      "added": 3,
+      "moved": 1,
+      "removed": 1
+    }
+  },
+  "118-hr-2882/4_engrossed-amendment-senate->5_engrossed-amendment-house": {
+    "bytes": 3842972,
+    "changes": 1794,
+    "declined": false,
+    "sha256": "c8486d97ed6e49b56b75663f53a44d7ee6ad7f3707f3df5d2093837df1451799",
+    "summary": {
+      "added": 1789,
+      "modified": 2,
+      "moved": 3
+    }
+  },
+  "118-hr-4366/1_reported-in-house->2_engrossed-in-house": {
+    "bytes": 364600,
+    "changes": 26,
+    "declined": false,
+    "sha256": "4ca58dba9bce48bb604deb79019546aca8aa1ee54a25aa0b96f993f237dad6bc",
+    "summary": {
+      "added": 8,
+      "modified": 17,
+      "removed": 1
+    }
+  },
+  "118-hr-4366/2_engrossed-in-house->3_placed-on-calendar-senate": {
+    "bytes": 325144,
+    "changes": 2,
+    "declined": false,
+    "sha256": "031fd78bc410deab07b27f450b631eed7be8657e9d4916a93d6f34dfa41578a6",
+    "summary": {
+      "modified": 2
+    }
+  },
+  "118-hr-4366/3_placed-on-calendar-senate->4_engrossed-amendment-senate": {
+    "bytes": 2086613,
+    "changes": 720,
+    "declined": false,
+    "sha256": "7f7311c60c59bfb0243c2c34858c33792e7648f076666e69b55788aaafdecfd3",
+    "summary": {
+      "added": 558,
+      "modified": 99,
+      "moved": 36,
+      "removed": 27
+    }
+  },
+  "118-hr-4366/4_engrossed-amendment-senate->5_engrossed-amendment-house": {
+    "bytes": 4960002,
+    "changes": 1283,
+    "declined": false,
+    "sha256": "e43ec5245f9c9ef24048d3d8ac368721a92c9770c0bad2b6bf0ec47102c061fd",
+    "summary": {
+      "added": 869,
+      "modified": 277,
+      "moved": 64,
+      "removed": 73
+    }
+  },
+  "118-hr-4366/5_engrossed-amendment-house->6_enrolled-bill": {
+    "declined": true,
+    "message": "This document has no printed line numbers, so DeltaTrack can't diff it accurately yet \u2014 enrolled bills and public-law prints are typeset this way. Use the XML version of the bill instead."
+  },
+  "118-hr-8752/1_reported-in-house->2_engrossed-in-house": {
+    "bytes": 392489,
+    "changes": 37,
+    "declined": false,
+    "sha256": "e5d63b3e7f978c5333ca1e35cdb0fccf11fe50c9bd4b7dc4694a8a5b4df4e2fc",
+    "summary": {
+      "added": 16,
+      "modified": 18,
+      "moved": 1,
+      "removed": 2
+    }
+  },
+  "118-hr-8774/1_reported-in-house->2_engrossed-in-house": {
+    "bytes": 569262,
+    "changes": 33,
+    "declined": false,
+    "sha256": "ceb1371731f892ad98d7672fb6dfda1e0c17e547b39113f0ad410c2e0bc80ff4",
+    "summary": {
+      "added": 8,
+      "modified": 22,
+      "removed": 3
+    }
+  },
+  "118-hr-9468/1_introduced-in-house->4_enrolled-bill": {
+    "declined": true,
+    "message": "This document has no printed line numbers, so DeltaTrack can't diff it accurately yet \u2014 enrolled bills and public-law prints are typeset this way. Use the XML version of the bill instead."
+  }
+}
