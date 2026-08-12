@@ -4666,6 +4666,122 @@ decision, no confirmatory or scoring artifact, and no execution marker.
 
 ---
 
+## A41 — SUBSTANTIVE. `score_metrics` implements the already-frozen section 6 and section 8
+
+```json
+{"id": "A41", "class": "SUBSTANTIVE",
+ "commits": ["1a18710", "7876631"],
+ "confirmatory_output_at_time": "none",
+ "affects_membership": false, "affects_scoring_rule": true,
+ "files_touched": ["probes/score_metrics.py", "probes/x27_score_metrics.py"],
+ "supersedes_text_in": "A38's 'score_metrics.py and decide_architecture.py remain unstarted' ONLY; no metric, denominator, matching rule, threshold, normalisation, hierarchy rule, statistical rule or decision rule is introduced or changed",
+ "status": "PROPOSED -- awaiting external review"}
+```
+
+**Why `affects_scoring_rule` is `true`, when A31's was `false`.** A31 implemented frame rules that
+A19/A22/A23/A27 had already spelled out completely, so nothing was left for the implementation to
+settle. That is *not* quite the case here. Two clauses of section 8 are frozen in what they require
+but not in what they range over, and this component had to make both executable to compute anything
+at all. They are named in full below rather than buried in the code, because a reviewer who does not
+know a choice was made cannot decline it. Everything else in section 6 was already determined.
+
+### What was implemented
+
+Section 6's **M0–M9 MINUS M6**, and the section 8 contract A27.5 assigns to this module.
+
+`score_metrics.py` is a **pure consumer of committed artifacts** — the property A38 exists to
+deliver. It opens no PDF, re-runs no architecture, re-derives no neutral clustering or anchor
+recognition, and invents no input schema. It does not import the renderer: `build_oracle` is
+imported lazily inside the three functions needing its join and route helpers, so the scorer stays
+importable without `pymupdf` and cannot silently re-acquire the dependency A38 removed.
+
+**Every frozen rule with a designated executable owner is CALLED, never transliterated:**
+`m3_boundaries.heading_outcome` (M3), `methodology_contracts.m5_agreement` (M5),
+`margin_line_loss` (M9's A39.1 fact), `zero_event_upper_bound` (section 8's closed form),
+`section8_document_bootstrap` with **no custom statistic id** (A38.10),
+`filter_keys` / `adequacy_occurrences` / `adequacy` (section 4.5),
+`build_oracle.resolve_adjudicated_occurrence` (the A38.7 occurrence join) and
+`build_oracle.select_answer` (A36.4's purpose→route table).
+
+**M6 is ABSENT** — not disabled, not zero, not empty. A control asserts no M6 surface exists.
+
+**Rule 0, Rule 1 and Rule 3 are not applied.** Each block records the fact and names
+`decide_architecture` as the owner in its own output, rather than leaving the boundary to be
+remembered.
+
+### The two clauses that were under-determined, and what was chosen
+
+**1. What derives the section 8 EVENT.** 8.3 fixes the event as "a document exhibits ≥ 1
+heading-level discordance" but does not name the committed predicate that decides it. The choice
+taken is **section 5.8's own frozen anchor-set predicate** — a region where the arms' emitted anchor
+sets differ — aggregated to the document, read from the committed
+`regions[].anchor_evidence.differ`. M0a and M0b are deliberately **not** used: they are LINE-level,
+and a text difference inside a paragraph is not a heading discordance. This can move the reported
+bound, which is why it is declared here rather than left in the code.
+
+**2. Which quantities are PAIRED.** 8.3 fixes that paired comparisons are per-document differences
+with an **unweighted** mean and **mandatory** per-document detail, but does not enumerate the
+quantities. The scorer pairs the per-arm, per-document M9 quantities it actually holds
+(margin-numbered lines recovered, and `_coverage`). The frozen constraint is on the *form* of the
+pairing, and the form is what `paired_differences` enforces: there is **no weight parameter** on the
+function at all, so the heading-count weighting section 8 forbids is unspellable rather than merely
+unused.
+
+### One ambiguity recorded OPEN rather than resolved
+
+**`R1_AGREEMENT_DENOMINATOR`.** Section 5.6 requires R1 heading-text agreement ≥ 0.90 and role
+agreement ≥ 0.80, but no frozen source states the denominator: the occurrence keys resolved in
+**both** the primary and the repeat, or their **union**. The two differ exactly when a repeat
+disagrees about a heading's **presence** — a reliability failure the intersection reading cannot
+see. Settling it here would fix the sensitivity of a Rule 3 gate after the protocol froze, so
+**the scorer computes no R1 agreement**: nothing unfrozen reaches a result-bearing path, and the
+ruling stays available to a later amendment. This follows A38.8's precedent, which recorded three
+readings of Rule 0's margin-line clause and chose none.
+
+### Controls
+
+`x27_score_metrics.py` — **82/82**, SYNTHETIC + DEVELOPMENT only.
+
+All **ELEVEN** of HARNESS-PLAN section 5's control rows fire. The table has eleven data rows;
+**A40.6 changes the metric→fixture MAPPING** (M1 → N-B + N-C, M2 → N-A, M3 → N-A) **and adds no
+twelfth control row**. Ten further negative attacks are carried separately and are deliberately not
+folded into that count.
+
+A **16-fault injection matrix** was run against the live scorer, each fault restored immediately
+after proving red. Fourteen surfaced as a failing control; two — a wrong zero-event closed form, and
+the section 8 bound computed on headings — were **refused at the source** by the scorer's own
+consistency guard, which is the stronger outcome because the number is never produced at all. The
+heading-unit fault was caught holding **0.00496** against the document form's **0.1926**: section
+8.1's own 39× gap, arriving as a refusal rather than as a published bound.
+
+**Two defects were found by the probe's own attacks, not by inspection.** A `CONTROL_IN_ESTIMAND`
+refusal was unreachable, because the record selector already filtered controls out — a guard that
+reads as protection while being incapable of firing, which is the class these controls exist to
+catch; selection is now on frame membership and the refusal is a live gate. Separately, three checks
+were **satisfiable by coincidence** on this window (M0b is zero, so union and sum coincide; the
+adjudicated and emitted counts are both 23; every occurrence is MATCHABLE, so dropping refusals
+subtracts nothing). Closing the third exposed a real scorer defect: the **reported** denominator was
+a separate expression from the one divided by, so the published label could state I10 while the
+arithmetic did something else.
+
+**The adjudication used is a KNOWN-ANSWER FIXTURE**, derived from the committed oracle key so the
+A38.7 join resolves back exactly. It is not an adjudication, is evidence about the **scorer** only,
+and is never written to `results/oracle_adjudicated.json`. One heading in the window carries a real
+H/X text disagreement (`INTELLIGENCE` against `INTEL<U+FFFD> LIGENCE`), which an oracle taken from H
+necessarily scores as the X arm regressing; it is recorded beside the count so it cannot later be
+quoted as a comparative result.
+
+### Population and boundary
+
+SYNTHETIC + DEVELOPMENT only. No holdout opened, nothing adjudicated, no architecture decision, and
+none of `frames.json`, `oracle_key.json`, `oracle_blind.json`, `oracle_adjudicated.json`,
+`metrics.json`, `scores.json` or `EXECUTION-START.json` created. The frozen `contamination.json`
+is unchanged. `write_metrics` exists and is asserted to **REFUSE** its canonical path while the
+boundary is ABSENT, through the same `assert_write_permitted` guard the oracle, S1 and cross-engine
+writers use. **`decide_architecture.py` remains unstarted**, so G5 stays CLOSED at 1 of 14 missing.
+
+---
+
 ## A18 — the commit ↔ file accounting of record
 
 ```json
