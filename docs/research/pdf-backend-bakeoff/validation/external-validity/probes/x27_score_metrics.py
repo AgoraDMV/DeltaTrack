@@ -861,7 +861,7 @@ def part_cross_engine_i13(scored_failing: dict, scored_passing: dict) -> dict:
         (False, False, False),
         (
             scored_failing["cross_engine"]["decision_blocking"],
-            scored_failing["cross_engine_qualification_is_decision_blocking"],
+            scored_failing.get("cross_engine_qualification_is_decision_blocking"),
             "x09" in " ".join(MC.GATE_VECTOR).lower() or "cross" in " ".join(MC.GATE_VECTOR).lower(),
         ),
         "a cross-engine failure blocks the architecture decision, which A27.6 forbids -- it "
