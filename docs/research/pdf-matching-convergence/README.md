@@ -23,7 +23,7 @@ uv run python docs/research/pdf-matching-convergence/probes/pdf_tiebreak_equival
 
 | # | Question | Ruling |
 |---|---|---|
-| 1 | Begin PDF stage extraction now | **STOP — no preservation oracle exists.** A ±0.05 change to either PDF matching cutoff passes the entire test suite. Measured, §6. |
+| 1 | Begin PDF stage extraction now | **Was STOP — no preservation oracle existed.** A ±0.05 change to either PDF matching cutoff passed the entire suite, confirmed by mutating production (§6.2.1). **Slice 0 has since been built and falsified (§6.3, §6.5), so this blocker is retired** and slice 1 may begin. |
 | 2 | Can `_Block` become an ADR 0019 observation | **CHANGE.** Yes in substance. The blocker is that the block former lives inside the differ, so "parser revision" would include the matcher. The emission rule itself is fine — the 190 dropped blocks are correctly dropped (§4.2a, corrected against an earlier draft); what is missing is any statement or test of the rule. §4 |
 | 3 | Is PDF emission deterministic (ADR 0019 open question 2) | **APPROVE.** 53/53 documents re-emit identical line, anchor and block sequences. §4.1 |
 | 4 | Share `ObservationRef` / `Candidate` / `CandidateSet` / `CorrespondenceEvidence` / `Correspondence` | **APPROVE**, conditional on ruling 2. §5 |
@@ -553,38 +553,53 @@ currently **false for PDF**, and now measured at the artifact rather than argued
 enforcement it relies on does not exist, and a PDF extraction slice claiming behaviour
 preservation today would be citing gates shown incapable of failing.
 
-### 6.3 What to build first
+### 6.3 The gates, as built
 
-**Gate 1 — a PDF canonical baseline** (`tests/test_pdf_canonical_baseline.py`), mirroring the
-XML one: SHA-256 over `compare.pdf.compare_pdfs`' sorted-key JSON for all 17 accepted pairs,
-plus counts so a failure reads as a diagnosis. Opt-in regeneration, all-or-nothing writes,
-a key-set drift guard. Covers the pairs the current gates miss, and by construction responds
-to every perturbation in §6.2 that moves any pair.
+**Slice 0 is implemented.** This section described what to build; it now describes what
+exists. Falsification results are in §6.5.
 
-Two PDF-specific design points the XML baseline does not face. It must key on
-**production-accepted pairs**, so the declined enrolled pairs cannot silently enter or leave
-the pinned set. And it must be built through `compare_pdfs` — the public producer — not a
-chain reassembled in the test, for the reason the XML baseline gives: a gate that
-re-implements the composition can stay green while production's composition changes.
+**Gate 1 — `tests/test_pdf_canonical_baseline.py`.** SHA-256 over `compare.pdf.compare_pdfs`'
+sorted-key JSON, through the public producer rather than a chain reassembled in the test,
+with counts beside each digest so a failure reads as a diagnosis. Opt-in regeneration
+(`UPDATE_PDF_BASELINE=1`), all-or-nothing writes, a key-set drift guard.
 
-**Gate 2 — a transcribed-oracle boundary test**, following
-`tests/test_assignment_classification_boundary.py`. That module transcribes the pre-refactor
-XML rule and states the constraint that makes it work: "It exists to disagree with
-production… this must never be replaced by a call to `pairing_survives_similarity_rule`, and
-production must never import it." The PDF equivalent transcribes `_emit_pair`'s split rule
-and `_hunk_for_paired_blocks`' moved rule as they stand today, and re-derives the current
-change sequence independently.
+Two PDF-specific design points the XML baseline does not face, and the second changed during
+implementation. It is built through `compare_pdfs`, not a reassembled chain. And it pins
+**all 23 adjacent pairs, including the 6 production declines**, rather than only the 17
+accepted ones as this section originally proposed. Pinning only the accepted set would make
+the covered population depend on a production decision nothing checks: a regression in
+`_MIN_NUMBERED_RATIO` or `_MIN_LINES_FOR_GUARD` would silently move which pairs are covered
+while every remaining digest still matched. The declines are recorded as
+`{"declined": true}` with their user-facing message, and the population is derived by
+*attempting* the comparison and catching `UnsupportedLayoutError` — public surface only, so
+the gate cannot drift from the predicate it describes, and no new private reach-around joins
+the tangle #62 tracks.
 
-**Gate 3 — prove both can fail.** ADR 0020 invariant 12 is called out as "a green-by-default
-gate of the kind that has passed while checking nothing before (#299, #542)". Before either
-gate is trusted, run it under each of the four §6.2 perturbations and record which fire.
-That is the same measurement this probe already performs, so the evidence is a re-run rather
-than new machinery — and the perturbations are the *known-bad fixtures* the absence
-assertion needs.
+**Gate 2 — `tests/test_pdf_matching_boundary.py`.** The split rule and the move rule,
+transcribed independently and checked against production over the corpus, following
+`tests/test_assignment_classification_boundary.py`'s constraint: "It exists to disagree with
+production… this must never be replaced by a call to [the production helper], and production
+must never import it."
 
-**Gate 4 — a split-population case.** No committed fixture exercises a below-0.4 split. 224
-occur on the corpus, 23 with money on both sides. Add at least one, and prefer a real one
-from 118-hr-4366 v4→v5 (11 of the 23) over a synthetic `Page`.
+The transcription checks three invariants over emitted hunks rather than re-deriving the
+whole opcode walk: every surviving pair clears the split cutoff; every `moved` hunk clears
+the move cutoff; and no `modified` hunk satisfies the transcribed moved rule. The third is
+the sharp one — a `modified` hunk whose anchors differ and whose bodies clear the move cutoff
+is precisely what `_hunk_for_paired_blocks` should have labelled `moved`.
+
+**Gate 4 — the split population**, in the same module. A real below-cutoff split on
+118-hr-4366 v4→v5, asserted as a floor rather than an exact count (an exact count would turn
+a legitimate retune into a fixture edit), plus a synthetic pair either side of the cutoff so
+the rule is pinned off-corpus too.
+
+**Gates 5–7 — the three controls of §6.4**, in
+`tests/test_pdf_observation_emission.py` (gate 5) and `tests/test_pdf_matching_boundary.py`
+(gates 6 and 7).
+
+**Gate 3 — every gate carries its own falsification, permanently.** Not a one-off probe: each
+rule is paired with a test applying a NAMED mutation and asserting the result changes, so if
+a future refactor makes a mutation stop mattering, the mutation test says so. §6.5 records
+the whole-suite falsification against the four production mutations.
 
 ### 6.4 Three more controls, each with its falsifying mutation named
 
@@ -595,20 +610,37 @@ decision sites gates 1–4 reach only incidentally, and they are adopted here. C
 review is the repository's own practice for consequential calls, and the value showed up
 exactly where a single reviewer is weakest — in the controls for one's own conclusions.
 
-**Gate 5 — the ordinal addresses the complete population.** Fixture emits observations
-`A, B, C, D` where `B` is later excluded from retrieval. Assert the ordinals stay
-`A=0, B=1, C=2, D=3`. **Mutation: assign ordinals after filtering. Required: red.** This is
-the control §4.2a's finding needs and gates 1–4 do not supply — a canonical digest is blind
-to a renumbering that happens to preserve the output, which is precisely how the filtered-view
-hazard would survive slice 2.
+**Gate 5 — the ordinal addresses the complete population.** **Mutation: assign ordinals after
+filtering. Required: red.** This is the control §4.2a's finding needs and gates 1–4 do not
+supply — a canonical digest is blind to a renumbering that happens to preserve the output,
+which is precisely how the filtered-view hazard would survive slice 2.
+
+Built as `tests/test_pdf_observation_emission.py`, and the shape changed once §4.2a was
+corrected. The review that proposed it assumed the pre-filter sequence was the emitted one,
+so its fixture asserted that an excluded observation keeps its ordinal. That is the wrong
+rule for PDF: the post-filter sequence *is* what the parser emits (§4.2a). What the module
+therefore pins is the emission rule itself — the sequence is exactly the blocks
+`_group_into_blocks` returns, in order, complete, non-overlapping and stable across
+re-derivation — together with the measurement that justifies it, that all 190 dropped blocks
+stay addressable three independent ways. The mutation survives intact in the corrected form:
+indexing a plausible filtered view (the section-anchored observations) is shown to address a
+*different* observation at the same ordinal.
 
 **Gate 6 — the positional `replace` rule is pinned.** Construct a `replace` region where
 global best-similarity pairing would cross (`old1↔new2`, `old2↔new1`) but legacy behaviour
 pairs positionally (`old1↔new1`, `old2↔new2`). **Mutation: replace the positional rule with
 global best-similarity assignment. Required: red.** This is the sharpest available test of
 §9's claim about the `replace` zip, and the specific guard against a future "reuse the XML
-assignment helper" changing PDF policy at the one site where the two genuinely disagree. No
-committed fixture constructs a crossing case today.
+assignment helper" changing PDF policy at the one site where the two genuinely disagree.
+
+Built, and the fixture had to be tuned against real scores rather than designed ones. The
+first attempt was symmetric — all four cross-similarities tied at 0.9429 — so positional and
+crossed scored identically and it discriminated nothing. The committed version carries an
+8-word shared head, giving positional 0.596 against crossed 0.913: clear enough above the 0.4
+split cutoff that production *keeps* the positional pair (so round 2 never runs and the gate
+tests the positional rule rather than the split rule), and far enough below the crossed score
+that global-best assignment visibly crosses. Both preconditions are asserted in the test, so
+the fixture cannot rot into a tautology.
 
 **Gate 7 — greedy competition is pinned, four ways.** Two removals against two additions with
 competing scores. **Mutations, one at a time: remove exclusivity; change settlement ordering;
@@ -621,6 +653,26 @@ positional key* is inert on PDF, so that particular substitution needs no guard.
 nothing about the other three mutations, and exclusivity in particular is unpinned: 49 of 194
 candidates lose to it.
 
+Built, and two of the four mutations were wrong on the first attempt in ways worth recording,
+because each is a shape in which the gate would have passed while testing nothing.
+
+*Collapsing all four scores onto one value does not isolate the tiebreak.* With every
+candidate tied, exclusivity still admits two disjoint pairs and an ascending sort selects the
+same set, so the experiment reports "no change" for a rule that does matter. The tie has to
+be placed on the **contested partner** — tie `X→P` against `Y→P` only — and the mutation must
+flip **only the index component** of the sort key, not sort everything ascending: on this
+fixture the remaining scores reorder to compensate and the selected set comes out identical
+either way.
+
+*The tie mutation cannot be compared against production's untied selection.* It perturbs the
+scores as well as the rule, so the correct control is production's rule applied to the tied
+fixture. Compared against the untied selection the two coincide here, which would have
+reported a failure that meant nothing.
+
+The committed fixture asserts four **distinct** scores as a precondition, so a future drift
+into a tie cannot silently merge the ordering and tie-handling mutations into one experiment
+while both still pass.
+
 **A rule for running all seven.** Once a gate is frozen and its preservation artifact is in
 place, do not modify the apparatus in response to a surprising result. If a new
 implementation disagrees with frozen legacy evidence, record the disagreement, identify which
@@ -631,6 +683,69 @@ is the confirmatory-execution discipline the PDF backend bake-off already runs u
 the same reason, and it is the second reviewer's contribution.
 
 ---
+
+### 6.5 Slice 0 falsified — the same four mutations, before and after
+
+The four production mutations of §6.2.1, re-run against the suite with the gates in place.
+Same harness, same PDF-only rebinding, same live-value proof each run.
+
+| production mutation | before slice 0 | after slice 0 | gates that fired |
+|---|---|---|---|
+| `SIMILARITY_THRESHOLD` → 0.45 | 3227 passed | **2 failed** | canonical baseline ×2 |
+| `SIMILARITY_THRESHOLD` → 0.35 | 3227 passed | **8 failed** | canonical baseline ×4, transcribed split rule ×4 |
+| `MOVE_THRESHOLD` → 0.65 | 3227 passed | **2 failed** | canonical baseline ×2 |
+| `MOVE_THRESHOLD` → 0.55 | 3227 passed | **2 failed** | canonical baseline ×1, transcribed move rule ×1 |
+
+Clean baseline with the gates in place: **3527 passed**, and the tree restored clean after
+every run.
+
+Three things worth reading off this beyond "it goes red now".
+
+**The failures land on exactly the pairs the replica predicted.** §6.2's replica said
+`similarity −0.05` moves 4 of 17 pairs and named them; the gate fails on 115-hr-5895 v3→v4,
+118-hr-4366 v3→v4 and v4→v5, and 118-hr-8774 v1→v2 — the same four. `similarity +0.05` and
+`move +0.05` were predicted to move 2, and fail on 2. That is the replica and production
+agreeing on a population neither was fitted to, which is the corroboration §6.2.1 could not
+supply on its own.
+
+**Both gate families fire, and on different mutations.** The canonical baseline catches every
+mutation that moves a committed pair. The transcribed oracle catches two it would not have
+caught alone — and the move-rule failure is the sharp direction by design: under
+`MOVE_THRESHOLD` → 0.55, production labels a pair `modified` that the independently written
+rule says is `moved`. A gate that only re-asked production what the rule is could not see
+that.
+
+**The counts are not symmetric, and that is informative.** `similarity −0.05` produces four
+times the failures of `similarity +0.05`, because lowering the split cutoff keeps pairs
+together that were previously split, which moves both the digests *and* the transcribed
+invariant. Raising it only moves digests.
+
+### 6.6 A source conflict found while building the gates
+
+**Production's admissibility decision has no public accessor.** `compare.pdf` refuses an
+unnumbered layout via `_is_unnumbered_layout`, which is private, so a gate that wants to
+restrict itself to the pairs a user can actually reach has three options and no good one:
+reach into the private predicate (another cross-module private import, which is the tangle
+[#62](https://github.com/AgoraDMV/DeltaTrack/issues/62) tracks), call `compare_pdfs` and
+catch `UnsupportedLayoutError` (correct, but pays for a full comparison), or invent a proxy.
+
+This is not hypothetical: the boundary module's first version invented a proxy —
+`len(cached_pages(...)) > 1` — and it was wrong **in both directions**. It let all six
+declined pairs through, because an enrolled print has plenty of pages and what it lacks is
+line numbers, and it dropped one legitimate pair whose old side is a one-page shell bill. The
+docstring asserted it excluded the declines, so the module carried a false claim about its
+own coverage. Caught by checking the proxy against the real predicate rather than by any
+test, which is itself the point: nothing would have failed.
+
+Resolved per gate rather than papered over. Gate 1 needs the full comparison anyway, so it
+attempts it and catches the refusal — public surface only, and it pins the decline as
+behaviour. The boundary module dropped the filter entirely, because the rules it transcribes
+are invariants of `diff_pdfs`, and admissibility is decided a layer above; a refused pair
+still exercises them. The division is now explicit: **gate 1 covers what a user can reach,
+the boundary module covers what the differ must always do.**
+
+The underlying seam stands as a finding for the eventual `bill_diff` resolver (§7.5): source
+admissibility is product-facing behaviour with no public way to ask about it.
 
 ## 7. Where forcing XML/PDF symmetry would be wrong
 
@@ -701,7 +816,7 @@ gate can be shown to fire before it lands. Slice 0 is not optional — §6.2 is 
 
 | slice | change | acceptance |
 |---|---|---|
-| **0** | **Build gates 1–4 (§6.3).** No production change. | Each gate is shown to redden under the §6.2 perturbations. **Nothing after this proceeds until slice 0's gates have each produced a real failure.** |
+| **0** | **DONE.** Gates 1–7 built (§6.3, §6.4); no production change. | Falsified against the four production mutations — §6.5. |
 | **1** | Move `_flatten`, `_rejoin_cross_page_hyphens`, `_group_into_blocks`, `_strip_heading_lines` from `diff_pdf` to `parsers/pdf_blocks.py`, unchanged. `diff_pdf` imports them. | Gate 1 byte-identical. Makes a parser revision derivable without hashing the matcher (§4.2c). Also relieves part of #62. |
 | **2** | **State and pin the emission rule** — the post-filter block sequence is what the parser emits — and assert the ordinal indexes it. Do **not** lift the filter into retrieval (§4.2a, corrected). | Gate 1 byte-identical; gate 5 red under "assign ordinals after filtering". |
 | **3** | Introduce `PdfObservation` + a `PdfObservationRegistry` mirroring `diff_bill.ObservationRegistry`. Nothing consumes it yet beyond address resolution. | Gate 1 byte-identical; totality and injectivity asserted, as the XML registry does. |
@@ -773,8 +888,9 @@ shared assignment implementation might make.
 
 **Blockers — implementation cannot start**
 
-1. **No PDF preservation oracle** (§6.2). Slice 0. Everything depends on it, and after two
-   corrections below it is the *only* hard blocker.
+1. ~~**No PDF preservation oracle** (§6.2).~~ **RETIRED — slice 0 is built and falsified**
+   (§6.3, §6.5). This was the only hard blocker after the two corrections below, so with it
+   closed, slice 1 may begin.
 2. **Block formation lives in `diff_pdf`** (§4.2c), so no ADR 0019 parser revision is
    derivable for PDF. Slice 1.
 3. **The emission rule is nowhere stated or tested** (§4.2a). Narrower than an earlier draft

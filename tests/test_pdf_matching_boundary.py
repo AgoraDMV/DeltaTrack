@@ -101,15 +101,23 @@ def _text_hunk(change_type: str, text: str, position: int) -> PdfHunk:
 
 # --- Gate 2: the transcribed rules hold over the committed corpus ---------------------
 
-_ACCEPTED = [
-    (bill, old, new)
-    for bill, old, new in adjacent_pdf_pairs()
-    # The pairs production will actually diff. `compare.pdf` declines an unnumbered
-    # (enrolled) layout; `diff_pdfs` does not, so iterating every adjacent pair would
-    # pin a path no user can reach. Detected by the collapse it produces rather than by
-    # importing the private predicate.
-    if len(cached_pages(old)) > 1 and len(cached_pages(new)) > 1
-]
+#: EVERY adjacent committed PDF pair, including the six ``compare.pdf`` refuses.
+#:
+#: That is deliberate here, and it is a different choice from
+#: ``tests/test_pdf_canonical_baseline``, which pins the product-facing behaviour and so
+#: must know which pairs are accepted. The rules transcribed below are invariants of
+#: ``diff_pdfs`` itself; admissibility is decided a layer above, in ``compare.pdf``, and a
+#: refused pair still exercises the split and move rules. So the division is: gate 1 covers
+#: what a user can reach, this module covers what the differ must always do.
+#:
+#: An earlier version of this list tried to exclude the refused pairs with a proxy —
+#: ``len(cached_pages(...)) > 1`` — and got it wrong in both directions: it let all six
+#: declined pairs through (an enrolled print has many pages; what it lacks is line numbers)
+#: while dropping one legitimate pair whose old side is a one-page shell. The proxy is gone
+#: rather than repaired, because the real predicate is ``compare.pdf._is_unnumbered_layout``
+#: and reaching into it would add another private cross-module import to the tangle #62
+#: tracks. See the convergence record's "source conflicts" note.
+_ALL_PAIRS = adjacent_pdf_pairs()
 
 
 @pytest.fixture(scope="module")
@@ -127,10 +135,10 @@ def diff_for():
 
 def test_the_corpus_pair_list_is_not_empty() -> None:
     """A parametrization list that silently empties is the fail-open shape (#542)."""
-    assert len(_ACCEPTED) >= 15, f"only {len(_ACCEPTED)} PDF pairs collected; the committed corpus holds more"
+    assert len(_ALL_PAIRS) >= 15, f"only {len(_ALL_PAIRS)} PDF pairs collected; the committed corpus holds more"
 
 
-@pytest.mark.parametrize(("bill", "old", "new"), _ACCEPTED, ids=[f"{b}/{o.stem}->{n.stem}" for b, o, n in _ACCEPTED])
+@pytest.mark.parametrize(("bill", "old", "new"), _ALL_PAIRS, ids=[f"{b}/{o.stem}->{n.stem}" for b, o, n in _ALL_PAIRS])
 def test_transcribed_split_rule_agrees_with_production(bill, old, new, diff_for) -> None:
     """Every surviving pair clears the split cutoff, per the independently written rule.
 
@@ -148,7 +156,7 @@ def test_transcribed_split_rule_agrees_with_production(bill, old, new, diff_for)
         )
 
 
-@pytest.mark.parametrize(("bill", "old", "new"), _ACCEPTED, ids=[f"{b}/{o.stem}->{n.stem}" for b, o, n in _ACCEPTED])
+@pytest.mark.parametrize(("bill", "old", "new"), _ALL_PAIRS, ids=[f"{b}/{o.stem}->{n.stem}" for b, o, n in _ALL_PAIRS])
 def test_transcribed_move_rule_agrees_with_production(bill, old, new, diff_for) -> None:
     """Every ``moved`` hunk clears MOVE_THRESHOLD, and no ``modified`` one should have.
 
