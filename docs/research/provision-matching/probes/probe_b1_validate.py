@@ -21,10 +21,14 @@ from collections import Counter
 from pathlib import Path
 
 from deltatrack.bill_tree import normalize_bill
-from deltatrack.diff_bill import _normalize_text, _text_similarity, match_nodes
+from deltatrack.diff_bill import _normalize_text, match_nodes
+from deltatrack.similarity import text_similarity
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
-BILLS = REPO / "bills"
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+BILLS = merged_root()
 _num = re.compile(r"^(\d+)_")
 _word = re.compile(r"[a-z0-9]+")
 KEEP_C = 0.55  # candidate containment keep threshold
@@ -98,7 +102,7 @@ for d in sorted(BILLS.iterdir()):
             if not o or not n or o == n:
                 continue
             total += 1
-            wr = _text_similarity(o, n)
+            wr = text_similarity(o, n)
             c = contain(vec(o), vec(n))
             if 0.35 <= wr <= 0.65:
                 deadzone_contain.append(c)

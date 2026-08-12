@@ -24,14 +24,15 @@ from pathlib import Path
 
 from deltatrack.bill_tree import BillNode, BillTree, normalize_bill, normalize_header
 from deltatrack.diff_bill import (
-    _MOVE_THRESHOLD,
-    _SIMILARITY_THRESHOLD,
     _normalize_text,
-    _text_similarity,
 )
+from deltatrack.similarity import MOVE_THRESHOLD, SIMILARITY_THRESHOLD, text_similarity  # noqa: E402
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
-BILLS = REPO / "bills"
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+BILLS = merged_root()
 FIXTURE = REPO / "tests" / "data" / "similarity_labels.json"
 
 HIGH_KEEP = 0.6   # raised text keep-floor (was 0.40); structure rescues low-sim keeps
@@ -56,7 +57,7 @@ def find_node(tree: BillTree, target: str) -> BillNode | None:
             return n
     best, bs = None, 0.0
     for n in tree.nodes:
-        s = _text_similarity(_normalize_text(n.body_text), tgt)
+        s = text_similarity(_normalize_text(n.body_text), tgt)
         if s > bs:
             best, bs = n, s
     return best if bs > 0.95 else None
@@ -65,11 +66,11 @@ def find_node(tree: BillTree, target: str) -> BillNode | None:
 def hdr_sim(a: str, b: str) -> float:
     if not a or not b:
         return 0.0
-    return _text_similarity(normalize_header(a), normalize_header(b))
+    return text_similarity(normalize_header(a), normalize_header(b))
 
 
 def baseline_pred(p: dict, body_sim: float) -> str:
-    thr = _SIMILARITY_THRESHOLD if p["decision"] == "split" else _MOVE_THRESHOLD
+    thr = SIMILARITY_THRESHOLD if p["decision"] == "split" else MOVE_THRESHOLD
     return "same" if body_sim >= thr else "different"
 
 
@@ -96,7 +97,7 @@ results = []
 for p in pairs:
     to, tn = load(p["bill"], p["version_old"]), load(p["bill"], p["version_new"])
     no, nn = find_node(to, p["text_old"]), find_node(tn, p["text_new"])
-    body_sim = _text_similarity(_normalize_text(p["text_old"]), _normalize_text(p["text_new"]))
+    body_sim = text_similarity(_normalize_text(p["text_old"]), _normalize_text(p["text_new"]))
     base = baseline_pred(p, body_sim)
     struct = structural_pred(p, no, nn, body_sim)
     results.append({

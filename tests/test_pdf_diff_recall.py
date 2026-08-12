@@ -116,19 +116,6 @@ class TestRecall:
             f"Case {case.number} ({case.title}): expected change_type={case.change_type!r}, got {h.change_type!r}"
         )
 
-    def test_amendment_annotation_flag_for_numeric_cases(self, case: PdfTestCase, hr8752_pdf_diff: PdfDiff):
-        # Cases 1-8 in the fixture are floor amendment additions; the hunk
-        # should carry has_amendment_annotations=True. Other cases either
-        # have no amendments (9, 10, 11, 13) or have them in long bodies
-        # (12) where we still expect the flag.
-        if "annotation" not in case.expected_what_changed.lower() and case.expected_net is None:
-            pytest.skip("not a financial annotation case")
-        h = _hunk_covering(hr8752_pdf_diff, case)
-        assert h is not None
-        assert h.has_amendment_annotations, (
-            f"Case {case.number} ({case.title}): expected has_amendment_annotations=True"
-        )
-
     def test_changed_prose_surfaces_in_a_hunk(self, case: PdfTestCase, hr8752_pdf_diff: PdfDiff):
         # The word-level counterpart to the financial-recall tests: the actual
         # changed prose (not just a hunk at the right location) must appear in the
@@ -140,3 +127,32 @@ class TestRecall:
         assert _prose_surfaces_in_any_hunk(hr8752_pdf_diff, fixture, removed=removed), (
             f"Case {case.number} ({case.title}): changed prose did not surface in any hunk — a real word-level miss"
         )
+
+
+# Only the cases the assertion actually applies to are generated, rather than
+# parametrizing all 13 and skipping the rest inside the test. A skip asserts nothing, so
+# the old shape put five permanently-green non-assertions in every run's summary and gave
+# a corpus-wide regression somewhere to hide; filtering at collection means the count of
+# collected cases IS the count of cases checked.
+#
+# It also makes the selection reviewable. The rule was previously buried in a guard whose
+# comment said case 12 keeps the flag "in long bodies", while the guard itself skipped it
+# — a mismatch invisible while both readings produced a green run.
+_ANNOTATION_CASES = [c for c in _CASES if "annotation" in c.expected_what_changed.lower() or c.expected_net is not None]
+
+
+@pytest.mark.parametrize("case", _ANNOTATION_CASES, ids=lambda c: f"case{c.number}")
+def test_amendment_annotation_flag_for_numeric_cases(case: PdfTestCase, hr8752_pdf_diff: PdfDiff):
+    """A floor-amendment case's hunk carries has_amendment_annotations=True."""
+    h = _hunk_covering(hr8752_pdf_diff, case)
+    assert h is not None
+    assert h.has_amendment_annotations, f"Case {case.number} ({case.title}): expected has_amendment_annotations=True"
+
+
+def test_annotation_case_selection_is_not_empty() -> None:
+    """The floor for the filter above: a fixture edit that stopped matching any case would
+    otherwise retire the gate silently, which is the failure the skip-based shape had."""
+    assert len(_ANNOTATION_CASES) >= 8, (
+        f"only {len(_ANNOTATION_CASES)} annotation cases selected from {len(_CASES)}; "
+        "the fixture's floor-amendment cases (1-8) should all qualify"
+    )

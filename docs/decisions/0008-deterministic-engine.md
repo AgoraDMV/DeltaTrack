@@ -1,4 +1,4 @@
-# 8. Deterministic Diff Engine
+# 8. Keep the diff engine deterministic; a language model may read a diff, never compute one
 
 - Status: Accepted
 - Date: 2026-06-27

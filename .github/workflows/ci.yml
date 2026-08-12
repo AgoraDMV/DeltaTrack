@@ -50,109 +50,127 @@ on:
     types: [checks_requested]
 
 jobs:
-  # The matrix legs report one context PER LEG (`test-suite (3.12)`,
-  # `test-suite (3.12.0)`), so the job that branch protection requires is the
-  # `test` aggregator at the bottom of this file, not the matrix itself. Renaming
-  # this job's id does not strand the required check; deleting the aggregator does.
-  test-suite:
+  # Interpreter-independent checks: lint and format. Run once, not per Python version.
+  lint-format:
     runs-on: ubuntu-latest
-    # Least-privilege token: this job only checks out and runs the suite.
     permissions:
       contents: read
-    strategy:
-      matrix:
-        # "3.12" resolves to the NEWEST patch uv knows, so a lone `uv python install
-        # 3.12` never visits the oldest interpreters `requires-python = ">=3.12"`
-        # promises to support -- and argparse's `parse_known_intermixed_args` re-enters
-        # the public `parse_known_args` on 3.12.0-3.12.7 but not from 3.12.8 on, so the
-        # difference is behavioural, not cosmetic (#426). The "3.12.0" entry pins the
-        # declared floor; "3.12" keeps tracking the newest patch. Ubuntu 24.04's system
-        # Python (3.12.3) sits inside the band only the floor entry exercises.
-        python-version: ["3.12", "3.12.0"]
     steps:
       - uses: actions/checkout@v7
-
       - name: Install uv
         uses: astral-sh/setup-uv@v7
-
       - name: Set up Python
-        # The other workflows install the version named in `.python-version` (#442).
-        # This job deliberately overrides it: the matrix exists to run the newest 3.12
-        # AND the declared floor, and one source of truth cannot name two interpreters.
-        # `.python-version` still governs developer environments and the
-        # single-interpreter workflows; the explicit version here, and the `--python`
-        # on `uv sync` below, are what hold the two legs apart (#426).
-        run: uv python install ${{ matrix.python-version }}
-
+        run: uv python install
       - name: Install dependencies
-        # --python pins the sync to the matrix interpreter. A bare `uv sync` follows
-        # uv's own preference order, so a later .python-version file or a UV_PYTHON
-        # env var would point BOTH legs at the same interpreter and the "3.12.0"
-        # floor leg would stay green while testing nothing.
-        run: uv sync --python ${{ matrix.python-version }}
-
-      # Each check runs even if an earlier one failed (but not after cancellation),
-      # so one push surfaces every problem at once instead of failing fast on the
-      # first gate. The job still goes red if any step fails.
+        run: uv sync
       - name: Lint
         if: ${{ !cancelled() }}
         run: uv run ruff check .
-
       - name: Check formatting
         if: ${{ !cancelled() }}
         run: uv run ruff format --check .
 
-      - name: Run tests
+  # Fast tests: run on every supported interpreter.
+  fast-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12.0", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Set up Python
+        run: uv python install ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync
+      - name: Run fast tests
         if: ${{ !cancelled() }}
         run: uv run pytest -m "not slow and not browser" -v
 
+  # Browser tests: run on every supported interpreter. Includes Playwright install.
+  browser-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12.0", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Set up Python
+        run: uv python install ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync
       - name: Install Playwright browser
         if: ${{ !cancelled() }}
-        # Chromium only; --with-deps pulls the OS libraries the browser needs on
-        # the Ubuntu runner. ~hundreds of MB but cached between runs by the image.
         run: uv run playwright install --with-deps chromium
-
       - name: Run browser tests
         if: ${{ !cancelled() }}
-        run: uv run pytest -m browser -v
+        # --run-browser: this step runs on dedicated hardware where Chromium is
+        # guaranteed, so a launch failure must fail the run rather than skip every
+        # test into a green no-op (#599).
+        run: uv run pytest -m browser --run-browser -v
 
+  # External-validation suite: committee reports + legislative branch validation.
+  # Runs on every supported interpreter.
+  external-validation:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12.0", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Set up Python
+        run: uv python install ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync
       - name: Run external-validation suite
         if: ${{ !cancelled() }}
-        # The committee-report validation is @slow but self-contained: it runs against the
-        # vendored govinfo sources (committee-report HTML + reported-bill XML), so it can gate
-        # CI.
-        #
-        # test_validate_extraction.py runs WHOLE rather than by nodeid. The two names it
-        # used to be selected by are parametrized, so they already pulled in most of the
-        # module -- but seven cases (the TestLegBranchValidation class) were collected by
-        # no CI step. Selecting a module by nodeid is what let the gap open, so it is
-        # selected by path now. All seven assert here since #278 committed the five
-        # remaining Legislative Branch bills: the class validates every curated account
-        # across all the fixture's bills, where CI previously saw only the two committed
-        # ones and silently dropped the rest.
         run: >
           uv run pytest -v -m slow
           tests/test_committee_report.py
           tests/test_validate_extraction.py
 
+  # Corpus correctness gates: parametrize over committed manifest.
+  # Runs on every supported interpreter.
+  corpus-gates:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12.0", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Set up Python
+        run: uv python install ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync
       - name: Run corpus correctness gates (committed manifest)
         if: ${{ !cancelled() }}
-        # These six @slow gates parametrize over the committed fixture set in
-        # tests/corpus_manifest.toml (ADR 0015 / #217 / #220): a byte-identical offline
-        # corpus, no fetch. Each module's test_manifest_fixtures_committed floor fails
-        # CLOSED if a manifested bill is uncommitted, so a missing fixture goes red rather
-        # than silently collecting fewer cases. Before this, they ran only locally over a
-        # fetched glob and never in CI (fail open). The last three were migrated in #220 --
-        # listing them here is what actually gives them CI coverage; committing their
-        # fixtures only made them runnable. CORPUS_SWEEP=1 is the opt-in local superset.
-        #
-        # test_financial_callout_whole_item is the seventh, and the odd one out: it is not
-        # manifest-parametrized, it diffs one committed pair (119-hr-1 v1 -> v2) to prove a
-        # wholly-removed appropriation is not rendered silently (#86). It is @slow, so
-        # every other step skipped it and it had never run in CI at all. Committing v2 made
-        # it runnable; naming it here is what makes it run. Its skipif channel is watched by
-        # the content-skip ceiling (CORPUS_GATE_MODULES in tests/conftest.py), so deleting
-        # the fixture goes red instead of quiet.
         run: >
           uv run pytest -v -m slow
           tests/test_corpus_properties.py
@@ -161,54 +179,60 @@ jobs:
           tests/test_node_join_corpus.py
           tests/test_xml_subsection_nodes.py
           tests/test_pdf_subsection_recall.py
+          tests/test_manifest_report_fixtures.py
           tests/test_financial_callout_whole_item.py
+          tests/test_canonical_baseline.py
+          tests/test_matching_contracts.py
+          tests/test_assignment_classification_boundary.py
 
-      - name: Run the packaging gate (build, install, diff from outside the checkout)
+  # Packaging gate: build wheel, install in clean env, run diff from outside checkout.
+  # Runs on every supported interpreter.
+  packaging-gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12.0", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Set up Python
+        run: uv python install ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync
+      - name: Run packaging gate (build, install, diff from outside the checkout)
         if: ${{ !cancelled() }}
-        # Its own step rather than folded into the slow suites below, because what it
-        # reports is a different failure: the engine does not INSTALL, as distinct from
-        # the engine computing the wrong answer. A reviewer seeing this step red should
-        # look at pyproject.toml, not at the diff logic.
-        #
-        # Named here for the reason every step in this job spells out: the marker makes a
-        # gate runnable, naming its module is what makes it RUN. Every slow step selects
-        # modules by path, so a new @slow file is collected by none of them -- which is
-        # exactly what happened to this one when it was added, and it sat green-by-absence
-        # through a full CI run before this step existed.
-        #
-        # Its `uv` skip cannot silently fire here: the step invokes `uv run`, so a missing
-        # uv fails the step rather than retiring the gate.
         run: >
           uv run pytest -v -m slow
           tests/test_engine_installs.py
 
+  # Remaining slow suites: all other @slow modules against committed fixtures.
+  # Runs on every supported interpreter.
+  remaining-slow:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12.0", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Set up Python
+        run: uv python install ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync
       - name: Run remaining slow suites (committed fixtures)
         if: ${{ !cancelled() }}
-        # These @slow modules already passed on any fresh clone, in ~20s, against
-        # committed fixtures — and were named by no CI step, so they never ran here.
-        # Committing a fixture makes a gate RUNNABLE; naming its module is what makes it
-        # RUN (the distinction #220 drew for the corpus gates). ~95 assertions, free.
-        #
-        # Their skips are not free: a skip asserts nothing, so every one is declared in
-        # ALLOWED_CI_SLOW_SKIPS (tests/conftest.py) and a NEW one fails the session. Most
-        # entries are a fixture this repo does not commit, i.e. a coverage gap #126 should
-        # shrink — kept separate from the corpus content-skip allowlist for that reason.
-        #
-        # The allowlist covers a module's WHOLE skip surface, not just what this step
-        # collects: the hook runs in every session, so a non-slow case in one of these
-        # modules (test_bill_tree.py has one) is watched in the fast step too.
-        #
-        # Every case CI collects here is watched. Two of these modules glob bills/ instead
-        # of the manifest, so a developer with a fetched corpus collects cases CI never
-        # sees (6 -> 90, 30 -> 432); those are excluded from the ceiling, because no
-        # allowlist calibrated on the committed corpus could name them and the session
-        # would go red locally while CI was green. See is_watched_case in tests/conftest.py.
-        #
-        # Deliberately excluded: test_govinfo_corpus_parity.py, which fetches BILLSTATUS
-        # live and so is not an offline gate. test_financial_callout_whole_item.py was the
-        # other exclusion pending its fixture; that landed in #320, which put it in the
-        # corpus-gate step above and under the #220 ceiling, so it is covered there rather
-        # than here.
         run: >
           uv run pytest -v -m slow
           tests/test_pdf_corpus_smoke.py
@@ -219,42 +243,60 @@ jobs:
           tests/test_financial_diff.py
           tests/test_pipeline_parity.py
           tests/test_pdf_xml_amount_recall.py
+          tests/test_pdf_xml_prose_recall.py
           tests/test_front_matter_parity.py
           tests/test_xml_compare.py
           tests/test_toc_tree.py
           tests/test_format_html.py
+          tests/test_manifest_report_fixtures.py
           tests/test_canonical_tree.py
           tests/test_reconcile.py
           tests/test_pdf_watermark_recall.py
           tests/test_formatters_text_serializer.py
+          tests/test_pdf_xml_withheld_recall.py
 
   # The required status check on `develop` and `main` is a context named exactly
-  # `test`. The matrix above reports per-leg contexts (`test-suite (3.12)`, ...),
-  # so without this aggregator the first matrix edit silently strands branch
-  # protection: every following pull request would wait on a `test` context that
-  # no longer reports (#426 review). This job reports `test` forever, no matter
-  # how the matrix is renamed or resized, and no branch-protection edit is needed.
+  # `test`. The matrix jobs above report per-leg contexts (e.g., `fast-tests (3.12)`),
+  # and the non-matrix `lint-format` reports a single context. Without this aggregator
+  # the first matrix edit would silently strand branch protection: every following
+  # pull request would wait on a `test` context that no longer reports (#426 review).
+  # This job reports `test` forever, no matter how the matrix is renamed or resized,
+  # and no branch-protection edit is needed.
   #
   # `if: always()` is load-bearing: a skipped or failed dependency would otherwise
   # skip this job too, and a skipped aggregator reports no verdict at all. The
-  # explicit result check is the other half: `needs.*.result` is "success" only
-  # when EVERY matrix leg succeeded -- a skipped or cancelled leg surfaces as
-  # "skipped"/"cancelled", and without the comparison below those would count as
-  # a pass, making the aggregator a rubber stamp.
+  # explicit result checks are the other half: each `needs.<job>.result` must be
+  # "success" -- a skipped or cancelled job surfaces as "skipped"/"cancelled", and
+  # without the comparison below those would count as a pass, making the aggregator
+  # a rubber stamp.
   test:
-    needs: test-suite
+    needs: [lint-format, fast-tests, browser-tests, external-validation, corpus-gates, packaging-gate, remaining-slow]
     if: always()
     runs-on: ubuntu-latest
-    # Least-privilege token: this job only reads the matrix result.
     permissions:
       contents: read
     steps:
-      - name: Require every matrix leg to have succeeded
+      - name: Require every dependent job to have succeeded
         env:
-          MATRIX_RESULT: ${{ needs.test-suite.result }}
+          LINT_FORMAT_RESULT: ${{ needs.lint-format.result }}
+          FAST_TESTS_RESULT: ${{ needs.fast-tests.result }}
+          BROWSER_TESTS_RESULT: ${{ needs.browser-tests.result }}
+          EXTERNAL_VALIDATION_RESULT: ${{ needs.external-validation.result }}
+          CORPUS_GATES_RESULT: ${{ needs.corpus-gates.result }}
+          PACKAGING_GATE_RESULT: ${{ needs.packaging-gate.result }}
+          REMAINING_SLOW_RESULT: ${{ needs.remaining-slow.result }}
         run: |
-          if [ "$MATRIX_RESULT" != "success" ]; then
-            echo "::error::test-suite matrix result is '$MATRIX_RESULT', not 'success'"
-            exit 1
-          fi
-          echo "All test-suite matrix legs succeeded."
+          for result in \
+            "$LINT_FORMAT_RESULT" \
+            "$FAST_TESTS_RESULT" \
+            "$BROWSER_TESTS_RESULT" \
+            "$EXTERNAL_VALIDATION_RESULT" \
+            "$CORPUS_GATES_RESULT" \
+            "$PACKAGING_GATE_RESULT" \
+            "$REMAINING_SLOW_RESULT"; do
+            if [ "$result" != "success" ]; then
+              echo "::error::A required job result is '$result', not 'success'"
+              exit 1
+            fi
+          done
+          echo "All required jobs succeeded."

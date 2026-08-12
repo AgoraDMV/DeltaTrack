@@ -1,0 +1,2028 @@
+{
+ "population": "SYNTHETIC + DEVELOPMENT -- no holdout opened, nothing adjudicated, nothing scored",
+ "contract": "A35 (adjudicator prompt + build_oracle) as amended by A36 (C/D overlap semantics + M5 coarsening), implementing A19-A34 and HARNESS-PLAN 3-4",
+ "renderer": "MuPDF (pymupdf)",
+ "renderer_version": "('1.28.2', '1.28.2', None)",
+ "artifacts_created": "NONE of frames.json, oracle_key.json, oracle_adjudicated.json, metrics.json, scores.json, EXECUTION-START.json",
+ "a35_5_stop_resolved_by": "A36 -- REGION_IN_BOTH_FRAMES is no longer raised; the overlap is BUILT as one stimulus carrying both memberships and both routes",
+ "prompt": {
+  "prompt_sha256": "2067821ddb0464059bdb9d0b7c0555458446b77c0af94029afbbfe620384a406",
+  "prompt_chars": 5027,
+  "forbidden_patterns_checked": [
+   "amount_attribution",
+   "architecture",
+   "arm_letter_H",
+   "arm_letter_X",
+   "control_status",
+   "deltatrack",
+   "extended_glyph",
+   "frame",
+   "hybrid",
+   "pdfium",
+   "renderer_scale",
+   "repeat_status",
+   "stratum"
+  ],
+  "required_instructions_checked": [
+   "a33_5_ignore_marks",
+   "a33_5_not_bounding_box",
+   "a33_5_visible_ink",
+   "exact_printed_text",
+   "identity_annotation_only",
+   "immediate_parent",
+   "independent_adjudication",
+   "role_codebook",
+   "start_physical_line",
+   "start_x_px"
+  ],
+  "injections_caught": {
+   "architecture name": true,
+   "arm letter": true,
+   "frame label": true,
+   "stratum": true,
+   "control status": true,
+   "repeat status": true,
+   "render scale": true,
+   "engine name": true
+  }
+ },
+ "blinding": {
+  "n_stimuli": 22,
+  "n_r1_repeats": 2,
+  "blind_id_scheme_swap_changed_selection": false,
+  "blind_id_scheme_swap_changed_order": false
+ },
+ "render": {
+  "synthetic_bbox": [
+   100.0,
+   529.0,
+   300.0,
+   681.0
+  ],
+  "expected_width_300": 834,
+  "expected_width_330": 917,
+  "n_r1_pairs_checked": 2
+ },
+ "fail_closed": {
+  "n_clean_stimuli": 22,
+  "rotation_refusal": "NONZERO_PAGE_ROTATION",
+  "rotation_build_returned": null,
+  "refusal_classes": [
+   "MISSING_LINE_BBOX",
+   "NON_FINITE_LINE_BBOX",
+   "NON_POSITIVE_LINE_BBOX",
+   "REGION_BBOX_OUTSIDE_PAGE",
+   "NONZERO_PAGE_ROTATION"
+  ]
+ },
+ "leakage_and_join": {
+  "n_stimuli": 22,
+  "blind_allowed_keys": [
+   "id",
+   "image",
+   "question"
+  ],
+  "injected_leaks_caught": {
+   "document_sha256": true,
+   "canonical_identity": true,
+   "png_sha256": true,
+   "structural_frame_and_stratum": true,
+   "forbidden_text": true
+  },
+  "shuffled_key_defects": 22
+ },
+ "start_line_bijection": {
+  "region_lines": 8,
+  "bijection": [
+   [
+    1,
+    0
+   ],
+   [
+    1,
+    1
+   ],
+   [
+    1,
+    2
+   ],
+   [
+    1,
+    3
+   ],
+   [
+    1,
+    4
+   ],
+   [
+    1,
+    5
+   ],
+   [
+    1,
+    6
+   ],
+   [
+    1,
+    7
+   ]
+  ]
+ },
+ "overlap_semantics": {
+  "frame_counts": {
+   "c_frame": 19,
+   "d_frame": 2,
+   "c_and_d_overlap": 1,
+   "union_reported_for_information_only": 20,
+   "c_audit_selected": 19,
+   "human_tasks": 21,
+   "ai_route": 21,
+   "human_route": 21
+  },
+  "synthetic_overlap_regions": 1,
+  "audit_size_used": 5,
+  "n_audit_overlap_items": 2,
+  "n_non_audit_overlap_items": 8,
+  "n_r1_repeats": 2
+ },
+ "occurrence_join": {
+  "blind_id": "cc4f046a87fd2a07",
+  "adjudicated_heading": {
+   "text": "SYNTHETIC ACCOUNT",
+   "start_physical_line": 3,
+   "start_x_px": 0
+  },
+  "resolved": {
+   "matched": true,
+   "neutral_line_key": [
+    1,
+    2
+   ],
+   "target_pdf_x": 99.83999999999999,
+   "start_ngid": 20,
+   "occurrence_key": [
+    "synthsha0123456789",
+    1,
+    [
+     1,
+     2
+    ],
+    20
+   ]
+  },
+  "emitted_occurrence_key": [
+   "synthsha0123456789",
+   1,
+   [
+    1,
+    2
+   ],
+   20
+  ],
+  "boundary_crossed_ngid": 21,
+  "tie_refused": true
+ },
+ "adjudicated_encoding": {
+  "schema": "oracle_adjudicated/1",
+  "heading_fields": [
+   "text",
+   "role",
+   "parent",
+   "start_physical_line",
+   "start_x_px"
+  ]
+ },
+ "m5_coarsening": {
+  "production_anchor_kinds": [
+   "account",
+   "agency",
+   "grouping",
+   "major",
+   "preamble",
+   "section",
+   "subsection",
+   "title"
+  ],
+  "oracle_role_to_m5": {
+   "account": "LEAF",
+   "section": "LEAF",
+   "agency": "CONTAINER",
+   "grouping": "CONTAINER",
+   "title": "CONTAINER",
+   "division": "CONTAINER",
+   "other": "UNSCORABLE"
+  },
+  "emitted_kind_to_m5": {
+   "account": "LEAF",
+   "section": "LEAF",
+   "major": "CONTAINER",
+   "agency": "CONTAINER",
+   "grouping": "CONTAINER",
+   "title": "CONTAINER",
+   "subsection": "UNSCORABLE",
+   "preamble": "UNSCORABLE"
+  },
+  "m5_status": "CORROBORATION ONLY -- may never affect the architecture decision"
+ },
+ "development": {
+  "documents": [
+   {
+    "document": "114-hr-2029/4",
+    "pages_consumed": 20,
+    "regions": 78,
+    "c_frame": 8,
+    "d_frame": 60,
+    "c_and_d": 8
+   },
+   {
+    "document": "118-hr-8752/1",
+    "pages_consumed": 20,
+    "regions": 79,
+    "c_frame": 8,
+    "d_frame": 56,
+    "c_and_d": 7
+   },
+   {
+    "document": "119-hr-1/1",
+    "pages_consumed": 20,
+    "regions": 107,
+    "c_frame": 8,
+    "d_frame": 54,
+    "c_and_d": 3
+   }
+  ],
+  "page_limit": 20,
+  "note": "PAGE_LIMIT is a machinery demonstration window, not a census",
+  "n_stimuli": 193,
+  "n_r1_repeats": 17,
+  "n_images": 193,
+  "image_width_px_min": 934,
+  "image_width_px_max": 2110,
+  "frame_counts": {
+   "c_frame": 24,
+   "d_frame": 170,
+   "c_and_d_overlap": 18,
+   "union_reported_for_information_only": 176,
+   "c_audit_selected": 24,
+   "human_tasks": 192,
+   "ai_route": 27,
+   "human_route": 192
+  },
+  "c_and_d_overlap_regions": 18,
+  "overlap_instances": [
+   {
+    "document": "114-hr-2029/4",
+    "page_number": 1,
+    "region_ordinal": 0
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page_number": 1,
+    "region_ordinal": 1
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page_number": 10,
+    "region_ordinal": 1
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page_number": 12,
+    "region_ordinal": 1
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page_number": 14,
+    "region_ordinal": 2
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page_number": 18,
+    "region_ordinal": 0
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page_number": 19,
+    "region_ordinal": 0
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page_number": 20,
+    "region_ordinal": 0
+   },
+   {
+    "document": "118-hr-8752/1",
+    "page_number": 4,
+    "region_ordinal": 1
+   },
+   {
+    "document": "118-hr-8752/1",
+    "page_number": 10,
+    "region_ordinal": 2
+   },
+   {
+    "document": "118-hr-8752/1",
+    "page_number": 11,
+    "region_ordinal": 3
+   },
+   {
+    "document": "118-hr-8752/1",
+    "page_number": 14,
+    "region_ordinal": 3
+   },
+   {
+    "document": "118-hr-8752/1",
+    "page_number": 18,
+    "region_ordinal": 0
+   },
+   {
+    "document": "118-hr-8752/1",
+    "page_number": 19,
+    "region_ordinal": 0
+   },
+   {
+    "document": "118-hr-8752/1",
+    "page_number": 20,
+    "region_ordinal": 0
+   },
+   {
+    "document": "119-hr-1/1",
+    "page_number": 3,
+    "region_ordinal": 0
+   },
+   {
+    "document": "119-hr-1/1",
+    "page_number": 11,
+    "region_ordinal": 5
+   },
+   {
+    "document": "119-hr-1/1",
+    "page_number": 15,
+    "region_ordinal": 3
+   }
+  ]
+ },
+ "stop_conditions": [],
+ "tests": [
+  {
+   "test": "18. the prompt asks NO M6 / amount-attribution question",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "an amount-to-account or total-the-figures question appears; M6 is deferred by A20"
+  },
+  {
+   "test": "19. the prompt carries the A33.5 visible-character instruction",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the A33.5 wording is missing, so start_x_px would be collected under a different definition and nothing downstream could tell"
+  },
+  {
+   "test": "the prompt forbids a text-box / bounding-box edge (A33.5)",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "an adjudicator could mark a bounding-box edge instead of the character's own ink"
+  },
+  {
+   "test": "the prompt says start_x_px is an identity annotation only",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "start_x_px could be read as evidence about text, parent or role"
+  },
+  {
+   "test": "the prompt requires text, parent and role to be judged independently",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "one field could be adjusted to agree with another"
+  },
+  {
+   "test": "the prompt leaks no forbidden architecture / frame / stratum / control token",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "any of H/X, hybrid, extended glyph, architecture, C/D-frame, stratum, control status, repeat status or DPI appears in the adjudicator's instructions"
+  },
+  {
+   "test": "the prompt carries every required instruction",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a required question or instruction is absent"
+  },
+  {
+   "test": "the committed prompt LOADS -- the gate accepts it",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the committed prompt is refused by its own gate"
+  },
+  {
+   "test": "10a. NEGATIVE -- every injected forbidden disclosure is CAUGHT by the prompt gate",
+   "expected": {
+    "architecture name": true,
+    "arm letter": true,
+    "frame label": true,
+    "stratum": true,
+    "control status": true,
+    "repeat status": true,
+    "render scale": true,
+    "engine name": true
+   },
+   "observed": {
+    "architecture name": true,
+    "arm letter": true,
+    "frame label": true,
+    "stratum": true,
+    "control status": true,
+    "repeat status": true,
+    "render scale": true,
+    "engine name": true
+   },
+   "pass": true,
+   "fails_when": "an injected architecture / frame / stratum / control / scale disclosure passes the gate, which would mean the gate cannot see the leak it exists to stop"
+  },
+  {
+   "test": "10b. NEGATIVE -- an injected M6 question is CAUGHT",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "an amount-attribution question could be added without the gate firing"
+  },
+  {
+   "test": "10c. NEGATIVE -- removing the A33.5 wording makes the completeness gate FAIL",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the required-instruction gate cannot detect the A33.5 instruction going missing"
+  },
+  {
+   "test": "...and a prompt carrying an injected leak is REFUSED, not merely reported",
+   "expected": "PROMPT_LEAKS",
+   "observed": "PROMPT_LEAKS",
+   "pass": true,
+   "fails_when": "load_prompt returns a leaking prompt instead of refusing it"
+  },
+  {
+   "test": "6. changing the blind-ID scheme changes NO selected stimulus",
+   "expected": [
+    "[\"region\",\"synthsha0123456789\",1,0]",
+    "[\"region\",\"synthsha0123456789\",2,0]",
+    "[\"region\",\"synthsha0123456789\",3,0]",
+    "[\"region\",\"synthsha0123456789\",4,0]",
+    "[\"region\",\"synthsha0123456789\",5,0]",
+    "[\"region\",\"synthsha0123456789\",6,0]",
+    "[\"region\",\"synthsha0123456789\",7,0]",
+    "[\"region\",\"synthsha0123456789\",8,0]",
+    "[\"region\",\"synthsha0123456789\",9,0]",
+    "[\"region\",\"synthsha0123456789\",10,0]",
+    "[\"region\",\"synthsha0123456789\",11,0]",
+    "[\"region\",\"synthsha0123456789\",12,0]",
+    "[\"region\",\"synthsha0123456789\",13,0]",
+    "[\"region\",\"synthsha0123456789\",14,0]",
+    "[\"region\",\"synthsha0123456789\",15,0]",
+    "[\"region\",\"synthsha0123456789\",16,0]",
+    "[\"region\",\"synthsha0123456789\",17,0]",
+    "[\"region\",\"synthsha0123456789\",18,0]",
+    "[\"region\",\"synthsha0123456789\",19,0]",
+    "[\"region\",\"synthsha0123456789\",20,0]",
+    "[\"r1-repeat\",[\"region\",\"synthsha0123456789\",3,0]]",
+    "[\"r1-repeat\",[\"region\",\"synthsha0123456789\",7,0]]"
+   ],
+   "observed": [
+    "[\"region\",\"synthsha0123456789\",1,0]",
+    "[\"region\",\"synthsha0123456789\",2,0]",
+    "[\"region\",\"synthsha0123456789\",3,0]",
+    "[\"region\",\"synthsha0123456789\",4,0]",
+    "[\"region\",\"synthsha0123456789\",5,0]",
+    "[\"region\",\"synthsha0123456789\",6,0]",
+    "[\"region\",\"synthsha0123456789\",7,0]",
+    "[\"region\",\"synthsha0123456789\",8,0]",
+    "[\"region\",\"synthsha0123456789\",9,0]",
+    "[\"region\",\"synthsha0123456789\",10,0]",
+    "[\"region\",\"synthsha0123456789\",11,0]",
+    "[\"region\",\"synthsha0123456789\",12,0]",
+    "[\"region\",\"synthsha0123456789\",13,0]",
+    "[\"region\",\"synthsha0123456789\",14,0]",
+    "[\"region\",\"synthsha0123456789\",15,0]",
+    "[\"region\",\"synthsha0123456789\",16,0]",
+    "[\"region\",\"synthsha0123456789\",17,0]",
+    "[\"region\",\"synthsha0123456789\",18,0]",
+    "[\"region\",\"synthsha0123456789\",19,0]",
+    "[\"region\",\"synthsha0123456789\",20,0]",
+    "[\"r1-repeat\",[\"region\",\"synthsha0123456789\",3,0]]",
+    "[\"r1-repeat\",[\"region\",\"synthsha0123456789\",7,0]]"
+   ],
+   "pass": true,
+   "fails_when": "sampling consumes a blind id, so the alias scheme could move the sample (A28.3)"
+  },
+  {
+   "test": "7. ...and changes NO presentation rank",
+   "expected": [
+    "[\"region\",\"synthsha0123456789\",9,0]",
+    "[\"region\",\"synthsha0123456789\",19,0]",
+    "[\"region\",\"synthsha0123456789\",1,0]",
+    "[\"region\",\"synthsha0123456789\",5,0]",
+    "[\"region\",\"synthsha0123456789\",16,0]",
+    "[\"region\",\"synthsha0123456789\",17,0]",
+    "[\"region\",\"synthsha0123456789\",6,0]",
+    "[\"region\",\"synthsha0123456789\",12,0]",
+    "[\"region\",\"synthsha0123456789\",18,0]",
+    "[\"region\",\"synthsha0123456789\",2,0]",
+    "[\"r1-repeat\",[\"region\",\"synthsha0123456789\",7,0]]",
+    "[\"region\",\"synthsha0123456789\",14,0]",
+    "[\"region\",\"synthsha0123456789\",3,0]",
+    "[\"r1-repeat\",[\"region\",\"synthsha0123456789\",3,0]]",
+    "[\"region\",\"synthsha0123456789\",8,0]",
+    "[\"region\",\"synthsha0123456789\",4,0]",
+    "[\"region\",\"synthsha0123456789\",13,0]",
+    "[\"region\",\"synthsha0123456789\",7,0]",
+    "[\"region\",\"synthsha0123456789\",11,0]",
+    "[\"region\",\"synthsha0123456789\",10,0]",
+    "[\"region\",\"synthsha0123456789\",20,0]",
+    "[\"region\",\"synthsha0123456789\",15,0]"
+   ],
+   "observed": [
+    "[\"region\",\"synthsha0123456789\",9,0]",
+    "[\"region\",\"synthsha0123456789\",19,0]",
+    "[\"region\",\"synthsha0123456789\",1,0]",
+    "[\"region\",\"synthsha0123456789\",5,0]",
+    "[\"region\",\"synthsha0123456789\",16,0]",
+    "[\"region\",\"synthsha0123456789\",17,0]",
+    "[\"region\",\"synthsha0123456789\",6,0]",
+    "[\"region\",\"synthsha0123456789\",12,0]",
+    "[\"region\",\"synthsha0123456789\",18,0]",
+    "[\"region\",\"synthsha0123456789\",2,0]",
+    "[\"r1-repeat\",[\"region\",\"synthsha0123456789\",7,0]]",
+    "[\"region\",\"synthsha0123456789\",14,0]",
+    "[\"region\",\"synthsha0123456789\",3,0]",
+    "[\"r1-repeat\",[\"region\",\"synthsha0123456789\",3,0]]",
+    "[\"region\",\"synthsha0123456789\",8,0]",
+    "[\"region\",\"synthsha0123456789\",4,0]",
+    "[\"region\",\"synthsha0123456789\",13,0]",
+    "[\"region\",\"synthsha0123456789\",7,0]",
+    "[\"region\",\"synthsha0123456789\",11,0]",
+    "[\"region\",\"synthsha0123456789\",10,0]",
+    "[\"region\",\"synthsha0123456789\",20,0]",
+    "[\"region\",\"synthsha0123456789\",15,0]"
+   ],
+   "pass": true,
+   "fails_when": "blind-order ranks blind ids rather than canonical final identities"
+  },
+  {
+   "test": "...and the alias itself DID change, so the control is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the substituted scheme returns the same alias, proving nothing"
+  },
+  {
+   "test": "8. NEGATIVE -- an injected blind-ID collision ABORTS the build",
+   "expected": "BlindIdCollision",
+   "observed": "BlindIdCollision",
+   "pass": true,
+   "fails_when": "the build completes with a collision, silently overwriting or merging two stimuli (I14)"
+  },
+  {
+   "test": "20. realized blind-ID uniqueness holds over the COMPLETE set, repeats included",
+   "expected": 22,
+   "observed": 22,
+   "pass": true,
+   "fails_when": "two realized stimuli share an adjudicator-facing id"
+  },
+  {
+   "test": "...and the uniqueness assertion is made over instances that INCLUDE R1 repeats",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no repeat exists in the realized set, so control 20 never exercised the repeat case"
+  },
+  {
+   "test": "1. same bbox + renderer + DPI re-renders to an IDENTICAL PNG hash",
+   "expected": "910e42afcff3d204f4d112eb7dad76ee9f772f381691d6dd25101161ca21e753",
+   "observed": "910e42afcff3d204f4d112eb7dad76ee9f772f381691d6dd25101161ca21e753",
+   "pass": true,
+   "fails_when": "the renderer is not deterministic, so a stored png_sha256 could not detect a re-render"
+  },
+  {
+   "test": "4. the renderer consumes PDF geometry only -- bytes match a frame-free direct render",
+   "expected": "910e42afcff3d204f4d112eb7dad76ee9f772f381691d6dd25101161ca21e753",
+   "observed": "910e42afcff3d204f4d112eb7dad76ee9f772f381691d6dd25101161ca21e753",
+   "pass": true,
+   "fails_when": "the frame contributes something to the pixels, i.e. an arm's output could reach the image (I6)"
+  },
+  {
+   "test": "17. the PNG hash CHANGES when the rendered stimulus really changes",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "two genuinely different renders hash the same, so the hash cannot detect a substitution"
+  },
+  {
+   "test": "5. changing H/X text cannot change ANY rendered PNG",
+   "expected": [
+    "0393c3c15058a7731d0891e594c166be0afc87f262c87f33c88500df95cd385f",
+    "0614bcc4e3217d3b7bfaa2d41ec4fdfa2412194c4672a525857067042ebd15c3",
+    "0d36093aa058c89a6f51cf2c971c2ae23cb6a768b88bda2d52939e9221bf3ce5",
+    "0e41c40661c94c29ff2d116ad624822b891fdf3112599c2034faa6848b71c96c",
+    "2195c25922784fbea4f897eaa5a9497161a98ea87364045447ce4f4b11d46b38",
+    "2b3288194f435a2ef8b6d1578fe41e9200d6124a28ea2ca730148653d08dc4e8",
+    "3682953cc91d9cdc67ef110947315ebb0ea20af0904ea701f82cfba21831ba68",
+    "4596e5e78e706e9c0bb94e21fee823dac1d0a2e68e7f0dad36a021afb51b1155",
+    "523e76b2dcc43b0339269ad853ddf7cb233035b11b6f2972c16e84c01d60210f",
+    "55b5c24f8bbde123a7761c23c69252b4a56d0a8af0f2f59d819851b33a0c4d0c",
+    "564afbde1c31bcf4a853c026f30d0043c8cfd7395f9dff6af4c6c14863974ee0",
+    "5787d162f1cc2b05461b08f7788961bc722a825750b37310543670eb121fcba7",
+    "59993342398a90ed8c6928eecc169a6e31fd055a4d12663fb7ae2ffcfc8521ed",
+    "64d9ab7852adf4bed4c745e97bdfa41d065587f80a38f80716af542d2369073e",
+    "77fb29c43c1a62ff27bc94d7a0eb61d6303bf707510ec65c350f8cec880d05dc",
+    "83d9e4e005f8dc78f00a7c84dfaa05870f67cfc46d0371de8114194969265fd3",
+    "901a178efbf6b463699e4dd5e5880771353407eeb09fb6545f8c268773c3b7f1",
+    "910e42afcff3d204f4d112eb7dad76ee9f772f381691d6dd25101161ca21e753",
+    "b465399f344653daf00f130dfd8c5c5739c019c5366b6c454161344d53f43af2",
+    "cb65c619132bd2e46033116332991afd2634b1f9f4832648ab5214005779904f",
+    "dc8501c025ea68920ff6567fcec53decc88e548bc1644ba4702d3a71af625660",
+    "f8158e1d2e7ba8ea9bc3e9cefcada264295baedd2c2e863284f7148f0c2e5d90"
+   ],
+   "observed": [
+    "0393c3c15058a7731d0891e594c166be0afc87f262c87f33c88500df95cd385f",
+    "0614bcc4e3217d3b7bfaa2d41ec4fdfa2412194c4672a525857067042ebd15c3",
+    "0d36093aa058c89a6f51cf2c971c2ae23cb6a768b88bda2d52939e9221bf3ce5",
+    "0e41c40661c94c29ff2d116ad624822b891fdf3112599c2034faa6848b71c96c",
+    "2195c25922784fbea4f897eaa5a9497161a98ea87364045447ce4f4b11d46b38",
+    "2b3288194f435a2ef8b6d1578fe41e9200d6124a28ea2ca730148653d08dc4e8",
+    "3682953cc91d9cdc67ef110947315ebb0ea20af0904ea701f82cfba21831ba68",
+    "4596e5e78e706e9c0bb94e21fee823dac1d0a2e68e7f0dad36a021afb51b1155",
+    "523e76b2dcc43b0339269ad853ddf7cb233035b11b6f2972c16e84c01d60210f",
+    "55b5c24f8bbde123a7761c23c69252b4a56d0a8af0f2f59d819851b33a0c4d0c",
+    "564afbde1c31bcf4a853c026f30d0043c8cfd7395f9dff6af4c6c14863974ee0",
+    "5787d162f1cc2b05461b08f7788961bc722a825750b37310543670eb121fcba7",
+    "59993342398a90ed8c6928eecc169a6e31fd055a4d12663fb7ae2ffcfc8521ed",
+    "64d9ab7852adf4bed4c745e97bdfa41d065587f80a38f80716af542d2369073e",
+    "77fb29c43c1a62ff27bc94d7a0eb61d6303bf707510ec65c350f8cec880d05dc",
+    "83d9e4e005f8dc78f00a7c84dfaa05870f67cfc46d0371de8114194969265fd3",
+    "901a178efbf6b463699e4dd5e5880771353407eeb09fb6545f8c268773c3b7f1",
+    "910e42afcff3d204f4d112eb7dad76ee9f772f381691d6dd25101161ca21e753",
+    "b465399f344653daf00f130dfd8c5c5739c019c5366b6c454161344d53f43af2",
+    "cb65c619132bd2e46033116332991afd2634b1f9f4832648ab5214005779904f",
+    "dc8501c025ea68920ff6567fcec53decc88e548bc1644ba4702d3a71af625660",
+    "f8158e1d2e7ba8ea9bc3e9cefcada264295baedd2c2e863284f7148f0c2e5d90"
+   ],
+   "pass": true,
+   "fails_when": "an arm's text reaches the renderer or the crop, which would let the thing under test choose its own stimulus"
+  },
+  {
+   "test": "2. every R1 repeat renders the EXACT same PDF bbox as its primary",
+   "expected": [
+    2,
+    true
+   ],
+   "observed": [
+    2,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a repeat is cropped differently, so a text disagreement could be a crop artifact (A28.4)"
+  },
+  {
+   "test": "3. ...and differs from it ONLY by raster scale (300 -> 330)",
+   "expected": [
+    2,
+    true
+   ],
+   "observed": [
+    2,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a repeat differs in source region, page or document, or is not 330 DPI"
+  },
+  {
+   "test": "13. the crop equals the committed-frame minimal union EXACTLY, zero padding",
+   "expected": [
+    100.0,
+    529.0,
+    300.0,
+    681.0
+   ],
+   "observed": [
+    100.0,
+    529.0,
+    300.0,
+    681.0
+   ],
+   "pass": true,
+   "fails_when": "the builder padded, expanded to column or page, re-clustered from the PDF, or repaired the bbox -- each would show the adjudicator something other than the committed region"
+  },
+  {
+   "test": "14. NEGATIVE -- a region bbox extending past the page ABORTS",
+   "expected": "REGION_BBOX_OUTSIDE_PAGE",
+   "observed": "REGION_BBOX_OUTSIDE_PAGE",
+   "pass": true,
+   "fails_when": "an out-of-page bbox is clipped, intersected or padded instead of refused (A33.1)"
+  },
+  {
+   "test": "15. NEGATIVE -- a non-positive committed line bbox ABORTS",
+   "expected": "NON_POSITIVE_LINE_BBOX",
+   "observed": "NON_POSITIVE_LINE_BBOX",
+   "pass": true,
+   "fails_when": "a degenerate line passes because its siblings make the union positive, so defective committed geometry would render and never be seen"
+  },
+  {
+   "test": "NEGATIVE -- a missing committed line bbox ABORTS",
+   "expected": "MISSING_LINE_BBOX",
+   "observed": "MISSING_LINE_BBOX",
+   "pass": true,
+   "fails_when": "a line with no geometry is skipped, silently shrinking the crop"
+  },
+  {
+   "test": "NEGATIVE -- a non-finite committed line bbox ABORTS",
+   "expected": "NON_FINITE_LINE_BBOX",
+   "observed": "NON_FINITE_LINE_BBOX",
+   "pass": true,
+   "fails_when": "a NaN coordinate propagates into a clip rectangle"
+  },
+  {
+   "test": "16. NEGATIVE -- a non-zero page rotation ABORTS oracle construction",
+   "expected": "NONZERO_PAGE_ROTATION",
+   "observed": "NONZERO_PAGE_ROTATION",
+   "pass": true,
+   "fails_when": "a rotated page renders anyway, though start_x_px would no longer be a PDF x offset (A33.4)"
+  },
+  {
+   "test": "16b. ...and the rotation refusal CANNOT become a skipped stimulus",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "fails_when": "the build returns a result with the rotated page's regions dropped, turning an unrepresentable condition into a quietly smaller study with no visible loss"
+  },
+  {
+   "test": "...and a clean build of the same shape DOES produce stimuli, so 16b is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the clean case produces nothing either, so 'None' proved nothing about rotation"
+  },
+  {
+   "test": "NEGATIVE -- a confirmatory holdout member is REFUSED while the boundary is not VALID",
+   "expected": "HOLDOUT_BEFORE_EXECUTION_BOUNDARY",
+   "observed": "HOLDOUT_BEFORE_EXECUTION_BOUNDARY",
+   "pass": true,
+   "fails_when": "a holdout document can be opened before execution is authorised"
+  },
+  {
+   "test": "the boundary ACCESS MATRIX permits a holdout only at VALID",
+   "expected": {
+    "ABSENT": "HOLDOUT_BEFORE_EXECUTION_BOUNDARY",
+    "UNCOMMITTED": "HOLDOUT_BEFORE_EXECUTION_BOUNDARY",
+    "MUTATED": "HOLDOUT_BEFORE_EXECUTION_BOUNDARY",
+    "VALID": null
+   },
+   "observed": {
+    "ABSENT": "HOLDOUT_BEFORE_EXECUTION_BOUNDARY",
+    "UNCOMMITTED": "HOLDOUT_BEFORE_EXECUTION_BOUNDARY",
+    "MUTATED": "HOLDOUT_BEFORE_EXECUTION_BOUNDARY",
+    "VALID": null
+   },
+   "pass": true,
+   "fails_when": "an ABSENT, UNCOMMITTED or MUTATED marker unlocks the holdout -- a stray or edited EXECUTION-START.json would then authorize the confirmatory run"
+  },
+  {
+   "test": "...and every CANONICAL confirmatory write obeys the same VALID-only rule",
+   "expected": {
+    "ABSENT": "CONFIRMATORY_WRITE_BEFORE_EXECUTION",
+    "UNCOMMITTED": "CONFIRMATORY_WRITE_BEFORE_EXECUTION",
+    "MUTATED": "CONFIRMATORY_WRITE_BEFORE_EXECUTION",
+    "VALID": null
+   },
+   "observed": {
+    "ABSENT": "CONFIRMATORY_WRITE_BEFORE_EXECUTION",
+    "UNCOMMITTED": "CONFIRMATORY_WRITE_BEFORE_EXECUTION",
+    "MUTATED": "CONFIRMATORY_WRITE_BEFORE_EXECUTION",
+    "VALID": null
+   },
+   "pass": true,
+   "fails_when": "an artifact can be created under a weaker condition than the material it describes"
+  },
+  {
+   "test": "the S1 and cross-engine canonical paths are inside the same guarded set",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "an S1 or cross-engine confirmatory artifact could be written with no boundary at all"
+  },
+  {
+   "test": "...and a scratch path is NOT refused, so the write guard is not blanket-refusing",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "fails_when": "the guard refuses everything, which would make the controls above meaningless"
+  },
+  {
+   "test": "no real execution marker was created by any of this",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "the boundary controls created the very marker they exist to test"
+  },
+  {
+   "test": "9. the adjudicator-facing artifact carries ONLY id, image and question",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a field beyond the blinding allowlist reaches the adjudicator"
+  },
+  {
+   "test": "9b. ...and no private VALUE appears anywhere in its serialization",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": "a document sha, canonical identity or png hash is smuggled inside an allowed field"
+  },
+  {
+   "test": "9c. ...and no forbidden architecture / frame / stratum token appears in it",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the blind file names an architecture, frame, stratum, control or repeat"
+  },
+  {
+   "test": "10. NEGATIVE -- every injected leak makes the leakage gate FAIL",
+   "expected": {
+    "document_sha256": true,
+    "canonical_identity": true,
+    "png_sha256": true,
+    "structural_frame_and_stratum": true,
+    "forbidden_text": true
+   },
+   "observed": {
+    "document_sha256": true,
+    "canonical_identity": true,
+    "png_sha256": true,
+    "structural_frame_and_stratum": true,
+    "forbidden_text": true
+   },
+   "pass": true,
+   "fails_when": "an injected private value, an extra structural field, or a forbidden token passes the gate -- which would mean a green leakage report proves nothing"
+  },
+  {
+   "test": "...and write_artifacts REFUSES a leaking blind file rather than writing it",
+   "expected": "BLIND_ARTIFACT_LEAKS",
+   "observed": "BLIND_ARTIFACT_LEAKS",
+   "pass": true,
+   "fails_when": "a leaking artifact is written and the leak survives to the adjudicator"
+  },
+  {
+   "test": "11. the private key carries every field the downstream join needs",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a join field is missing, so an adjudication could not be bound back to its region"
+  },
+  {
+   "test": "12. NEGATIVE -- a misassociated private key BREAKS the join, proving it load-bearing",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "adjudications still align after the key is shuffled, which would mean the join is fake and the key decorative"
+  },
+  {
+   "test": "...and the shuffle was real: at least two distinct stimuli existed to permute",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "fewer than two stimuli, so the shuffle was a no-op and control 12 was vacuous"
+  },
+  {
+   "test": "the bijection covers EXACTLY the region's committed neutral lines",
+   "expected": [
+    [
+     1,
+     0
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     2
+    ],
+    [
+     1,
+     3
+    ],
+    [
+     1,
+     4
+    ],
+    [
+     1,
+     5
+    ],
+    [
+     1,
+     6
+    ],
+    [
+     1,
+     7
+    ]
+   ],
+   "observed": [
+    [
+     1,
+     0
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     2
+    ],
+    [
+     1,
+     3
+    ],
+    [
+     1,
+     4
+    ],
+    [
+     1,
+     5
+    ],
+    [
+     1,
+     6
+    ],
+    [
+     1,
+     7
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a printed line maps to a line outside the region, or a region line is unreachable"
+  },
+  {
+   "test": "...and it is a bijection, not a multimap",
+   "expected": 8,
+   "observed": 8,
+   "pass": true,
+   "fails_when": "two printed-line indices resolve to the same committed line"
+  },
+  {
+   "test": "printed order is committed-ordinal order, top to bottom",
+   "expected": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "observed": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "pass": true,
+   "fails_when": "the bijection is not sorted by ordinal, so line 1 is not the topmost printed line"
+  },
+  {
+   "test": "start_physical_line 1 resolves to the topmost committed line",
+   "expected": [
+    1,
+    0
+   ],
+   "observed": [
+    1,
+    0
+   ],
+   "pass": true,
+   "fails_when": "the 1-based index is off by one"
+  },
+  {
+   "test": "NEGATIVE -- an out-of-range printed-line index REFUSES rather than guessing",
+   "expected": "START_LINE_OUT_OF_RANGE",
+   "observed": "START_LINE_OUT_OF_RANGE",
+   "pass": true,
+   "fails_when": "an impossible line index resolves to some line anyway, which would hand the nearest-x resolver a confident and wrong start_ngid"
+  },
+  {
+   "test": "NEGATIVE -- a zero or negative index REFUSES",
+   "expected": "START_LINE_OUT_OF_RANGE",
+   "observed": "START_LINE_OUT_OF_RANGE",
+   "pass": true,
+   "fails_when": "0 is accepted, silently reading as the last line under Python indexing"
+  },
+  {
+   "test": "1. a C-only region yields ONE stimulus with frames == ['C']",
+   "expected": [
+    1,
+    [
+     "C"
+    ]
+   ],
+   "observed": [
+    1,
+    [
+     "C"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a C-only region is mislabelled or emitted more than once"
+  },
+  {
+   "test": "2. a D-only region yields ONE stimulus with frames == ['D']",
+   "expected": [
+    "D"
+   ],
+   "observed": [
+    "D"
+   ],
+   "pass": true,
+   "fails_when": "a D-only region is mislabelled or emitted more than once"
+  },
+  {
+   "test": "3. an OVERLAP region yields ONE stimulus with frames == ['C','D']",
+   "expected": [
+    "C",
+    "D"
+   ],
+   "observed": [
+    "C",
+    "D"
+   ],
+   "pass": true,
+   "fails_when": "the overlap is projected onto a single frame, losing one membership (A36.2)"
+  },
+  {
+   "test": "4. the overlap creates EXACTLY ONE primary blind id",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "fails_when": "two blind ids exist for one physical region, so it would be rendered and adjudicated twice and A30.5's identity uniqueness would have had to be weakened to permit it"
+  },
+  {
+   "test": "17. ...and is rendered exactly once at primary DPI",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "fails_when": "the same primary region is rasterised twice, which would also produce two PNG hashes for one committed bbox"
+  },
+  {
+   "test": "5. adding D membership to a C item cannot change its BASE IDENTITY",
+   "expected": [
+    "[\"region\",\"synthsha0123456789\",1,0]",
+    "[\"region\",\"synthsha0123456789\",2,0]",
+    "[\"region\",\"synthsha0123456789\",3,0]"
+   ],
+   "observed": [
+    "[\"region\",\"synthsha0123456789\",1,0]",
+    "[\"region\",\"synthsha0123456789\",2,0]",
+    "[\"region\",\"synthsha0123456789\",3,0]"
+   ],
+   "pass": true,
+   "fails_when": "frame membership leaked into A28.3's identity, which would re-key every selection and every blind id the moment a region became discordant"
+  },
+  {
+   "test": "8. adding C membership to a D item cannot remove it from the D census",
+   "expected": [
+    true,
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a region drawn into C is dropped from the discordance census, shrinking the only evidence that can satisfy Rule 1"
+  },
+  {
+   "test": "...and the D-only items are in D too, so control 8 is not comparing against nothing",
+   "expected": [
+    true,
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "the D-only fixture is not actually in D"
+  },
+  {
+   "test": "9. frame membership ORDER cannot change canonical output",
+   "expected": [
+    "C",
+    "D"
+   ],
+   "observed": [
+    "C",
+    "D"
+   ],
+   "pass": true,
+   "fails_when": "membership is emitted in input order, so the same stimulus could serialize two ways"
+  },
+  {
+   "test": "6. adding D membership cannot change C selection",
+   "expected": [
+    "[\"region\",\"synthsha0123456789\",1,0]",
+    "[\"region\",\"synthsha0123456789\",2,0]",
+    "[\"region\",\"synthsha0123456789\",3,0]",
+    "[\"region\",\"synthsha0123456789\",4,0]",
+    "[\"region\",\"synthsha0123456789\",5,0]",
+    "[\"region\",\"synthsha0123456789\",6,0]",
+    "[\"region\",\"synthsha0123456789\",7,0]",
+    "[\"region\",\"synthsha0123456789\",8,0]",
+    "[\"region\",\"synthsha0123456789\",9,0]",
+    "[\"region\",\"synthsha0123456789\",10,0]",
+    "[\"region\",\"synthsha0123456789\",11,0]",
+    "[\"region\",\"synthsha0123456789\",12,0]",
+    "[\"region\",\"synthsha0123456789\",13,0]",
+    "[\"region\",\"synthsha0123456789\",14,0]",
+    "[\"region\",\"synthsha0123456789\",15,0]",
+    "[\"region\",\"synthsha0123456789\",16,0]",
+    "[\"region\",\"synthsha0123456789\",17,0]",
+    "[\"region\",\"synthsha0123456789\",18,0]",
+    "[\"region\",\"synthsha0123456789\",19,0]",
+    "[\"region\",\"synthsha0123456789\",20,0]"
+   ],
+   "observed": [
+    "[\"region\",\"synthsha0123456789\",1,0]",
+    "[\"region\",\"synthsha0123456789\",2,0]",
+    "[\"region\",\"synthsha0123456789\",3,0]",
+    "[\"region\",\"synthsha0123456789\",4,0]",
+    "[\"region\",\"synthsha0123456789\",5,0]",
+    "[\"region\",\"synthsha0123456789\",6,0]",
+    "[\"region\",\"synthsha0123456789\",7,0]",
+    "[\"region\",\"synthsha0123456789\",8,0]",
+    "[\"region\",\"synthsha0123456789\",9,0]",
+    "[\"region\",\"synthsha0123456789\",10,0]",
+    "[\"region\",\"synthsha0123456789\",11,0]",
+    "[\"region\",\"synthsha0123456789\",12,0]",
+    "[\"region\",\"synthsha0123456789\",13,0]",
+    "[\"region\",\"synthsha0123456789\",14,0]",
+    "[\"region\",\"synthsha0123456789\",15,0]",
+    "[\"region\",\"synthsha0123456789\",16,0]",
+    "[\"region\",\"synthsha0123456789\",17,0]",
+    "[\"region\",\"synthsha0123456789\",18,0]",
+    "[\"region\",\"synthsha0123456789\",19,0]",
+    "[\"region\",\"synthsha0123456789\",20,0]"
+   ],
+   "pass": true,
+   "fails_when": "the C membership set moved when D membership changed, i.e. the draw consumed the thing it is supposed to be independent of"
+  },
+  {
+   "test": "7. adding D membership cannot change C AUDIT selection or its denominator",
+   "expected": [
+    [
+     "[\"region\",\"synthsha0123456789\",1,0]",
+     "[\"region\",\"synthsha0123456789\",3,0]",
+     "[\"region\",\"synthsha0123456789\",12,0]",
+     "[\"region\",\"synthsha0123456789\",15,0]",
+     "[\"region\",\"synthsha0123456789\",20,0]"
+    ],
+    5
+   ],
+   "observed": [
+    [
+     "[\"region\",\"synthsha0123456789\",1,0]",
+     "[\"region\",\"synthsha0123456789\",3,0]",
+     "[\"region\",\"synthsha0123456789\",12,0]",
+     "[\"region\",\"synthsha0123456789\",15,0]",
+     "[\"region\",\"synthsha0123456789\",20,0]"
+    ],
+    5
+   ],
+   "pass": true,
+   "fails_when": "the 25-item audit sample or size moved with D membership, which would make the audit a function of architecture disagreement (A36.5)"
+  },
+  {
+   "test": "...and the D-heavy fixture really did gain D members, so control 7 is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no region gained D membership, so nothing was perturbed"
+  },
+  {
+   "test": "11. an overlap stimulus requires BOTH the AI and the human route",
+   "expected": [
+    "ai",
+    "human"
+   ],
+   "observed": [
+    "ai",
+    "human"
+   ],
+   "pass": true,
+   "fails_when": "an overlap region is answered on one route, dropping it from RQ2 metrics or from Rule 1 decision evidence (A36.4)"
+  },
+  {
+   "test": "...and C-only takes AI while D-only takes human",
+   "expected": [
+    [
+     "ai"
+    ],
+    [
+     "human"
+    ]
+   ],
+   "observed": [
+    [
+     "ai"
+    ],
+    [
+     "human"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a frame's route is wrong, so the wrong oracle would supply its labels"
+  },
+  {
+   "test": "12. the C metric route reads the AI answer EVEN WHERE a human answer exists",
+   "expected": "AI-ANSWER",
+   "observed": "AI-ANSWER",
+   "pass": true,
+   "fails_when": "human truth is substituted into C on overlap regions, making C a mixed oracle whose source is selected by H/X discordance -- the architectures choosing their own oracle on exactly the regions where they disagree"
+  },
+  {
+   "test": "13. the D decision route reads the human answer EVEN WHERE an AI answer exists",
+   "expected": "HUMAN-ANSWER",
+   "observed": "HUMAN-ANSWER",
+   "pass": true,
+   "fails_when": "an AI answer decides Rule 1, which 5.5.1 reserves for human adjudication"
+  },
+  {
+   "test": "...and a missing mandated answer REFUSES rather than falling back to the other route",
+   "expected": "ANSWER_MISSING_FOR_REQUIRED_ROUTE",
+   "observed": "ANSWER_MISSING_FOR_REQUIRED_ROUTE",
+   "pass": true,
+   "fails_when": "a missing AI answer silently falls back to human, which is the prohibited substitution arriving through the back door"
+  },
+  {
+   "test": "the adjudication artifact schema requires two namespaced answer sets (A36.4)",
+   "expected": "ADJUDICATION_NOT_NAMESPACED",
+   "observed": "ADJUDICATION_NOT_NAMESPACED",
+   "pass": true,
+   "fails_when": "a flat one-answer-per-id artifact validates, which would collapse an overlap region's two independent answers into whichever was written last"
+  },
+  {
+   "test": "...and a correctly namespaced artifact is accepted",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "fails_when": "the validator refuses everything, making the control above meaningless"
+  },
+  {
+   "test": "14. an audit-selected C-and-D item uses ONE human task for both D and the audit",
+   "expected": [
+    true,
+    [
+     1,
+     1
+    ]
+   ],
+   "observed": [
+    true,
+    [
+     1,
+     1
+    ]
+   ],
+   "pass": true,
+   "fails_when": "the human is asked to answer the same blind image twice, or the item exists in no fixture so the reuse rule was never exercised"
+  },
+  {
+   "test": "...and that one task carries BOTH purposes",
+   "expected": [
+    [
+     "d_decision",
+     "c_audit"
+    ],
+    [
+     "d_decision",
+     "c_audit"
+    ]
+   ],
+   "observed": [
+    [
+     "d_decision",
+     "c_audit"
+    ],
+    [
+     "d_decision",
+     "c_audit"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "the shared answer is recorded as serving only one purpose"
+  },
+  {
+   "test": "15. a NON-audit C-and-D human answer cannot enlarge the audit denominator",
+   "expected": [
+    true,
+    5
+   ],
+   "observed": [
+    true,
+    5
+   ],
+   "pass": true,
+   "fails_when": "a human answer that exists only because of D membership counts as an audit item, inflating the audit beyond the seeded cframe-audit draw (A36.5)"
+  },
+  {
+   "test": "...and non-audit overlap items exist, so control 15 is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "every overlap item happened to be audit-selected, so nothing was tested"
+  },
+  {
+   "test": "16. an R1 repeat keeps ONE identity and inherits its primary's routes",
+   "expected": [
+    2,
+    true
+   ],
+   "observed": [
+    2,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a repeat carries a route-specific identity or a route its primary does not have, which would make the reliability measurement compare two different things"
+  },
+  {
+   "test": "10. the blind artifact leaks no membership and no route",
+   "expected": [
+    0,
+    [],
+    []
+   ],
+   "observed": [
+    0,
+    [],
+    []
+   ],
+   "pass": true,
+   "fails_when": "frame membership, audit status or adjudication route reaches the adjudicator, who could then infer that a region is one the architectures disagree about"
+  },
+  {
+   "test": "10b. NEGATIVE -- injected membership/route in the blind file FAILS the gate",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "membership or route can be added to the adjudicator's file without the gate firing"
+  },
+  {
+   "test": "the occurrence join RESOLVES an adjudicated heading to an A30 occurrence key",
+   "expected": [
+    true,
+    [
+     1,
+     2
+    ]
+   ],
+   "observed": [
+    true,
+    [
+     1,
+     2
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a scorer cannot get from an adjudicated (line, x) to an occurrence identity at all, which is what A35's image-binding join left unproven"
+  },
+  {
+   "test": "...and it selects the NEAREST candidate, not merely some candidate",
+   "expected": 20,
+   "observed": 20,
+   "pass": true,
+   "fails_when": "the resolver returned a glyph that is not nearest the converted coordinate"
+  },
+  {
+   "test": "...and the key is the A30 4-tuple (doc_sha, page, neutral_line_key, start_ngid)",
+   "expected": [
+    "synthsha0123456789",
+    1,
+    [
+     1,
+     2
+    ],
+    20
+   ],
+   "observed": [
+    "synthsha0123456789",
+    1,
+    [
+     1,
+     2
+    ],
+    20
+   ],
+   "pass": true,
+   "fails_when": "the occurrence key is not the frozen A30 shape, so it cannot join to the emitted side"
+  },
+  {
+   "test": "each stimulus carries ONLY its own page's sentinel occurrence",
+   "expected": {
+    "1": [
+     "SYNTHETIC ACCOUNT SENTINEL P1"
+    ],
+    "2": [
+     "SYNTHETIC ACCOUNT SENTINEL P2"
+    ],
+    "3": [
+     "SYNTHETIC ACCOUNT SENTINEL P3"
+    ],
+    "4": [
+     "SYNTHETIC ACCOUNT SENTINEL P4"
+    ]
+   },
+   "observed": {
+    "1": [
+     "SYNTHETIC ACCOUNT SENTINEL P1"
+    ],
+    "2": [
+     "SYNTHETIC ACCOUNT SENTINEL P2"
+    ],
+    "3": [
+     "SYNTHETIC ACCOUNT SENTINEL P3"
+    ],
+    "4": [
+     "SYNTHETIC ACCOUNT SENTINEL P4"
+    ]
+   },
+   "pass": true,
+   "fails_when": "a stimulus holds another page's sentinel, i.e. region_ordinal is being matched without the page and every multi-page document contaminates every region"
+  },
+  {
+   "test": "...and the fixture really does reuse region_ordinal across pages, so this is not vacuous",
+   "expected": [
+    true,
+    [
+     0
+    ]
+   ],
+   "observed": [
+    true,
+    [
+     0
+    ]
+   ],
+   "pass": true,
+   "fails_when": "the fixture has one page or distinct ordinals per page, so a page-blind filter would have looked correct here"
+  },
+  {
+   "test": "POSITIVE -- the adjudicated key EQUALS the emitted architecture occurrence key",
+   "expected": [
+    "synthsha0123456789",
+    1,
+    [
+     1,
+     2
+    ],
+    20
+   ],
+   "observed": [
+    "synthsha0123456789",
+    1,
+    [
+     1,
+     2
+    ],
+    20
+   ],
+   "pass": true,
+   "fails_when": "the two sides of the M1-M5 join do not meet, so no matched-heading denominator exists"
+  },
+  {
+   "test": "NEGATIVE -- crossing the nearest-glyph boundary CHANGES the resolved key",
+   "expected": [
+    true,
+    21
+   ],
+   "observed": [
+    true,
+    21
+   ],
+   "pass": true,
+   "fails_when": "moving the annotation onto the other glyph resolves to the same ngid, which would mean the resolver is not actually reading the coordinate"
+  },
+  {
+   "test": "NEGATIVE -- an EXACT geometric tie refuses rather than picking one",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "a tie silently resolves to a glyph, inventing an identity A30.3 says does not exist"
+  },
+  {
+   "test": "NEGATIVE -- removing the identity candidates makes the join REFUSE",
+   "expected": [
+    false,
+    "MISSING_IDENTITY_CANDIDATES"
+   ],
+   "observed": [
+    false,
+    "MISSING_IDENTITY_CANDIDATES"
+   ],
+   "pass": true,
+   "fails_when": "the join returns a match without candidate geometry, i.e. it is not reading it"
+  },
+  {
+   "test": "NEGATIVE -- an out-of-range start_physical_line REFUSES",
+   "expected": "START_LINE_OUT_OF_RANGE",
+   "observed": "START_LINE_OUT_OF_RANGE",
+   "pass": true,
+   "fails_when": "an impossible line resolves anyway, handing the resolver the wrong candidate set"
+  },
+  {
+   "test": "NEGATIVE -- changing heading TEXT does not move the occurrence identity",
+   "expected": [
+    [
+     "synthsha0123456789",
+     1,
+     [
+      1,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     2,
+     [
+      2,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     3,
+     [
+      3,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     4,
+     [
+      4,
+      2
+     ],
+     20
+    ]
+   ],
+   "observed": [
+    [
+     "synthsha0123456789",
+     1,
+     [
+      1,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     2,
+     [
+      2,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     3,
+     [
+      3,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     4,
+     [
+      4,
+      2
+     ],
+     20
+    ]
+   ],
+   "pass": true,
+   "fails_when": "identity consumes text, so a word-boundary defect would silently renumber the very occurrences the study exists to compare (A30.1)"
+  },
+  {
+   "test": "NEGATIVE -- changing anchor KIND does not move the occurrence identity",
+   "expected": [
+    [
+     "synthsha0123456789",
+     1,
+     [
+      1,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     2,
+     [
+      2,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     3,
+     [
+      3,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     4,
+     [
+      4,
+      2
+     ],
+     20
+    ]
+   ],
+   "observed": [
+    [
+     "synthsha0123456789",
+     1,
+     [
+      1,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     2,
+     [
+      2,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     3,
+     [
+      3,
+      2
+     ],
+     20
+    ],
+    [
+     "synthsha0123456789",
+     4,
+     [
+      4,
+      2
+     ],
+     20
+    ]
+   ],
+   "pass": true,
+   "fails_when": "identity consumes anchor kind rather than absolute source position"
+  },
+  {
+   "test": "NEGATIVE -- an UNMATCHED occurrence is RETAINED and explicitly flagged",
+   "expected": [
+    "UNMATCHED",
+    "SYNTHETIC_REFUSAL"
+   ],
+   "observed": [
+    "UNMATCHED",
+    "SYNTHETIC_REFUSAL"
+   ],
+   "pass": true,
+   "fails_when": "an occurrence whose A30 resolution refused is dropped, shrinking an M1-M5 denominator invisibly instead of being reported as a refusal"
+  },
+  {
+   "test": "REQUIRED_JOIN_FIELDS now includes the occurrence-join facts",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the completeness gate still checks only image/region binding, so a key missing the occurrence facts would pass and the defect would resurface in score_metrics"
+  },
+  {
+   "test": "NEGATIVE -- a key missing its architecture occurrences FAILS the completeness gate",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "verify_join stays green without the occurrence records, which is exactly the false sufficiency A35's join had"
+  },
+  {
+   "test": "a well-formed adjudicated artifact VALIDATES",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "fails_when": "the encoding rejects a conforming artifact"
+  },
+  {
+   "test": "the heading fields are EXACTLY the six the prompt asks for",
+   "expected": [
+    "text",
+    "role",
+    "parent",
+    "start_physical_line",
+    "start_x_px"
+   ],
+   "observed": [
+    "text",
+    "role",
+    "parent",
+    "start_physical_line",
+    "start_x_px"
+   ],
+   "pass": true,
+   "fails_when": "the encoding asks for a field the prompt never collected, or drops one it did"
+  },
+  {
+   "test": "NEGATIVE -- an unknown blind id REFUSES",
+   "expected": "UNKNOWN_BLIND_ID",
+   "observed": "UNKNOWN_BLIND_ID",
+   "pass": true,
+   "fails_when": "an answer for a stimulus that does not exist is accepted and would join to nothing"
+  },
+  {
+   "test": "NEGATIVE -- an answer whose id differs from its namespace key REFUSES",
+   "expected": "ADJUDICATION_ID_MISMATCH",
+   "observed": "ADJUDICATION_ID_MISMATCH",
+   "pass": true,
+   "fails_when": "an answer can be filed under one id while claiming another, silently misjoining it"
+  },
+  {
+   "test": "NEGATIVE -- a stimulus missing a REQUIRED route REFUSES, with no fallback",
+   "expected": "ADJUDICATION_ROUTE_MISSING",
+   "observed": "ADJUDICATION_ROUTE_MISSING",
+   "pass": true,
+   "fails_when": "a missing AI answer falls back to the human one, which is the A36.4 prohibition"
+  },
+  {
+   "test": "UNREADABLE stays representable per field",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "fails_when": "an UNREADABLE field is rejected, forcing the adjudicator to guess a value instead"
+  },
+  {
+   "test": "the emitted map is COMPLETE against production's AnchorKind",
+   "expected": [
+    "account",
+    "agency",
+    "grouping",
+    "major",
+    "preamble",
+    "section",
+    "subsection",
+    "title"
+   ],
+   "observed": [
+    "account",
+    "agency",
+    "grouping",
+    "major",
+    "preamble",
+    "section",
+    "subsection",
+    "title"
+   ],
+   "pass": true,
+   "fails_when": "production emits a kind the M5 map does not cover, so that kind would arrive as an unmapped role -- this control is what makes a future kind FAIL instead of slipping in"
+  },
+  {
+   "test": "every oracle role maps exactly as A36.7 freezes it",
+   "expected": {
+    "account": "LEAF",
+    "section": "LEAF",
+    "agency": "CONTAINER",
+    "grouping": "CONTAINER",
+    "title": "CONTAINER",
+    "division": "CONTAINER",
+    "other": "UNSCORABLE"
+   },
+   "observed": {
+    "account": "LEAF",
+    "section": "LEAF",
+    "agency": "CONTAINER",
+    "grouping": "CONTAINER",
+    "title": "CONTAINER",
+    "division": "CONTAINER",
+    "other": "UNSCORABLE"
+   },
+   "pass": true,
+   "fails_when": "a role coarsens differently from the frozen table"
+  },
+  {
+   "test": "every emitted kind maps exactly as A36.7 freezes it",
+   "expected": {
+    "account": "LEAF",
+    "section": "LEAF",
+    "major": "CONTAINER",
+    "agency": "CONTAINER",
+    "grouping": "CONTAINER",
+    "title": "CONTAINER",
+    "subsection": "UNSCORABLE",
+    "preamble": "UNSCORABLE"
+   },
+   "observed": {
+    "account": "LEAF",
+    "section": "LEAF",
+    "major": "CONTAINER",
+    "agency": "CONTAINER",
+    "grouping": "CONTAINER",
+    "title": "CONTAINER",
+    "subsection": "UNSCORABLE",
+    "preamble": "UNSCORABLE"
+   },
+   "pass": true,
+   "fails_when": "an emitted kind coarsens differently from the frozen table"
+  },
+  {
+   "test": "a LEAF/LEAF pair is scorable and agrees",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "an account-to-account match is excluded or read as disagreement"
+  },
+  {
+   "test": "a LEAF/CONTAINER pair is scorable and DISAGREES",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "a genuine role disagreement is hidden"
+  },
+  {
+   "test": "an UNSCORABLE oracle role is EXCLUDED, not counted as disagreement",
+   "expected": [
+    false,
+    null
+   ],
+   "observed": [
+    false,
+    null
+   ],
+   "pass": true,
+   "fails_when": "`other` enters the M5 denominator, penalising the architecture for a role M5 was never licensed to score"
+  },
+  {
+   "test": "an UNSCORABLE emitted kind is EXCLUDED on the other side too",
+   "expected": [
+    false,
+    null
+   ],
+   "observed": [
+    false,
+    null
+   ],
+   "pass": true,
+   "fails_when": "`subsection` or `preamble` enters the denominator"
+  },
+  {
+   "test": "NEGATIVE -- an unknown oracle role REFUSES rather than becoming UNSCORABLE",
+   "expected": "UnknownRole",
+   "observed": "UnknownRole",
+   "pass": true,
+   "fails_when": "an unmapped role silently becomes UNSCORABLE, quietly SHRINKING the denominator -- and a smaller denominator reads as a cleaner result rather than as a defect"
+  },
+  {
+   "test": "NEGATIVE -- an unknown emitted kind REFUSES",
+   "expected": "UnknownRole",
+   "observed": "UnknownRole",
+   "pass": true,
+   "fails_when": "an unmapped emitted kind is silently excluded"
+  },
+  {
+   "test": "18. raw C, raw D and the C-and-D overlap are reported SEPARATELY on real material",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "a frame size or the overlap count is missing or disagrees with the frames, so a reader could not see that an overlap region is counted once in each estimand"
+  },
+  {
+   "test": "every DEVELOPMENT overlap region produced EXACTLY ONE stimulus (A36.2)",
+   "expected": 18,
+   "observed": 18,
+   "pass": true,
+   "fails_when": "an overlap region was emitted twice or dropped, so |C| + |D| would not reconcile with the realized stimulus set"
+  },
+  {
+   "test": "...and every one of them carries BOTH required routes",
+   "expected": [
+    18,
+    true
+   ],
+   "observed": [
+    18,
+    true
+   ],
+   "pass": true,
+   "fails_when": "an overlap region is answered on one route only, silently dropping it from either the RQ2 metrics or the Rule 1 decision evidence"
+  },
+  {
+   "test": "the DEVELOPMENT overlap population is non-empty, so the two controls above are not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no overlap region exists on this material, so nothing about overlap was exercised"
+  },
+  {
+   "test": "every DEVELOPMENT stimulus renders at the frozen width for its own DPI",
+   "expected": [
+    193,
+    true
+   ],
+   "observed": [
+    193,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a rendered image is not the width the A34 derivation predicts for its bbox and scale"
+  },
+  {
+   "test": "every planned DEVELOPMENT stimulus was rendered, so no denominator is a sample",
+   "expected": 193,
+   "observed": 193,
+   "pass": true,
+   "fails_when": "a stimulus was planned but not rendered, which would shrink the study invisibly"
+  },
+  {
+   "test": "the DEVELOPMENT blind file leaks nothing",
+   "expected": [
+    0,
+    [],
+    []
+   ],
+   "observed": [
+    0,
+    [],
+    []
+   ],
+   "pass": true,
+   "fails_when": "a private value or forbidden token reaches the adjudicator on real material"
+  },
+  {
+   "test": "the DEVELOPMENT join is complete",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a real stimulus cannot be bound back to its region"
+  },
+  {
+   "test": "the DEVELOPMENT population is non-empty, so these controls are not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no document or no stimulus was produced, so every check above passed on nothing"
+  }
+ ],
+ "failures": []
+}

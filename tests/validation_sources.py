@@ -100,10 +100,12 @@ JURISDICTIONS = [
     # srpt85) — another out-of-corpus year. The House FY2025 DHS bill exists but House reports
     # render their account tables as images, so they can't be read.
     _senate_fy25("homeland_security", "Homeland Security (FY2024)", "85", "2625", "118-s-2625", 35, fy="FY 2024"),
+    _senate_fy25("legislative_branch", "Legislative Branch", "192", "4678", "118-s-4678", 31),
 ]
 
-# Coverage note: with MilCon-VA and Homeland Security, all 12 regular Senate appropriations
-# subcommittees are now represented (Legislative Branch via the separate spreadsheet source,
-# the other 11 via committee reports). DHS is the FY2024 bill because FY2025 was never reported.
+# Coverage note: with MilCon-VA, Homeland Security, and Legislative Branch, all 12 regular Senate
+# appropriations subcommittees are now represented via committee reports (Legislative Branch via
+# both a committee report and the separate spreadsheet source). DHS is the FY2024 bill because
+# FY2025 was never reported.
 
 BY_SLUG = {j.slug: j for j in JURISDICTIONS}

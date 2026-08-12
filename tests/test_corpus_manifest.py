@@ -247,11 +247,37 @@ def test_migrated_modules_pin_only_manifested_fixtures() -> None:
     fetched-but-unmanifested bill, its floor would stay green (the rest of the manifest
     is present), and the parametrized test would ``FileNotFoundError`` on a clean
     checkout. This test locks the coupling the floor assumes: every fixture the three
-    migrated modules pin must be manifested. (Caught by review of #220.)"""
+    migrated modules pin must be manifested. (Caught by review of #220.)
+
+    Extended in #539 to cover ``test_pdf_division_recall``, which reaches the same
+    coupling by a different route: its lookups now RAISE instead of skipping when a pin is
+    absent, so an unmanifested pin turns a clean checkout red rather than quietly skipping
+    -- a fail-open traded for a fail-wrong. It pins (bill, stage-substring) patterns
+    rather than literal paths, so those are resolved against the manifest below instead of
+    being compared as strings."""
     from tests import test_node_join_corpus as nj
+    from tests import test_pdf_division_recall as dr
     from tests import test_pdf_subsection_recall as pr
 
     manifest = _manifest_rel_paths()
+
+    # Division recall: a pin is satisfied only by a stage manifested in BOTH formats,
+    # because both lookups read dual_format_versions().
+    for bill, stage_substr in dr.PINNED_FIXTURES:
+        stems = {rel.split("/", 1)[1].rsplit(".", 1)[0] for rel in manifest if rel.startswith(f"{bill}/")}
+        dual = sorted(
+            s
+            for s in stems
+            if (stage_substr is None or stage_substr in s)
+            and f"{bill}/{s}.xml" in manifest
+            and f"{bill}/{s}.pdf" in manifest
+        )
+        assert dual, (
+            f"test_pdf_division_recall pins {bill}/{stage_substr or '*'}, which no manifested "
+            "version satisfies in BOTH formats. Since #539 that lookup raises instead of "
+            "skipping, so this would hard-fail on a clean checkout rather than skip. Manifest "
+            "both formats of the stage, or stop pinning it."
+        )
 
     pinned: set[str] = set()
     # node-join: (bill, v1_stem, v2_stem) pairs, XML or PDF by which list they live in.
@@ -349,9 +375,11 @@ def test_ci_slow_allowlisted_skips_name_watched_modules() -> None:
 def test_unmanifested_expanding_case_is_not_watched() -> None:
     """A glob-only case (its bill version is not committed) is ignored.
 
-    This is the exact shape that reddened a local full run: 113-hr-3547 v1 is fetch-only,
-    so CI never collects it and there is nothing to declare."""
-    nodeid = "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf[113-hr-3547/1_introduced-in-house]"
+    This is the exact shape that reddened a local full run: the bill version is fetch-only,
+    so CI never collects it and there is nothing to declare. Keyed on a bill that is not in
+    the manifest AT ALL, which is the property under test and cannot be invalidated by the
+    corpus gaining or losing a format the way a real single-format stage can."""
+    nodeid = "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf[118-hr-9999/1_introduced-in-house]"
     assert not conftest.is_watched_case(nodeid)
     assert conftest.classify_corpus_skips({nodeid: "No amounts in XML (shell / procedural version)"}) == {}
 
@@ -367,26 +395,79 @@ def test_manifested_expanding_case_is_still_watched() -> None:
     assert conftest.classify_corpus_skips({nodeid: "some new reason"}) == {nodeid: "some new reason"}
 
 
-def test_expanding_case_resolves_per_version_and_per_format() -> None:
+# A stand-in manifest for the two resolution tests below, replacing the real one so the
+# property under test is the RESOLUTION LOGIC rather than the corpus's current shape.
+#
+# These two tests used to key on real single-format stages (113-hr-3547 v6 as the xml-only
+# case, and a v5->v6 pair whose second side had no pdf). #126 took format parity to 52 of
+# 57 versions, and those particular examples were among the ones that gained a pdf, so both
+# became dual-format and the assertions inverted — the tests failed while the code they
+# cover was unchanged. That is the fragility test_unmanifested_expanding_case_is_not_watched
+# already names in its own docstring: an
+# example "cannot be invalidated by the corpus gaining or losing a format" only if it does
+# not depend on one. test_guard_flags_a_stale_extensionless_stage_entry says the same thing
+# from the other side ("parity means there may be none, in which case the honest fix is a
+# synthetic unmanifested id rather than hunting for a real one"). Stubbing gets that
+# guarantee for the format-resolution cases, which genuinely need a single-format stage to
+# point at. Five real ones do remain — the five xml-only versions whose pdfs are withheld
+# for #519 — but every one of them is single-format only until the
+# issue that withholds its counterpart is resolved, so keying on any of them would reset
+# this same trap with a later fuse.
+_STUB_MANIFEST = frozenset(
+    {
+        "000-xx-1/1_both.xml",
+        "000-xx-1/1_both.pdf",
+        "000-xx-1/2_xml_only.xml",
+        "000-xx-1/3_pdf_only.pdf",
+        "000-xx-1/4_both.xml",
+        "000-xx-1/4_both.pdf",
+    }
+)
+
+
+def test_expanding_case_resolves_per_version_and_per_format(monkeypatch) -> None:
     """A bill id alone is not enough, and neither is a stage.
 
-    113-hr-3547 v1 IS manifested -- as pdf only. The amount-recall gate reads the xml and
-    the pdf of a stage, so CI collects no case for it; a check that collapsed format would
-    wave through the exact ids that reddened a local run. v4 is the stage committed in
-    both formats, and is the one real case."""
-    one = "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf[113-hr-3547/{}]"
-    assert not conftest.is_watched_case(one.format("1_introduced-in-house"))  # pdf only
-    assert not conftest.is_watched_case(one.format("6_enrolled-bill"))  # xml only
-    assert conftest.is_watched_case(one.format("4_engrossed-amendment-senate"))  # both
+    The amount-recall gate reads the xml AND the pdf of a stage, so a stage committed in
+    only one format produces no case in CI. A check that collapsed format would wave
+    through the exact ids that reddened a local run. Both single-format directions are
+    covered: xml-only and pdf-only.
+
+    The pdf-only example used to be 114-hr-2029 v4, whose xml was withheld while #434 (the
+    multi-<legis-body> text drop) was open. That xml is now committed, and per-version
+    format parity leaves the corpus with no pdf-only stage to name. The xml-only direction
+    still has one, so the single-format case is still covered from that side; both
+    directions run through the same format resolution, so what is checked here is
+    unchanged."""
+    recall = "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf[{}]"
+    assert not conftest.is_watched_case(recall.format("113-hr-3547/5_engrossed-amendment-house"))  # xml only
+    assert conftest.is_watched_case(recall.format("113-hr-3547/4_engrossed-amendment-senate"))  # both
+    assert conftest.is_watched_case(recall.format("114-hr-2029/4_reported-in-senate"))  # both, since #434
+
+    monkeypatch.setattr(conftest, "_manifest_case_refs", lambda: _STUB_MANIFEST)
+    assert not conftest.is_watched_case(recall.format("000-xx-1/2_xml_only"))
+    assert not conftest.is_watched_case(recall.format("000-xx-1/3_pdf_only"))
+    assert conftest.is_watched_case(recall.format("000-xx-1/1_both"))
 
 
-def test_pair_case_resolves_both_sides() -> None:
+def test_pair_case_resolves_both_sides(monkeypatch) -> None:
     """A smoke-gate id names two stages as "<bill>/<a>-><b>", and the second carries no
     bill prefix. Both sides must be manifested as pdf; parsing only the first would keep
-    watching half the uncollectable pairs."""
-    pair = "tests/test_pdf_corpus_smoke.py::TestPdfCorpusSmoke::test_no_crash[113-hr-3547/{}->{}]"
-    assert conftest.is_watched_case(pair.format("1_introduced-in-house", "2_engrossed-in-house"))
-    assert not conftest.is_watched_case(pair.format("5_engrossed-amendment-house", "6_enrolled-bill"))
+    watching half the uncollectable pairs — so the unwatched case must be driven by the
+    SECOND side, which is the half a first-side-only parser would get wrong.
+
+    Runs against the stub because no real pair can exercise the negative branch: the pair
+    ids come from adjacent_pdf_pairs(), which enumerates the PDFs actually on disk, and the
+    manifest declares "pdf" for exactly those. A version with no pdf — the five xml-only
+    #519 ones — never appears as either side of a generated id in the first place, so a
+    real example of a side failing this check cannot be constructed by hand from the
+    corpus.
+    """
+    monkeypatch.setattr(conftest, "_manifest_case_refs", lambda: _STUB_MANIFEST)
+    pair = "tests/test_pdf_corpus_smoke.py::TestPdfCorpusSmoke::test_no_crash[000-xx-1/{}->{}]"
+    assert conftest.is_watched_case(pair.format("1_both", "4_both"))
+    assert not conftest.is_watched_case(pair.format("1_both", "2_xml_only"))  # second side has no pdf
+    assert not conftest.is_watched_case(pair.format("2_xml_only", "4_both"))  # first side has no pdf
 
 
 def test_filter_does_not_touch_non_expanding_modules() -> None:

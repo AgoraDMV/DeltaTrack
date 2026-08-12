@@ -38,6 +38,24 @@ def _xml_headings(xml_path: Path):
     dozens of times), so instance counts and the unique-name vocabulary are
     tracked separately: count ratio is the recovery metric, unique overlap is a
     vocabulary check.
+
+    A headed node contributes its EFFECTIVE name — the leaf of ``display_path`` —
+    rather than its raw ``header_text``. GPO splits one printed account across
+    sibling elements, and the sibling that carries the money is often headed by a
+    parenthetical qualifier (``(HIGHWAY TRUST FUND)``) while the account's real name
+    sits in an earlier header-only sibling. ``normalize_bill`` already resolves that
+    into the path leaf, so reading ``header_text`` here asked the tree for the one
+    field that keeps the qualifier, and the vocabulary lost the account name the
+    print actually shows. The PDF side reads the print, so those names scored as
+    false positives against an oracle that had never heard of them (#499).
+
+    Unheaded nodes contribute nothing, exactly as before: their path leaf is an
+    inherited title or agency name, not a heading of their own, and admitting it
+    would put department names into the account vocabulary.
+
+    Instance counts stay gated on ``header_text`` and are unaffected by this: every
+    node whose name this changes has both a raw header and a leaf, so it counted
+    once before and counts once now.
     """
     tree = normalize_bill(xml_path)
     levels = ("appropriations-major", "appropriations-intermediate", "appropriations-small")
@@ -46,7 +64,8 @@ def _xml_headings(xml_path: Path):
     for node in tree.nodes:
         if node.tag in counts and node.header_text:
             counts[node.tag] += 1
-            unique[node.tag].add(normalize_header(node.header_text))
+            effective = str(node.display_path[-1]) if node.display_path else node.header_text
+            unique[node.tag].add(normalize_header(effective))
     return counts, unique
 
 

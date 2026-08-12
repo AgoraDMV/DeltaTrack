@@ -1,8 +1,9 @@
 """Corpus + golden validation for the PDF division level (DeltaTrack#107).
 
-Pins three things across every division-bearing version present (fetch with
-`./tools/fetch_bills.py download <congress> <type> <number> --format both`; absent bills
-skip, matching the other corpus suites):
+Pins three things across every division-bearing version in the committed manifest
+(tests/corpus_manifest.toml). Every fixture this module reads is committed, so an absence
+is a broken checkout, not an expected gap -- it is asserted rather than skipped (#539),
+the same treatment the module already gives the #141 zero-anchor layouts below:
   1. Division COUNT == the XML division count on every parseable version (hard) —
      the 33-division FY22 omnibus included.
   2. Division NAMES match XML (modulo casing) on every parseable version, with two
@@ -12,8 +13,10 @@ skip, matching the other corpus suites):
      division, proving anchor identity survives the rebuild in `extract_anchors`
      (fresh-eyes #6).
 
-Enrolled bills are skipped (typeset without margin line numbers, so they yield no
-TITLE anchors — DeltaTrack#141), not counted as failures.
+Enrolled bills are typeset without margin line numbers, so they yield no TITLE anchors
+(DeltaTrack#141). They are ASSERTED rather than skipped: the version must be a declared
+zero-anchor layout in `_PDF_NO_TITLE_ANCHOR_LAYOUTS` and must still classify as unnumbered,
+so a numbered print that silently stops producing anchors reddens instead of going green.
 """
 
 from __future__ import annotations
@@ -37,10 +40,62 @@ _KNOWN_NAME_RESIDUE = {
 }
 
 
+# Versions whose print carries no margin line numbers, so the anchor pipeline yields no
+# TITLE anchors (#141). Keyed the way `_IDS` builds a case id, value is the reason.
+#
+# These used to `pytest.skip`, which asserted nothing: a corpus-wide anchor regression
+# would have turned every case into a green skip. Following the #262 treatment of the same
+# layout in test_corpus_tree_properties, a zero-anchor document is now ASSERTED rather than
+# skipped — the document must be a documented layout AND still classify as unnumbered, so
+# "this print has no line numbers" stays distinguishable from "anchor extraction broke".
+_PDF_NO_TITLE_ANCHOR_LAYOUTS: dict[str, str] = {
+    "115-hr-5895/5_enrolled-bill": "enrolled print — no GPO margin line numbers (#141)",
+    # The enrolled prints committed by #126, which took format parity to 52 of 57
+    # manifested versions so far more pairings can be tested. They are carried for the
+    # dollar-amount cross-check (which reads PDF text and needs no anchors) and for the
+    # enacted text itself, not for structure: they contribute no anchors for the same #141 reason as
+    # the entry above. The assertions around this registry still hold each one to
+    # classifying as the unnumbered layout with an intact text layer, so the registry
+    # cannot go stale in the quiet direction.
+    "117-hr-2471/6_enrolled-bill": "enrolled print — no GPO margin line numbers (#141)",
+    "116-hr-1865/6_enrolled-bill": "enrolled print — no GPO margin line numbers (#141)",
+    "115-hr-1625/6_enrolled-bill": "enrolled print — no GPO margin line numbers (#141)",
+    "115-hr-244/6_enrolled-bill": "enrolled print — no GPO margin line numbers (#141)",
+    "118-hr-4366/6_enrolled-bill": "enrolled print — no GPO margin line numbers (#141)",
+    "113-hr-3547/6_enrolled-bill": "enrolled print — no GPO margin line numbers (#141)",
+    "114-hr-2029/7_enrolled-bill": "enrolled print — no GPO margin line numbers (#141)",
+    "113-hr-83/7_enrolled-bill": "enrolled print — no GPO margin line numbers (#141)",
+    "118-hr-9468/4_enrolled-bill": "enrolled print — no GPO margin line numbers (#141)",
+}
+
+
 def _has_structure(pdf_path) -> bool:
     """A PDF the anchor pipeline can read — has TITLE anchors. Enrolled bills are
-    typeset without margin line numbers, so they yield none (#141) and are skipped."""
+    typeset without margin line numbers, so they yield none (#141)."""
     return any(a.kind == "title" for a in extract_anchors(cached_pages(pdf_path)))
+
+
+def _assert_documented_zero_anchor(case_id: str, pdf_path) -> None:
+    """A version with no TITLE anchors must be a KNOWN unnumbered layout, not a regression.
+
+    Two assertions, because the registry alone would accept a numbered print that simply
+    stopped producing anchors: the id must be declared, and the print must independently
+    still look unnumbered. A numbered print losing its anchors fails the second even if
+    someone adds it to the registry.
+    """
+    assert case_id in _PDF_NO_TITLE_ANCHOR_LAYOUTS, (
+        f"{case_id}: produced no TITLE anchors but is not a documented zero-anchor layout. "
+        "A numbered print that stops producing anchors is an extraction regression — add it "
+        "to _PDF_NO_TITLE_ANCHOR_LAYOUTS only with a reason."
+    )
+    # The production classifier, not a second heuristic: if these two ever disagree about
+    # what "unnumbered" means, the gate would certify a layout the shipped code rejects.
+    from deltatrack.compare.pdf import _is_unnumbered_layout  # test-only import
+
+    assert _is_unnumbered_layout(cached_pages(pdf_path)), (
+        f"{case_id}: registered as a zero-anchor layout but classifies as NUMBERED — the "
+        "anchor pipeline, not the layout, is why there are no TITLE anchors"
+    )
 
 
 def _xml_divisions(xml_path) -> dict[str, str]:
@@ -77,6 +132,22 @@ _DIVISION_VERSIONS = [(name, xml, pdf) for (name, xml, pdf) in dual_format_versi
 _IDS = [f"{name}/{xml.stem}" for (name, xml, _pdf) in _DIVISION_VERSIONS]
 
 
+def test_the_gate_collected_the_expected_case_set():
+    """The two parametrized gates below must actually have cases (#539).
+
+    `_DIVISION_VERSIONS` is a collection-time filter (dual_format_versions() narrowed to
+    versions whose XML carries divisions), so a bug that made `_xml_divisions` return {}
+    for every version -- or a corpus_manifest.toml edit that dropped every division-bearing
+    bill -- would shrink the parametrize to zero and both gates would pass having asserted
+    nothing. A floor well under the current count (15 at last count) so adding or removing
+    an unrelated fixture doesn't force an edit here, but a wholesale loss still reddens.
+    """
+    assert len(_DIVISION_VERSIONS) >= 10, (
+        f"expected >=10 division-bearing versions, collected {len(_DIVISION_VERSIONS)} -- "
+        "either the corpus lost fixtures or _xml_divisions() stopped finding divisions"
+    )
+
+
 @pytest.mark.parametrize(("name", "xml", "pdf"), _DIVISION_VERSIONS, ids=_IDS)
 def test_division_count_matches_xml(name, xml, pdf):
     """Detected division count == XML count, on every parseable version (hard).
@@ -85,7 +156,8 @@ def test_division_count_matches_xml(name, xml, pdf):
     `engrossed-amendment-house` reprint (where a front-matter table of divisions
     must NOT shadow the real, content-bearing banners)."""
     if not _has_structure(pdf):
-        pytest.skip(f"{name}/{pdf.stem}: PDF has no TITLE anchors (unnumbered/enrolled — #141)")
+        _assert_documented_zero_anchor(f"{name}/{pdf.stem}", pdf)
+        return
     assert set(_pdf_divisions(pdf)) == set(_xml_divisions(xml))
 
 
@@ -98,7 +170,8 @@ def test_division_names_match_xml(name, xml, pdf):
     residues are catalogued in `_KNOWN_NAME_RESIDUE` (a wrapped genuine compound; an
     XML-side hyphen artifact) — asserted to stay confined to those (bill, letter)."""
     if not _has_structure(pdf):
-        pytest.skip(f"{name}/{pdf.stem}: PDF has no TITLE anchors (unnumbered/enrolled — #141)")
+        _assert_documented_zero_anchor(f"{name}/{pdf.stem}", pdf)
+        return
     truth, found = _xml_divisions(xml), _pdf_divisions(pdf)
     mismatches = {
         letter: (truth[letter], found.get(letter, ""))
@@ -108,12 +181,39 @@ def test_division_names_match_xml(name, xml, pdf):
     assert not mismatches, f"{name}/{pdf.stem} name mismatches: {mismatches}"
 
 
+# The (bill, stage-substring) pairs the fail-closed lookups below hardcode. Exposed as a
+# module constant because tests/test_corpus_manifest.py holds them to the committed
+# manifest: since #539 an absent pin RAISES instead of skipping, so pinning a
+# fetched-but-unmanifested version would hard-fail a clean checkout rather than quietly
+# skip there -- trading a fail-open for a fail-wrong. Both lookups read
+# dual_format_versions(), so each pin needs the version committed in BOTH formats. A stage
+# of None means "any manifested version of this bill".
+_SINGLE_DIVISION_BILL = "118-hr-8752"
+PINNED_FIXTURES: tuple[tuple[str, str | None], ...] = (
+    ("115-hr-5895", "engrossed-in-house"),  # _fixture(), both callers
+    (_SINGLE_DIVISION_BILL, None),  # test_single_division_bill_has_no_division_labels
+)
+
+
 def _fixture(bill: str, stage: str):
-    """The PDF for a specific division-bearing version, or skip when not fetched."""
+    """The manifested PDF for a specific division-bearing version.
+
+    Fails closed rather than skipping: every (bill, stage) this is called with is a
+    committed corpus fixture, so its absence means a broken checkout, not an expected
+    gap -- a skip here would silently retire the caller (#539).
+    """
+    assert (bill, stage) in PINNED_FIXTURES, (
+        f"{bill}/{stage} is not registered in PINNED_FIXTURES -- add it there, so the "
+        "manifest coupling this lookup now depends on stays checked (#539, "
+        "tests/test_corpus_manifest.py::test_migrated_modules_pin_only_manifested_fixtures)"
+    )
     for n, _x, p in _DIVISION_VERSIONS:
         if n == bill and stage in p.stem:
             return p
-    pytest.skip(f"{bill}/{stage} not fetched")
+    raise AssertionError(
+        f"{bill}/{stage} not found among the {len(_DIVISION_VERSIONS)} committed "
+        "division-bearing versions -- expected a manifested fixture (tests/corpus_manifest.toml)"
+    )
 
 
 def test_same_numbered_titles_separate_by_division():
@@ -147,9 +247,12 @@ def test_multi_division_breadcrumb_carries_division_end_to_end():
 
 def test_single_division_bill_has_no_division_labels():
     """Guard: a single-division bill (8752) tags nothing (breadcrumbs unchanged)."""
-    pairs = [(n, x, p) for (n, x, p) in dual_format_versions() if n == "118-hr-8752"]
-    if not pairs:
-        pytest.skip("118-hr-8752 not present")
+    pairs = [(n, x, p) for (n, x, p) in dual_format_versions() if n == _SINGLE_DIVISION_BILL]
+    # 118-hr-8752 is a committed corpus fixture (both formats, both stages), so an empty
+    # result means a broken checkout, not an expected gap -- fails closed rather than
+    # skipping, which would silently retire this guard (#539). Named via the constant so
+    # the pin stays the one PINNED_FIXTURES declares and the manifest check cannot drift.
+    assert pairs, f"{_SINGLE_DIVISION_BILL} not found among committed dual-format versions"
     _name, _xml, pdf = pairs[0]
     anchors = extract_anchors(cached_pages(pdf))
     assert anchors, "expected anchors on 8752"

@@ -10,9 +10,10 @@ Fixture policy (#287): every fixture this module pins is committed, so the gate 
 in CI instead of silently skipping (the fail-open shape #287 removes). The bills/
 fixtures are in tests/corpus_manifest.toml; the tests/data/ fixtures (subcommittee
 prints, the CJS Senate print) sit outside the bills/-layout manifest and are floored
-directly by test_manifest_fixtures_committed. The ONE fetched-only case left is
-TestCorpusAccountPrecision, a tolerant net over the larger appropriations corpus that
-is not committed — it keeps an explicit, visible skip, like the other slow PDF suites.
+directly by test_manifest_fixtures_committed. TestCorpusAccountPrecision, a tolerant net
+over the larger appropriations corpus, was the last case reaching outside the committed
+set; its remaining two pairs are now manifested and committed, so every case in this
+module runs on a clean checkout and is fail-closed by the manifest floor (#489).
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from deltatrack.parsers.pdf_anchors import extract_anchors
+from deltatrack.parsers.pdf_anchors import derive_size_bands, extract_anchors
 from tests.conftest import assert_manifest_committed
 from tests.corpus_paths import DATA_DIR, fixture_path
 from tests.pdf_corpus import cached_pages
@@ -299,8 +300,11 @@ def test_manifest_fixtures_committed():
     the already-manifested 118-hr-8752 / 118-hr-8282 / 118-s-4795) are checked via the
     shared manifest helper; the tests/data/ golden fixtures (the 10 subcommittee prints and
     the CJS Senate print) sit outside the bills/-layout manifest (ADR 0015), so they are
-    floored here directly. TestCorpusAccountPrecision's larger corpus stays fetched-only
-    and is deliberately NOT floored — it keeps a visible per-case skip."""
+    floored here directly. TestCorpusAccountPrecision's larger corpus needs no separate
+    floor: its bills are manifested, and `missing_manifest_files` checks the whole manifest
+    rather than only the cases a caller collects, so they are covered by the assertion
+    above. Its per-case skip is a defensive fallback, not the mechanism that protects
+    them (#489)."""
     assert_manifest_committed(sorted(FIXTURES), "pdf-anchor-golden")
     committed = set(FIXTURES.values()) | set(SUBCOMMITTEE_FIXTURES.values())
     absent = sorted(str(p.relative_to(ROOT)) for p in committed if not p.exists())
@@ -394,6 +398,62 @@ class TestMajorLevelAcrossSubcommittees:
         pdf = SUBCOMMITTEE_FIXTURES[subc]
         golden = json.loads(MAJOR_VOCAB_GOLDEN.read_text())
         assert sorted(_pdf_major_texts(pdf)) == golden[subc]
+
+
+class TestSizeFailBillEmitsNoAccounts:
+    """The real bill behind #114, on a committed PDF rather than synthetic pages.
+
+    119-hr-1 is the corpus's only size-fail document with real content: its glyph
+    sizes are fully attached (coverage 1.0) but they are trimodal, so
+    `derive_size_bands` bails and no size-based account detection can run (#508).
+    That is exactly the state the retired `For necessary expenses of` backwalk used
+    to fill, and it is where the measurement found the trigger's whole output: one
+    account anchor, wrongly naming a fragment of a wrapped subsection catchline.
+
+    The golden snapshots pin three OTHER fixtures, all of which take the size path,
+    so they cannot witness this. Without this test the motivating failure has no
+    end-to-end regression at all.
+    """
+
+    PDF = fixture_path("119-hr-1", "1_reported-in-house.pdf")
+
+    def test_no_account_anchors_on_a_size_fail_bill(self):
+        # Fail closed if the fixture ever stops being committed: a missing PDF must
+        # not turn this gate into a silent pass (module-wide floor is
+        # test_manifest_fixtures_committed; this is the per-path guard).
+        assert self.PDF.exists(), f"{self.PDF} missing; this #114 regression would pass by absence"
+        pages = cached_pages(self.PDF)
+        # Pin the PRECONDITION, not just the outcome: if this bill ever moves onto
+        # the size path (#508), the assertions below would pass for a new reason and
+        # silently stop guarding the degrade. Then this test should be revisited,
+        # not deleted -- it becomes a coverage win to assert instead.
+        assert derive_size_bands(pages) is None, "119-hr-1 now derives bands; see #508 and re-aim this test"
+        anchors = extract_anchors(pages)
+        assert [a for a in anchors if a.kind == "account"] == []
+        assert [a for a in anchors if a.kind in ("major", "agency", "grouping")] == []
+
+    def test_universal_structure_survives_the_degrade(self):
+        # Losing the appropriations-specific interior levels must not cost the
+        # universal ones. TITLE/SEC. and enumerator-derived run-in subsections are
+        # the grammar of all legislation (#114's carve-out) and are emitted by the
+        # per-page pass, which never consults size bands.
+        anchors = extract_anchors(cached_pages(self.PDF))
+        kinds = {a.kind for a in anchors}
+        assert {"title", "section", "subsection"} <= kinds
+
+    def test_the_false_account_fragment_is_now_a_whole_subsection(self):
+        # The single anchor the retired trigger produced on this bill was
+        # `EXISTING ``FREE FILE'' PROGRAM AND ANY ``DIRECT` -- a mid-catchline
+        # fragment of a wrapped subsection heading, labelled `account`. The text is
+        # still recovered, but as the subsection it actually is, with its catchline
+        # whole. This pins both halves: the wrong reading is gone, and removing it
+        # cost no navigation.
+        anchors = extract_anchors(cached_pages(self.PDF))
+        matches = [a for a in anchors if "FREE FILE" in a.text]
+        assert len(matches) == 1, f"expected one FREE FILE anchor, got {[a.text for a in matches]}"
+        assert matches[0].kind == "subsection"
+        assert matches[0].text.startswith("(b) APPROPRIATION FOR TASK FORCE")
+        assert not matches[0].text.startswith("EXISTING")
 
 
 @pytest.mark.parametrize("name", sorted(FIXTURES))
@@ -490,17 +550,40 @@ class TestCarryoverAgencyVocabFloors:
 
 
 class TestCorpusAccountPrecision:
-    """Corpus-wide floor on size-detected account vocabulary precision/recall (#89).
+    """Corpus-wide smoke floor on account vocabulary precision/recall (#89).
 
-    Complements the exact golden snapshots (which pin three bills) with a tolerant
-    net over the appropriations corpus, so a future change can't silently flood
-    false accounts or drop real ones without tripping a gate. The floors sit below
-    today's measured values (see scripts/heading_precision.py for the live numbers).
+    Complements the exact golden snapshots (which pin three bills) with a tolerant net
+    over the appropriations corpus. The floors ARE enforced minima — the assertions below
+    fail under them — but they are corpus-wide smoke floors rather than tight per-bill
+    regression expectations. They catch a large degradation and leave substantial unused
+    margin on the easier bills: 118-hr-8752 scores 1.000/1.000 and would still pass having
+    lost 40% of its accounts.
 
-    Unlike the golden/subcommittee fixtures above, this corpus is FETCHED-ONLY and not
-    committed (larger omnibus PDFs, out of the #287 committed set), so it keeps an
-    explicit per-case skip when a pair is absent — a visible skip, like the other slow
-    PDF suites (TESTING.md), not the empty-parametrization fail-open #287 removes.
+    That looseness is deliberate for now. #489 carries the full nine-bill measurement and
+    the per-heading breakdown; the load-bearing conclusions are:
+
+    - The oracle is LEVEL-CORRECT, and since #499 it reads the tree's EFFECTIVE heading
+      (the `display_path` leaf) rather than the raw `header_text`. It previously asked for
+      the one field that keeps a parenthetical qualifier in place of the account's name,
+      so accounts the PDF side had found correctly scored as false positives. The tree
+      itself was right throughout: `FEDERAL-AID HIGHWAYS` in 118-hr-4820 is an
+      account-level node carrying its appropriation, which `TestEffectiveHeadingVocabulary`
+      now pins. Correcting the oracle raised precision and recall on every corpus bill,
+      which is why the floors below are higher than the numbers #489 recorded.
+    - Reading the vocabulary straight from the XML instead is COMPLETE BUT LEVEL-BLIND:
+      GPO tags agency names (`COAST GUARD`, `U.S. CUSTOMS AND BORDER PROTECTION`) with the
+      same element types as accounts, and the PDF pipeline correctly calls those `agency`.
+      Scoring them as missed accounts drops 118-hr-8752 from 1.000 recall to 0.276.
+      Defining the account vocabulary needs the leveled tree, which is the #54 epic.
+    - So a per-bill band table (the #489 proposal, following `test_pipeline_parity`) would
+      pin numbers that do not yet mean what their names say. #499 has landed; reconsider
+      once #54 does. Until then the unused margin above is the accepted cost.
+
+    Every case runs on committed fixtures. 117-hr-4432 and 118-hr-4820 were the last
+    fetched-only pairs and are now in `tests/corpus_manifest.toml`, so they are fail-closed
+    by the shared manifest floor: `test_manifest_fixtures_committed` checks the whole
+    manifest, not only the cases this module collects. The per-case skip below is a
+    defensive fallback, not the mechanism that keeps these fixtures available.
 
     Why precision is well under 1.0 even when correct — the residual misses are
     KNOWN and accepted, deferred to #54, NOT bugs to chase here:
@@ -514,6 +597,13 @@ class TestCorpusAccountPrecision:
     The SEC.-catchline-continuation class is NOT among the accepted residue — it is
     fixed (see TestSectionCatchlineContinuation); a regression there would lower
     these numbers, but the targeted test catches it first.
+
+    That list predates the per-heading breakdown on #489, and the third bullet is where it
+    needed qualifying: on the one bill measured heading by heading (118-hr-4820), the
+    dominant cause was not normalization disagreement but the oracle reading the wrong
+    field, which #499 fixed. The first two bullets held up — the wrapped-fragment class is
+    the 17 misses recorded on #489. The other eight bills were measured in aggregate only,
+    so how the causes divide on them is unknown rather than assumed to match.
     """
 
     # Appropriations bills with a paired XML; (bill id, pdf rel path, xml rel path).
@@ -527,24 +617,35 @@ class TestCorpusAccountPrecision:
         # version, which carries no printed line numbers and so has no size-detected
         # account vocabulary at all — the directory form would measure 0.000 recall in
         # CI while quietly measuring v1 locally. This gate is about account detection on
-        # a numbered print, so it names v1 and skips where v1 isn't fetched.
+        # a numbered print, so it names v1 explicitly. v1 is committed in both formats,
+        # so the naming now guards against the directory form resolving to the enrolled
+        # pair rather than against v1 being absent.
         (
             "115-hr-5895",
             "tests/corpus/115-hr-5895/1_reported-in-house.pdf",
             "tests/corpus/115-hr-5895/1_reported-in-house.xml",
         ),
-        ("117-hr-4432", "bills/117-hr-4432", None),
+        ("117-hr-4432", "tests/corpus/117-hr-4432", None),
         ("117-hr-4502", "tests/corpus/117-hr-4502", None),
         ("118-hr-4366", "tests/corpus/118-hr-4366", None),
-        ("118-hr-4820", "bills/118-hr-4820", None),
+        ("118-hr-4820", "tests/corpus/118-hr-4820", None),
         ("118-hr-8752", "tests/corpus/118-hr-8752", None),
         ("118-hr-8774", "tests/corpus/118-hr-8774", None),
         ("118-s-4795", "tests/data/BILLS-118s4795rs.pdf", "tests/corpus/118-s-4795/1_reported-in-senate.xml"),
     ]
-    # Set below the lowest measured value (118-hr-4820: vrec 0.64 / vprec 0.46) with
-    # margin for per-line median wobble; these are regression floors, not targets.
-    RECALL_FLOOR = 0.60
-    PRECISION_FLOOR = 0.45
+    # Set below the lowest measured values across the nine bills. Since #499 corrected the
+    # oracle to read the tree's effective heading, the floor-setting bill is 117-hr-4502
+    # (vrec 0.744 / vprec 0.750) rather than 118-hr-4820, whose precision moved 0.538 ->
+    # 0.782. Recall and precision rose on every bill, so no floor here is a relaxation.
+    # The class docstring carries what the remaining gap to 1.0 is made of.
+    #
+    # Both floor-setting bills were named as `bills/<id>` until they were committed, so CI
+    # collected no case for either and the floors were calibrated on a bill CI could not
+    # measure. The precision figure recorded here had drifted to 0.46 in the meantime and
+    # nothing could catch it, because the only run that could check it was a developer's.
+    # Now that the pair is committed, these two numbers are re-derivable from the suite.
+    RECALL_FLOOR = 0.70
+    PRECISION_FLOOR = 0.70
 
     @staticmethod
     def _pair(spec) -> tuple[Path, Path] | None:
@@ -563,12 +664,86 @@ class TestCorpusAccountPrecision:
     def test_account_vocab_floors(self, spec):
         pair = self._pair(spec)
         if pair is None:
-            pytest.skip(f"{spec[0]} pdf/xml pair not present (fetched-only corpus)")
+            # Defensive only: every bill here is committed and manifested, so reaching
+            # this means a fixture was lost, not that one was never fetched (#489).
+            pytest.skip(f"{spec[0]} pdf/xml pair not present — expected committed, see corpus_manifest.toml")
         from scripts.heading_precision import measure
 
         m = measure(*pair)
         assert m["vocab_recall"] >= self.RECALL_FLOOR, f"{spec[0]} recall {m['vocab_recall']:.3f}"
         assert m["vocab_precision"] >= self.PRECISION_FLOOR, f"{spec[0]} precision {m['vocab_precision']:.3f}"
+
+
+class TestEffectiveHeadingVocabulary:
+    """#499: an account named in a header-only sibling keeps that name, and the
+    heading vocabulary reads it.
+
+    GPO splits one printed account across sibling `<appropriations-small>` elements:
+    the name in one, parenthetical qualifiers in the next, the money in a later one.
+    `FEDERAL-AID HIGHWAYS` in 118-hr-4820 is the reference case — three siblings, the
+    moneyed one headed `(HIGHWAY TRUST FUND)`.
+
+    `normalize_bill` resolves this correctly and always did: the money lands on an
+    `account`-level node labelled `FEDERAL-AID HIGHWAYS`. What #499 actually found was
+    that the heading-precision harness asked for `header_text`, the one field that
+    holds the raw parenthetical, so the account's real name never reached the oracle.
+
+    Both halves are pinned because the fix depends on both: the tree putting the name
+    on the moneyed node, and the harness reading that field rather than the raw header.
+    """
+
+    def test_federal_aid_highways_labels_its_appropriation(self):
+        """The money is filed under the account's name, not under a qualifier."""
+        from deltatrack.bill_tree import normalize_bill
+        from deltatrack.structure_tree import build_xml_tree
+
+        xml = fixture_path("118-hr-4820", "1_reported-in-house.xml")
+        roots = build_xml_tree(normalize_bill(xml))
+
+        def walk(node):
+            yield node
+            for child in node.children:
+                yield from walk(child)
+
+        named = [n for r in roots for n in walk(r) if n.label == "FEDERAL-AID HIGHWAYS"]
+        assert named, "no node carries the account name FEDERAL-AID HIGHWAYS"
+        assert {n.level for n in named} == {"account"}, (
+            f"FEDERAL-AID HIGHWAYS must be an account, got {sorted({n.level for n in named})}"
+        )
+        # The appropriation itself must hang off that name. Both reported-in-house
+        # occurrences carry an amount; asserting the money is present is what makes this
+        # about attribution rather than about a bare label existing somewhere.
+        assert all(n.own_amounts for n in named), (
+            "FEDERAL-AID HIGHWAYS carries no amount — its appropriation is filed elsewhere"
+        )
+        # The raw header on the moneyed element is the parenthetical it is named despite.
+        assert any(n.source is not None and n.source.header_text.startswith("(") for n in named), (
+            "expected the moneyed sibling's own header to be a parenthetical qualifier"
+        )
+
+    def test_vocabulary_prefers_the_effective_heading(self):
+        """The harness oracle carries the account name, not the qualifier."""
+        from deltatrack.bill_tree import normalize_header
+        from scripts.heading_precision import _xml_headings
+
+        xml = fixture_path("118-hr-4820", "1_reported-in-house.xml")
+        _counts, unique = _xml_headings(xml)
+        vocab = unique["appropriations-small"] | unique["appropriations-intermediate"]
+
+        assert normalize_header("FEDERAL-AID HIGHWAYS") in vocab
+        # The qualifier must NOT be admitted as an account name in its own right.
+        assert normalize_header("(HIGHWAY TRUST FUND)") not in vocab
+        # Unheaded nodes still contribute nothing. Their path leaf is inherited from an
+        # enclosing group, so admitting it would put provision-group container names into
+        # the account vocabulary. These three are what 118-hr-4820 would leak if the
+        # `header_text` gate were dropped, so they are what makes this assertion able to
+        # fail rather than a name that was never a candidate.
+        for leaked in (
+            "General Provisions—Department of Transportation",
+            "General provisions—Department of housing and urban development",
+            "TITLE IV—GENERAL PROVISIONS—THIS ACT",
+        ):
+            assert normalize_header(leaked) not in vocab
 
 
 class TestPrecisionHarnessOracle:
@@ -581,7 +756,12 @@ class TestPrecisionHarnessOracle:
 
         m = measure(pdf, xml)
         # XML-side counts are stable (independent of PDF detection method).
-        assert m["xml_small"] == 35
+        # 35 before #474: OPERATIONS AND SUPPORT (CBP) and FEDERAL ASSISTANCE (FEMA) are
+        # each marked up as a header-only element plus an untitled body element, so the
+        # moneyed half carried no header and was not counted as a named account. The PDF
+        # side always found all 37 — the print shows the heading — so joining the split
+        # pairs brings the two pipelines into exact agreement on this bill.
+        assert m["xml_small"] == 37
         # count_ratio is accounts / (small + intermediate); verify the arithmetic.
         denom = m["xml_small"] + m["xml_intermediate"]
         assert m["count_ratio"] == pytest.approx(m["pdf_accounts"] / denom)

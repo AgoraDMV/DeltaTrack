@@ -113,9 +113,11 @@ uses:
 
 - **Parser accuracy** (`bill_tree.py`, `parsers/`). A missed or mis-nested section corrupts
   everything downstream and does it silently — the report still renders. Guarded by the
-  corpus property gates and by external ground truth
+  corpus property gates, and on the money axis by independent external evidence: committee
+  reports validate appropriations **amount recall and attribution to the correct agency**
   ([ADR 0009](decisions/0009-validation-ground-truth.md),
-  [parser-validation.md](parser-validation.md)).
+  [parser-validation.md](parser-validation.md)). That evidence does not by itself cover
+  provision correspondence, structural interpretation, or PDF layout.
 - **Financial diff** (`diff_bill.py`). Dollar amounts are the product
   ([ADR 0001](decisions/0001-structured-money-diff.md)). Wrong money is worse than no
   money, because a staffer cannot tell it is wrong by looking.

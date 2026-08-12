@@ -16,15 +16,22 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from tests.corpus_paths import DATA_DIR  # noqa: E402
 from tests.validation_check import validate_jurisdiction  # noqa: E402
 from tests.validation_sources import JURISDICTIONS  # noqa: E402
 
-OUTPUT = Path("docs/parser-validation.md")
+# The intentional CLI regeneration destination, resolved against the script's own
+# location so it never depends on the caller's current working directory. Writing this
+# tracked report happens only in the __main__ block below (explicit `main(output=...)`),
+# never as a side effect of an import-and-call: an in-process caller must choose where
+# output goes.
+COMMITTED_OUTPUT = PROJECT_ROOT / "docs" / "parser-validation.md"
 LEG_BRANCH_FIXTURE = DATA_DIR / "validation_leg_branch.json"
 
 
@@ -51,8 +58,16 @@ def build_parser() -> argparse.ArgumentParser:
     return argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 
 
-def main() -> None:
-    build_parser().parse_args()
+def main(argv: Sequence[str] | None = None, *, output: Path) -> None:
+    """Regenerate the parser-accuracy report and write it to ``output``.
+
+    ``output`` is required and keyword-only so an in-process caller has to state
+    where the report goes; the tracked ``COMMITTED_OUTPUT`` is supplied only by the
+    CLI entry point below. ``argv`` is accepted so programmatic callers pass their
+    own arguments instead of stubbing the host process's ``sys.argv``; ``None`` keeps
+    argparse's real-CLI behavior.
+    """
+    build_parser().parse_args(argv)
     available = [j for j in JURISDICTIONS if j.fixture_path.exists() and j.bill_xml_path.exists()]
     missing = [j.slug for j in JURISDICTIONS if j not in available]
 
@@ -109,7 +124,7 @@ bill XML; we check that our parser reads it correctly, by comparing the parser's
 ## Two independent ground-truth sources
 
 {_leg_branch_summary()}
-- **{len(available)} other jurisdictions** — committee-recommended amounts parsed from the
+- **{len(available)} committee-report jurisdictions** — committee-recommended amounts parsed from the
   Senate Appropriations **committee reports** (govinfo `CRPT-…`), compared to what the parser
   extracts from each reported bill. The report is written by committee staff for a different
   purpose than the bill, so it is genuinely independent. (Committee reports, not CRS reports.)
@@ -194,10 +209,21 @@ uv run python scripts/generate_validation_report.py   # refresh this page
     if missing:
         doc += f"\n<!-- jurisdictions skipped (bill XML not present locally): {', '.join(missing)} -->\n"
 
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(doc, encoding="utf-8")
-    print(f"wrote {OUTPUT} ({val}/{tot} recalled, {overall:.1f}%); skipped: {missing or 'none'}")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(doc, encoding="utf-8")
+    print(f"wrote {output} ({val}/{tot} recalled, {overall:.1f}%); skipped: {missing or 'none'}")
+
+
+def _cli() -> None:
+    """The real CLI entrypoint: regenerate the tracked report.
+
+    This is the one caller of `main()` that may target `COMMITTED_OUTPUT` — writing
+    the tracked copy is intentional here. Kept as a named helper rather than inline so
+    the wiring test can pin that the CLI really does supply `COMMITTED_OUTPUT` (a
+    regression to a CWD-relative path here would recreate #445).
+    """
+    main(output=COMMITTED_OUTPUT)
 
 
 if __name__ == "__main__":
-    main()
+    _cli()

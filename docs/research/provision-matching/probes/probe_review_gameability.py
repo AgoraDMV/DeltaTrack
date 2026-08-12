@@ -22,10 +22,14 @@ from collections import Counter
 from pathlib import Path
 
 from deltatrack.bill_tree import normalize_bill
-from deltatrack.diff_bill import _normalize_text, _text_similarity
+from deltatrack.diff_bill import _normalize_text
+from deltatrack.similarity import text_similarity
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
-BILLS = REPO / "bills"
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+BILLS = merged_root()
 _word = re.compile(r"[a-z0-9]+")
 _cite = re.compile(r"u\.s\.c\.|\bsection\s+\d|\bact of \d{4}|\bpublic law", re.I)
 
@@ -101,7 +105,7 @@ for _ in range(N):
     s = random.choice(short_by_bill[ba])
     lg = random.choice(long_by_bill[bb])
     c = contain(vec(s), vec(lg))
-    wr = _text_similarity(s, lg)
+    wr = text_similarity(s, lg)
     n += 1
     cited = bool(_cite.search(s))
     if cited:

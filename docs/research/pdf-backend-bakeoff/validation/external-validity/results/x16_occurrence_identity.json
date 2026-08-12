@@ -1,0 +1,661 @@
+{
+ "population": "DEVELOPMENT + synthetic -- no holdout opened, nothing scored",
+ "builds_no_harness_component": true,
+ "occurrence_key": "(document_sha256, page_number, start_neutral_line_key, start_ngid)",
+ "ngid_is_identity_not_order": true,
+ "text_matching_used": false,
+ "kind_matching_used": false,
+ "emitted_ordinal_used": false,
+ "fidelity_contract": "strip_to_production(instrumented) == extract_anchors, element for element, on every DEVELOPMENT page consumed. When confirmatory execution is authorized the same assertion must cover every consumed confirmatory page.",
+ "refusal_classes": [
+  "AMBIGUOUS_SOURCE_POSITION",
+  "CELLS_NOT_ALIGNED_WITH_PRINT_TEXT",
+  "MERGE_RECONSTRUCTION_MISMATCH",
+  "NO_NEUTRAL_INK_AT_OR_AFTER_START",
+  "NO_NEUTRAL_INK_ON_LINE",
+  "OFFSET_PAST_END_OF_LINE",
+  "PAGE_HAS_NO_PRINT_LINE_PROVENANCE",
+  "PRINT_LINE_INDEX_UNRESOLVED",
+  "START_NGID_NOT_OWNED_BY_NEUTRAL_LINE"
+ ],
+ "census": {
+  "documents": [
+   {
+    "document": "114-hr-2029/4",
+    "document_sha256": "7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2",
+    "pages": 150,
+    "H": {
+     "occurrences": 339,
+     "keys_derived": 339,
+     "collision_lines": 2,
+     "collision_shapes": {
+      "section+subsection": 2
+     }
+    },
+    "X": {
+     "occurrences": 339,
+     "keys_derived": 339,
+     "collision_lines": 2,
+     "collision_shapes": {
+      "section+subsection": 2
+     }
+    },
+    "shared": 339,
+    "identity_agrees": 339,
+    "identity_disagrees": [],
+    "text_discordant": 0,
+    "text_discordant_identity_agrees": 0
+   },
+   {
+    "document": "118-s-4795/1",
+    "document_sha256": "7f7d022501496236b1b3fcc5dea7a8af4eed7ea9d272fd3568d71d8bc01766e8",
+    "pages": 150,
+    "H": {
+     "occurrences": 212,
+     "keys_derived": 212,
+     "collision_lines": 0,
+     "collision_shapes": {}
+    },
+    "X": {
+     "occurrences": 212,
+     "keys_derived": 212,
+     "collision_lines": 0,
+     "collision_shapes": {}
+    },
+    "shared": 212,
+    "identity_agrees": 212,
+    "identity_disagrees": [],
+    "text_discordant": 0,
+    "text_discordant_identity_agrees": 0
+   },
+   {
+    "document": "115-hr-5895/1",
+    "document_sha256": "3450f4825ff273988f9fe6b77e244a04f163f67fff9c4b8ee42588d81cea5157",
+    "pages": 150,
+    "H": {
+     "occurrences": 129,
+     "keys_derived": 129,
+     "collision_lines": 2,
+     "collision_shapes": {
+      "section+subsection": 2
+     }
+    },
+    "X": {
+     "occurrences": 129,
+     "keys_derived": 129,
+     "collision_lines": 2,
+     "collision_shapes": {
+      "section+subsection": 2
+     }
+    },
+    "shared": 129,
+    "identity_agrees": 129,
+    "identity_disagrees": [],
+    "text_discordant": 1,
+    "text_discordant_identity_agrees": 1
+   },
+   {
+    "document": "118-hr-8752/1",
+    "document_sha256": "d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0",
+    "pages": 150,
+    "H": {
+     "occurrences": 203,
+     "keys_derived": 203,
+     "collision_lines": 1,
+     "collision_shapes": {
+      "section+subsection": 1
+     }
+    },
+    "X": {
+     "occurrences": 203,
+     "keys_derived": 203,
+     "collision_lines": 1,
+     "collision_shapes": {
+      "section+subsection": 1
+     }
+    },
+    "shared": 203,
+    "identity_agrees": 203,
+    "identity_disagrees": [],
+    "text_discordant": 1,
+    "text_discordant_identity_agrees": 1
+   },
+   {
+    "document": "119-hr-1/1",
+    "document_sha256": "d324ddfc44c2d277ea095938ec94b3f78bb2cffd0bf02c92382d4bd1a40846e0",
+    "pages": 150,
+    "H": {
+     "occurrences": 169,
+     "keys_derived": 169,
+     "collision_lines": 0,
+     "collision_shapes": {}
+    },
+    "X": {
+     "occurrences": 169,
+     "keys_derived": 169,
+     "collision_lines": 0,
+     "collision_shapes": {}
+    },
+    "shared": 169,
+    "identity_agrees": 169,
+    "identity_disagrees": [],
+    "text_discordant": 28,
+    "text_discordant_identity_agrees": 28
+   },
+   {
+    "document": "118-hr-4366/1",
+    "document_sha256": "9c801bffcf796935315ba8cf17897389430e885a8aa6fc0dab1efe193d5e93df",
+    "pages": 150,
+    "H": {
+     "occurrences": 197,
+     "keys_derived": 197,
+     "collision_lines": 2,
+     "collision_shapes": {
+      "section+subsection": 2
+     }
+    },
+    "X": {
+     "occurrences": 197,
+     "keys_derived": 197,
+     "collision_lines": 2,
+     "collision_shapes": {
+      "section+subsection": 2
+     }
+    },
+    "shared": 197,
+    "identity_agrees": 197,
+    "identity_disagrees": [],
+    "text_discordant": 0,
+    "text_discordant_identity_agrees": 0
+   }
+  ],
+  "totals": {
+   "H_occurrences": 1249,
+   "X_occurrences": 1249,
+   "shared": 1249,
+   "agree": 1249,
+   "disagree": 0,
+   "text_discordant": 30,
+   "text_discordant_agree": 30,
+   "H_collision_lines": 7,
+   "X_collision_lines": 7
+  },
+  "refusals": {},
+  "fidelity_failures": []
+ },
+ "adversarial": {
+  "H": {
+   "section": {
+    "offset": 0,
+    "key": [
+     "devsha",
+     1,
+     [
+      1,
+      0
+     ],
+     0
+    ]
+   },
+   "subsection": {
+    "offset": 10,
+    "key": [
+     "devsha",
+     1,
+     [
+      1,
+      0
+     ],
+     8
+    ]
+   }
+  },
+  "X": {
+   "section": {
+    "offset": 0,
+    "key": [
+     "devsha",
+     1,
+     [
+      1,
+      0
+     ],
+     0
+    ]
+   },
+   "subsection": {
+    "offset": 9,
+    "key": [
+     "devsha",
+     1,
+     [
+      1,
+      0
+     ],
+     8
+    ]
+   }
+  },
+  "rejected_ordinal_with_A": 1,
+  "rejected_ordinal_without_A": 0,
+  "neutral_line": [
+   1,
+   0
+  ]
+ },
+ "oracle_position": {
+  "key_A": [
+   "devsha",
+   1,
+   [
+    1,
+    0
+   ],
+   0
+  ],
+  "key_B": [
+   "devsha",
+   1,
+   [
+    1,
+    0
+   ],
+   8
+  ],
+  "tie_refusal": "AMBIGUOUS_SOURCE_POSITION"
+ },
+ "r1": {
+  "R1_start_identity_agreement": "4/4",
+  "items": [
+   {
+    "ngid_truth": 0,
+    "agree": true,
+    "at_bbox_origin": true,
+    "primary_px": 0,
+    "repeat_px": 0
+   },
+   {
+    "ngid_truth": 8,
+    "agree": true,
+    "at_bbox_origin": false,
+    "primary_px": 200,
+    "repeat_px": 220
+   },
+   {
+    "ngid_truth": 22,
+    "agree": true,
+    "at_bbox_origin": false,
+    "primary_px": 550,
+    "repeat_px": 605
+   },
+   {
+    "ngid_truth": 40,
+    "agree": true,
+    "at_bbox_origin": false,
+    "primary_px": 1000,
+    "repeat_px": 1100
+   }
+  ]
+ },
+ "pdfium_conditioned_frame_note": "This occurrence-position join reads the neutral skeleton, so it inherits the already-frozen PDFIUM-CONDITIONED FRAME qualification when the cross-engine neutral-frame control (x09) fails. It does not change the oracle's heading text/role/parent truth source, which stays independently adjudicated.",
+ "tests": [
+  {
+   "test": "the instrumented mirror reproduces production extract_anchors on EVERY page",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "any drift makes every derived offset describe a recognition this study does not run"
+  },
+  {
+   "test": "every cross-arm occurrence identity agrees",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...and text-discordant occurrences were actually exercised, so it is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "if no occurrence had discordant text, space-invariance would be untested on real material"
+  },
+  {
+   "test": "every text-discordant occurrence still agrees on identity",
+   "expected": 30,
+   "observed": 30,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "no occurrence was refused on development material",
+   "expected": {},
+   "observed": {},
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "both arms recognise the section and its inline subsection on one physical line",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the arms genuinely disagree about spacing, so space-invariance is exercised",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "A's identity is arm-invariant",
+   "expected": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    0
+   ],
+   "observed": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    0
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "B's identity is arm-invariant",
+   "expected": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "observed": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "A and B are separately identifiable on the one line",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "key_H(B) == key_X(B) when X is missing A",
+   "expected": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "observed": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "mirror: key_H(B) == key_X(B) when H is missing A",
+   "expected": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "observed": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the rejected arm-local ordinal DOES renumber B when A is missing",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "ordinal(B) 1 -> 0 while start_ngid stays fixed; a green run here proves the control can fail"
+  },
+  {
+   "test": "oracle control 1: two occurrences on one line resolve to two distinct identities",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the oracle's identity for A equals the architecture's",
+   "expected": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    0
+   ],
+   "observed": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    0
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the oracle's identity for B equals the architecture's",
+   "expected": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "observed": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "oracle control 2: dropping the FIRST architecture occurrence leaves B's identity",
+   "expected": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "observed": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "pass": true,
+   "implication": "the resolver reads the skeleton and the adjudicated position; no arm output enters"
+  },
+  {
+   "test": "oracle control 3: mirror -- dropping the SECOND leaves A's identity",
+   "expected": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    0
+   ],
+   "observed": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    0
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "oracle control 4: H/X spacing before the occurrence does not move the identity",
+   "expected": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "observed": [
+    "devsha",
+    1,
+    [
+     1,
+     0
+    ],
+    8
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "oracle control 5: an exact geometric tie is UNMATCHED",
+   "expected": [
+    null,
+    "AMBIGUOUS_SOURCE_POSITION"
+   ],
+   "observed": [
+    null,
+    "AMBIGUOUS_SOURCE_POSITION"
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...but a non-tie still resolves, so the tie rule is not swallowing everything",
+   "expected": 12,
+   "observed": 12,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "oracle control 6: a start not owned by the reported neutral line is UNMATCHED",
+   "expected": [
+    null,
+    "START_NGID_NOT_OWNED_BY_NEUTRAL_LINE"
+   ],
+   "observed": [
+    null,
+    "START_NGID_NOT_OWNED_BY_NEUTRAL_LINE"
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "oracle control 7: a line with no neutral ink is UNMATCHED",
+   "expected": [
+    null,
+    "NO_NEUTRAL_INK_ON_LINE"
+   ],
+   "observed": [
+    null,
+    "NO_NEUTRAL_INK_ON_LINE"
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "oracle control 8: the source identity is fixed while the rejected ordinal moves",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the repeat is genuinely a re-render: pixel coordinates differ away from the bbox origin",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "if the coordinates matched, R1 would be testing a cache rather than a re-read"
+  },
+  {
+   "test": "...and the bbox-origin occurrence is pixel 0 at both scales, as arithmetic requires",
+   "expected": [
+    0,
+    0
+   ],
+   "observed": [
+    0,
+    0
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "R1_start_identity_agreement: every repeated item resolves to the primary's identity",
+   "expected": 4,
+   "observed": 4,
+   "pass": true,
+   "implication": ""
+  }
+ ],
+ "failures": []
+}

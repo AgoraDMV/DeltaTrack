@@ -289,28 +289,46 @@ _HR8774_V2 = fixture_path("118-hr-8774", "2_engrossed-in-house.xml")
     reason="Real XML not present",
 )
 class TestCliFinancial:
-    def test_financial_flag_filters_output(self):
+    """The `compare` CLI's financial behaviour, exercised as a real subprocess.
+
+    Invoked with ``sys.executable``, never ``uv run``: on an interpreter outside the
+    ``.python-version`` series a bare ``uv run`` deletes and rebuilds ``.venv`` underneath
+    the pytest process that called it, and these two tests pass while doing it -- the
+    damage lands on everything scheduled afterwards. Running the interpreter that is
+    already running the test cannot mutate anything, and needs no environment manager.
+    """
+
+    def _compare(self, *extra: str) -> dict:
+        """Run `diff_bill.py compare` on the committed pair, returning parsed JSON.
+
+        Absolute paths for both the wrapper and the fixtures, so the call does not depend
+        on pytest's working directory the way the relative form it replaced did.
+        """
         import json
         import subprocess
+        import sys
+        from pathlib import Path
 
+        wrapper = Path(__file__).resolve().parents[1] / "diff_bill.py"
         result = subprocess.run(
             [
-                "uv",
-                "run",
-                "python",
-                "diff_bill.py",
+                sys.executable,
+                str(wrapper),
                 "compare",
-                "tests/corpus/118-hr-8774/1_reported-in-house.xml",
-                "tests/corpus/118-hr-8774/2_engrossed-in-house.xml",
+                str(_HR8774_V1),
+                str(_HR8774_V2),
                 "--format",
                 "json",
-                "--financial",
+                *extra,
             ],
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
+        assert result.returncode == 0, f"CLI exited {result.returncode}\nstderr:\n{result.stderr}"
+        return json.loads(result.stdout)
+
+    def test_financial_flag_filters_output(self):
+        data = self._compare("--financial")
 
         for change in data["changes"]:
             assert "financial" in change
@@ -321,26 +339,7 @@ class TestCliFinancial:
         assert data["financial_summary"]["sections_with_financial_changes"] == len(data["changes"])
 
     def test_no_financial_flag_no_filtering(self):
-        import json
-        import subprocess
-
-        result = subprocess.run(
-            [
-                "uv",
-                "run",
-                "python",
-                "diff_bill.py",
-                "compare",
-                "tests/corpus/118-hr-8774/1_reported-in-house.xml",
-                "tests/corpus/118-hr-8774/2_engrossed-in-house.xml",
-                "--format",
-                "json",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        assert result.returncode == 0
-        data = json.loads(result.stdout)
+        data = self._compare()
 
         assert "financial_summary" not in data
         for change in data["changes"]:

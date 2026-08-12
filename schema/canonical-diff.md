@@ -55,16 +55,18 @@ Top-level field: `schema_version: "2.0"`.
   compatible with 1.0 (consumers that ignore unknown fields keep working).
 - **1.0** — Initial public contract.
 
-- Consumers SHOULD reject documents whose major version they do not understand.
+- A consumer claiming support for this contract MUST reject a document whose major
+  version it does not support, rather than interpreting it as the current shape. This
+  is an obligation on the consumer: the JSON Schema constrains the document, and cannot
+  enforce what a reader does at runtime.
 - Additive, backward-compatible changes (new optional fields) bump the minor:
   `1.0 → 1.1`.
 - Breaking changes (renamed/removed/restructured fields) bump the major:
-  `1.0 → 2.0`. N-way comparison support is planned as a later major break (it was
-  once earmarked for 2.0; 2.0 went to the `amounts` removal instead).
+  `1.0 → 2.0`. N-way comparison support is planned as a later major break.
 
 ## Scope
 
-- **Binary only.** v1.0 represents a single comparison of two bill versions
+- **Binary only.** This contract represents a single comparison of two bill versions
   (`v1` and `v2`). N-way comparison is out of scope and will be a later major break.
 - **Read-only diff data.** No edit instructions, comments, or annotations.
 - **Semantic, not presentational.** The JSON does not carry pre-rendered
@@ -367,7 +369,7 @@ using `null` for absent values. Consumers SHOULD treat missing optional fields
 the same as `null`. This keeps the JSON predictable for schema validation
 while leaving room for additive fields in minor versions.
 
-## Out of scope for v1.0
+## Out of scope for the current contract
 
 - N-way comparison (more than two versions in a single document)
 - Cross-reference pairing (mapping an `"added"` change to a related
@@ -376,4 +378,5 @@ while leaving room for additive fields in minor versions.
 - Inline word-level diff annotations
 - AI-generated summaries, importance scores, or annotations
 
-These may appear in future minor versions (additive) or v2.0 (breaking).
+These may appear in a future minor version (additive) or a future major version
+(breaking).

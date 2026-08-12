@@ -325,7 +325,7 @@ def _build_change_groups(view: DiffView, order_map: dict[tuple, int] | None = No
         items = "".join(_build_nav_item(view.changes[i], i) for i in node["items"])
         kids = "".join(render(s, c, p) for s, c in _ordered_children(node, p, order_map))
         return (
-            f'<details class="nav-group"><summary>{escape(label)}'
+            f'<details class="nav-group"><summary class="disclosure">{escape(label)}'
             f' <span class="nav-group__count">({subtree_count(node)})</span></summary>'
             f"<ul>{items}</ul>{kids}</details>"
         )
@@ -334,7 +334,7 @@ def _build_change_groups(view: DiffView, order_map: dict[tuple, int] | None = No
     for label in _fallback_labels(fallback):
         items = "".join(_build_nav_item(view.changes[i], i) for i in fallback[label])
         blocks.append(
-            f'<details class="nav-group"><summary>{escape(label)}'
+            f'<details class="nav-group"><summary class="disclosure">{escape(label)}'
             f' <span class="nav-group__count">({len(fallback[label])})</span></summary>'
             f"<ul>{items}</ul></details>"
         )
@@ -413,7 +413,8 @@ def _build_toc_from_tree(tree_nodes: list[dict], full_text: str) -> str:
             # sections) it falls through to the <details> toggle below (#161).
             return f'<li class="toc-child">{link(node)}</li>'
         return (
-            f'<li><details class="toc-group"><summary>{link(node)}</summary><ul class="toc">{inner}</ul></details></li>'
+            f'<li><details class="toc-group"><summary class="disclosure">{link(node)}</summary>'
+            f'<ul class="toc">{inner}</ul></details></li>'
         )
 
     blocks = "".join(render(n) for n in tree_nodes)
@@ -535,7 +536,7 @@ def _cards_section_html(view: DiffView, order_map: dict[tuple, int] | None = Non
     def group_html(label: str, inner: str) -> str:
         return (
             '<details class="card-group" open>'
-            f'<summary class="card-group__label">{escape(label)}</summary>\n{inner}\n</details>'
+            f'<summary class="card-group__label disclosure">{escape(label)}</summary>\n{inner}\n</details>'
         )
 
     def render(seg: tuple[str, str], node: dict, path: tuple) -> str:
@@ -561,14 +562,24 @@ def _build_financial_summary(view: DiffView) -> str:
     together. An added row has no old amount and a removed row no new amount —
     rendered as "—", never ``fmt_dollar(None)`` (which raises).
 
+    Wrapped in a ``<details>`` that is *closed* by default: on a real
+    appropriations bill the table runs hundreds of rows and pushes the bill text
+    off the first several screens. The summary carries the entry count so the
+    table's size is visible without opening it, and ``revealCard`` opens the
+    <details> like any other, so find-in-page hits and #change-N jumps still work.
+
     Returns "" when no change carries any amount entry.
     """
     rows: list[tuple[int, ChangeView]] = [(i, c) for i, c in enumerate(view.changes) if _amount_entries_for(c)]
     if not rows:
         return ""
 
+    entry_count = sum(len(_amount_entries_for(c)) for _, c in rows)
+    noun = "amount change" if entry_count == 1 else "amount changes"
     lines = [
-        "<h2>Financial Summary</h2>",
+        '<details class="financial-summary">',
+        f'<summary><h2 class="disclosure">Financial Summary</h2>'
+        f'<span class="count">{entry_count} {noun}</span></summary>',
         '<table class="financial-table">',
         "<thead><tr>",
         "<th>Section</th>",
@@ -619,7 +630,7 @@ def _build_financial_summary(view: DiffView) -> str:
                 f"</tr>"
             )
 
-    lines.append("</tbody></table>")
+    lines.append("</tbody></table></details>")
     return "\n".join(lines)
 
 
@@ -1153,12 +1164,24 @@ h1, h2, h3, h4 { font-family: var(--font-serif); letter-spacing: -0.02em; }
   font-size: 13px; font-weight: 600; color: var(--foreground); list-style: none;
   display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
 .nav-group > summary::-webkit-details-marker { display: none; }
-.nav-group > summary::before { content: "\\25b8"; color: var(--muted-foreground); font-size: 10px; margin-right: 2px; }
-.nav-group[open] > summary::before { content: "\\25be"; }
 .nav-group > summary:hover { background: var(--secondary); }
 .nav-group__count { color: var(--muted-foreground); font-weight: 400; font-variant-numeric: tabular-nums; }
 .nav-group ul { margin: 2px 0 6px 10px; }
 .nav-group .nav-group { margin-left: 10px; }
+
+/* Disclosure carets, for every collapsible on the page.
+   One rule, opted into with `class="disclosure"` on whichever element carries the
+   label: the <summary> itself, or a heading inside it. Sized in `em` so the caret
+   tracks its own label, which spans 13px sidebar text to a 24px serif heading. A
+   fixed px caret reads as a control at one of those sizes and as decoration at the
+   other, which is what kept the largest of these headings from looking clickable.
+   Keep prose here free of report phrases that tests assert are absent: this
+   stylesheet ships inside every report, so a comment is part of the output. */
+.disclosure::before { content: "\\25b8"; color: var(--muted-foreground);
+  font-size: 0.85em; line-height: 1; margin-right: 2px; flex: 0 0 auto; }
+details[open] > summary.disclosure::before,
+details[open] > summary > .disclosure::before { content: "\\25be"; }
+summary:hover .disclosure::before, summary.disclosure:hover::before { color: var(--primary); }
 
 /* Filters */
 .filters { margin-bottom: 16px; }
@@ -1190,6 +1213,20 @@ h1, h2, h3, h4 { font-family: var(--font-serif); letter-spacing: -0.02em; }
 .badge-removed { background: var(--diff-remove); color: var(--diff-remove-foreground); }
 .badge-moved { background: var(--diff-moved); color: var(--diff-moved-foreground); }
 
+/* Financial summary: collapsed by default so the table doesn't bury the text.
+   The caret hangs off the <h2> rather than the <summary>, so it is sized in `em`
+   against the heading and stays legible at the heading's scale. On the summary it
+   would inherit body text and read as the sidebar's 11px marker, which is small
+   enough that the heading doesn't look like a control at all. */
+.financial-summary { margin: 0 0 20px; }
+.financial-summary > summary { cursor: pointer; list-style: none; display: flex;
+  align-items: baseline; gap: 10px; padding: 4px 8px 4px 4px; margin-left: -4px;
+  border-radius: var(--radius); width: fit-content; }
+.financial-summary > summary::-webkit-details-marker { display: none; }
+.financial-summary > summary:hover { background: var(--secondary); }
+.financial-summary > summary h2 { display: inline-flex; align-items: center; gap: 10px; margin: 0; }
+.financial-summary > summary .count { color: var(--muted-foreground); font-size: 13px; font-weight: 400; }
+
 /* Financial table */
 .financial-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px; }
 .financial-table th { background: var(--muted); text-align: left; padding: 9px;
@@ -1206,8 +1243,6 @@ tr.decrease .change-amount { color: var(--destructive); }
 .card-group > summary { cursor: pointer; font-weight: 600; padding: 6px 8px;
   border-radius: var(--radius); list-style: none; display: flex; align-items: center; gap: 6px; }
 .card-group > summary::-webkit-details-marker { display: none; }
-.card-group > summary::before { content: "\\25be"; color: var(--muted-foreground); font-size: 10px; }
-.card-group:not([open]) > summary::before { content: "\\25b8"; }
 .card-group > summary:hover { background: var(--secondary); }
 .card-group .card-group { margin-left: 16px; }
 .card-group > .change-card { margin-left: 16px; }
@@ -1369,8 +1404,6 @@ mark.find-hit--current { background: var(--gold); color: #fff; }
   font-size: 13px; font-weight: 600; color: var(--foreground); list-style: none;
   display: flex; align-items: baseline; gap: 4px; }
 .toc-group > summary::-webkit-details-marker { display: none; }
-.toc-group > summary::before { content: "\\25b8"; color: var(--muted-foreground); font-size: 10px; flex: 0 0 auto; }
-.toc-group[open] > summary::before { content: "\\25be"; }
 .toc-group > summary:hover { background: var(--secondary); }
 .toc-group > summary a { color: inherit; text-decoration: none; }
 .toc-group ul { margin: 2px 0 6px 14px; }

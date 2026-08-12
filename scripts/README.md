@@ -13,6 +13,37 @@ root.
 | `generate_validation_report.py` | Generate `docs/parser-validation.md`, the team-facing parser-accuracy report, from those fixtures. |
 | `fetch_test_assets.py` | Re-fetch a bill-print PDF the slow suite needs that `tools/fetch_bills.py` cannot produce (it defaults to XML). Every asset it lists is committed, so this is a provenance record plus a way to restore one you deleted, not a setup step. Committee-report PDFs are **not** fetched here — the ones the gates read are committed fixtures ([ADR 0015](../docs/decisions/0015-corpus-test-fixtures.md)). |
 | `compare_differs.py <a> <b>` | Compare DeltaTrack against off-the-shelf differs on the same bill pair (evidence for [ADR 0001](../docs/decisions/0001-structured-money-diff.md)). |
+| `probe_observation_identity.py [root]` | Measure what can serve as an observation address: duplicated body texts, duplicated `match_path`s, emission determinism, and how much of `element_id` is recoverable from the source rather than synthesized. Read-only; the evidence behind [ADR 0019](../docs/decisions/0019-observation-identity.md). Defaults to the committed `tests/corpus`, so it needs no downloads. Re-run under a different `PYTHONHASHSEED` to check the determinism digest does not move. |
+| `probe_matching_stages.py [root]` | Size what the fused matching decision costs: pairs split by the similarity cutoff that carry amounts on both sides (#368), changes recovered by the post-classification move pass, and match paths whose output is not a one-to-one relation. Read-only; the evidence behind [ADR 0020](../docs/decisions/0020-matching-stages.md). Defaults to the committed `tests/corpus`, so it needs no downloads. |
+
+### ADR 0020 slice-2 evidence
+
+Whether the move-assignment pass can be extracted as its own [ADR 0020](../docs/decisions/0020-matching-stages.md)
+stage turns on what the current code measurably does. These are the probes behind that.
+All are read-only,
+all run against the committed corpus via `tests.test_canonical_baseline.baseline_pairs`
+so the probe and the byte-identity gate always describe the same population, and all
+instrument production by *wrapping* it rather than reimplementing it.
+
+Where a greedy loop has to be duplicated to see inside it, the duplicate resolves every
+selection back to the corresponding production record using the same within-run lookup key,
+`(element_id_old, element_id_new)`, and asserts **exact agreement with production on both
+the selected set and the selected order**, per corpus pair, before any number is reported. Comparing selection *counts* is
+not sufficient and the gap is the very phenomenon these probes measure: a tie-policy
+difference changes which pair wins while leaving the count identical, so a count-only
+check passes straight through it. On disagreement the run stops and names the differing
+pair rather than reporting a figure derived from a drifted duplicate.
+
+| Script | What it does |
+|--------|--------------|
+| `probe_splits.py` | Sizes the removal/addition **input population that exists only because classification has already run**: the pairs the similarity cutoff splits into a removal plus an addition (#368). Scope limit, stated in the script and its output: it does *not* measure overlap with the move-candidate population or the selected moves, so on its own it bounds rather than answers what moving retrieval before classification would change. |
+| `probe_provenance.py` | Whether `element_id` could stand in for a complete parser-sequence ordinal: how many tree nodes carry an empty or duplicated one. |
+| `probe_slice2.py [OUT.json]` | The same population and tie counts, plus the order-perturbation negative control: reverse and three seeded shuffles of the candidate list, checking whether the selected correspondences move. Prints how many pairs the perturbation *actually reordered*, because a perturbation that changed nothing would prove nothing. |
+| `probe_ordinal_loss.py` | Whether the engine still carries a complete parser-sequence ordinal where assignment runs: is `element_id` a unique address, and does `match_nodes` emit nodes in parser order? Sizes how far its output departs from document sequence, which is what the `(ri, ai)` tiebreak actually sorts on. |
+| `probe_correspondence_revision.py` | Demonstrates against the real types that a `CorrespondenceSet` which has already settled 1:0 and 0:1 records **cannot subsequently revise those same observations in place** into a later 1:1 move correspondence: the populated set has no remove or replace operation. It also shows the final 1:1 state *is* representable, by building a new set that holds it, so the finding is not read as a missing capability. A migration must therefore either delay settlement until later retrieval rounds finish, or build a new final set from the ultimate correspondence. A constraint on migration order; this chooses between neither design and changes no contract. |
+| `probe_node_identity.py` | Whether an ADR 0019 ordinal is still recoverable where matching runs: do `match_nodes` **and** `apply_similarity_assignment_rule` return the *same objects* the source `BillTree.nodes` holds, and is that recovery a bijection across the whole pre-classification sequence? Both stages go through a validator that **raises** on any foreign object, double claim or omission, so a regression stops the run rather than printing a counter. Object identity here is a run-local mechanism for recovering the ordinal, **not** ADR 0019 Observation identity. Carries three negative controls, because a validator that has never rejected anything proves nothing — a value-equal copy pushed through that *same* validator, value collisions within one tree (observational only), and output position used as if it were the ordinal. The position figure is also a tripwire: it must come out equal at both stages, since the revocation stage replaces a pairing *in place* and canonical output depends on that. |
+| `probe_round2_migration.py` | What a pre-classification second retrieval round would have to reproduce. Measures the part `probe_splits.py` leaves open — how much of the move-candidate and selected-move population depends on an observation **the similarity rule left unmatched** — and puts the legacy `(ri, ai)` sort key and the ADR 0019 ordinal key through one greedy loop to see whether they select the same correspondence. Derives the revocation population from an exact **structural walk** of the two stages by object identity — equal cardinality is not enough, since the same count of the wrong pairings is a false green — then cross-checks that population against production's own predicate. Section E compares the unmatched observations against the removed/added change records as **ordered element-id sequences**, establishing that classification preserves their identity *and order*, which is the fact the relocation needs because legacy `(ri, ai)` is a position in those lists. Every headline figure is **pinned**: a drift fails the run rather than printing a new number. Since #591 the population figure sizes an *ordering constraint inside assignment* (round 2 must run after the revocation stage), not a dependency on classification output; `(similarity, ri, ai)` is legacy ordering policy that Phase 1 must carry across unchanged. |
+| `probe_canonical_sensitivity.py` | Proves the canonical byte-identity gate can actually redden on a *correspondence* change, by injecting one and watching the digests. Four passes: production, the duplicated loop under the production key (so a drifted copy cannot be mistaken for the fault), the duplicated loop under an ordinal key, and production restored. Requires passes 1, 2 and 4 to be empty and pass 3 to redden **exactly** the three pairs `probe_round2_migration.py` predicts — imported from that probe so the two cannot drift apart. An extra, missing or different pair fails: "non-empty" would also be satisfied by a fault that reddened everything, which is what a broken harness produces. Its `element_id → ordinal` bridge fails closed on an empty or repeated id rather than building a dictionary that collapses two observations onto one address. |
 
 ### Refreshing the validation evidence
 
@@ -57,6 +88,60 @@ Things worth knowing before running any of it:
 
 The commands run unattended; the `git diff` review before committing is the part that
 waits on a person.
+
+## Committee report pairing
+
+Which committee report explains a given bill version, recorded per version in
+[tests/corpus_manifest.toml](../tests/corpus_manifest.toml) as `committee_report`
+(DeltaTrack#295).
+
+| Script | What it does |
+|--------|--------------|
+| `report_pairing.py` | Not a runnable script — the shared pairing rules both of the others import. Defines a stage's authoring chamber, where it sits in the bill's life, and which reports are conference reports. Change a rule here, then re-run the updater. |
+| `update_manifest_with_reports.py [--refresh]` | Rewrite the manifest's `committee_report` entries. Default is offline: re-applies the pairing rules to the report sources already recorded. `--refresh` re-fetches BILLSTATUS and re-confirms each package and granule against govinfo. Edits via tomlkit so the manifest's documentation comments survive. |
+| `vendor_reports.py` | Download the committed report HTML fixtures named by the manifest, and re-validate the ones already present. Rejects govinfo's error page, which it serves as HTTP 200 for an unknown package. |
+
+Which report explains a version turns on three things: the chamber that **authored**
+that text, **when** the text exists, and which **lineage** it belongs to.
+
+- A committee report is filed at the reported stage, so it explains text from there
+  on, never the introduced text it recommends changing.
+- It propagates forward only through its own lineage: the reported text, the
+  engrossment derived from it, and transit to the other chamber (which amends
+  nothing). Once the other chamber amends, the lineage ends — and it does not
+  resume when the first chamber later amends *that*. Such a version gets no report
+  unless one explaining it is recorded deliberately.
+- A conference report explains only the enrolled result.
+
+The lineage rule is what stops an unrelated report re-attaching to a repurposed
+shell bill. Four corpus bills are that shape: an omnibus carried by a House
+amendment onto a reported bill about something else entirely (H. Rept. 118-364
+accompanies the Udall Foundation Reauthorization Act; the House amendment to
+H.R. 2882 is the Further Consolidated Appropriations Act, 2024).
+
+The round is read from the stage NAME, not by counting authoring runs over the
+manifest's versions: the manifest holds committed fixtures, not every version a bill
+had. 113-hr-83 commits only its House amendment, which a run-count would read as
+that chamber's first text when it is its second.
+
+A report is published either as one undivided document or as a package holding one
+granule per book, which is how `H. Rept. 119-106` Books 1 and 2 are separately
+addressable:
+
+```
+pkg     = "CRPT-119hrpt106"        # parent package
+granule = "CRPT-119hrpt106-pt1"    # Book 1; -pt2 is Book 2
+```
+
+Granules are addressed inside the parent's path
+(`/content/pkg/CRPT-119hrpt106/html/CRPT-119hrpt106-pt1.htm`); there is no standalone
+`CRPT-119hrpt106-pt1` package. Fixtures are named after the granule when there is one,
+so each book is its own committed file.
+
+A report govinfo publishes no text for is recorded as `text_available = false` with a
+reason and **no** `pkg`, and must have no fixture — `tests/test_manifest_report_fixtures.py`
+asserts both directions, so the exception cannot outlive its reason. Nothing is
+predicted: a package or granule is recorded only after govinfo is asked and answers.
 
 ## PDF / rendering
 

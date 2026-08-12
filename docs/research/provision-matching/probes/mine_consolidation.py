@@ -33,14 +33,16 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(Path(__file__).parent))
 
 from mine_common import containment, make_candidate, vec, write_pool  # noqa: E402
 
 from deltatrack.bill_tree import normalize_bill  # noqa: E402
-from deltatrack.diff_bill import _normalize_text, _text_similarity, diff_bills  # noqa: E402
+from deltatrack.diff_bill import _normalize_text, diff_bills# noqa: E402
+from deltatrack.similarity import text_similarity# noqa: E402
 
 BILL = "119-hr-1"
 V_OLD = "3_placed-on-calendar-senate.xml"
@@ -53,8 +55,8 @@ TARGET = 60  # ~2x the §3 quota of 25 so the human can rule down with margin
 
 
 def main() -> None:
-    a = normalize_bill(REPO / "bills" / BILL / V_OLD)
-    b = normalize_bill(REPO / "bills" / BILL / V_NEW)
+    a = normalize_bill(merged_root() / BILL / V_OLD)
+    b = normalize_bill(merged_root() / BILL / V_NEW)
     diff = diff_bills(a, b)
 
     removed = [c for c in diff.changes if c.change_type == "removed" and (c.old_text or "").strip()]
@@ -77,7 +79,7 @@ def main() -> None:
         if best is None:
             continue
         c, ac, ao = best
-        wr = _text_similarity(ro, ao)
+        wr = text_similarity(ro, ao)
         if c >= CONTAIN_KEEP and wr < MOVE_BAR:
             repaired.append((rc, ac, c, wr))
 

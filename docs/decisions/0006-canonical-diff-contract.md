@@ -8,8 +8,8 @@
 A comparison of two bill versions has to travel from the diff engine to several
 different consumers: BillTrax (the analysis product that uses DeltaTrack as its
 diff engine), the HTML report, a future browser extension, a CSV/Markdown export,
-a staffer's internal LLM tool (i.e., CoPilot), and possible third-party tooling. 
-There are two input pipelines (XML and PDF) that must converge so consumers do 
+a staffer's internal LLM tool (i.e., CoPilot), and possible third-party tooling.
+There are two input pipelines (XML and PDF) that must converge so consumers do
 not care which one produced a diff (see [0002](0002-pdfium-single-engine.md),
 [0003](0003-pdfjs-client-side-viability.md)).
 
@@ -20,32 +20,99 @@ queryable dataset.
 
 The delivery constraint is hard: the primary report is a self-contained HTML file
 that opens in any browser with no server and no install. We believe this is
-the correct decision to limit IT and procurement limitations for staffers. The 
+the correct decision to limit IT and procurement limitations for staffers. The
 canonical payload is embedded inside that file and read back by the browser
 to drive find, navigation, and the full-bill view.
 
 What makes the choice non-obvious is that "how should a diff be represented" is
-often discussed with "how should we store and query many diffs." Those are 
-different layers, and the question that will recur — "why not a database ?" — 
+often discussed with "how should we store and query many diffs." Those are
+different layers, and the question that will recur — "why not a database ?" —
 lives at the second one.
 
 ## Decision
 
-We will represent every diff as a **versioned, semantic JSON document** that is
-the public contract between the engine and all consumers. Both pipelines emit this
-shape (`xml_diff_to_canonical`, `pdf_diff_to_canonical` in `formatters/canonical.py`);
-the renderers only read this shape and turn it into a view (`view_from_canonical`
-→ the HTML renderer); they add no data of their own. The contract is semantic, not
-presentational: it carries no pre-rendered HTML, and word-level inline diffs are
-computed at render time. It is versioned with a `schema_version` field under an
-additive-minor / breaking-major policy. The full shape is specified in
-[schema/canonical-diff.md](../../schema/canonical-diff.md) and validated by
-[schema/canonical-diff.schema.json](../../schema/canonical-diff.schema.json).
+Every diff is a **versioned, semantic JSON document** that is the public contract
+between the engine and all consumers. Both pipelines emit this shape
+(`xml_diff_to_canonical`, `pdf_diff_to_canonical` in `formatters/canonical.py`).
+The full field shape is specified in
+[schema/canonical-diff.md](../../schema/canonical-diff.md) and enforced by
+[schema/canonical-diff.schema.json](../../schema/canonical-diff.schema.json), which
+this record does not restate.
 
-JSON is chosen for two plain reasons: a person can read it and every browser can 
+JSON is chosen for two plain reasons: a person can read it and every browser can
 read it directly, which is what lets the report embed its own data and work offline.
 
-Alternatives:
+### Producer and consumer responsibilities
+
+**The canonical artifact holds the semantic facts.** Consumer and view layers may
+*derive* presentation data from those facts — headings, navigation labels, citations,
+inline word-level diffs, HTML — but they do not add new semantic diff facts, and none
+of that derived material belongs in the document. `view_from_canonical` is therefore
+not a field-for-field projection: it composes presentation from the contract. The
+contract itself stays presentational-free, which is what lets one renderer family
+serve both pipelines and every output medium ([0007](0007-single-renderer.md)).
+
+Producers are expected to emit schema-valid documents and are tested against the
+schema. The schema defines validity; the DeltaTrack reader carries explicit
+compatibility guards but is not a general schema validator, so "invalid" is a
+statement about the schema, not a promise that every reader will reject it.
+
+### The money contract
+
+A `Change` carries exactly one exported money field, `amount_entries`.
+
+- **Required, not merely sole.** These are two distinct guarantees. Being the only
+  money field prevents ambiguity about which field to read; being *required* lets a
+  consumer distinguish "this change has no money entries" (an empty array) from "this
+  document does not satisfy the contract" (the field absent). An optional-and-sole
+  field would collapse those two into one silence.
+- **The obsolete changed-only money field is absent from the contract**, rather than
+  retained beside `amount_entries` with prose declaring a winner. Two plausible
+  machine-readable authorities for the same concept, one of them structurally
+  incomplete, is a correctness bug rather than untidiness: the report ships prompts
+  telling a staffer to hand `diff.json` to an AI assistant, and a machine holding only
+  the exported artifact cannot read this repository's documentation to learn which
+  field wins. Reading the incomplete one would answer questions about a bill's
+  appropriations while seeing a fraction of them — confidently, with every newly
+  funded or wholly defunded program invisible, and those are usually the changes a
+  staffer most wants. The schema forbids the legacy field outright.
+- **Entries are self-describing**, distinguishing `changed`, `added` and `removed`, and
+  an absent side is represented explicitly as null. The schema is the exhaustive
+  authority for the exact shape.
+- **One-sided changes stay representable on the money axis.** A producer may not omit
+  money from a change merely because one side is absent: a wholly added or wholly
+  removed item is exactly the case a money-aware consumer most needs, so the pipelines
+  extract against the empty side rather than emitting nothing.
+- **Canonicalization does not perform value-symmetric cancellation.** An `added` and a
+  `removed` entry are not collapsed merely because their values are equal. On a
+  renumbered list the pairing emits a shuffled item's identical value as a net-zero
+  added/removed pair, and distinguishing that from two genuinely distinct equal-value
+  items needs within-list content alignment the producer does not have. So the producer
+  reports the changed/added/removed entries the pairing semantics emit, and richer
+  alignment — or presentation-side collapse — is downstream policy. (This is narrower
+  than "every raw pair survives": a pair whose sides are equal is not a change and is
+  dropped.)
+
+This concerns the *extraction and representation* of money, not its interpretation.
+Reading appropriations language for meaning is out of scope here and bounded by
+[0018](0018-text-triggers-are-financial-only.md).
+
+### Compatibility
+
+The serialized contract carries a required `schema_version` under an
+**additive-minor / breaking-major** policy. Compatible revisions stay within a major.
+A consumer claiming support for this contract must **reject an unsupported major**
+rather than silently interpreting it as the current shape — the failure that rule
+exists to prevent is a document from an older major parsing cleanly and reading as
+having no money anywhere.
+
+A removed or required contract property is **tested in the rejection direction**.
+Validating producer output only proves the producer is well behaved: if the schema
+itself lost a constraint, every producer-output test would stay green while a removed
+field became legal again. The rejection is asserted directly, alongside a positive
+case so the probe cannot pass by rejecting everything.
+
+## Alternatives
 
 - **Wire the engine straight to the report, with no standalone file.** The engine
   could pass its results directly to the HTML report, or produce finished HTML
@@ -57,105 +124,33 @@ Alternatives:
   time; a single diff is one fixed, read-only result, not a dataset. Requiring a
   database would also break the self-contained report, which has to run with no
   server. Storing and querying many diffs may matter later, but that would be a
-  layer built on top of these documents, not a replacement for them (see
-  Consequences).
+  layer built on top of these documents, not a replacement for them.
 
 ## Consequences
 
-- One renderer family serves both input pipelines and every output medium,
-  because they all meet at this shape. This is the enabler for the single-renderer
-  decision.
-- The self-contained offline HTML report and the "hand the diff to an internal
-  LLM as an attachment" use case both fall out for free: a semantic JSON document
-  enables both.
-- The document repeats some information on purpose — for example, the section
-  number also appears in the breadcrumb path, and the full bill text is carried
-  alongside the individual change fragments. That repetition keeps the file
-  self-contained and is fine for a one-use artifact; it would be wasteful inside a
-  database built to avoid duplication.
-- The contract does not by itself answer questions that span many diffs, and that
-  is deliberate. DeltaTrack stays the simple, local, offline engine that compares
-  two versions; analyzing diffs over time, storing them, or running them through an
-  LLM is BillTrax's job (see [0005](0005-deltatrack-billtrax-boundary.md)). This
-  JSON is the boundary between the two: DeltaTrack produces it,
-  BillTrax and any other consumer build on it. The per-comparison record of truth
-  lives here; anything spanning many comparisons lives one layer up.
-- Whether the format should ever grow beyond two versions is left open. The schema
-  notes N-way comparison (more than two versions in one document) as a possible
-  future major break, but cross-version analysis may belong in BillTrax while
-  DeltaTrack stays strictly two-at-a-time. That call is not made here, and when it
-  is, the question is the format's scope, not whether to keep JSON. (This was once
-  earmarked as the v2.0 break; 2.0 went to the `amounts` removal below.)
+- One renderer family serves both input pipelines and every output medium, because
+  they all meet at this shape. This is the enabler for the single-renderer decision.
+- The self-contained offline HTML report and the "hand the diff to an internal LLM as
+  an attachment" use case both fall out for free.
+- The document repeats some information on purpose — the section number also appears
+  in the breadcrumb path, and the full bill text is carried alongside the individual
+  change fragments. That repetition keeps the file self-contained and is fine for a
+  one-use artifact; it would be wasteful inside a database built to avoid duplication.
+- The contract does not by itself answer questions that span many diffs, and that is
+  deliberate. DeltaTrack stays the simple, local, offline engine that compares two
+  versions; analyzing diffs over time, storing them, or running them through an LLM is
+  BillTrax's job ([0005](0005-deltatrack-billtrax-boundary.md)). This JSON is the
+  boundary between the two: the per-comparison record of truth lives here, anything
+  spanning many comparisons lives one layer up.
 
-## Amendment — v1.4: `amount_entries` (2026-07-09, #86)
+Two format questions are open, and they are separate:
 
-An additive minor bump (1.3 → 1.4) adds an optional `amount_entries` array on each
-change: self-describing base-amount changes with an explicit `kind`
-(`changed`/`added`/`removed`) and a nullable absent side, so whole-item additions
-and removals — not just changed-value pairs — are representable. The prior `amounts`
-field is deprecated as its `changed`-kind subset (and removed in v2.0 below). Two
-decisions worth recording:
-
-- **The contract stays lossless.** `amount_entries` carries every entry the pairing
-  found, with no value-symmetric cancellation. On a renumbered list the word-diff
-  emits a shuffled item's identical value as a net-zero added/removed pair;
-  distinguishing that from two genuinely-distinct equal-value items needs within-list
-  content alignment (#87). Baking a heuristic cancellation into the contract would be
-  lossy and could mislead a cross-version consumer (BillTrax, [0005](0005-deltatrack-billtrax-boundary.md)),
-  so the producer reports honestly and any presentation-side collapse stays a
-  consumer concern. Renumbering noise on the report is left to #87.
-- **Degrade, but not silently, on the money axis.** The degrade-by-design ethos
-  ([0012](0012-pdf-heading-levels.md)) is about heading levels; applying it to money
-  is new here. The PDF pipeline previously carried *no* amounts on whole-item
-  added/removed hunks (`amount_pairs=()`), so an XML demo could look done while PDF
-  stayed silent on exactly the "what money moved" case. #86 closes that: PDF
-  added/removed hunks now run `match_amounts` against the empty other side.
-
-## Amendment — v2.0: `amounts` removed (2026-07-23, #274)
-
-A breaking bump (1.4 → 2.0) removes `amounts` from each change object and makes
-`amount_entries` required in its place, leaving exactly one money field. The v1.4
-deprecation above kept both written, so every exported document carried two lists of
-dollar amounts, one of them structurally incomplete, with nothing in the document
-saying which to read. Three decisions worth recording:
-
-- **The contract is read by machines, so an ambiguous field is a correctness bug,
-  not untidiness.** The report ships prompts telling a staffer to upload `diff.json`
-  to an AI assistant. An assistant seeing two plausible money fields and no
-  authority marker can read the changed-only one and answer questions about a bill's
-  appropriations while seeing a fraction of them — confidently, with every newly
-  funded or wholly defunded program invisible, and those are usually the changes a
-  staffer most wants. Deprecation notes live in this repo's docs, not in the
-  artifact the consumer actually holds.
-- **Remove rather than document which one wins.** A note leaves the incomplete field
-  readable and the failure mode intact. Same reasoning retires the pre-1.4 reader
-  fallback: nothing in this codebase ever re-reads a stored diff document — every
-  caller builds the canonical in-process and views it immediately — so there is no
-  older document on any live path, and keeping the fallback would have preserved the
-  incomplete read path it existed to serve. (Reports *are* written to disk, and the
-  export button hands the user a `diff.json`; the claim is about what this code
-  reads back, not about what exists in the world.)
-- **`amount_entries` becomes required, not merely sole.** Optional-and-sole still
-  leaves a consumer distinguishing "no money on this change" from "field absent". It
-  is now always present, empty when there is no money.
-- **The guard is tested in the direction that can regress.** The standing block on
-  `amounts` returning is the schema's `additionalProperties: false` on a change
-  object, plus `amount_entries` being required. Validating *produced output* against
-  the schema — which is what the existing tests do — only ever proves the producer is
-  well behaved: if the schema file itself lost either rule, every one of those tests
-  would stay green while the removed field became legal again. So the rejection
-  direction is asserted directly (a change carrying `amounts`, and one missing
-  `amount_entries`, must both fail validation), alongside a positive case so the
-  probe cannot pass by rejecting everything.
-- **The reader rejects unknown majors, which is new.** The contract has said
-  consumers reject unknown majors since v1.0, but no consumer implemented it. That
-  was harmless while every field was additive; at a removal it stops being harmless,
-  because a 1.x document still parses and simply reads as having no money anywhere.
-  `view_from_canonical` now refuses a non-2.x `schema_version` rather than degrading
-  silently. No in-repo path feeds it a foreign document today — every caller builds
-  the canonical in-process — so this guards the seam a future stored-diff or
-  re-upload feature would open, and turns a stated rule into an enforced one.
-
-`ChangeView.amount_pairs`, an internal Python attribute of similar shape, is
-unrelated to the exported field and unchanged; it stays a changed-only in-memory
-view, now derived from the entries.
+- **More than two bill versions in one document.** The schema notes N-way comparison
+  as a possible future major break, but cross-version analysis may belong in BillTrax
+  while DeltaTrack stays strictly two-at-a-time. Undecided; when it is decided, the
+  question is the format's scope, not whether to keep JSON.
+- **Grouping binary changes that come from one non-binary correspondence.** A `Change`
+  is a binary row, so a 1:N or N:1 correspondence has no faithful representation;
+  [0020](0020-matching-stages.md) deliberately degrades it into binary rows, which
+  keeps every amount counted once. Whether this contract should grow a grouping field
+  is undecided and needs a demonstrated consumer.

@@ -1,0 +1,780 @@
+{
+ "population": "DEVELOPMENT worst cases from x18 -- no holdout opened, nothing scored",
+ "summary": {
+  "renderer": "MuPDF (pymupdf)",
+  "renderer_version": "('1.28.2', '1.28.2', None)",
+  "edge_rule": "exact raster occupancy -- leftmost column with ANY alpha; no intensity threshold",
+  "ocr_used": false,
+  "segmentation_heuristic_used": false,
+  "window_pt": 3.0,
+  "n_attempted": 16,
+  "n_cleanly_measured": 15,
+  "n_excluded_neighbour_ink": {
+   "H": 0,
+   "C": 0
+  },
+  "n_excluded_non_glyph_vector_ink": 1,
+  "excluded_non_glyph_vector_ink": [
+   {
+    "document": "114-hr-2029/4",
+    "page": 66,
+    "ngid": 627,
+    "n_vector_paths_in_band": 1
+   }
+  ],
+  "visible_edge_offset_px_300": {
+   "min": -0.5,
+   "max": 0.5,
+   "values": [
+    0.5,
+    0.5,
+    -0.5,
+    -0.5,
+    -0.5,
+    -0.5,
+    -0.5,
+    -0.5,
+    -0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "visible_edge_offset_px_330": {
+   "min": -0.75,
+   "max": 1.25,
+   "values": [
+    0.25,
+    0.25,
+    0.25,
+    1.25,
+    0.25,
+    1.25,
+    0.25,
+    0.25,
+    -0.75,
+    -0.75,
+    0.25,
+    0.25,
+    -0.75,
+    0.25,
+    0.25
+   ]
+  },
+  "limitation": "Two exclusions, both STRUCTURAL rather than heuristic. (1) A target whose window contains a neighbouring GLYPH's ink is not measured; its intruding boxes are listed. (2) A target whose band is crossed by NON-GLYPH VECTOR INK is not measured: GPO reported prints strike through matter deleted in committee, and that rule is a drawn path with no text index, hence no ngid -- correctly outside the neutral skeleton, but rendered by MuPDF across the whole line. Raster occupancy cannot separate rule ink from glyph ink, and doing so would need the segmentation heuristic the A32 contract forbids. Crops for the worst cases are committed for human inspection.",
+  "mupdf_vs_pdfium_glyph_bbox": "Separately measured and reported so it cannot look like an unexplained discrepancy: MuPDF's glyph BBOX x0 sits systematically left of PDFium's char-box x0 -- about -1.23 pt for '(' and -0.90 pt for the open quote at DeVinne/14. That is the font's left side bearing, i.e. reserved whitespace before the ink, and it is NOT what a human marking the left edge of a printed character would point at. The raster-occupancy offsets above are the task-relevant quantity.",
+  "for_the_reviewer": "The struck-through case is not a defect in A30.3's geometry: the glyph's x0 is unchanged and the resolver never reads pixels. It is a PROMPT-DESIGN observation -- an adjudicator asked for 'the left edge of the first printed character' will see a horizontal rule running through that character on reported prints. Whether that needs wording in adjudicator_prompt.md is the reviewer's call; A32 states no ruling."
+ },
+ "H": [
+  {
+   "document": "119-hr-1/1",
+   "page": 51,
+   "ngid": 404,
+   "kind": "subsection",
+   "m_pt": 1.337005615234375,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     25,
+     51
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 13,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": 0.5,
+    "image": "H0_119-hr-1-1_p51_g404_300dpi.png",
+    "image_sha256": "f6fa1428320b19befb1147c63f2ec5137ba661452fe4d95f2d8a0a41b112352e"
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     28,
+     56
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 14,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 0.25,
+    "image": "H0_119-hr-1-1_p51_g404_330dpi.png",
+    "image_sha256": "e8a15c2ab823f800bb318945190d1c60cbe97dc31912af24312fd5df9afb8fda"
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 177.9995880126953,
+    "char": "(",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 179.23159790039062,
+    "delta_pt": -1.2320098876953125,
+    "delta_px_300": -5.133374532063802,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "119-hr-1/1",
+   "page": 86,
+   "ngid": 424,
+   "kind": "subsection",
+   "m_pt": 1.7430038452148438,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     25,
+     51
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 13,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": 0.5,
+    "image": "H1_119-hr-1-1_p86_g424_300dpi.png",
+    "image_sha256": "fdfc2d0091b3657cefd768ff05e635f81f6df979ba0bbea9bd979fc05fcee1b6"
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     28,
+     56
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 14,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 0.25,
+    "image": "H1_119-hr-1-1_p86_g424_330dpi.png",
+    "image_sha256": "55b9950309c02595160ab75b4cdb293b75edc20be42cd02ba488d2f842047698"
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 178.0002899169922,
+    "char": "(",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 179.23226928710938,
+    "delta_pt": -1.2319793701171875,
+    "delta_px_300": -5.133247375488281,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "119-hr-1/1",
+   "page": 16,
+   "ngid": 942,
+   "kind": "account",
+   "m_pt": 1.8130035400390625,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     21,
+     18
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 12,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": -0.5,
+    "image": "H2_119-hr-1-1_p16_g942_300dpi.png",
+    "image_sha256": "0ba7c7651f0620fea0a8eff4bc3d412616fec3dd88d89f101d585c7084834d23"
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     23,
+     19
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 14,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 0.25,
+    "image": "H2_119-hr-1-1_p16_g942_330dpi.png",
+    "image_sha256": "b0e9c0dcd3c7db34cad03d5f74f446a5f857a8e301e99233cdd9cd8deada7a0b"
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 206.0002899169922,
+    "char": "\u2018",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 206.8962860107422,
+    "delta_pt": -0.89599609375,
+    "delta_px_300": -3.7333170572916665,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "119-hr-1/1",
+   "page": 22,
+   "ngid": 203,
+   "kind": "account",
+   "m_pt": 1.8130035400390625,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     20,
+     18
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 12,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": -0.5,
+    "image": "H3_119-hr-1-1_p22_g203_300dpi.png",
+    "image_sha256": "82d1e0b0529a809cd2268ad3b742b0159bb6750d25acc20bb098d104b1498028"
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     23,
+     20
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 15,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 1.25,
+    "image": "H3_119-hr-1-1_p22_g203_330dpi.png",
+    "image_sha256": "0ba32184928fc8523abcd292b21d8603f6ef64d9b4a892b00f8185c150cec243"
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 234.0001983642578,
+    "char": "\u2018",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 234.8961944580078,
+    "delta_pt": -0.89599609375,
+    "delta_px_300": -3.7333170572916665,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "119-hr-1/1",
+   "page": 23,
+   "ngid": 647,
+   "kind": "account",
+   "m_pt": 1.8130035400390625,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     21,
+     18
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 12,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": -0.5
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     23,
+     19
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 14,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 0.25
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 206.00039672851562,
+    "char": "\u2018",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 206.89639282226562,
+    "delta_pt": -0.89599609375,
+    "delta_px_300": -3.7333170572916665,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "119-hr-1/1",
+   "page": 25,
+   "ngid": 776,
+   "kind": "account",
+   "m_pt": 1.8130035400390625,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     20,
+     17
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 12,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": -0.5
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     23,
+     19
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 15,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 1.25
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 234.0001983642578,
+    "char": "\u2018",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 234.8961944580078,
+    "delta_pt": -0.89599609375,
+    "delta_px_300": -3.7333170572916665,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "119-hr-1/1",
+   "page": 28,
+   "ngid": 832,
+   "kind": "account",
+   "m_pt": 1.8130035400390625,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     21,
+     17
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 12,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": -0.5
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     23,
+     19
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 14,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 0.25
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 205.99998474121094,
+    "char": "\u2018",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 206.89599609375,
+    "delta_pt": -0.8960113525390625,
+    "delta_px_300": -3.7333806355794272,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "119-hr-1/1",
+   "page": 31,
+   "ngid": 529,
+   "kind": "account",
+   "m_pt": 1.8130035400390625,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     21,
+     17
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 12,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": -0.5
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     23,
+     19
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 14,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 0.25
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 205.99948120117188,
+    "char": "\u2018",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 206.89547729492188,
+    "delta_pt": -0.89599609375,
+    "delta_px_300": -3.7333170572916665,
+    "found": true
+   },
+   "measured": true
+  }
+ ],
+ "C": [
+  {
+   "document": "114-hr-2029/4",
+   "page": 136,
+   "ngid": 1262,
+   "kind": "subsection",
+   "m_pt": 1.9739990234375,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     32,
+     51
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 12,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": -0.5,
+    "image": "C0_114-hr-2029-4_p136_g1262_300dpi.png",
+    "image_sha256": "a30eb23f2b78a1d67fdebc65f8e1d3c4bbc2f58e0e40a870205f8ebba7c117ae"
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     35,
+     56
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 13,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": -0.75,
+    "image": "C0_114-hr-2029-4_p136_g1262_330dpi.png",
+    "image_sha256": "5e752d5932c782b80f0a74fd8cf99f340564336a2812efcef9d365a3ae73e2d6"
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 236.5199432373047,
+    "char": "(",
+    "font": "DeVinne-Italic",
+    "size": 14.0,
+    "pdfium_x0": 237.55599975585938,
+    "delta_pt": -1.0360565185546875,
+    "delta_px_300": -4.316902160644531,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "118-hr-4366/1",
+   "page": 88,
+   "ngid": 1256,
+   "kind": "subsection",
+   "m_pt": 2.1909942626953125,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     26,
+     51
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 13,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": 0.5,
+    "image": "C1_118-hr-4366-1_p88_g1256_300dpi.png",
+    "image_sha256": "899a180fcf2b2fe181171e00d9740e5f5e71037889b18c9dc15b4ede596eb26a"
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     28,
+     56
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 13,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": -0.75,
+    "image": "C1_118-hr-4366-1_p88_g1256_330dpi.png",
+    "image_sha256": "ac679a5baf8e5a4c1a88fb284c810f0475f6601d255193fead34745ddc11b116"
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 240.7592315673828,
+    "char": "(",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 241.9912109375,
+    "delta_pt": -1.2319793701171875,
+    "delta_px_300": -5.133247375488281,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "114-hr-2029/4",
+   "page": 66,
+   "ngid": 627,
+   "kind": "subsection",
+   "m_pt": 2.1910018920898438,
+   "dpi_300": {
+    "dpi": 300,
+    "measured": false,
+    "why_not_measured": "NON_GLYPH_VECTOR_INK_IN_BAND",
+    "n_vector_paths_in_band": 1,
+    "note": "struck-through matter: a drawn rule, not a glyph; no ngid by construction"
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "measured": false,
+    "why_not_measured": "NON_GLYPH_VECTOR_INK_IN_BAND",
+    "n_vector_paths_in_band": 1,
+    "note": "struck-through matter: a drawn rule, not a glyph; no ngid by construction"
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 240.7467041015625,
+    "char": "(",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 241.97869873046875,
+    "delta_pt": -1.23199462890625,
+    "delta_px_300": -5.133310953776042,
+    "found": true
+   },
+   "measured": false,
+   "why_not_measured": "NON_GLYPH_VECTOR_INK_IN_BAND"
+  },
+  {
+   "document": "115-hr-5895/1",
+   "page": 49,
+   "ngid": 1105,
+   "kind": "subsection",
+   "m_pt": 2.1910018920898438,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     26,
+     51
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 13,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": 0.5,
+    "image": "C3_115-hr-5895-1_p49_g1105_300dpi.png",
+    "image_sha256": "18b9d0c7e8fad8d22414ff824f1e7b9f373e5c0657cf1604f824951775faf294"
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     28,
+     56
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 14,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 0.25,
+    "image": "C3_115-hr-5895-1_p49_g1105_330dpi.png",
+    "image_sha256": "3781c7c72e26bf51f5ce53ce85c1cc27b9bf25e8abf5331db5b53beeb2e50a7c"
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 238.60044860839844,
+    "char": "(",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 239.8323974609375,
+    "delta_pt": -1.2319488525390625,
+    "delta_px_300": -5.133120218912761,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "115-hr-5895/1",
+   "page": 52,
+   "ngid": 159,
+   "kind": "subsection",
+   "m_pt": 2.1910018920898438,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     25,
+     51
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 13,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": 0.5
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     28,
+     56
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 14,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 0.25
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 244.95924377441406,
+    "char": "(",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 246.19119262695312,
+    "delta_pt": -1.2319488525390625,
+    "delta_px_300": -5.133120218912761,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "118-hr-8752/1",
+   "page": 92,
+   "ngid": 190,
+   "kind": "subsection",
+   "m_pt": 2.1910018920898438,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     26,
+     51
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 13,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": 0.5
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     27,
+     56
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 13,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": -0.75
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 242.9180450439453,
+    "char": "(",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 244.14999389648438,
+    "delta_pt": -1.2319488525390625,
+    "delta_px_300": -5.133120218912761,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "118-hr-4366/1",
+   "page": 90,
+   "ngid": 639,
+   "kind": "subsection",
+   "m_pt": 2.1910018920898438,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     25,
+     51
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 13,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": 0.5
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     28,
+     56
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 14,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 0.25
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 243.83924865722656,
+    "char": "(",
+    "font": "DeVinne",
+    "size": 14.0,
+    "pdfium_x0": 245.07119750976562,
+    "delta_pt": -1.2319488525390625,
+    "delta_px_300": -5.133120218912761,
+    "found": true
+   },
+   "measured": true
+  },
+  {
+   "document": "114-hr-2029/4",
+   "page": 136,
+   "ngid": 1252,
+   "kind": "section",
+   "m_pt": 3.7351531982421875,
+   "dpi_300": {
+    "dpi": 300,
+    "crop_px": [
+     45,
+     43
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 13,
+    "geometric_x0_column_px": 12.5,
+    "visible_edge_offset_px": 0.5
+   },
+   "dpi_330": {
+    "dpi": 330,
+    "crop_px": [
+     50,
+     46
+    ],
+    "window_pt": 3.0,
+    "leftmost_inked_column_px": 14,
+    "geometric_x0_column_px": 13.75,
+    "visible_edge_offset_px": 0.25
+   },
+   "mupdf_glyph_bbox_delta": {
+    "mupdf_x0": 178.0,
+    "char": "S",
+    "font": "DeVinne-Italic",
+    "size": 14.0,
+    "pdfium_x0": 178.33599853515625,
+    "delta_pt": -0.33599853515625,
+    "delta_px_300": -1.399993896484375,
+    "found": true
+   },
+   "measured": true
+  }
+ ],
+ "tests": [
+  {
+   "test": "a vector-ink exclusion is NOT counted in the measured denominator",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the outer row once said measured=True before measure() ran, inflating n_measured by one"
+  },
+  {
+   "test": "...and contributes NO value to either offset distribution",
+   "expected": [
+    0,
+    0
+   ],
+   "observed": [
+    0,
+    0
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "the denominator is exact: cleanly measured + excluded == attempted",
+   "expected": 16,
+   "observed": 16,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "every rendered crop contained ink, so the PDF->MuPDF coordinate mapping is right",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": "an empty crop would mean the bottom-up/top-down y conversion is wrong and every offset below would be measuring blank paper"
+  },
+  {
+   "test": "at least one worst-case target admitted a clean, unsegmented measurement",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "if all were excluded, this diagnostic would report nothing and must say so"
+  }
+ ],
+ "failures": []
+}

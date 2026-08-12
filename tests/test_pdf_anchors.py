@@ -48,9 +48,27 @@ class TestSectionAnchor:
 
 
 class TestAccountAnchor:
-    def test_uppercase_heading_before_for_necessary_expenses(self):
-        # A common GPO pattern: an all-caps account heading followed within
-        # a few lines by `For necessary expenses of …`.
+    """Raw text alone never yields an account anchor (#114).
+
+    These cases used to assert the opposite: an all-caps heading within three lines
+    above a `For necessary expenses of` line became an ``account``. That made an
+    appropriations-specific English phrase load-bearing for structure, which #114
+    rules out — text triggers may interpret dollar amounts, never name accounts.
+    Account detection is now glyph-size based, and `_scan_anchors_in_page` builds
+    pages from raw text with no sizes attached, so no size-based account can arise
+    here. These are not vacuous, though: reintroducing a text trigger would make
+    them fail immediately, which is exactly how the superseded versions of these
+    cases used to pass.
+
+    What still emits from raw text is the universal grammar — TITLE, SEC., and
+    enumerator-derived run-in subsections. Positive account assertions live in
+    test_pdf_size_detection.py (sized synthetic pages) and test_pdf_anchor_golden.py
+    (real PDFs).
+    """
+
+    def test_for_necessary_expenses_does_not_name_an_account(self):
+        # The exact GPO shape the retired backwalk keyed on: heading, then the
+        # trigger phrase within its 3-line reach.
         text = (
             "11 OFFICE OF THE SECRETARY AND EXECUTIVE\n"
             "12 MANAGEMENT\n"
@@ -58,20 +76,20 @@ class TestAccountAnchor:
             "14 For necessary expenses of the Office of the Secretary"
         )
         anchors = _scan_anchors_in_page(2, text)
-        accounts = [a for a in anchors if a.kind == "account"]
-        # The heading immediately preceding `For necessary expenses of` is the
-        # closest account label. The plan accepts misses; require at least one
-        # uppercase heading line is found and stored as an account.
-        assert any(a.text == "OPERATIONS AND SUPPORT" for a in accounts)
+        assert not any(a.kind == "account" for a in anchors)
 
-    def test_no_account_when_no_for_necessary_expenses(self):
-        # Without the trigger phrase, uppercase lines may be titles or other
-        # display headings; the heuristic should not produce account anchors.
+    def test_no_account_from_bare_uppercase_headings(self):
+        # Uppercase lines may be titles or other display headings; without a size
+        # signal nothing classifies them as accounts.
         text = "7 TITLE I\n8 DEPARTMENTAL MANAGEMENT, INTEL-\n9 LIGENCE"
         anchors = _scan_anchors_in_page(2, text)
         assert not any(a.kind == "account" for a in anchors)
 
-    def test_account_heading_below_section_break(self):
+    def test_section_break_still_yields_its_section_anchor(self):
+        # Losing the account level must not cost the universal SEC. token beside it
+        # (#114 category D) — that is the whole point of degrading rather than
+        # guessing: TITLE/SEC./enumerator-derived structure survives, the
+        # appropriations-specific guess does not.
         text = (
             "5 SEC. 101. Short title.\n"
             "6 U.S. CUSTOMS AND BORDER PROTECTION\n"
@@ -79,8 +97,8 @@ class TestAccountAnchor:
             "8 For necessary expenses of U.S. Customs and Border Protection"
         )
         anchors = _scan_anchors_in_page(11, text)
-        accounts = [a for a in anchors if a.kind == "account"]
-        assert any(a.text == "OPERATIONS AND SUPPORT" for a in accounts)
+        assert not any(a.kind == "account" for a in anchors)
+        assert [a.text for a in anchors if a.kind == "section"] == ["SEC. 101"]
 
 
 class TestPageChromeIgnored:
@@ -232,7 +250,9 @@ class TestRunInSubsection:
     DEFINED.—`) renders inline at body size, so the size path can't see it. A
     dedicated format-grammatical detector emits a `subsection` anchor from the
     parenthesized lower-case enumerator + capitalized catchline + `.—` signature,
-    matched over a 2-line de-hyphenating continuation window with a stop-rule.
+    matched over a de-hyphenating continuation window with a stop-rule: two lines join
+    unconditionally, and past that a line joins only while it is still title-shaped, so a
+    long title is followed but body prose ends the join (#473).
     """
 
     def _subs(self, page_number, text):
@@ -260,8 +280,9 @@ class TestRunInSubsection:
         assert subs == [Anchor(1, 5, "subsection", "(d) EMERGENCY ASSISTANCE")]
 
     def test_wrapped_catchline_two_lines(self):
-        # Real catchlines wrap up to two continuation lines (measured on 119-hr-1):
-        # a soft-hyphen join on line 1, a plain space-join on line 2.
+        # A two-continuation wrap: a soft-hyphen join on line 1, a plain space-join on
+        # line 2. Two was the matcher's whole budget until #473; see
+        # test_wrapped_catchline_five_lines for the long-title case it used to drop.
         text = (
             "7 (a) URBAN AND EMERGING AGRI-\n"
             "8 CULTURAL RESEARCH, EDUCATION, AND\n"
@@ -273,6 +294,107 @@ class TestRunInSubsection:
                 1, 7, "subsection", "(a) URBAN AND EMERGING AGRICULTURAL RESEARCH, EDUCATION, AND EXTENSION INITIATIVE"
             )
         ]
+
+    def test_wrapped_catchline_five_lines(self):
+        # A catchline wrapping onto FIVE continuation lines, transcribed from the case
+        # that exposed the old two-line budget: 119-hr-1 sec. 112207(b), whose 250-char
+        # title put its terminal `.—` out of reach and left a $15,000,000 appropriation
+        # with no anchor at all (#473). Long titles are not exotic; they attach to the
+        # specific, negotiated provisions, which is why dropping them was expensive.
+        text = (
+            "1 (b) APPROPRIATION FOR TASK FORCE TO DESIGN A\n"
+            "2 BETTER PUBLIC-PRIVATE PARTNERSHIP BETWEEN THE\n"
+            "3 IRS AND PRIVATE SECTOR TAX PREPARATION SERVICES\n"
+            "4 TO PROVIDE FOR FREE TAX FILING TO REPLACE THE\n"
+            "5 EXISTING FREE FILE PROGRAM AND ANY DIRECT\n"
+            "6 EFILE TAX RETURN SYSTEM.—Out of any money in the\n"
+        )
+        subs = self._subs(1, text)
+        assert subs == [
+            Anchor(
+                1,
+                1,
+                "subsection",
+                "(b) APPROPRIATION FOR TASK FORCE TO DESIGN A BETTER PUBLIC-PRIVATE PARTNERSHIP "
+                "BETWEEN THE IRS AND PRIVATE SECTOR TAX PREPARATION SERVICES TO PROVIDE FOR FREE "
+                "TAX FILING TO REPLACE THE EXISTING FREE FILE PROGRAM AND ANY DIRECT EFILE TAX "
+                "RETURN SYSTEM",
+            )
+        ]
+
+    def test_catchline_less_subsection_does_not_run_into_the_next_section(self):
+        # Transcribed from 115-hr-5895 p49 lines 16-21. This subsection has NO catchline:
+        # it opens straight into prose. Nothing in it should anchor, but with a pure
+        # line-count budget the join walked the prose, crossed the `SEC.` line, and
+        # terminated on the FOLLOWING section's `.—`, producing a 295-char anchor labelled
+        # "(c) A waiver under subsection (b) … SEC. 307. (a) NEW REGIONAL RESERVES".
+        #
+        # It is the counterpart to test_wrapped_catchline_five_lines: both need to look
+        # more than two lines ahead, and only the case-shape of the continuation tells
+        # them apart. A count cannot, which is why one is not enough (#473).
+        text = (
+            "16 (c) A waiver under subsection (b) shall not be effective\n"
+            "17 until 15 days after the date on which the Secretary submits\n"
+            "18 to the Committees on Appropriations of both Houses of\n"
+            "19 Congress a report on the justification for the waiver.\n"
+            "20 SEC. 307. (a) NEW REGIONAL RESERVES.—The Secretary\n"
+            "21 shall establish reserves.\n"
+        )
+        assert [a for a in self._subs(1, text) if a.line_number == 16] == []
+
+    def test_section_heading_ends_the_join_without_an_inline_enumerator(self):
+        # A heading is the start of the next provision, so a catchline can never continue
+        # through one. "SEC. 142. PURPOSE OF PROGRAMS.—" opens with neither a quote nor a
+        # `(a)`, so the older stop-rule clauses let it through, and the all-caps account
+        # heading before it is title-shaped — the join reached the heading's own `.—` and
+        # labelled this subsection with the NEXT section's title (#473).
+        text = (
+            "16 (c) A waiver under subsection (b) shall not apply here.\n"
+            "17 SECURITY PROGRAMS\n"
+            "18 SEC. 142. PURPOSE OF PROGRAMS.—The Secretary shall act.\n"
+        )
+        assert [a for a in self._subs(1, text) if a.line_number == 16] == []
+
+    def test_a_reference_to_a_section_is_not_a_heading(self):
+        # The converse of the guard above: "SECTION 1245" inside a title is ordinary
+        # vocabulary (119-hr-1 has a real one), and must not end the join. The heading rule
+        # keys on the period after the number, which a cross-reference does not carry.
+        text = "1 (b) TREATMENT OF PROPERTY AS\n2 SECTION 1245 PROPERTY.—For purposes of this part.\n"
+        assert self._subs(1, text) == [Anchor(1, 1, "subsection", "(b) TREATMENT OF PROPERTY AS SECTION 1245 PROPERTY")]
+
+    def test_an_amount_line_is_not_title_shaped(self):
+        # "No lowercase" is satisfied by a line with no letters at all, so an amount or a
+        # bare numeral would read as title and let a join walk through it into whatever
+        # follows. Title-shape requires positive evidence: at least one capital (#473).
+        text = (
+            "1 (c) For an additional amount for such purposes,\n"
+            "2 $15,000,000\n"
+            "3 $27,500,000\n"
+            "4 GENERAL PROVISIONS.—The following applies.\n"
+        )
+        assert [a for a in self._subs(1, text) if a.line_number == 1] == []
+
+    def test_an_abbreviation_dash_is_not_a_terminator(self):
+        # "U.S.–E.U." puts a period next to a dash mid-prose, which looks exactly like the
+        # `.—` that ends a catchline. Judging the line on the three characters before it
+        # ("U.S") would call plain prose a title. The same fabrication mode is documented
+        # on the XML side of this parser for 113-hr-83 sec. 415(a).
+        text = (
+            "1 (a) NOTHING IN THIS SECTION SHALL\n"
+            "2 BE CONSTRUED TO LIMIT ANY\n"
+            "3 U.S.–E.U. trade obligations shall be impaired by this\n"
+            "4 subsection or any other.—Provided further, that funds.\n"
+        )
+        assert [a for a in self._subs(1, text) if a.line_number == 1] == []
+
+    def test_catchline_beyond_the_window_is_abandoned(self):
+        # The window is a bound, not an invitation: a catchline still running after
+        # `_RUNIN_MAX_CONTINUATIONS` continuations yields NO anchor rather than an
+        # ever-longer join. Without this, an unbounded matcher would let a subsection
+        # with no catchline reach forward indefinitely for an unrelated `.—`.
+        body = "".join(f"{i} WORDS THAT KEEP RUNNING ON AND ON AND ON\n" for i in range(2, 2 + 8))
+        text = "1 (b) A TITLE THAT NEVER TERMINATES\n" + body + "10 AT LAST.—The body begins here."
+        assert self._subs(1, text) == []
 
     def test_same_line_after_sec_collision(self):
         # A SEC. line can carry an inline (a) run-in: emit BOTH a section and a

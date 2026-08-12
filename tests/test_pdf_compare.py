@@ -83,6 +83,34 @@ def test_security_headers_on_served_page():
     assert resp.headers["x-content-type-options"] == "nosniff"
 
 
+def test_csp_header_on_served_page():
+    """Content-Security-Policy header is present on HTML responses (#282).
+
+    The diff report embeds inline <script>, <style>, and <script type="application/json">
+    blocks and must also work as a downloaded file:// document. The policy allows
+    inline script/style as a minimal starting point while still blocking object/
+    base-uri/frame-ancestors vectors.
+    """
+    resp = _client().get("/", follow_redirects=False)
+    assert resp.status_code == 200
+    csp = resp.headers.get("content-security-policy")
+    assert csp is not None
+    # Verify key directives are present
+    assert "default-src 'self'" in csp
+    assert "script-src 'self' 'unsafe-inline'" in csp
+    assert "style-src 'self' 'unsafe-inline'" in csp
+    assert "object-src 'none'" in csp
+    assert "base-uri 'none'" in csp
+    assert "frame-ancestors 'none'" in csp
+
+
+def test_referrer_policy_header_on_served_page():
+    """Referrer-Policy header is present as a ride-along with CSP (#282)."""
+    resp = _client().get("/", follow_redirects=False)
+    assert resp.status_code == 200
+    assert resp.headers.get("referrer-policy") == "no-referrer"
+
+
 def test_security_headers_on_rejected_upload():
     """The headers wrap the API too, not just the static mount.
 
@@ -99,6 +127,37 @@ def test_security_headers_on_rejected_upload():
     assert resp.status_code == 415
     assert resp.headers["x-frame-options"] == "DENY"
     assert resp.headers["x-content-type-options"] == "nosniff"
+    assert "default-src 'self'" in resp.headers.get("content-security-policy", "")
+    assert resp.headers.get("referrer-policy") == "no-referrer"
+
+
+def test_csp_header_on_generated_report():
+    """Content-Security-Policy header is present on generated HTML reports (#282)."""
+    import web.app as app_module
+
+    fake_html = "<!DOCTYPE html><html>" + ("report " * 20_000) + "</html>"
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setitem(app_module._COMPARE, "pdf", (".pdf", lambda *a, **kw: fake_html, lambda *a, **kw: {}))
+    try:
+        resp = _client().post(
+            "/api/compare",
+            files={
+                "start_file": ("v1.pdf", b"%PDF-1.4 start", "application/pdf"),
+                "end_file": ("v2.pdf", b"%PDF-1.4 end", "application/pdf"),
+            },
+        )
+        assert resp.status_code == 200
+        csp = resp.headers.get("content-security-policy")
+        assert csp is not None
+        assert "default-src 'self'" in csp
+        assert "script-src 'self' 'unsafe-inline'" in csp
+        assert "style-src 'self' 'unsafe-inline'" in csp
+        assert "object-src 'none'" in csp
+        assert "base-uri 'none'" in csp
+        assert "frame-ancestors 'none'" in csp
+        assert resp.headers.get("referrer-policy") == "no-referrer"
+    finally:
+        monkeypatch.undo()
 
 
 def test_security_headers_survive_the_https_redirect():
@@ -117,6 +176,8 @@ def test_security_headers_survive_the_https_redirect():
     assert resp.status_code == 301
     assert resp.headers["x-frame-options"] == "DENY"
     assert resp.headers["x-content-type-options"] == "nosniff"
+    assert "default-src 'self'" in resp.headers.get("content-security-policy", "")
+    assert resp.headers.get("referrer-policy") == "no-referrer"
 
 
 def test_report_sized_html_is_gzipped():
@@ -299,6 +360,8 @@ def test_rate_limited_response_keeps_security_headers():
     assert resp.status_code == 429
     assert resp.headers["x-frame-options"] == "DENY"
     assert resp.headers["x-content-type-options"] == "nosniff"
+    assert "default-src 'self'" in resp.headers.get("content-security-policy", "")
+    assert resp.headers.get("referrer-policy") == "no-referrer"
 
 
 def test_rate_limit_is_checked_before_the_body_is_read():

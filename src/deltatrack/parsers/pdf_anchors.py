@@ -60,8 +60,9 @@ class SizeBands:
 # exceed that rounding granularity. Body↔heading separation must exceed 2·eps.
 _SIZE_EPS = 0.3
 # A document needs at least this fraction of its numbered lines to carry an
-# attached glyph size before we trust size-based detection; below it we fall back
-# to the legacy text trigger (a partial join would silently drop headings).
+# attached glyph size before we trust size-based detection; below it no account
+# anchors are emitted at all (a partial join would silently drop headings, and
+# there is no text-trigger fallback to degrade to — #114).
 _COVERAGE_MIN = 0.85
 
 
@@ -75,7 +76,6 @@ _TITLE_PATTERN = re.compile(r"^TITLE\s+([IVXLC]+)\b.*$")
 # for an inline-named title.
 _INLINE_TITLE_NAME = re.compile(r"^TITLE\s+[IVXLC]+\s*[—–]\s*\S")
 _SECTION_PATTERN = re.compile(r"^(SEC(?:TION)?\.?\s+\d+)\b")
-_FOR_NECESSARY_EXPENSES = re.compile(r"^For necessary expenses of\b", re.IGNORECASE)
 # A run-in subsection header ("(B) Current visas revoked.—") renders small-caps,
 # so it lands in the heading band, but it is NOT an account: it opens with a
 # parenthesized enumerator, which appropriations account headings never do. Used
@@ -116,7 +116,89 @@ _RUNIN_QUOTED_LINE = re.compile(r"^[‘“'\"]")
 # quote self-exclusion doesn't carry through a joined continuation. Measured on 119-hr-1:
 # removes all 29 false joins. (The anchor line's OWN enumerator is expected, so this
 # enumerator clause applies only to continuations, never the first line.)
-_RUNIN_CONTINUATION_STOP = re.compile(r"^[‘“'\"]|^\([0-9A-Za-z]{1,4}\)\s")
+#
+# The third clause ends the window at a SECTION HEADING. A heading is the start of the next
+# provision, so a catchline can never legitimately continue through one, and reaching one
+# means the join has left its own subsection. Added in #473: a heading with no inline
+# enumerator ("SEC. 142. PURPOSE OF PROGRAMS.—") opens with neither a quote nor a `(a)`, so
+# the first two clauses let it through. Requiring the period after the number keeps this off
+# a cross-REFERENCE to a section, which is ordinary catchline vocabulary (119-hr-1 has
+# "AS SECTION 1245 PROPERTY").
+_RUNIN_CONTINUATION_STOP = re.compile(r"^[‘“'\"]|^\([0-9A-Za-z]{1,4}\)\s|^SEC(?:TION)?\.?\s+\d+\.")
+# How far a wrapped catchline may be followed, and on what evidence (#473).
+#
+# A catchline wraps because GPO ran out of column, so its continuations are still TITLE:
+# set in caps, no lowercase, until the `.—` hands over to body prose. That shape is the
+# real signal that the title is still going, and `_catchline_shaped` tests for it.
+#
+# Why the shape test rather than simply a bigger line budget. The budget used to be 2,
+# which silently discarded every subsection whose title wrapped onto a third line: at
+# GPO's ~45 characters per line it fit about 122 characters, and on 119-hr-1 every title
+# <=122 chars was found (929 of them) while every title >=127 chars was missed (5),
+# nothing in between. But raising the number is not free, because a subsection with NO
+# catchline at all is only stopped from reaching forward by that same number. At 6 the
+# join ran out of five such subsections, across an account heading and a `SEC.` line, and
+# terminated on the FOLLOWING section's `.—`:
+#
+#   115-hr-5895 p49:16 -> "(c) A waiver under subsection (b) shall not be effective
+#                          until 15 days ... SEC. 307. (a) NEW REGIONAL RESERVES"  (295 ch)
+#
+# `_RUNIN_CONTINUATION_STOP` does not catch those: it ends the window at a quote or an
+# enumerator, and none of those runaways opens with either. Measured over the committed
+# corpus, subsection anchors whose text contains "SEC." went 0 at budget 2, to 6 at budget
+# 6, to more as the budget grows. The count was doing the precision work, so spending it
+# on title length alone traded one silent defect for another.
+#
+# So EVERY continuation must look like a title; there is no unconditional window. An
+# earlier revision let the first two join unconditionally, to be a strict superset of the
+# old rule, but that is where the remaining fabrications lived: two lines of prose followed
+# by an all-caps heading still reached a `.—` that was not this subsection's. Applying the
+# shape test from the first continuation measures IDENTICALLY on every committed PDF (1069
+# subsection anchors either way, none gained, none lost), so the exemption was buying no
+# recall and only carrying risk.
+#
+# The rule is now one sentence with no line count in it: follow the title while it still
+# reads as title. That recovers all 5 genuine long catchlines (including the 258-char
+# 119-hr-1 sec. 112207(b), a $15,000,000 appropriation) and fabricates none.
+#
+# Known limitation: a MIXED-CASE catchline that wraps cannot be followed, because its
+# continuation does not read as title. All 12 mixed-case catchlines in the corpus fit on one
+# line (longest 43 chars), so none is affected, but a bill that both sets catchlines in
+# mixed case and wraps one would miss it. That is the precision-first side of the trade this
+# module already takes: a missed anchor degrades to a page/line citation, while a fabricated
+# one puts the next section's title on this subsection.
+#
+# Backstop only. With the shape test doing the bounding this is not reached on the corpus
+# (budgets 8 and 100 measure identically); it exists so a pathological all-caps run cannot
+# make the join unbounded.
+_RUNIN_MAX_CONTINUATIONS = 8
+# The catchline/body boundary: everything up to the terminating `.—` is title. The line that
+# HANDS OVER ("...SYSTEM.—Out of any money in the") must be judged on its title half only,
+# so the terminator is located first and the test applied to what precedes it.
+_RUNIN_TERMINATOR_SPLIT = re.compile(r"[.]\s*[—–]")
+# An initialism ("U.S.", "E.U.") ends in a lone capital after a period, and its internal
+# periods can sit next to a dash in running prose ("U.S.–E.U. trade obligations shall…"),
+# which looks exactly like a terminator. Trusting it would judge such a line on the three
+# characters before the dash and call plain prose a title. When the part before a candidate
+# terminator ends this way, the terminator is not believed and the WHOLE line is judged.
+_ABBREVIATION_TAIL = re.compile(r"(?:^|[\s(])[A-Z](?:\.[A-Z])*$")
+
+
+def _catchline_shaped(line: str) -> bool:
+    """Is `line` still part of a wrapped catchline (title case-shape, not body prose)?
+
+    Requires positive evidence of a title, not merely the absence of prose: at least one
+    capital, and no lowercase. Absence alone is satisfied vacuously by a line carrying no
+    letters at all, so an amount line ("$15,000,000") or a bare numeral would read as title
+    and let a join walk through it (#473).
+    """
+    match = _RUNIN_TERMINATOR_SPLIT.search(line)
+    head = line[: match.start()] if match else line
+    if match and _ABBREVIATION_TAIL.search(head):
+        head = line
+    return any(c.isupper() for c in head) and not any(c.islower() for c in head)
+
+
 # Line-fullness split (DeltaTrack#130): two stacked majors vs one wrapped name. A run
 # line broke EARLY (its successor's first word would have fit) ⇒ an intentional break
 # between stacked headings; otherwise it wrapped because the next word didn't fit. The
@@ -189,7 +271,7 @@ def _sized_lines(pages: list[Page]):
 def derive_size_bands(pages: list[Page]) -> SizeBands | None:
     """Derive the per-document body/heading glyph-size bands, or None.
 
-    Returns None (→ legacy text-trigger fallback) when the signal isn't a clean
+    Returns None (→ no account-level anchors at all) when the signal isn't a clean
     body+single-heading-band split: no sized prose lines, no sub-body heading
     cluster, more than one strong heading cluster (trimodal, e.g. reconciliation
     bills), or a body↔heading gap within 2·eps.
@@ -199,7 +281,7 @@ def derive_size_bands(pages: list[Page]) -> SizeBands | None:
         return None
     # body = the most common prose size; on a tie take the LARGER (body is the
     # dominant, larger cluster in GPO bills — picking a smaller tied size would
-    # exclude real sub-body headings and silently force the legacy fallback).
+    # exclude real sub-body headings and silently lose the account level entirely).
     body = max(statistics.multimode(round(s, 1) for s in body_sizes))
 
     head_sizes = sorted(
@@ -232,9 +314,10 @@ def _scan_anchors_in_page(page_number: int, raw_text: str) -> list[Anchor]:
     """Scan one page's raw chrome-stripped, line-numbered text for anchors.
 
     Test-only entry point that takes a raw `<n> content` string per line. Runs the
-    full `extract_anchors` pipeline on the single page so account detection (size
-    path, or legacy fallback when the synthetic page carries no glyph sizes) is
-    exercised. Production path uses `extract_anchors(pages)`.
+    full `extract_anchors` pipeline on the single page. Note the synthetic page
+    carries no glyph sizes, so the size path cannot run: these cases exercise the
+    TITLE/SEC/subsection pass only and never yield account anchors (#114).
+    Production path uses `extract_anchors(pages)`.
     """
     page = Page(page_number, parse_lines(strip_page_chrome(raw_text)))
     return extract_anchors([page])
@@ -256,11 +339,14 @@ def _match_runin_subsection(first_text: str, next_texts: list[str]) -> str | Non
     """Canonical `(enum) Catchline` for a run-in subsection at the start of `first_text`,
     or None (DeltaTrack#96).
 
-    Joins up to TWO continuation lines to recover a catchline whose terminal `.—` GPO
-    wrapped, de-hyphenating soft wraps via `_WRAP_HYPHENS` exactly as `_join_major_run`
-    does. The stop-rule (`_RUNIN_CONTINUATION_STOP`) and the quote self-exclusion guard
-    against fabricated anchors; roman-lookalike enumerators are rejected. Printed casing
-    is preserved (the PDF is source-of-truth), trailing `.—` and body stripped."""
+    Follows a catchline whose terminal `.—` GPO wrapped, de-hyphenating soft wraps via
+    `_WRAP_HYPHENS` exactly as `_join_major_run` does. A continuation joins only while it is
+    `_catchline_shaped`, so the join follows a long TITLE but stops where body prose begins;
+    there is no line budget in the rule, only `_RUNIN_MAX_CONTINUATIONS` as a backstop
+    behind it. The stop-rule
+    (`_RUNIN_CONTINUATION_STOP`) and the quote self-exclusion guard against fabricated
+    anchors; roman-lookalike enumerators are rejected. Printed casing is preserved (the
+    PDF is source-of-truth), trailing `.—` and body stripped."""
     first = first_text.strip()
     if _RUNIN_QUOTED_LINE.match(first):  # quoted amendment target self-excludes
         return None
@@ -276,11 +362,15 @@ def _match_runin_subsection(first_text: str, next_texts: list[str]) -> str | Non
                 return None
             catchline = re.sub(r"\s+", " ", m.group(2).strip())
             return f"({m.group(1)}) {catchline}"
-        if conts_used >= 2 or conts_used >= len(next_texts):
+        if conts_used >= _RUNIN_MAX_CONTINUATIONS or conts_used >= len(next_texts):
             return None
         cont = next_texts[conts_used].strip()
         conts_used += 1
         if not cont or _RUNIN_CONTINUATION_STOP.match(cont):
+            return None
+        # Keep going only while the line is still title-shaped. This is what stops a
+        # catchline-less subsection running into the next section.
+        if not _catchline_shaped(cont):
             return None
         joined = joined[:-1] + cont if joined.endswith(_WRAP_HYPHENS) else f"{joined} {cont}"
 
@@ -288,9 +378,9 @@ def _match_runin_subsection(first_text: str, next_texts: list[str]) -> str | Non
 def _anchors_from_page(page: Page) -> list[Anchor]:
     """TITLE, SEC and run-in subsection anchors for one page.
 
-    Emitted here (the per-page pass runs unconditionally, before the size/legacy
-    branch) so run-in subsections surface on BOTH the size path and the legacy
-    fallback — they render at body size and are never gated on a size band. Account
+    Emitted here (the per-page pass runs unconditionally, before the size branch)
+    so run-in subsections surface even when size bands are not derivable — they
+    render at body size and are never gated on a size band. Account
     anchors are emitted separately by `extract_anchors`, which needs the flattened
     document line stream for size-band classification and page-seam look-ahead.
 
@@ -311,9 +401,12 @@ def _anchors_from_page(page: Page) -> list[Anchor]:
         if title_match:
             anchors.append(Anchor(page.page_number, line.line_number, "title", f"TITLE {title_match.group(1)}"))
             continue
-        # Up to two continuation lines for a wrapped catchline (page-local; a page-seam
-        # wrap is documented 0-measured residue — the per-page window never crosses pages).
-        next_texts = [ln.text for ln in lines[idx + 1 : idx + 3]]
+        # Every remaining line on the page is offered; the matcher alone decides where to
+        # stop (page-local, so a page-seam wrap is documented 0-measured residue). This
+        # used to be pre-truncated to the matcher's own limit, which put the bound in two
+        # places that had to agree: when only one moved, the other silently kept the old
+        # limit, and the matcher's cap became unreachable dead code (#473).
+        next_texts = [ln.text for ln in lines[idx + 1 :]]
         section_match = _SECTION_PATTERN.match(line.text)
         if section_match:
             canonical = re.sub(r"\s+", " ", section_match.group(1))
@@ -491,36 +584,6 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
                 anchors.append(agency)
         # else: candidate followed by another heading ⇒ part of a carry-over agency
         # run, emitted as one joined `agency` anchor at the leaf account above.
-    return anchors
-
-
-def _account_anchors_legacy(pages: list[Page]) -> list[Anchor]:
-    """Legacy fallback: per page, walk back ≤3 line positions from a `For necessary
-    expenses of` trigger to the nearest uppercase heading (parenthetical qualifiers
-    skipped). Used when size bands aren't derivable or attachment coverage is too
-    low. Per-page and 3-position to match the pre-#89 behavior exactly."""
-    anchors: list[Anchor] = []
-    # `seen` mirrors `anchors` purely for the membership test: several `For necessary
-    # expenses of` triggers can walk back to the same heading, and scanning the list
-    # made that check cost O(n) per hit on a document with thousands of accounts.
-    # Anchor is a frozen dataclass, so set membership is the same equality the list
-    # scan used, and the list still fixes the output order.
-    seen: set[Anchor] = set()
-    for page in pages:
-        lines = page.lines
-        for idx, line in enumerate(lines):
-            if line.line_number is None or not _FOR_NECESSARY_EXPENSES.match(line.text):
-                continue
-            for back in range(idx - 1, max(idx - 4, -1), -1):
-                bline = lines[back]
-                if bline.line_number is None or _is_parenthetical(bline.text):
-                    continue
-                if _is_uppercase_heading(bline.text):
-                    candidate = Anchor(page.page_number, bline.line_number, "account", bline.text.strip())
-                    if candidate not in seen:
-                        seen.add(candidate)
-                        anchors.append(candidate)
-                    break
     return anchors
 
 
@@ -793,7 +856,9 @@ def extract_anchors(pages: list[Page]) -> list[Anchor]:
 
     TITLE/SEC are detected per page. Accounts use size-band + position
     classification when the document yields clean bands and adequate glyph-size
-    attachment coverage; otherwise they fall back to the legacy text trigger.
+    attachment coverage; otherwise NO account-level anchors are emitted and the
+    structure degrades to those universal legislative tokens. Naming accounts from
+    an appropriations-specific English phrase is out (#114 / ADR 0018).
 
     On an omnibus/minibus, each anchor is finally tagged with its division
     (DeltaTrack#107) — a display field prepended in the breadcrumb, not a matching key.
@@ -806,8 +871,9 @@ def extract_anchors(pages: list[Page]) -> list[Anchor]:
     if bands is not None and _coverage(pages) >= _COVERAGE_MIN:
         anchors.extend(_account_anchors_by_size(pages, bands))
         anchors.extend(_major_anchors_by_size(pages, bands))
-    else:
-        anchors.extend(_account_anchors_legacy(pages))
+    # No else: when the size signal is absent, structure degrades to the universal
+    # TITLE/SEC./enumerator tokens already collected above rather than being guessed from an
+    # appropriations-specific English phrase (#114, ADR 0018).
 
     anchors.sort(key=lambda a: (a.page_number, a.line_number))
     return _assign_divisions(anchors, _flatten(pages))
@@ -861,15 +927,16 @@ def _breadcrumb_core(anchor: Anchor, all_anchors: tuple[Anchor, ...] | list[Anch
     just inside the TITLE.
 
     Breadcrumb DEPTH is detection-path dependent: major/agency/grouping parents exist
-    only on the size path, so a low-coverage/no-band bill (legacy fallback) yields a
-    shallower chain for the same logical account. Consumers must not assume a major or
-    agency segment is always present.
+    only on the size path, so a low-coverage/no-band bill has no account level at all
+    and its deepest chain runs TITLE/SEC./subsection. Consumers must not assume a major, agency or
+    account segment is always present.
     """
     if anchor.kind in ("title", "preamble"):
         return (anchor.text,)
     # Resolve by value-equality .index(); relies on anchors being unique per
-    # (page, line) — the size path emits one per line and the legacy path dedups,
-    # so no two value-equal anchors exist. Keep that invariant if emitting more.
+    # (page, line) — the size path emits at most one per line, so no two value-equal
+    # anchors exist. Keep that invariant if emitting more; it is gated corpus-wide by
+    # test_pdf_anchor_golden.py::test_no_value_equal_duplicate_anchors.
     try:
         idx = list(all_anchors).index(anchor)
     except ValueError:

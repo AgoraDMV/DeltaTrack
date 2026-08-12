@@ -61,6 +61,18 @@ def map_account_path(nodes, title, bureau, heading) -> list[str] | None:
     """
     nh = _norm(heading)
     cands = [n for n in nodes if _norm(n.match_path[-1]) == nh]
+    if not cands and any(nh and nh == _norm(e) for n in nodes for e in n.match_path[:-1]):
+        # The heading names an agency/bureau the bill itemizes rather than a leaf account:
+        # it matches an *interior* path element, so no single node carries its amount.
+        # Legislative Branch's "CAPITOL POLICE" is the case — the bill splits it into
+        # SALARIES and GENERAL EXPENSES under a "Capitol Police" agency node that holds no
+        # amount of its own. Stopping here matters because the substring tier below would
+        # otherwise pair it with the only leaf whose name happens to contain the words,
+        # "Capitol Police Buildings, Grounds and Security", which sits under a different
+        # agency (Architect of the Capitol) and is a different account entirely. A wrong
+        # match_path is worse than none: it reads as a real mapping in the fixture and
+        # sends whoever triages the miss to the wrong node.
+        return None
     if not cands:
         cands = [n for n in nodes if nh and (nh in _norm(n.match_path[-1]) or _norm(n.match_path[-1]) in nh)]
     if not cands:

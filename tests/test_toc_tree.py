@@ -64,7 +64,7 @@ def test_toc_from_tree_nests_to_arbitrary_depth():
     # three nested groups (division/title/agency each have children) + one leaf
     assert html.count('<details class="toc-group">') == 3
     assert html.count('<li class="toc-child">') == 1
-    summaries = re.findall(r"<summary>(.*?)</summary>", html)
+    summaries = re.findall(r"<summary[^>]*>(.*?)</summary>", html)
     assert any("DEPARTMENT OF ENERGY" in s for s in summaries)  # interior → group
     assert not any("OPERATIONS" in s for s in summaries)  # leaf → not a group
 
@@ -86,7 +86,7 @@ def test_account_named_title_is_not_promoted_to_a_toc_group():
         ),
     ]
     html = _build_toc_from_tree(tree, text)
-    summaries = re.findall(r"<summary>(.*?)</summary>", html)
+    summaries = re.findall(r"<summary[^>]*>(.*?)</summary>", html)
     assert not any("Title 17" in s for s in summaries), "Title 17 account wrongly rendered as a TOC group (#155)"
     leaves = re.findall(r'<li class="toc-child">(.*?)</li>', html)
     assert any("Title 17 Innovative" in leaf for leaf in leaves)

@@ -18,8 +18,9 @@ block text. The classifier produces:
 - `moved` — block bodies similar but anchors differ (renumbered SEC.)
 - `modified` — paired blocks with different bodies
 
-Reuses amount extraction (`extract_amounts`, `match_amounts`) and text
-similarity (`_text_similarity`) from diff_bill.py.
+Reuses amount extraction (`extract_amounts`, `match_amounts`) from diff_bill.py
+and text similarity (`text_similarity_at_least`, `move_candidates`) plus both
+cutoffs from similarity.py.
 """
 
 from __future__ import annotations
@@ -33,9 +34,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from deltatrack.diff_bill import _move_candidates, _text_similarity_at_least, extract_amounts, match_amounts
+from deltatrack.diff_bill import extract_amounts, match_amounts
 from deltatrack.parsers.pdf_anchors import Anchor, _is_uppercase_heading, extract_anchors
 from deltatrack.parsers.pdf_text import Page
+from deltatrack.similarity import (
+    MOVE_THRESHOLD,
+    SIMILARITY_THRESHOLD,
+    move_candidates,
+    text_similarity_at_least,
+)
 from deltatrack.version_stems import label_from_stem
 
 ChangeType = Literal["added", "removed", "modified", "moved"]
@@ -43,17 +50,18 @@ PageLineRange = tuple[int, int, int, int]  # (start_page, start_line, end_page, 
 
 _AMENDMENT_RE_DETAIL = re.compile(r"\((increased|reduced|decreased) by\s+\$([\d,]+)\)")
 
-# Body similarity needed to call a block-pair "moved" rather than "modified",
-# and to reconcile a removed+added pair as moved. Matches diff_bill's threshold.
-_MOVE_SIMILARITY_THRESHOLD = 0.6
-
-# Below this similarity, two blocks paired by alignment aren't really a
-# modified pair — they're an unrelated removal + addition that happen to
-# share an anchor (e.g. v1 SEC. 413 = H-2A waiver, v2 SEC. 413 = Asylum
-# Fee renumbered from SEC. 414). Split them so reconcile_moves can pair
-# v1 SEC. 414 with v2 SEC. 413 by body similarity. Matches diff_bill's
-# _SIMILARITY_THRESHOLD.
-_PAIR_BODY_THRESHOLD = 0.4
+# What the two shared cutoffs mean HERE (they are defined in deltatrack.similarity,
+# #492, and were re-declared in this module until then — two copies kept in step by a
+# comment saying they were, which is not a mechanism).
+#
+# MOVE_THRESHOLD: body similarity needed to call a block-pair "moved" rather than
+# "modified", and to reconcile a removed+added pair as moved.
+#
+# SIMILARITY_THRESHOLD: below it, two blocks paired by alignment aren't really a
+# modified pair — they're an unrelated removal + addition that happen to share an
+# anchor (e.g. v1 SEC. 413 = H-2A waiver, v2 SEC. 413 = Asylum Fee renumbered from
+# SEC. 414). Split them so reconcile_moves can pair v1 SEC. 414 with v2 SEC. 413 by
+# body similarity.
 
 # Label and breadcrumb for the synthesized front-matter anchor (issue #33) — the
 # boilerplate before the first real anchor (calendar number, designator, long
@@ -346,13 +354,13 @@ def _hunk_for_paired_blocks(v1_block: _Block, v2_block: _Block, similarity: floa
     Classifies as `moved` when anchors differ and bodies are highly similar
     (renumbered SEC.), else `modified`. Caller has already confirmed v1 and v2
     block texts differ AND has computed `similarity` (the
-    `_text_similarity` between the two block texts) to decide split-vs-pair.
+    `text_similarity` between the two block texts) to decide split-vs-pair.
     """
     v1_text = v1_block.text
     v2_text = v2_block.text
     v1_anchor = v1_block.anchor
     v2_anchor = v2_block.anchor
-    if v1_anchor and v2_anchor and v1_anchor.text != v2_anchor.text and similarity >= _MOVE_SIMILARITY_THRESHOLD:
+    if v1_anchor and v2_anchor and v1_anchor.text != v2_anchor.text and similarity >= MOVE_THRESHOLD:
         change_type: ChangeType = "moved"
     else:
         change_type = "modified"
@@ -402,7 +410,7 @@ def _hunk_for_removed(v1_block: _Block) -> PdfHunk:
     )
 
 
-def _reconcile_moves(hunks: list[PdfHunk], threshold: float = _MOVE_SIMILARITY_THRESHOLD) -> list[PdfHunk]:
+def _reconcile_moves(hunks: list[PdfHunk], threshold: float = MOVE_THRESHOLD) -> list[PdfHunk]:
     """Pair `removed`+`added` hunks whose bodies are highly similar into `moved` hunks.
 
     Catches renumbered sections (e.g. SEC. 414 in v1 → SEC. 413 in v2) when block
@@ -414,7 +422,7 @@ def _reconcile_moves(hunks: list[PdfHunk], threshold: float = _MOVE_SIMILARITY_T
     if not removed_idx or not added_idx:
         return hunks
 
-    # Gated + matcher-reused pairwise similarity; _move_candidates returns local
+    # Gated + matcher-reused pairwise similarity; move_candidates returns local
     # indices, so map them back to absolute hunk indices. Identical result to the
     # naive removed×added loop for every pair with text on both sides (same tuples;
     # the sort below is what orders them).
@@ -428,7 +436,7 @@ def _reconcile_moves(hunks: list[PdfHunk], threshold: float = _MOVE_SIMILARITY_T
     # produces a text-free hunk, so this path is unchanged in practice. The rule is kept
     # uniform across both callers because a hunk with no text carries no evidence of
     # having moved anywhere either way.
-    local = _move_candidates(
+    local = move_candidates(
         [hunks[ri].v1_text for ri in removed_idx],
         [hunks[ai].v2_text for ai in added_idx],
         threshold,
@@ -493,10 +501,10 @@ def _emit_pair(v1_b: _Block, v2_b: _Block, sink: list[PdfHunk]) -> None:
         if v1_b.anchor and v2_b.anchor and v1_b.anchor.text != v2_b.anchor.text:
             sink.append(_hunk_for_paired_blocks(v1_b, v2_b, similarity=1.0))
         return
-    # Gate at the lower (split) threshold: when sim >= 0.4 the exact ratio is
-    # needed downstream for the 0.6 moved/modified split in _hunk_for_paired_blocks.
-    sim = _text_similarity_at_least(v1_b.text, v2_b.text, _PAIR_BODY_THRESHOLD)
-    if sim < _PAIR_BODY_THRESHOLD:
+    # Gate at the lower (split) threshold: at or above it the exact ratio is
+    # needed downstream for the MOVE_THRESHOLD moved/modified split in _hunk_for_paired_blocks.
+    sim = text_similarity_at_least(v1_b.text, v2_b.text, SIMILARITY_THRESHOLD)
+    if sim < SIMILARITY_THRESHOLD:
         sink.append(_hunk_for_removed(v1_b))
         sink.append(_hunk_for_added(v2_b))
     else:

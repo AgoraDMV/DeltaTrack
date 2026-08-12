@@ -1,0 +1,1390 @@
+{
+ "population": "SYNTHETIC only -- no holdout opened, nothing adjudicated, no real decision taken",
+ "contract": "HARNESS-PLAN section 6 (the decider) over PRE-REGISTRATION section 7.2, A5, A10, A20, A27.3, A27.4, A27.6, A28.2, A39.1 and A41",
+ "question": "does `decide_architecture` implement the frozen Rule 0 / Rule 1 / Rule 3 machinery, and can each result-bearing branch be made to go RED?",
+ "artifacts_created": "NONE of frames.json, oracle_key.json, oracle_blind.json, oracle_adjudicated.json, s1_control.json, cross_engine_control.json, metrics.json, scores.json, EXECUTION-START.json",
+ "fixture_caveat": "every payload is real `score_metrics.score(...)` output; Rule 3 gate STATUSES are overwritten to reach later rules and are fixtures, never evidence",
+ "open_ruling": "Rule 1's M4 condition (A5 row 4 / A20) has NO producer -- the scorer emits per-arm M4 counts only. The verdict is SUPPLIED and its absence REFUSES; see A42",
+ "section6_rows": {
+  "synthetic X win (6 corrects, 0 regressions, no M4 regression)": [
+   "6 corrections, 0 regressions, no M4 regression -> EXTENDED_BY_RULE_1"
+  ],
+  "synthetic 5 corrects and 1 regression": [
+   "5 corrections AND 1 regression -> INSUFFICIENT, never EXTENDED_BY_RULE_1, never HYBRID"
+  ],
+  "synthetic 5 corrects and 1 M4 regression": [
+   "5 corrections, 0 regressions, ONE M4 parent regression -> INSUFFICIENT (A5 row 4 / A20)",
+   "...and it fires while the per-arm M4 AGGREGATES are equal -- the A42.3 payload"
+  ],
+  "synthetic census of 61 regions": [
+   "D = 61 regions -> INSUFFICIENT, and Rule 1 is NOT reached"
+  ],
+  "synthetic asymmetric M9 loss for H only": [
+   "BAND -- H loses the band, X keeps it -> EXTENDED_BY_RULE_0_M9"
+  ],
+  "synthetic asymmetric M9 loss on BOTH arms, different documents": [
+   "A27.4 -- an asymmetric loss on EACH arm, different documents -> INSUFFICIENT, no ranking"
+  ],
+  "any Rule 3 gate set to FAIL": [
+   "a FAILING N-A control -> INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "a FAILING N-B control -> INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "a FAILING N-C control -> INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "a FAILING R1 text reliability gate -> INSUFFICIENT",
+   "a FAILING R1 role reliability gate -> INSUFFICIENT",
+   "S1 not firing -> INSUFFICIENT (the comparator is not live)",
+   "a FAILING confirmatory X2A -> INSUFFICIENT",
+   "a FAILING confirmatory X2B -> INSUFFICIENT"
+  ],
+  "x09 set to FAIL": [
+   "x09 FAILING on every sampled document changes NO outcome -- it only adds a label"
+  ],
+  "synthetic empty census": [
+   "an EMPTY census -> HYBRID_BY_PRIOR, and the text makes no empirical claim for hybrid"
+  ],
+  "wording gate": [
+   "the prior conclusion carries NO comparative-accuracy claim for hybrid",
+   "the insufficient by veto conclusion carries NO comparative-accuracy claim for hybrid",
+   "the insufficient by budget conclusion carries NO comparative-accuracy claim for hybrid",
+   "the insufficient by gate conclusion carries NO comparative-accuracy claim for hybrid",
+   "the gate FIRES on a planted superiority claim (non-vacuity)"
+  ],
+  "M9 one-arm loss": [
+   "PRECEDENCE -- Rule 0 fires while Rule 1 would have chosen X: Rule 0 decides"
+  ]
+ },
+ "evidence": {
+  "contract": {
+   "n_metrics_paths": 14,
+   "n_document_paths": 8
+  },
+  "rule0": {
+   "two_sided": {
+    "H_asymmetric_loss_documents": [
+     "SYNTHETIC/1"
+    ],
+    "X_asymmetric_loss_documents": [
+     "SYNTHETIC/2"
+    ]
+   }
+  },
+  "rule3": {
+   "gate_names": [
+    "R1",
+    "N-A",
+    "N-B",
+    "N-C",
+    "S1",
+    "X2-a",
+    "X2-b",
+    "M9_evaluability",
+    "adequacy_4_5"
+   ]
+  },
+  "qualification": {
+   "n_failed": 1
+  },
+  "budget": {
+   "census_60": {
+    "d_frame_census": 60,
+    "per_document": {
+     "SYNTHETIC/1": 60
+    },
+    "budget": 60,
+    "within_budget": true,
+    "n_adjudicated_d_regions": 60,
+    "census_fully_adjudicated": true,
+    "unit": "REGION (A27.3); the census is enumerated complete BEFORE any sampling",
+    "rule": "<= 60 -> Rule 1 may be evaluated; > 60 -> Rule 1 cannot choose X (A10)"
+   },
+   "census_61": {
+    "d_frame_census": 61,
+    "per_document": {
+     "SYNTHETIC/1": 61
+    },
+    "budget": 60,
+    "within_budget": false,
+    "n_adjudicated_d_regions": 61,
+    "census_fully_adjudicated": true,
+    "unit": "REGION (A27.3); the census is enumerated complete BEFORE any sampling",
+    "rule": "<= 60 -> Rule 1 may be evaluated; > 60 -> Rule 1 cannot choose X (A10)"
+   }
+  },
+  "rule1": {
+   "conditions": {
+    "x_corrects_at_least_5": true,
+    "x_regresses_exactly_0": true,
+    "no_m4_parent_regression": true
+   },
+   "five_and_one": {
+    "evaluable": true,
+    "x_corrects": 5,
+    "x_regresses": 1,
+    "m4_h_correct_x_wrong": 0,
+    "m4_vetoing_occurrences": [],
+    "thresholds": {
+     "x_corrects_min": 5,
+     "x_regresses_max": 0
+    },
+    "conditions": {
+     "x_corrects_at_least_5": true,
+     "x_regresses_exactly_0": false,
+     "no_m4_parent_regression": true
+    },
+    "all_conditions_hold": false,
+    "condition_1_holds": true,
+    "vetoes_failing": [
+     "x_regresses_exactly_0"
+    ],
+    "decision_unit": "heading occurrence (A3); m3_outcomes, never WELD/SPLIT boundary tallies",
+    "m6_veto": "STRUCK by A20 -- M6 is deferred and may not veto",
+    "m4_condition_source": "metrics.headings_pooled.D.M4.h_correct_x_wrong -- the PAIRED per-heading existential (A42.3); the per-arm m4_correct rates are never substituted"
+   }
+  },
+  "enums": {
+   "reached": {
+    "HYBRID_BY_PRIOR": 2,
+    "EXTENDED_BY_RULE_1": 4,
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE": 54,
+    "EXTENDED_BY_RULE_0_M9": 30,
+    "HYBRID_BY_RULE_0_M9": 30
+   }
+  },
+  "wording": {
+   "prior_conclusion": "Corrected extended glyph did not meet Rule 1's win conditions on the D-frame census. The pre-stated architectural prior therefore stands and hybrid is retained BY PRIOR. No comparative-accuracy finding about hybrid is made or implied."
+  },
+  "refusals": {
+   "n_refusal_classes": 11
+  },
+  "injection": {
+   "faults": [
+    {
+     "fault": "rule1_threshold_lowered",
+     "anchor": "X_CORRECTS_MIN = 5",
+     "replacement": "X_CORRECTS_MIN = 4",
+     "detected": true,
+     "crashed": false
+    },
+    {
+     "fault": "regression_tolerance_restored",
+     "anchor": "\"x_regresses_exactly_0\": regresses == X_REGRESSES_MAX,",
+     "replacement": "\"x_regresses_exactly_0\": regresses <= 1,",
+     "detected": true,
+     "crashed": false
+    },
+    {
+     "fault": "budget_relaxed_to_120",
+     "anchor": "D_FRAME_REGION_BUDGET = 60",
+     "replacement": "D_FRAME_REGION_BUDGET = 120",
+     "detected": true,
+     "crashed": false
+    },
+    {
+     "fault": "m4_veto_disabled",
+     "anchor": "\"no_m4_parent_regression\": m4_regressions == 0,",
+     "replacement": "\"no_m4_parent_regression\": True,",
+     "detected": true,
+     "crashed": false
+    },
+    {
+     "fault": "m4_veto_inferred_from_aggregates_the_A42_3_rejected_reading",
+     "anchor": "        m4_regressions = pooled_d[\"M4\"][\"h_correct_x_wrong\"]",
+     "replacement": "        _c = pooled_d[\"counts\"][\"m4_correct\"]\n        m4_regressions = max(0, _c[\"H\"] - _c[\"X\"])",
+     "detected": true,
+     "crashed": false
+    },
+    {
+     "fault": "rule0_two_sided_ranking_invented",
+     "anchor": "if h_documents and x_documents:",
+     "replacement": "if False:",
+     "detected": true,
+     "crashed": false
+    },
+    {
+     "fault": "not_evaluable_accepted_as_pass",
+     "anchor": "failing = [name for name, block in ordered.items() if block[\"status\"] != GATE_PASS]",
+     "replacement": "failing = [name for name, block in ordered.items() if block[\"status\"] == GATE_FAIL]",
+     "detected": true,
+     "crashed": false
+    },
+    {
+     "fault": "five_and_one_collapsed_into_the_prior",
+     "anchor": "elif rule1_block[\"condition_1_holds\"]:",
+     "replacement": "elif False:",
+     "detected": true,
+     "crashed": false
+    },
+    {
+     "fault": "rule0_no_longer_supersedes",
+     "anchor": "elif rule0_block[\"fires\"]:",
+     "replacement": "elif False:",
+     "detected": true,
+     "crashed": false
+    },
+    {
+     "fault": "wording_gate_disabled",
+     "anchor": "hits = sorted({p for p in SUPERIORITY_PATTERNS if re.search(p, text, re.IGNORECASE)})",
+     "replacement": "hits = []",
+     "detected": true,
+     "crashed": false
+    },
+    {
+     "fault": "closed_enum_guard_removed",
+     "anchor": "if outcome not in ARCHITECTURE_OUTCOMES:",
+     "replacement": "if False:",
+     "detected": true,
+     "crashed": false
+    }
+   ],
+   "n_faults": 11
+  },
+  "boundary": {
+   "checked": [
+    "results/frames.json",
+    "results/oracle_key.json",
+    "results/oracle_blind.json",
+    "results/oracle_adjudicated.json",
+    "results/s1_control.json",
+    "results/cross_engine_control.json",
+    "results/metrics.json",
+    "results/scores.json",
+    "EXECUTION-START.json",
+    "results/_x28_faulted.py"
+   ]
+  }
+ },
+ "tests": [
+  {
+   "test": "every metrics path the decider reads is present in a REAL score_metrics payload",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the decider reads a field name the scorer does not emit -- the mismatch a hand-written fixture cannot see, because it encodes the decider's belief about the producer",
+   "row": ""
+  },
+  {
+   "test": "every per-document M9 path the decider reads is present in real scorer output",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "Rule 0 reads an M9 clause field the scorer does not emit",
+   "row": ""
+  },
+  {
+   "test": "the PAIRED M4 fact the decider reads is emitted by the real scorer (A42.3)",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the scorer stopped emitting A5 row 4's paired quantity, so Rule 1's fourth condition has no producer again and the decider can only refuse",
+   "row": ""
+  },
+  {
+   "test": "every frame path the budget reads is present in real build_frames output",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the A27.3 census is read from a key `build_frames` does not commit",
+   "row": ""
+  },
+  {
+   "test": "the contract walker DETECTS an absent path (non-vacuity)",
+   "expected": [
+    null,
+    false
+   ],
+   "observed": [
+    null,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the walker returns 'present' for everything, so the three contract checks are vacuous",
+   "row": ""
+  },
+  {
+   "test": "the scorer still declares it took no decision",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "the scorer began deciding Rule 0, so two components own the architecture outcome",
+   "row": ""
+  },
+  {
+   "test": "BAND -- H loses the band, X keeps it -> EXTENDED_BY_RULE_0_M9",
+   "expected": "EXTENDED_BY_RULE_0_M9",
+   "observed": "EXTENDED_BY_RULE_0_M9",
+   "pass": true,
+   "fails_when": "an arm that lost the whole heading tree is not rejected outright, so section 7.2 rule 0's largest available heading failure decides nothing",
+   "row": "synthetic asymmetric M9 loss for H only"
+  },
+  {
+   "test": "BAND near-miss -- BOTH arms lose the band -> Rule 0 does NOT fire",
+   "expected": [
+    false,
+    "HYBRID_BY_PRIOR"
+   ],
+   "observed": [
+    false,
+    "HYBRID_BY_PRIOR"
+   ],
+   "pass": true,
+   "fails_when": "a shared failure is read as an asymmetric loss, rejecting an arm on evidence that distinguishes nothing (section 7.2 rule 0's both-lose branch)",
+   "row": ""
+  },
+  {
+   "test": "BAND near-miss -- NEITHER arm loses the band -> Rule 0 does not fire",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "Rule 0 fires on a clean document, rejecting an arm for nothing",
+   "row": ""
+  },
+  {
+   "test": "COVERAGE -- H at 0.84, X at 0.85 -> HYBRID rejected, EXTENDED_BY_RULE_0_M9",
+   "expected": "EXTENDED_BY_RULE_0_M9",
+   "observed": "EXTENDED_BY_RULE_0_M9",
+   "pass": true,
+   "fails_when": "the frozen 0.85 floor stopped biting, so an arm keeps a document's heading tree by a threshold this study invented",
+   "row": ""
+  },
+  {
+   "test": "COVERAGE near-miss -- BOTH exactly at 0.85 -> the clause does not fire",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "the floor is read as a strict inequality, so a document meeting it exactly is a loss",
+   "row": ""
+  },
+  {
+   "test": "COVERAGE mirror -- X at 0.84, H at 0.85 -> HYBRID_BY_RULE_0_M9",
+   "expected": "HYBRID_BY_RULE_0_M9",
+   "observed": "HYBRID_BY_RULE_0_M9",
+   "pass": true,
+   "fails_when": "Rule 0 is one-directional, so it can only ever reject hybrid",
+   "row": ""
+  },
+  {
+   "test": "MARGIN -- a ONE-line deficit for H fires (A39.1: no tolerance) -> EXTENDED_BY_RULE_0_M9",
+   "expected": "EXTENDED_BY_RULE_0_M9",
+   "observed": "EXTENDED_BY_RULE_0_M9",
+   "pass": true,
+   "fails_when": "a tolerance was introduced, so 'loses margin-numbered lines' became 'loses more than N' -- choosing the sensitivity of a decision rule the frozen text does not parameterise",
+   "row": ""
+  },
+  {
+   "test": "MARGIN near-miss -- EQUAL counts do not fire",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "the margin clause fires on identical counts, rejecting an arm for nothing",
+   "row": ""
+  },
+  {
+   "test": "SAME document, DIFFERENT clauses (H band, X margin) -> Rule 0 does NOT fire",
+   "expected": [
+    false,
+    [],
+    [],
+    [
+     "SYNTHETIC/1"
+    ],
+    "HYBRID_BY_PRIOR"
+   ],
+   "observed": [
+    false,
+    [],
+    [],
+    [
+     "SYNTHETIC/1"
+    ],
+    "HYBRID_BY_PRIOR"
+   ],
+   "pass": true,
+   "fails_when": "the clauses were read independently instead of per document, so one document both arms lost was counted as an asymmetric loss for each -- rejecting BOTH architectures on evidence section 7.2 rule 0 calls neutral, and inventing A27.4's two-sided branch on a single document when A27.4 requires different ones",
+   "row": ""
+  },
+  {
+   "test": "...and BOTH clauses really did fire on that document, so the trap is live",
+   "expected": [
+    "H",
+    "X"
+   ],
+   "observed": [
+    "H",
+    "X"
+   ],
+   "pass": true,
+   "fails_when": "the fixture does not actually produce two opposite clause losses on one document, so the control could not have caught the per-clause reading",
+   "row": ""
+  },
+  {
+   "test": "A27.4 -- an asymmetric loss on EACH arm, different documents -> INSUFFICIENT, no ranking",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    [
+     "SYNTHETIC/1"
+    ],
+    [
+     "SYNTHETIC/2"
+    ]
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    [
+     "SYNTHETIC/1"
+    ],
+    [
+     "SYNTHETIC/2"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a severity or count comparison was invented between two rejected arms, which A27.4 explicitly forbids",
+   "row": "synthetic asymmetric M9 loss on BOTH arms, different documents"
+  },
+  {
+   "test": "PRECEDENCE -- Rule 0 fires while Rule 1 would have chosen X: Rule 0 decides",
+   "expected": [
+    "HYBRID_BY_RULE_0_M9",
+    "RULE_0_M9",
+    false
+   ],
+   "observed": [
+    "HYBRID_BY_RULE_0_M9",
+    "RULE_0_M9",
+    false
+   ],
+   "pass": true,
+   "fails_when": "Rule 1 was consulted after an arm had already been rejected outright -- section 7.2 rule 0 rejects 'regardless of every other metric'",
+   "row": "M9 one-arm loss"
+  },
+  {
+   "test": "PRECEDENCE -- Rule 0 fires while Rule 3 gates fail: Rule 0 decides, gates still reported",
+   "expected": [
+    "EXTENDED_BY_RULE_0_M9",
+    "RULE_0_M9",
+    false
+   ],
+   "observed": [
+    "EXTENDED_BY_RULE_0_M9",
+    "RULE_0_M9",
+    false
+   ],
+   "pass": true,
+   "fails_when": "either M9 stopped superseding 'everything below' (section 7.2 rule 0), or the failing gates vanished from the artifact when another rule decided",
+   "row": ""
+  },
+  {
+   "test": "PRECEDENCE -- the FULL gate vector is emitted whatever decided",
+   "expected": [
+    "R1",
+    "N-A",
+    "N-B",
+    "N-C",
+    "S1",
+    "X2-a",
+    "X2-b",
+    "M9_evaluability",
+    "adequacy_4_5"
+   ],
+   "observed": [
+    "R1",
+    "N-A",
+    "N-B",
+    "N-C",
+    "S1",
+    "X2-a",
+    "X2-b",
+    "M9_evaluability",
+    "adequacy_4_5"
+   ],
+   "pass": true,
+   "fails_when": "a gate that failed is invisible in the artifact because Rule 0 took the outcome first",
+   "row": ""
+  },
+  {
+   "test": "a FAILING N-A control -> INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "RULE_3_GATE",
+    [
+     "N-A"
+    ]
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "RULE_3_GATE",
+    [
+     "N-A"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a failed N-A Rule 3 blocker does not block, so the study decides on evidence its own controls say is unreliable",
+   "row": "any Rule 3 gate set to FAIL"
+  },
+  {
+   "test": "an UNEVALUABLE N-A control is not a pass either (A41.2.1)",
+   "expected": "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "observed": "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "pass": true,
+   "fails_when": "a blocker that was never measured certifies itself, which is exactly the self-consistent-but-incomplete artifact A41.2.1 closed",
+   "row": ""
+  },
+  {
+   "test": "a FAILING N-B control -> INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "RULE_3_GATE",
+    [
+     "N-B"
+    ]
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "RULE_3_GATE",
+    [
+     "N-B"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a failed N-B Rule 3 blocker does not block, so the study decides on evidence its own controls say is unreliable",
+   "row": "any Rule 3 gate set to FAIL"
+  },
+  {
+   "test": "an UNEVALUABLE N-B control is not a pass either (A41.2.1)",
+   "expected": "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "observed": "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "pass": true,
+   "fails_when": "a blocker that was never measured certifies itself, which is exactly the self-consistent-but-incomplete artifact A41.2.1 closed",
+   "row": ""
+  },
+  {
+   "test": "a FAILING N-C control -> INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "RULE_3_GATE",
+    [
+     "N-C"
+    ]
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "RULE_3_GATE",
+    [
+     "N-C"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a failed N-C Rule 3 blocker does not block, so the study decides on evidence its own controls say is unreliable",
+   "row": "any Rule 3 gate set to FAIL"
+  },
+  {
+   "test": "an UNEVALUABLE N-C control is not a pass either (A41.2.1)",
+   "expected": "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "observed": "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "pass": true,
+   "fails_when": "a blocker that was never measured certifies itself, which is exactly the self-consistent-but-incomplete artifact A41.2.1 closed",
+   "row": ""
+  },
+  {
+   "test": "a FAILING R1 text reliability gate -> INSUFFICIENT",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    [
+     "R1"
+    ]
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    [
+     "R1"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "section 5.6's text threshold stopped blocking Rule 3",
+   "row": "any Rule 3 gate set to FAIL"
+  },
+  {
+   "test": "a FAILING R1 role reliability gate -> INSUFFICIENT",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    [
+     "R1"
+    ]
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    [
+     "R1"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "section 5.6's role threshold stopped blocking Rule 3",
+   "row": "any Rule 3 gate set to FAIL"
+  },
+  {
+   "test": "S1 not firing -> INSUFFICIENT (the comparator is not live)",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    [
+     "S1"
+    ]
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    [
+     "S1"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a dead comparator does not block the decision, so an architecture is chosen on a comparison that was never shown to move",
+   "row": "any Rule 3 gate set to FAIL"
+  },
+  {
+   "test": "section 4.5 INADEQUATE blocks; LIMITED does NOT (A28.2)",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "HYBRID_BY_PRIOR"
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "HYBRID_BY_PRIOR"
+   ],
+   "pass": true,
+   "fails_when": "either INADEQUATE stopped failing Rule 3, or LIMITED started to -- A28.2 says LIMITED does not fail Rule 3, and treating it as a blocker would void a valid study",
+   "row": ""
+  },
+  {
+   "test": "a FAILING confirmatory X2A -> INSUFFICIENT",
+   "expected": "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "observed": "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "pass": true,
+   "fails_when": "X's own contract assertions failed and the study decided anyway",
+   "row": "any Rule 3 gate set to FAIL"
+  },
+  {
+   "test": "a FAILING confirmatory X2B -> INSUFFICIENT",
+   "expected": "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "observed": "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+   "pass": true,
+   "fails_when": "X's own contract assertions failed and the study decided anyway",
+   "row": "any Rule 3 gate set to FAIL"
+  },
+  {
+   "test": "an M9 clause missing from a document -> M9 NOT EVALUABLE -> INSUFFICIENT",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "NOT_EVALUABLE"
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "NOT_EVALUABLE"
+   ],
+   "pass": true,
+   "fails_when": "an unevaluable M9 gate lets Rule 0 report 'nothing fired', which is indistinguishable from 'both arms were structurally viable everywhere'",
+   "row": ""
+  },
+  {
+   "test": "the gate vector is exactly A27.6's nine, in its order",
+   "expected": 9,
+   "observed": 9,
+   "pass": true,
+   "fails_when": "a decision-blocking condition was added to or dropped from A27.6's vector",
+   "row": ""
+  },
+  {
+   "test": "x09 FAILING on every sampled document changes NO outcome -- it only adds a label",
+   "expected": [
+    "HYBRID_BY_PRIOR",
+    "RULE_2_PRIOR",
+    true
+   ],
+   "observed": [
+    "HYBRID_BY_PRIOR",
+    "RULE_2_PRIOR",
+    true
+   ],
+   "pass": true,
+   "fails_when": "a cross-engine failure moved the architecture decision, making a REPORTING qualification decision-blocking against A27.6",
+   "row": "x09 set to FAIL"
+  },
+  {
+   "test": "x09 is absent from the Rule 3 gate vector",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "cross-engine became a Rule 3 gate",
+   "row": ""
+  },
+  {
+   "test": "the decision records the qualification as non-blocking",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "the artifact claims the qualification blocks",
+   "row": ""
+  },
+  {
+   "test": "D = 60 regions -> Rule 1 IS evaluated (and X's win stands)",
+   "expected": [
+    "EXTENDED_BY_RULE_1",
+    60,
+    true
+   ],
+   "observed": [
+    "EXTENDED_BY_RULE_1",
+    60,
+    true
+   ],
+   "pass": true,
+   "fails_when": "the frozen 60-region budget moved, so a raw count is applied to a census it was never valid on -- or Rule 1 stopped running on a census it may run on",
+   "row": ""
+  },
+  {
+   "test": "D = 61 regions -> INSUFFICIENT, and Rule 1 is NOT reached",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "BUDGET_A10_A27_3",
+    false,
+    61
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "BUDGET_A10_A27_3",
+    false,
+    61
+   ],
+   "pass": true,
+   "fails_when": "a census over the human budget still chose X on raw counts -- A10's whole subject",
+   "row": "synthetic census of 61 regions"
+  },
+  {
+   "test": "the 61-region census came from build_frames, not from the fixture",
+   "expected": 61,
+   "observed": 61,
+   "pass": true,
+   "fails_when": "the census is a number the probe wrote down, so the budget check is tested against the fixture's belief rather than the producer's count",
+   "row": ""
+  },
+  {
+   "test": "a census of 40 with only 39 adjudicated -> INSUFFICIENT (A27.3: never a sample)",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "BUDGET_A10_A27_3",
+    false
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "BUDGET_A10_A27_3",
+    false
+   ],
+   "pass": true,
+   "fails_when": "Rule 1 ran on a SAMPLE of the census, which A27.3 forbids in the same words as the 60/120 clause it supersedes",
+   "row": ""
+  },
+  {
+   "test": "an EMPTY census -> HYBRID_BY_PRIOR, and the text makes no empirical claim for hybrid",
+   "expected": [
+    "HYBRID_BY_PRIOR",
+    "RULE_2_PRIOR",
+    true
+   ],
+   "observed": [
+    "HYBRID_BY_PRIOR",
+    "RULE_2_PRIOR",
+    true
+   ],
+   "pass": true,
+   "fails_when": "an empty census produced something other than the prior, or the conclusion claimed hybrid won empirically on no evidence at all",
+   "row": "synthetic empty census"
+  },
+  {
+   "test": "X_CORRECTS = 4 -> HYBRID_BY_PRIOR (condition 1 fails, so Rule 2's prior stands)",
+   "expected": [
+    "HYBRID_BY_PRIOR",
+    "RULE_2_PRIOR",
+    false
+   ],
+   "observed": [
+    "HYBRID_BY_PRIOR",
+    "RULE_2_PRIOR",
+    false
+   ],
+   "pass": true,
+   "fails_when": "the >= 5 threshold moved down, so four corrections overturn the architectural prior",
+   "row": ""
+  },
+  {
+   "test": "X_CORRECTS = 5 -> EXTENDED_BY_RULE_1 (the threshold is >= 5, not > 5)",
+   "expected": [
+    "EXTENDED_BY_RULE_1",
+    "RULE_1"
+   ],
+   "observed": [
+    "EXTENDED_BY_RULE_1",
+    "RULE_1"
+   ],
+   "pass": true,
+   "fails_when": "the threshold moved up, so exactly five corrections -- the number section 7.3 names as falsifying the hybrid hypothesis -- no longer does",
+   "row": ""
+  },
+  {
+   "test": "6 corrections, 0 regressions, no M4 regression -> EXTENDED_BY_RULE_1",
+   "expected": "EXTENDED_BY_RULE_1",
+   "observed": "EXTENDED_BY_RULE_1",
+   "pass": true,
+   "fails_when": "a clean synthetic X win does not produce an X win, so no evidence could ever flip the ADR",
+   "row": "synthetic X win (6 corrects, 0 regressions, no M4 regression)"
+  },
+  {
+   "test": "X_REGRESSES = 0 wins; X_REGRESSES = 1 does NOT (A5 tightened '<= 1' to zero)",
+   "expected": [
+    "EXTENDED_BY_RULE_1",
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE"
+   ],
+   "observed": [
+    "EXTENDED_BY_RULE_1",
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE"
+   ],
+   "pass": true,
+   "fails_when": "the regression tolerance came back, and at an expected denominator near zero '<= 1' is not a tolerance -- it is 20 % of the win threshold",
+   "row": ""
+  },
+  {
+   "test": "5 corrections AND 1 regression -> INSUFFICIENT, never EXTENDED_BY_RULE_1, never HYBRID",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "RULE_1",
+    [
+     "x_regresses_exactly_0"
+    ]
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "RULE_1",
+    [
+     "x_regresses_exactly_0"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "A5's asymmetry was lost: condition 1 holding with a veto failing is 'insufficient evidence / review, NEVER an X win' -- and equally never a hybrid victory",
+   "row": "synthetic 5 corrects and 1 regression"
+  },
+  {
+   "test": "5 corrections, 0 regressions, ONE M4 parent regression -> INSUFFICIENT (A5 row 4 / A20)",
+   "expected": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "RULE_1",
+    [
+     "no_m4_parent_regression"
+    ],
+    1
+   ],
+   "observed": [
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE",
+    "RULE_1",
+    [
+     "no_m4_parent_regression"
+    ],
+    1
+   ],
+   "pass": true,
+   "fails_when": "the M4 parent veto stopped blocking, so X wins while breaking a hierarchy H had right",
+   "row": "synthetic 5 corrects and 1 M4 regression"
+  },
+  {
+   "test": "...and it fires while the per-arm M4 AGGREGATES are equal -- the A42.3 payload",
+   "expected": [
+    3,
+    3,
+    true,
+    true
+   ],
+   "observed": [
+    3,
+    3,
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "the fixture's aggregates are NOT equal, so it does not separate the two readings of A5 row 4 and the veto could have fired for the wrong reason",
+   "row": "synthetic 5 corrects and 1 M4 regression"
+  },
+  {
+   "test": "the M4 veto only bites when condition 1 holds -- 4 corrections still yields the PRIOR",
+   "expected": "HYBRID_BY_PRIOR",
+   "observed": "HYBRID_BY_PRIOR",
+   "pass": true,
+   "fails_when": "a failing veto beneath the win threshold was reported as insufficient evidence, when the census simply yielded no X win and Rule 2's prior applies",
+   "row": ""
+  },
+  {
+   "test": "condition 4 is READ from the scorer's paired fact, not supplied and not inferred",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the supplied-fact channel came back, so a caller can assert Rule 1's fourth condition with nothing behind it (R5's closed channel, reopened)",
+   "row": ""
+  },
+  {
+   "test": "M6 is STRUCK by A20 and is not a Rule 1 condition",
+   "expected": [
+    "no_m4_parent_regression",
+    "x_corrects_at_least_5",
+    "x_regresses_exactly_0"
+   ],
+   "observed": [
+    "no_m4_parent_regression",
+    "x_corrects_at_least_5",
+    "x_regresses_exactly_0"
+   ],
+   "pass": true,
+   "fails_when": "A5's M6 amount-attribution veto came back, reviving a metric A20 deferred from the study",
+   "row": ""
+  },
+  {
+   "test": "the frozen enum is exactly the five outcomes A10 and A27.4 name",
+   "expected": [
+    "EXTENDED_BY_RULE_0_M9",
+    "EXTENDED_BY_RULE_1",
+    "HYBRID_BY_PRIOR",
+    "HYBRID_BY_RULE_0_M9",
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE"
+   ],
+   "observed": [
+    "EXTENDED_BY_RULE_0_M9",
+    "EXTENDED_BY_RULE_1",
+    "HYBRID_BY_PRIOR",
+    "HYBRID_BY_RULE_0_M9",
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE"
+   ],
+   "pass": true,
+   "fails_when": "an outcome was added, removed or renamed, so a consumer reads a decision the protocol does not define",
+   "row": ""
+  },
+  {
+   "test": "no SIXTH outcome-shaped literal exists anywhere in the module (AST, not grep)",
+   "expected": "set()",
+   "observed": "set()",
+   "pass": true,
+   "fails_when": "a branch invents an outcome alias, which would leave the module as a string no gate, report or reader knows how to treat",
+   "row": ""
+  },
+  {
+   "test": "a 240-payload sweep emits ONLY the five frozen outcomes",
+   "expected": "set()",
+   "observed": "set()",
+   "pass": true,
+   "fails_when": "some payload reaches an outcome outside the closed enum",
+   "row": ""
+  },
+  {
+   "test": "and ALL FIVE are reachable by an intentional fixture",
+   "expected": [
+    "EXTENDED_BY_RULE_0_M9",
+    "EXTENDED_BY_RULE_1",
+    "HYBRID_BY_PRIOR",
+    "HYBRID_BY_RULE_0_M9",
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE"
+   ],
+   "observed": [
+    "EXTENDED_BY_RULE_0_M9",
+    "EXTENDED_BY_RULE_1",
+    "HYBRID_BY_PRIOR",
+    "HYBRID_BY_RULE_0_M9",
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE"
+   ],
+   "pass": true,
+   "fails_when": "an outcome the protocol defines can never be produced, so a real result could have no expressible answer",
+   "row": ""
+  },
+  {
+   "test": "the closed-enum assertion REFUSES a fabricated outcome (non-vacuity)",
+   "expected": "OUTCOME_NOT_IN_FROZEN_ENUM",
+   "observed": "OUTCOME_NOT_IN_FROZEN_ENUM",
+   "pass": true,
+   "fails_when": "the guard cannot fire, so 'no sixth outcome can be emitted' is certified by a check that was never able to fail",
+   "row": ""
+  },
+  {
+   "test": "a pre-committed sentence exists for EXACTLY the five outcomes -- the second layer's basis",
+   "expected": [
+    "EXTENDED_BY_RULE_0_M9",
+    "EXTENDED_BY_RULE_1",
+    "HYBRID_BY_PRIOR",
+    "HYBRID_BY_RULE_0_M9",
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE"
+   ],
+   "observed": [
+    "EXTENDED_BY_RULE_0_M9",
+    "EXTENDED_BY_RULE_1",
+    "HYBRID_BY_PRIOR",
+    "HYBRID_BY_RULE_0_M9",
+    "INSUFFICIENT_COMPARATIVE_EVIDENCE"
+   ],
+   "pass": true,
+   "fails_when": "an outcome has no pre-committed sentence (so the wording would be chosen once the result is known), or a sentence exists for an outcome the enum does not define",
+   "row": ""
+  },
+  {
+   "test": "the prior conclusion carries NO comparative-accuracy claim for hybrid",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "'X failed to prove a win' was written as 'H empirically beat X', which A10 forbids in those words",
+   "row": "wording gate"
+  },
+  {
+   "test": "the insufficient by veto conclusion carries NO comparative-accuracy claim for hybrid",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "'X failed to prove a win' was written as 'H empirically beat X', which A10 forbids in those words",
+   "row": "wording gate"
+  },
+  {
+   "test": "the insufficient by budget conclusion carries NO comparative-accuracy claim for hybrid",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "'X failed to prove a win' was written as 'H empirically beat X', which A10 forbids in those words",
+   "row": "wording gate"
+  },
+  {
+   "test": "the insufficient by gate conclusion carries NO comparative-accuracy claim for hybrid",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "'X failed to prove a win' was written as 'H empirically beat X', which A10 forbids in those words",
+   "row": "wording gate"
+  },
+  {
+   "test": "every prior/insufficient conclusion says hybrid stands BY PRIOR",
+   "expected": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a non-win is reported without saying hybrid survives by prior rather than by victory",
+   "row": ""
+  },
+  {
+   "test": "the gate FIRES on a planted superiority claim (non-vacuity)",
+   "expected": "CONCLUSION_CLAIMS_SUPERIORITY",
+   "observed": "CONCLUSION_CLAIMS_SUPERIORITY",
+   "pass": true,
+   "fails_when": "the wording gate cannot fire, so every conclusion above passed a check that was never able to fail -- the vacuous-pass shape this study keeps finding",
+   "row": "wording gate"
+  },
+  {
+   "test": "and on each forbidden pattern individually, not just the one example",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a forbidden pattern is in the list but matches nothing, so it is decoration",
+   "row": ""
+  },
+  {
+   "test": "a MISSING X2-a status refuses",
+   "expected": "GATE_STATUS_MISSING",
+   "observed": "GATE_STATUS_MISSING",
+   "pass": true,
+   "fails_when": "missing or malformed evidence was silently treated as zero or as a pass, which at the architecture decision is the one substitution nothing downstream can undo",
+   "row": ""
+  },
+  {
+   "test": "a MISSING X2-b status refuses",
+   "expected": "GATE_STATUS_MISSING",
+   "observed": "GATE_STATUS_MISSING",
+   "pass": true,
+   "fails_when": "missing or malformed evidence was silently treated as zero or as a pass, which at the architecture decision is the one substitution nothing downstream can undo",
+   "row": ""
+  },
+  {
+   "test": "an UNKNOWN gate status refuses",
+   "expected": "GATE_STATUS_UNKNOWN",
+   "observed": "GATE_STATUS_UNKNOWN",
+   "pass": true,
+   "fails_when": "missing or malformed evidence was silently treated as zero or as a pass, which at the architecture decision is the one substitution nothing downstream can undo",
+   "row": ""
+  },
+  {
+   "test": "a D block carrying NO paired M4 fact refuses -- the aggregates are not a fallback",
+   "expected": "M4_VETO_FACT_MISSING",
+   "observed": "M4_VETO_FACT_MISSING",
+   "pass": true,
+   "fails_when": "missing or malformed evidence was silently treated as zero or as a pass, which at the architecture decision is the one substitution nothing downstream can undo",
+   "row": ""
+  },
+  {
+   "test": "an unknown metrics SCHEMA refuses",
+   "expected": "METRICS_SCHEMA_UNKNOWN",
+   "observed": "METRICS_SCHEMA_UNKNOWN",
+   "pass": true,
+   "fails_when": "missing or malformed evidence was silently treated as zero or as a pass, which at the architecture decision is the one substitution nothing downstream can undo",
+   "row": ""
+  },
+  {
+   "test": "a metrics payload MISSING a required block refuses",
+   "expected": "MISSING_REQUIRED_FACT",
+   "observed": "MISSING_REQUIRED_FACT",
+   "pass": true,
+   "fails_when": "missing or malformed evidence was silently treated as zero or as a pass, which at the architecture decision is the one substitution nothing downstream can undo",
+   "row": ""
+  },
+  {
+   "test": "a scorer claiming it took the decision refuses",
+   "expected": "SCORER_TOOK_A_DECISION",
+   "observed": "SCORER_TOOK_A_DECISION",
+   "pass": true,
+   "fails_when": "missing or malformed evidence was silently treated as zero or as a pass, which at the architecture decision is the one substitution nothing downstream can undo",
+   "row": ""
+  },
+  {
+   "test": "frames that do not match the scored documents refuse",
+   "expected": "FRAME_DOCUMENT_SET_MISMATCH",
+   "observed": "FRAME_DOCUMENT_SET_MISMATCH",
+   "pass": true,
+   "fails_when": "missing or malformed evidence was silently treated as zero or as a pass, which at the architecture decision is the one substitution nothing downstream can undo",
+   "row": ""
+  },
+  {
+   "test": "a frame with no committed D census refuses",
+   "expected": "D_CENSUS_MISSING",
+   "observed": "D_CENSUS_MISSING",
+   "pass": true,
+   "fails_when": "missing or malformed evidence was silently treated as zero or as a pass, which at the architecture decision is the one substitution nothing downstream can undo",
+   "row": ""
+  },
+  {
+   "test": "a census COUNT that disagrees with its own census LIST refuses",
+   "expected": "D_CENSUS_DRIFT",
+   "observed": "D_CENSUS_DRIFT",
+   "pass": true,
+   "fails_when": "missing or malformed evidence was silently treated as zero or as a pass, which at the architecture decision is the one substitution nothing downstream can undo",
+   "row": ""
+  },
+  {
+   "test": "a TRUNCATED census refuses -- A27.3 requires the complete enumeration",
+   "expected": "D_CENSUS_TRUNCATED",
+   "observed": "D_CENSUS_TRUNCATED",
+   "pass": true,
+   "fails_when": "missing or malformed evidence was silently treated as zero or as a pass, which at the architecture decision is the one substitution nothing downstream can undo",
+   "row": ""
+  },
+  {
+   "test": "M4's refusal NAMES the rejected fallback rather than silently taking it",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the refusal is anonymous, so a reader cannot tell the decider declined to substitute the aggregates rather than simply failing to find a key",
+   "row": ""
+  },
+  {
+   "test": "an ABSENT D block over a ZERO census is not a refusal -- the prior stands",
+   "expected": [
+    "HYBRID_BY_PRIOR",
+    0,
+    true
+   ],
+   "observed": [
+    "HYBRID_BY_PRIOR",
+    0,
+    true
+   ],
+   "pass": true,
+   "fails_when": "an empty census was turned into a refusal, so the most likely real outcome of the whole study could not be expressed at all",
+   "row": ""
+  },
+  {
+   "test": "FAULT rule1_threshold_lowered changes a result-bearing answer (and is caught by a NAMED check)",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the fault is invisible, so the control asserting the correct behaviour is not discriminating -- or it was detected only by a crash, which cannot distinguish 'the rule broke' from 'the probe has a bug'",
+   "row": ""
+  },
+  {
+   "test": "FAULT regression_tolerance_restored changes a result-bearing answer (and is caught by a NAMED check)",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the fault is invisible, so the control asserting the correct behaviour is not discriminating -- or it was detected only by a crash, which cannot distinguish 'the rule broke' from 'the probe has a bug'",
+   "row": ""
+  },
+  {
+   "test": "FAULT budget_relaxed_to_120 changes a result-bearing answer (and is caught by a NAMED check)",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the fault is invisible, so the control asserting the correct behaviour is not discriminating -- or it was detected only by a crash, which cannot distinguish 'the rule broke' from 'the probe has a bug'",
+   "row": ""
+  },
+  {
+   "test": "FAULT m4_veto_disabled changes a result-bearing answer (and is caught by a NAMED check)",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the fault is invisible, so the control asserting the correct behaviour is not discriminating -- or it was detected only by a crash, which cannot distinguish 'the rule broke' from 'the probe has a bug'",
+   "row": ""
+  },
+  {
+   "test": "FAULT m4_veto_inferred_from_aggregates_the_A42_3_rejected_reading changes a result-bearing answer (and is caught by a NAMED check)",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the fault is invisible, so the control asserting the correct behaviour is not discriminating -- or it was detected only by a crash, which cannot distinguish 'the rule broke' from 'the probe has a bug'",
+   "row": ""
+  },
+  {
+   "test": "FAULT rule0_two_sided_ranking_invented changes a result-bearing answer (and is caught by a NAMED check)",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the fault is invisible, so the control asserting the correct behaviour is not discriminating -- or it was detected only by a crash, which cannot distinguish 'the rule broke' from 'the probe has a bug'",
+   "row": ""
+  },
+  {
+   "test": "FAULT not_evaluable_accepted_as_pass changes a result-bearing answer (and is caught by a NAMED check)",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the fault is invisible, so the control asserting the correct behaviour is not discriminating -- or it was detected only by a crash, which cannot distinguish 'the rule broke' from 'the probe has a bug'",
+   "row": ""
+  },
+  {
+   "test": "FAULT five_and_one_collapsed_into_the_prior changes a result-bearing answer (and is caught by a NAMED check)",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the fault is invisible, so the control asserting the correct behaviour is not discriminating -- or it was detected only by a crash, which cannot distinguish 'the rule broke' from 'the probe has a bug'",
+   "row": ""
+  },
+  {
+   "test": "FAULT rule0_no_longer_supersedes changes a result-bearing answer (and is caught by a NAMED check)",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the fault is invisible, so the control asserting the correct behaviour is not discriminating -- or it was detected only by a crash, which cannot distinguish 'the rule broke' from 'the probe has a bug'",
+   "row": ""
+  },
+  {
+   "test": "FAULT wording_gate_disabled changes a result-bearing answer (and is caught by a NAMED check)",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the fault is invisible, so the control asserting the correct behaviour is not discriminating -- or it was detected only by a crash, which cannot distinguish 'the rule broke' from 'the probe has a bug'",
+   "row": ""
+  },
+  {
+   "test": "FAULT closed_enum_guard_removed changes a result-bearing answer (and is caught by a NAMED check)",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the fault is invisible, so the control asserting the correct behaviour is not discriminating -- or it was detected only by a crash, which cannot distinguish 'the rule broke' from 'the probe has a bug'",
+   "row": ""
+  },
+  {
+   "test": "NO confirmatory or execution artifact exists after this probe",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a probe wrote a confirmatory artifact, or left its own faulted module on disk inside the protected tree",
+   "row": ""
+  },
+  {
+   "test": "the decider takes no path that could WRITE anything",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the decider acquired a writer, so an architecture decision could be persisted before the frozen start procedure has been performed",
+   "row": ""
+  },
+  {
+   "test": "every HARNESS-PLAN section 6 control row has at least one executable check",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a frozen control row is unimplemented, so the decider carries a rule nothing can falsify",
+   "row": ""
+  }
+ ],
+ "failures": []
+}

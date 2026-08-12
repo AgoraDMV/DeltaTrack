@@ -3,24 +3,42 @@
 These use SYNTHETIC glyph sizes to exercise the classifier/position logic in
 isolation. They are NOT the proof that real PDFs produce the bands (that is
 tests/test_pdf_text.py::TestPageGlyphSizes) nor the end-to-end fix (that is the
-FEDERAL PROTECTIVE SERVICE test in test_pdf_anchor_golden.py). Body text is
-deliberately non-"For necessary expenses" so detection cannot fall through to the
-legacy trigger — only the size path can satisfy these.
+FEDERAL PROTECTIVE SERVICE test in test_pdf_anchor_golden.py). Since #114 the size
+path is the ONLY producer of account anchors — there is no text-trigger fallback
+behind it — so a case that omits glyph sizes asserts the degraded TITLE/SEC./subsection
+contract, not an alternative detector (see TestFallbackWhenNoBands).
 """
 
 from __future__ import annotations
 
 import pytest
 
-from deltatrack.parsers.pdf_anchors import SizeBands, breadcrumb_for, derive_size_bands, extract_anchors
-from deltatrack.parsers.pdf_text import Line, Page
+from deltatrack.parsers.pdf_anchors import breadcrumb_for, derive_size_bands, extract_anchors
+from deltatrack.parsers.pdf_text import Line, LineGeom, Page
 
 BODY = 14.0
 HEAD = 11.2
 
+# Synthetic page geometry for the major detector's stacked-vs-wrapped split (#130),
+# which reads each line's horizontal extent. COLUMN is the justified body width GPO
+# prints (335-339 pt on the corpus subcommittee prints); the body-prose lines below
+# run the full width, which is what the detector derives the column from.
+CONTENT_LEFT = 100.0
+COLUMN = 339.0
+
 
 def _page(page_number: int, rows: list[tuple[int | None, str, float | None]]) -> Page:
     return Page(page_number, tuple(Line(ln, txt, sz) for ln, txt, sz in rows))
+
+
+def _geom(width: float, first_word: float) -> LineGeom:
+    """A line starting at the left margin, `width` pt of content, `first_word` pt of it
+    in the first word (the extent the line-fullness split measures)."""
+    return LineGeom(CONTENT_LEFT, CONTENT_LEFT + width, CONTENT_LEFT + first_word)
+
+
+def _geom_page(page_number: int, rows: list[tuple[int | None, str, float | None, LineGeom]]) -> Page:
+    return Page(page_number, tuple(Line(ln, txt, sz, gm) for ln, txt, sz, gm in rows))
 
 
 class TestDeriveSizeBands:
@@ -187,7 +205,7 @@ class TestSizePositionClassification:
         assert "OPERATIONS AND SUPPORT" in names
 
     @pytest.mark.xfail(
-        reason="Known #89 residual deferred to #54: a SEC. catchline directly "
+        reason="DeltaTrack#500: a SEC. catchline directly "
         "abutting an agency heading with NO body between false-skips the account. "
         "Confirmed NOT closeable by #103 (grouping headers): this input is "
         "structurally identical to test_multiline_section_catchline_continuation_"
@@ -195,9 +213,11 @@ class TestSizePositionClassification:
         "emits this account re-emits that false one. #104 (carry-over agencies) does "
         "NOT close it either: the catchline guard suppresses both MANAGEMENT "
         "DIRECTORATE and OPERATIONS AND SUPPORT before agency/account emission, so "
-        "the account still never surfaces. Disambiguation needs the leveled tree "
-        "(#108). Does not occur in the corpus (catchline wraps appear only in "
-        "account-free authorization bills).",
+        "the account still never surfaces. The tree (#108) shipped without closing it "
+        "either; #500 carries the open options, line geometry among them. Does not "
+        "occur in the corpus: a scan of all 23 committed PDFs finds the shape only in "
+        "117-hr-2471, an authorization bill with no accounts, where suppressing is "
+        "correct.",
         strict=True,
     )
     def test_account_directly_after_section_catchline_no_body(self):
@@ -211,8 +231,13 @@ class TestSizePositionClassification:
             (4, "the account body prose follows here", BODY),
         ]
         rows += [(n, f"more body prose line {n}", BODY) for n in range(5, 15)]
-        names = {a.text for a in _accounts(extract_anchors([_page(1, rows)]))}
-        assert "OPERATIONS AND SUPPORT" in names
+        anchors = extract_anchors([_page(1, rows)])
+
+        accounts = {a.text for a in anchors if a.kind == "account"}
+        agencies = {a.text for a in anchors if a.kind == "agency"}
+
+        assert "OPERATIONS AND SUPPORT" in accounts
+        assert "MANAGEMENT DIRECTORATE" in agencies
 
     def test_multiline_section_catchline_continuation_not_account(self):
         # A catchline wrapping onto two heading-band lines: both continuations must
@@ -649,26 +674,48 @@ class TestMajorLevel:
         majors = {a.text for a in _by_kind(extract_anchors([_page(1, rows)]), "major")}
         assert not any("CHINA" in m or "ENCE" in m for m in majors)
 
+    def _stacked_rows(self, upper_width: float):
+        # 118-hr-8998 (Interior) TITLE III shape: two DISTINCT body-size header levels
+        # stacked under one title. Size and casing cannot tell them from one wrapped
+        # name — both are body-size all-caps — so the split is decided by how full the
+        # upper line is (#130): a name wraps only because the next word did not fit.
+        # `upper_width` is the whole variable under test; the lower line's first word
+        # ("DEPARTMENT", 90 pt) is what has to fit after it for a hard break to show.
+        return [
+            (1, "TITLE III", BODY, _geom(60, 40)),
+            (2, "RELATED AGENCIES", BODY, _geom(upper_width, 70)),  # heading level 1
+            (3, "DEPARTMENT OF AGRICULTURE", BODY, _geom(200, 90)),  # heading level 2
+            (4, "FOREST SERVICE", HEAD, _geom(120, 60)),  # agency
+            (5, "FOREST AND RANGELAND RESEARCH", HEAD, _geom(220, 60)),  # account
+            (6, "For necessary expenses of the Forest Service, $100.", BODY, _geom(COLUMN, 30)),
+        ] + [(n, f"more body prose line {n} runs here", BODY, _geom(COLUMN, 40)) for n in range(7, 17)]
+
+    def test_stacked_distinct_headings_split_into_two_majors(self):
+        # The upper line stops 127 pt short of the column, so the lower line's first
+        # word would have fit: an intentional break between two headings, not a wrap.
+        majors = {a.text for a in _by_kind(extract_anchors([_geom_page(1, self._stacked_rows(212))]), "major")}
+        assert majors == {"RELATED AGENCIES", "DEPARTMENT OF AGRICULTURE"}
+
+    def test_stacked_headings_join_without_geometry(self):
+        # Documented conservative fallback: with no geometry attached (the string
+        # pipeline, or a line the size sidecar could not match) the split has nothing
+        # to measure and the run stays one major, as it did before #130. Pinned so the
+        # fallback is a choice the suite records, not an accident.
+        rows = [(ln, txt, sz) for ln, txt, sz, _gm in self._stacked_rows(212)]
+        majors = {a.text for a in _by_kind(extract_anchors([_page(1, rows)]), "major")}
+        assert majors == {"RELATED AGENCIES DEPARTMENT OF AGRICULTURE"}
+
     @pytest.mark.xfail(
-        reason="Documented slice-C residue (DeltaTrack#105): two DISTINCT body-size "
-        "header levels stacked under one title (e.g. 118-hr-8998 Interior TITLE III "
-        "'RELATED AGENCIES' / 'DEPARTMENT OF AGRICULTURE') are indistinguishable from a "
-        "single wrapped name by size/casing alone — both are centered body-size all-caps. "
-        "The greedy join mashes them into one major; splitting needs the geometric "
-        "(centering / vertical-leading) signal deferred to the bbox plumbing (#106) and "
-        "the tree (#108). Flips to pass when that lands.",
+        reason="DeltaTrack#501: a stacked upper line that nearly fills the column leaves "
+        "no early break to detect, so the pair reads as one wrapped name and merges into "
+        "a department that was never printed. Known limitation recorded when the "
+        "line-fullness split shipped (#130) and left unsolved: no corpus bill triggers it "
+        "(the tightest real split clears by 20 pt of 335). Pins the wanted behavior as an "
+        "executable spec; flips to pass when a second signal lands.",
         strict=True,
     )
-    def test_stacked_distinct_headings_split_into_two_majors(self):
-        rows = [
-            (1, "TITLE III", BODY),
-            (2, "RELATED AGENCIES", BODY),  # heading level 1 (complete)
-            (3, "DEPARTMENT OF AGRICULTURE", BODY),  # heading level 2 (distinct)
-            (4, "FOREST SERVICE", HEAD),  # agency
-            (5, "FOREST AND RANGELAND RESEARCH", HEAD),  # account
-            (6, "For necessary expenses of the Forest Service, $100.", BODY),
-        ]
-        majors = {a.text for a in _by_kind(extract_anchors([_page(1, rows)]), "major")}
+    def test_near_full_upper_line_still_splits(self):
+        majors = {a.text for a in _by_kind(extract_anchors([_geom_page(1, self._stacked_rows(250))]), "major")}
         assert majors == {"RELATED AGENCIES", "DEPARTMENT OF AGRICULTURE"}
 
     def test_title_directly_followed_by_heading_band_emits_no_major(self):
@@ -961,9 +1008,27 @@ class TestMajorLevel:
 
 
 class TestFallbackWhenNoBands:
-    def test_legacy_trigger_used_when_no_sizes(self):
-        # No glyph sizes (e.g. a draft/odd PDF): derive_size_bands -> None, so the
-        # legacy "For necessary expenses" backwalk still finds the account.
+    """When size bands are not derivable, the APPROPRIATIONS-SPECIFIC interior levels
+    disappear (account / agency / major / grouping) while everything derived from
+    universal legislative grammar survives: TITLE, SEC., and enumerator-based run-in
+    subsections, all emitted by a per-page pass that never consults size bands (#114).
+
+    An appropriations-specific English phrase (``For necessary expenses of``) used to
+    name accounts here by walking back to the nearest uppercase heading. That made an
+    appropriations-phrase trigger load-bearing for *structure*, which #114 rules out:
+    text triggers may interpret dollar amounts, never name accounts or build the
+    hierarchy. Measured over the 68-PDF corpus before removal, the trigger's entire
+    output on bills that reach this path was one distinct anchor, and it was wrong (a
+    fragment of a wrapped subsection catchline on 119-hr-1 labelled ``account``), so
+    no correct structure is lost by degrading instead of guessing.
+
+    These cases are synthetic. The end-to-end proof on the real bill is
+    test_pdf_anchor_golden.py::TestSizeFailBillEmitsNoAccounts.
+    """
+
+    def test_no_account_anchors_when_no_sizes(self):
+        # The phrase is present and a heading precedes it -- the exact shape the
+        # retired backwalk keyed on. No account anchor may be emitted from it.
         pages = [
             Page(
                 1,
@@ -973,34 +1038,41 @@ class TestFallbackWhenNoBands:
                 ),
             )
         ]
-        assert isinstance(derive_size_bands(pages), (type(None), SizeBands))
-        accounts = _accounts(extract_anchors(pages))
-        assert any(a.text == "OPERATIONS AND SUPPORT" for a in accounts)
+        assert derive_size_bands(pages) is None  # no sizes -> no size path
+        assert _accounts(extract_anchors(pages)) == []
 
-    def test_two_triggers_under_one_heading_emit_one_account(self):
-        # Two `For necessary expenses of` lines inside the 3-position backwalk of the
-        # same heading resolve to the same account anchor. Only one is emitted -- the
-        # legacy path dedupes, and without that every consumer walking anchors sees the
-        # account twice. Pinned because the dedup was covered but its *duplicate*
-        # branch was not, so a change to how it is done had nothing holding it (#19).
+    def test_fallback_still_emits_universal_tokens(self):
+        # TITLE/SEC./enumerators are the grammar of all legislation, not
+        # appropriations-specific (#114 category D), and are detected per page
+        # independently of size bands. All three must survive the degrade -- otherwise
+        # a size-fail bill loses ALL structure rather than just its account level.
+        # The subsection case is the one most easily lost by mistake: it is the
+        # deepest level the degrade keeps, so a contract stated as "TITLE/SEC. only"
+        # would wrongly license dropping it.
         pages = [
             Page(
                 1,
                 (
-                    Line(1, "OPERATIONS AND SUPPORT"),
-                    Line(2, "For necessary expenses of the agency, $1,000."),
-                    Line(3, "For necessary expenses of the same agency, $2,000."),
+                    Line(1, "TITLE I"),
+                    Line(2, "OPERATIONS AND SUPPORT"),
+                    Line(3, "For necessary expenses of the agency, $1,000."),
+                    Line(4, "SEC. 101. The Secretary shall report annually."),
+                    Line(5, "(a) In general.—The report shall include costs."),
                 ),
             )
         ]
-        assert derive_size_bands(pages) is None  # no sizes -> legacy path
-        accounts = _accounts(extract_anchors(pages))
-        assert [a.text for a in accounts] == ["OPERATIONS AND SUPPORT"]
+        assert derive_size_bands(pages) is None
+        anchors = extract_anchors(pages)
+        assert [a.text for a in _by_kind(anchors, "title")] == ["TITLE I"]
+        assert [a.text for a in _by_kind(anchors, "section")] == ["SEC. 101"]
+        assert [a.text for a in _by_kind(anchors, "subsection")] == ["(a) In general"]
+        # ...and still no account, from the trigger phrase sitting right there.
+        assert _accounts(anchors) == []
 
-    def test_legacy_path_emits_no_major(self):
-        # Majors are a size-band-path feature: a no-glyph-size doc (legacy fallback)
-        # emits the account but NO major, and the account breadcrumb has no major
-        # segment. Pins the "breadcrumb depth is detection-path dependent" contract.
+    def test_fallback_emits_no_major_or_agency(self):
+        # Majors/agencies are size-path features; with the account trigger retired the
+        # fallback emits no interior appropriations level at all. Pins the "breadcrumb
+        # depth is detection-path dependent" contract that the legacy test held.
         pages = [
             Page(
                 1,
@@ -1012,8 +1084,9 @@ class TestFallbackWhenNoBands:
                 ),
             )
         ]
-        assert derive_size_bands(pages) is None  # no sizes -> legacy path
+        assert derive_size_bands(pages) is None
         anchors = extract_anchors(pages)
         assert _by_kind(anchors, "major") == []
-        account = next(a for a in anchors if a.kind == "account")
-        assert "DEPARTMENTAL MANAGEMENT" not in breadcrumb_for(account, anchors)
+        assert _by_kind(anchors, "agency") == []
+        section = next(a for a in anchors if a.kind == "title")
+        assert breadcrumb_for(section, anchors) == ("TITLE I",)

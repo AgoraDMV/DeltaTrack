@@ -1,0 +1,790 @@
+{
+ "population": "DEVELOPMENT only -- no holdout opened, nothing adjudicated or scored",
+ "contract": "A40 F1/F2 -- independent account source truth and the physical bridge",
+ "schema": {
+  "schemas": {
+   "114-hr-2029/4": {
+    "doctype_root": "bill",
+    "public_id": "-//US Congress//DTDs/bill.dtd//EN",
+    "system_id": "bill.dtd",
+    "stylesheet": "billres.xsl"
+   },
+   "118-hr-8752/1": {
+    "doctype_root": "bill",
+    "public_id": "-//US Congress//DTDs/bill.dtd//EN",
+    "system_id": "bill.dtd",
+    "stylesheet": "billres.xsl"
+   }
+  },
+  "element_counts": {
+   "114-hr-2029/4": {
+    "account_elements": 0,
+    "appropriations_small": 107,
+    "header_attr": 0
+   },
+   "118-hr-8752/1": {
+    "account_elements": 0,
+    "appropriations_small": 44,
+    "header_attr": 0
+   }
+  }
+ },
+ "bridge": {
+  "per_document": {
+   "114-hr-2029/4": {
+    "xml_records": 105,
+    "paired": 55,
+    "order_agreement": {
+     "checks": [
+      {
+       "scope": "unique_only",
+       "n": 1,
+       "n_inversions": 0,
+       "at": []
+      },
+      {
+       "scope": "all_paired",
+       "n": 55,
+       "n_inversions": 0,
+       "at": []
+      }
+     ],
+     "n_unique": 1,
+     "n_paired": 55
+    },
+    "anchor_monotonicity": {
+     "n_anchors": 85,
+     "n_adjacent_pairs": 84,
+     "n_inversions": 0,
+     "at": []
+    },
+    "n_independent_anchors": 85,
+    "na_eligible": 45
+   },
+   "118-hr-8752/1": {
+    "xml_records": 41,
+    "paired": 41,
+    "order_agreement": {
+     "checks": [
+      {
+       "scope": "unique_only",
+       "n": 8,
+       "n_inversions": 0,
+       "at": []
+      },
+      {
+       "scope": "all_paired",
+       "n": 41,
+       "n_inversions": 0,
+       "at": []
+      }
+     ],
+     "n_unique": 8,
+     "n_paired": 41
+    },
+    "anchor_monotonicity": {
+     "n_anchors": 111,
+     "n_adjacent_pairs": 110,
+     "n_inversions": 0,
+     "at": []
+    },
+    "n_independent_anchors": 111,
+    "na_eligible": 38
+   }
+  },
+  "refusals": {
+   "114-hr-2029/4": [
+    {
+     "reason": "UNDISCRIMINATED_GROUP",
+     "text": "(INCLUDING TRANSFER OF FUNDS)",
+     "xml_count": 38
+    },
+    {
+     "reason": "NO_PHYSICAL_OCCURRENCE",
+     "text": "GENERAL OPERATING EXPENSES, VETERANS BENEFITS ADMINISTRATION",
+     "xml_count": 2
+    },
+    {
+     "reason": "NO_PHYSICAL_OCCURRENCE",
+     "text": "GRANTS FOR CONSTRUCTION OF STATE EXTENDED CARE FACILITIES",
+     "xml_count": 2
+    },
+    {
+     "reason": "NO_PHYSICAL_OCCURRENCE",
+     "text": "NATIVE AMERICAN VETERAN HOUSING LOAN PROGRAM ACCOUNT",
+     "xml_count": 2
+    },
+    {
+     "reason": "UNDISCRIMINATED_GROUP",
+     "text": "SALARIES AND EXPENSES",
+     "xml_count": 6
+    }
+   ],
+   "118-hr-8752/1": []
+  }
+ },
+ "architecture_disabled": {
+  "n_sources": 96,
+  "n_na_eligible": 83
+ },
+ "populations": {
+  "n_paired": 96,
+  "n_na_eligible": 83,
+  "na_selected": [
+   {
+    "document": "114-hr-2029/4",
+    "element_id": "idF8D001406A6243A8838D80C7241CCBDF",
+    "page": 126,
+    "printed_text": "(RESCISSIONS OF FUNDS)"
+   },
+   {
+    "document": "114-hr-2029/4",
+    "element_id": "idD50F9E5AE38746D68732969A822E264A",
+    "page": 127,
+    "printed_text": "(RESCISSIONS OF FUNDS)"
+   },
+   {
+    "document": "114-hr-2029/4",
+    "element_id": "id391D86C18A674027A4F24ACA5B72BF63",
+    "page": 32,
+    "printed_text": "INFORMATION TECHNOLOGY SYSTEMS"
+   },
+   {
+    "document": "118-hr-8752/1",
+    "element_id": "H678E045EEF614CC397A326B1375E18E1",
+    "page": 20,
+    "printed_text": "RESEARCH AND DEVELOPMENT"
+   },
+   {
+    "document": "114-hr-2029/4",
+    "element_id": "H008CC077F54D4254A1DFF78AE4A1255C",
+    "page": 35,
+    "printed_text": "OFFICE OF INSPECTOR GENERAL"
+   },
+   {
+    "document": "118-hr-8752/1",
+    "element_id": "HF913816B59C34861BBEC58B3ABC546D6",
+    "page": 17,
+    "printed_text": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS"
+   },
+   {
+    "document": "118-hr-8752/1",
+    "element_id": "H84D3DE10957043D8AC503C0E976A7FD4",
+    "page": 11,
+    "printed_text": "OPERATIONS AND SUPPORT"
+   },
+   {
+    "document": "114-hr-2029/4",
+    "element_id": "HE56DF44D7E454E9898F01E1D6652F69C",
+    "page": 101,
+    "printed_text": "INFORMATION TECHNOLOGY SYSTEMS"
+   }
+  ],
+  "nb_selected": [
+   {
+    "document": "118-hr-8752/1",
+    "element_id": "H9C028C40025A4625B7711A1013A4D551",
+    "page": 49,
+    "printed_text": "NATIONAL FLOOD INSURANCE FUND"
+   },
+   {
+    "document": "114-hr-2029/4",
+    "element_id": "H62F09D480AFC43CCA4A5A9A59E5731AF",
+    "page": 37,
+    "printed_text": "CONSTRUCTION, MINOR PROJECTS"
+   },
+   {
+    "document": "114-hr-2029/4",
+    "element_id": "id3B3816AC51A84923ADA634D768D3CA49",
+    "page": 127,
+    "printed_text": "(RESCISSIONS OF FUNDS)"
+   },
+   {
+    "document": "114-hr-2029/4",
+    "element_id": "id1298040CDE544515AA76CA08C86563B1",
+    "page": 90,
+    "printed_text": "(RESCISSIONS OF FUNDS)"
+   },
+   {
+    "document": "114-hr-2029/4",
+    "element_id": "HF21CCD23CFCC4D1F94D0EDF7ED2B2E2B",
+    "page": 28,
+    "printed_text": "MEDICAL SUPPORT AND COMPLIANCE"
+   },
+   {
+    "document": "114-hr-2029/4",
+    "element_id": "HE56DF44D7E454E9898F01E1D6652F69C",
+    "page": 101,
+    "printed_text": "INFORMATION TECHNOLOGY SYSTEMS"
+   },
+   {
+    "document": "118-hr-8752/1",
+    "element_id": "H64B67A103A1B4FF3981C2A3176C818CA",
+    "page": 95,
+    "printed_text": "(RESCISSIONS OF FUNDS)"
+   },
+   {
+    "document": "118-hr-8752/1",
+    "element_id": "H3AAFBF6B6E5E4300A3FA053B7EB13F1A",
+    "page": 44,
+    "printed_text": "OPERATIONS AND SUPPORT"
+   }
+  ]
+ },
+ "stop_conditions": [],
+ "tests": [
+  {
+   "test": "both DEVELOPMENT sources declare the legacy US Congress bill DTD",
+   "expected": {
+    "114-hr-2029/4": "-//US Congress//DTDs/bill.dtd//EN",
+    "118-hr-8752/1": "-//US Congress//DTDs/bill.dtd//EN"
+   },
+   "observed": {
+    "114-hr-2029/4": "-//US Congress//DTDs/bill.dtd//EN",
+    "118-hr-8752/1": "-//US Congress//DTDs/bill.dtd//EN"
+   },
+   "pass": true,
+   "fails_when": "the corpus uses a different schema, so the structural predicate below would be asserted about elements this DTD does not define"
+  },
+  {
+   "test": "this corpus has NO <account> element -- the account level is appropriations-small",
+   "expected": {
+    "114-hr-2029/4": 0,
+    "118-hr-8752/1": 0
+   },
+   "observed": {
+    "114-hr-2029/4": 0,
+    "118-hr-8752/1": 0
+   },
+   "pass": true,
+   "fails_when": "an <account> element exists, so the newer schema's structure should be used instead and the legacy predicate would be the wrong one"
+  },
+  {
+   "test": "the header is a CHILD ELEMENT here, never the attribute the prose examples abbreviate",
+   "expected": {
+    "114-hr-2029/4": 0,
+    "118-hr-8752/1": 0
+   },
+   "observed": {
+    "114-hr-2029/4": 0,
+    "118-hr-8752/1": 0
+   },
+   "pass": true,
+   "fails_when": "some headers are attributes, so a child-only reader silently truncates the population"
+  },
+  {
+   "test": "a schema mismatch REFUSES rather than being read anyway",
+   "expected": "UNEXPECTED_SCHEMA",
+   "observed": "UNEXPECTED_SCHEMA",
+   "pass": true,
+   "fails_when": "an unexpected DTD is parsed as though it were the legacy bill DTD"
+  },
+  {
+   "test": "CONSISTENCY ONLY -- the paired set carries no order inversion",
+   "expected": {
+    "114-hr-2029/4": [
+     0,
+     0
+    ],
+    "118-hr-8752/1": [
+     0,
+     0
+    ]
+   },
+   "observed": {
+    "114-hr-2029/4": [
+     0,
+     0
+    ],
+    "118-hr-8752/1": [
+     0,
+     0
+    ]
+   },
+   "pass": true,
+   "fails_when": "the paired rows contradict themselves. NOTE this check CANNOT license the pairing rule: these rows were paired index-to-index, so a green result is guaranteed by construction. It is retained as a consistency assertion only"
+  },
+  {
+   "test": "the LICENSING evidence is independent of the pairing -- anchors alone, zero inversions",
+   "expected": {
+    "114-hr-2029/4": 0,
+    "118-hr-8752/1": 0
+   },
+   "observed": {
+    "114-hr-2029/4": 0,
+    "118-hr-8752/1": 0
+   },
+   "pass": true,
+   "fails_when": "the independent anchors invert, so XML reading order does not correspond to physical print order and the ordinal pairing rule is unlicensed -- a STOP. This is the check the unique-occurrence subset (n=1 in 114-hr-2029/4) was far too small to make; x25 falsifies it in full, including the five bracketing negatives"
+  },
+  {
+   "test": "NEGATIVE -- a contradicted physical ordering IS detected as an inversion",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the order check cannot go red, so its green result on the real material proves nothing"
+  },
+  {
+   "test": "NEGATIVE -- an extra XML occurrence REFUSES the whole group on count mismatch",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "a count mismatch is paired anyway, so the k-to-k rule would silently mis-associate a heading with a different physical occurrence"
+  },
+  {
+   "test": "...and the refusal removes the ENTIRE group, not just the surplus",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": "only the extra record is dropped, leaving the rest of an unverifiable group paired. Asserted as a direct property of the paired set rather than as an arithmetic identity, which would silently absorb any other refusal into the expected count"
+  },
+  {
+   "test": "the source population is BYTE-IDENTICAL with run_hybrid/run_extended/extract_anchors raising",
+   "expected": [
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id2E62F0413D7047B9BDB72A5D3E8EBBAC\",4,20]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id6F67AFBC04BD41B4BB87288874CC1F2D\",5,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idAB8DD978E87E47C982A04ECE698F66E0\",6,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id56679E906A574CD2999B872083B585C8\",7,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H28C2B4A56282401B89ABB1F6D6EF0496\",8,23]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H07FB15160B4E4D139BA230212A101204\",10,24]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H8F1342C5C10F4399BBE581A2248B993A\",11,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HBE25A18341144E4F802D8580A83BE15F\",12,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCE84943256314714844B7C4206C9EEE5\",13,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HC5B6BEB95970464DADCC79D283BC0158\",15,26]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HF21CCD23CFCC4D1F94D0EDF7ED2B2E2B\",16,28]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H0099245F179749BB92D220FFD263FB4D\",17,28]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H13BC0C8B220248C8BD4DDF52FE406751\",18,29]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HF6B0DB6767D94CCDAFBCA28E60323FF4\",19,30]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H71312D9E29F2492B9345DDA6F99FFAD2\",21,30]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id391D86C18A674027A4F24ACA5B72BF63\",23,32]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H008CC077F54D4254A1DFF78AE4A1255C\",25,35]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4BDADBC74FFB479C81AFFA91CFDD2F76\",26,35]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H62F09D480AFC43CCA4A5A9A59E5731AF\",27,37]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H3CC412EC29904E5EB8F18BFC2F407552\",29,39]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H74590EC1B49A4428AA62A08A1857D2DB\",42,51]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id4C6564A2F4A94827823CC6AFC031ADF3\",43,54]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HA455255406D44BA0B7CAC5B48831100F\",46,57]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HDF3F475772C041D8B38DF22D1534D2F9\",47,57]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H14754A1F2E044DD183E15C482B43FB7C\",49,60]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H41B9065124E44D00801181944BDECF8E\",52,61]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H7F1E7E8A3597444BA02CDA4217A3BE59\",53,67]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id1298040CDE544515AA76CA08C86563B1\",58,90]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id3F0DC73C9BDA4734B039E10767E365EF\",59,91]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H406FDAD023DF45C8A71E821AA6CDDD65\",60,92]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HB793FFF2BB814E11AE00B5FF65103518\",62,93]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HB092A1529E86427E980461688FF15EA4\",63,94]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H50AA9DF7CAF546EBB565A12B7E32ED25\",64,94]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4512476C89E14D819E4B1CCE1F57B5D6\",65,95]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HA6965BB588BA4C83AE702B3512EBA8B9\",67,95]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCB2B0B1C3CCD4900BD43FA815951E9F8\",68,97]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4CDA12D59AF4430EA69F8B2B01F46CCA\",69,98]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HD702CA5401B349E4B92AD8CDD1F6CEAD\",70,99]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H9C7007EC424F4A35907F4C5E62077861\",71,100]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idFC412A773B43411CAC7AA8BCBA7CA19D\",73,100]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE56DF44D7E454E9898F01E1D6652F69C\",75,101]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE030FC976E27419DA53A4669DE517999\",76,105]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H327ACD92E67E49FB93183EAF25B2F05C\",77,105]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HB19A7BF7DD2243B9A4BE34B229A2EC20\",78,108]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H39D1CF2F6DD04CC6BB36BD389058DBC7\",80,109]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id48E7E82AA89042BB8DE1A9F8ECB5A880\",85,115]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCE66C02D114A45CD9EA2E7A2B3D65ED3\",93,122]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H440502B7B451409093FE927A90D1A70F\",94,122]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idF8D001406A6243A8838D80C7241CCBDF\",95,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id7B6E2DF0F81A4AFDAAFD9EE47559AA49\",96,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idA6C2B7639F1D40B7913757096579EA7C\",97,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idD50F9E5AE38746D68732969A822E264A\",98,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id3B3816AC51A84923ADA634D768D3CA49\",99,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H506A309468FF4A949672831D165AC5E2\",101,132]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4BF55239BE2944269976B585A6286134\",104,133]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H83CABDD0A60844B294FF6036C9C5CF3A\",0,2]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H5A961F0C10704C7BB15820C290742502\",1,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF7492E96DF014286A8C83E8661FBD17E\",2,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H185E5D91987D4A259D17EAFA3851FF21\",3,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H32F6540DEBEB4D48B546B0F46135EEA3\",4,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H6080F001A5054872962FE766EC12F560\",5,4]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H84D3DE10957043D8AC503C0E976A7FD4\",6,11]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC54243F7C7DF40AFB25964407D87BB96\",7,11]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HA698FC87624B49DE88184BC043AC28AF\",8,12]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H9F4C1B03650241FB8463F3834E89E0E2\",9,13]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H8F0E83D54B934790941808AEEC1D464C\",10,14]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H4AEC49930993478E946147D96784AF5D\",11,15]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HAF692D1DAD8A45858DCA0142AB484A68\",12,15]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HEEF1858D2D3047AD826AC348490319F2\",13,16]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF8F2FA7EE6C64C738DED07BDF48CFBA9\",14,16]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF913816B59C34861BBEC58B3ABC546D6\",15,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HA6ABB0CED01542A990738D3130890D40\",16,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HFBE37EBB40FD417B94BDC37CB0548640\",17,18]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H28885A070F614C7CB41CC2D9CD3C0F5E\",18,18]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HFA67B26D3E884932BAB1955052FFAB81\",19,20]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H678E045EEF614CC397A326B1375E18E1\",20,20]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HCB53FDF8764F433A9D38B08EA43E0890\",21,43]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H5BFB8B5395E24CBEAD8F124C098937BF\",22,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H3AAFBF6B6E5E4300A3FA053B7EB13F1A\",23,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HDBFE999FE60A4A57A64943054E0B9738\",24,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H6FE2F43D79C2428688CF3C8C77599852\",25,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H6D1C524D551246108CDEE553D9EB01AD\",26,49]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H9C028C40025A4625B7711A1013A4D551\",27,49]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H49E2D7DADD4F40B9B9FBB488C4126775\",28,51]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC308222694524A38859E317746AEB753\",29,56]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HDE3E18C5FE1043DB94B3506799113DE3\",30,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H86A6F791079E4F6B9A1EBB805B81C8F9\",31,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H842FF1D33FDC40A489A55C6910F380E0\",32,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC9FF1E30713544B4A9EFDBC706429FF7\",33,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HD1B4F89AD7AB4440B85326DE0A3CD9FB\",34,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H7BD885E459AC4C37A68D0646B2B1789D\",35,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H3FD9EC7D9D28490D91467523E23886AA\",36,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HE85ADC06B8CE434FB2BAE4A632831143\",37,59]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H0C5B9BB52F06498DB7D4BB82D69D58E0\",38,59]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC79B53E84C144258A4477E1CD0311508\",39,64]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H64B67A103A1B4FF3981C2A3176C818CA\",40,95]"
+   ],
+   "observed": [
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id2E62F0413D7047B9BDB72A5D3E8EBBAC\",4,20]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id6F67AFBC04BD41B4BB87288874CC1F2D\",5,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idAB8DD978E87E47C982A04ECE698F66E0\",6,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id56679E906A574CD2999B872083B585C8\",7,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H28C2B4A56282401B89ABB1F6D6EF0496\",8,23]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H07FB15160B4E4D139BA230212A101204\",10,24]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H8F1342C5C10F4399BBE581A2248B993A\",11,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HBE25A18341144E4F802D8580A83BE15F\",12,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCE84943256314714844B7C4206C9EEE5\",13,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HC5B6BEB95970464DADCC79D283BC0158\",15,26]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HF21CCD23CFCC4D1F94D0EDF7ED2B2E2B\",16,28]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H0099245F179749BB92D220FFD263FB4D\",17,28]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H13BC0C8B220248C8BD4DDF52FE406751\",18,29]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HF6B0DB6767D94CCDAFBCA28E60323FF4\",19,30]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H71312D9E29F2492B9345DDA6F99FFAD2\",21,30]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id391D86C18A674027A4F24ACA5B72BF63\",23,32]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H008CC077F54D4254A1DFF78AE4A1255C\",25,35]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4BDADBC74FFB479C81AFFA91CFDD2F76\",26,35]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H62F09D480AFC43CCA4A5A9A59E5731AF\",27,37]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H3CC412EC29904E5EB8F18BFC2F407552\",29,39]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H74590EC1B49A4428AA62A08A1857D2DB\",42,51]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id4C6564A2F4A94827823CC6AFC031ADF3\",43,54]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HA455255406D44BA0B7CAC5B48831100F\",46,57]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HDF3F475772C041D8B38DF22D1534D2F9\",47,57]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H14754A1F2E044DD183E15C482B43FB7C\",49,60]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H41B9065124E44D00801181944BDECF8E\",52,61]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H7F1E7E8A3597444BA02CDA4217A3BE59\",53,67]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id1298040CDE544515AA76CA08C86563B1\",58,90]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id3F0DC73C9BDA4734B039E10767E365EF\",59,91]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H406FDAD023DF45C8A71E821AA6CDDD65\",60,92]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HB793FFF2BB814E11AE00B5FF65103518\",62,93]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HB092A1529E86427E980461688FF15EA4\",63,94]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H50AA9DF7CAF546EBB565A12B7E32ED25\",64,94]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4512476C89E14D819E4B1CCE1F57B5D6\",65,95]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HA6965BB588BA4C83AE702B3512EBA8B9\",67,95]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCB2B0B1C3CCD4900BD43FA815951E9F8\",68,97]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4CDA12D59AF4430EA69F8B2B01F46CCA\",69,98]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HD702CA5401B349E4B92AD8CDD1F6CEAD\",70,99]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H9C7007EC424F4A35907F4C5E62077861\",71,100]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idFC412A773B43411CAC7AA8BCBA7CA19D\",73,100]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE56DF44D7E454E9898F01E1D6652F69C\",75,101]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE030FC976E27419DA53A4669DE517999\",76,105]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H327ACD92E67E49FB93183EAF25B2F05C\",77,105]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HB19A7BF7DD2243B9A4BE34B229A2EC20\",78,108]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H39D1CF2F6DD04CC6BB36BD389058DBC7\",80,109]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id48E7E82AA89042BB8DE1A9F8ECB5A880\",85,115]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCE66C02D114A45CD9EA2E7A2B3D65ED3\",93,122]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H440502B7B451409093FE927A90D1A70F\",94,122]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idF8D001406A6243A8838D80C7241CCBDF\",95,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id7B6E2DF0F81A4AFDAAFD9EE47559AA49\",96,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idA6C2B7639F1D40B7913757096579EA7C\",97,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idD50F9E5AE38746D68732969A822E264A\",98,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id3B3816AC51A84923ADA634D768D3CA49\",99,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H506A309468FF4A949672831D165AC5E2\",101,132]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4BF55239BE2944269976B585A6286134\",104,133]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H83CABDD0A60844B294FF6036C9C5CF3A\",0,2]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H5A961F0C10704C7BB15820C290742502\",1,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF7492E96DF014286A8C83E8661FBD17E\",2,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H185E5D91987D4A259D17EAFA3851FF21\",3,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H32F6540DEBEB4D48B546B0F46135EEA3\",4,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H6080F001A5054872962FE766EC12F560\",5,4]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H84D3DE10957043D8AC503C0E976A7FD4\",6,11]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC54243F7C7DF40AFB25964407D87BB96\",7,11]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HA698FC87624B49DE88184BC043AC28AF\",8,12]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H9F4C1B03650241FB8463F3834E89E0E2\",9,13]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H8F0E83D54B934790941808AEEC1D464C\",10,14]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H4AEC49930993478E946147D96784AF5D\",11,15]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HAF692D1DAD8A45858DCA0142AB484A68\",12,15]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HEEF1858D2D3047AD826AC348490319F2\",13,16]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF8F2FA7EE6C64C738DED07BDF48CFBA9\",14,16]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF913816B59C34861BBEC58B3ABC546D6\",15,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HA6ABB0CED01542A990738D3130890D40\",16,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HFBE37EBB40FD417B94BDC37CB0548640\",17,18]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H28885A070F614C7CB41CC2D9CD3C0F5E\",18,18]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HFA67B26D3E884932BAB1955052FFAB81\",19,20]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H678E045EEF614CC397A326B1375E18E1\",20,20]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HCB53FDF8764F433A9D38B08EA43E0890\",21,43]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H5BFB8B5395E24CBEAD8F124C098937BF\",22,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H3AAFBF6B6E5E4300A3FA053B7EB13F1A\",23,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HDBFE999FE60A4A57A64943054E0B9738\",24,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H6FE2F43D79C2428688CF3C8C77599852\",25,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H6D1C524D551246108CDEE553D9EB01AD\",26,49]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H9C028C40025A4625B7711A1013A4D551\",27,49]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H49E2D7DADD4F40B9B9FBB488C4126775\",28,51]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC308222694524A38859E317746AEB753\",29,56]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HDE3E18C5FE1043DB94B3506799113DE3\",30,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H86A6F791079E4F6B9A1EBB805B81C8F9\",31,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H842FF1D33FDC40A489A55C6910F380E0\",32,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC9FF1E30713544B4A9EFDBC706429FF7\",33,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HD1B4F89AD7AB4440B85326DE0A3CD9FB\",34,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H7BD885E459AC4C37A68D0646B2B1789D\",35,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H3FD9EC7D9D28490D91467523E23886AA\",36,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HE85ADC06B8CE434FB2BAE4A632831143\",37,59]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H0C5B9BB52F06498DB7D4BB82D69D58E0\",38,59]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC79B53E84C144258A4477E1CD0311508\",39,64]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H64B67A103A1B4FF3981C2A3176C818CA\",40,95]"
+   ],
+   "pass": true,
+   "fails_when": "an architecture path contributes to source enumeration, which A40.3 forbids -- and would mean N-A/N-B truth is derived from the thing under test"
+  },
+  {
+   "test": "...and so is N-A eligibility",
+   "expected": [
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id2E62F0413D7047B9BDB72A5D3E8EBBAC\",4,20]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id6F67AFBC04BD41B4BB87288874CC1F2D\",5,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idAB8DD978E87E47C982A04ECE698F66E0\",6,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id56679E906A574CD2999B872083B585C8\",7,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H28C2B4A56282401B89ABB1F6D6EF0496\",8,23]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H8F1342C5C10F4399BBE581A2248B993A\",11,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HBE25A18341144E4F802D8580A83BE15F\",12,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCE84943256314714844B7C4206C9EEE5\",13,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HF21CCD23CFCC4D1F94D0EDF7ED2B2E2B\",16,28]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H13BC0C8B220248C8BD4DDF52FE406751\",18,29]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H71312D9E29F2492B9345DDA6F99FFAD2\",21,30]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id391D86C18A674027A4F24ACA5B72BF63\",23,32]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H008CC077F54D4254A1DFF78AE4A1255C\",25,35]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4BDADBC74FFB479C81AFFA91CFDD2F76\",26,35]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H62F09D480AFC43CCA4A5A9A59E5731AF\",27,37]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H3CC412EC29904E5EB8F18BFC2F407552\",29,39]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H74590EC1B49A4428AA62A08A1857D2DB\",42,51]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id4C6564A2F4A94827823CC6AFC031ADF3\",43,54]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HA455255406D44BA0B7CAC5B48831100F\",46,57]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HDF3F475772C041D8B38DF22D1534D2F9\",47,57]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H14754A1F2E044DD183E15C482B43FB7C\",49,60]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H7F1E7E8A3597444BA02CDA4217A3BE59\",53,67]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id1298040CDE544515AA76CA08C86563B1\",58,90]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id3F0DC73C9BDA4734B039E10767E365EF\",59,91]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H406FDAD023DF45C8A71E821AA6CDDD65\",60,92]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HB092A1529E86427E980461688FF15EA4\",63,94]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H50AA9DF7CAF546EBB565A12B7E32ED25\",64,94]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4512476C89E14D819E4B1CCE1F57B5D6\",65,95]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCB2B0B1C3CCD4900BD43FA815951E9F8\",68,97]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HD702CA5401B349E4B92AD8CDD1F6CEAD\",70,99]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idFC412A773B43411CAC7AA8BCBA7CA19D\",73,100]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE56DF44D7E454E9898F01E1D6652F69C\",75,101]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE030FC976E27419DA53A4669DE517999\",76,105]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H327ACD92E67E49FB93183EAF25B2F05C\",77,105]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HB19A7BF7DD2243B9A4BE34B229A2EC20\",78,108]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H39D1CF2F6DD04CC6BB36BD389058DBC7\",80,109]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id48E7E82AA89042BB8DE1A9F8ECB5A880\",85,115]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCE66C02D114A45CD9EA2E7A2B3D65ED3\",93,122]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H440502B7B451409093FE927A90D1A70F\",94,122]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idF8D001406A6243A8838D80C7241CCBDF\",95,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id7B6E2DF0F81A4AFDAAFD9EE47559AA49\",96,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idA6C2B7639F1D40B7913757096579EA7C\",97,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idD50F9E5AE38746D68732969A822E264A\",98,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id3B3816AC51A84923ADA634D768D3CA49\",99,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H506A309468FF4A949672831D165AC5E2\",101,132]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H83CABDD0A60844B294FF6036C9C5CF3A\",0,2]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H5A961F0C10704C7BB15820C290742502\",1,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF7492E96DF014286A8C83E8661FBD17E\",2,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H185E5D91987D4A259D17EAFA3851FF21\",3,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H32F6540DEBEB4D48B546B0F46135EEA3\",4,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H6080F001A5054872962FE766EC12F560\",5,4]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H84D3DE10957043D8AC503C0E976A7FD4\",6,11]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC54243F7C7DF40AFB25964407D87BB96\",7,11]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HA698FC87624B49DE88184BC043AC28AF\",8,12]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H9F4C1B03650241FB8463F3834E89E0E2\",9,13]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H8F0E83D54B934790941808AEEC1D464C\",10,14]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H4AEC49930993478E946147D96784AF5D\",11,15]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HAF692D1DAD8A45858DCA0142AB484A68\",12,15]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HEEF1858D2D3047AD826AC348490319F2\",13,16]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF8F2FA7EE6C64C738DED07BDF48CFBA9\",14,16]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF913816B59C34861BBEC58B3ABC546D6\",15,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HA6ABB0CED01542A990738D3130890D40\",16,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H28885A070F614C7CB41CC2D9CD3C0F5E\",18,18]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HFA67B26D3E884932BAB1955052FFAB81\",19,20]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H678E045EEF614CC397A326B1375E18E1\",20,20]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HCB53FDF8764F433A9D38B08EA43E0890\",21,43]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H5BFB8B5395E24CBEAD8F124C098937BF\",22,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H3AAFBF6B6E5E4300A3FA053B7EB13F1A\",23,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HDBFE999FE60A4A57A64943054E0B9738\",24,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H6D1C524D551246108CDEE553D9EB01AD\",26,49]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H9C028C40025A4625B7711A1013A4D551\",27,49]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H49E2D7DADD4F40B9B9FBB488C4126775\",28,51]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC308222694524A38859E317746AEB753\",29,56]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HDE3E18C5FE1043DB94B3506799113DE3\",30,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H86A6F791079E4F6B9A1EBB805B81C8F9\",31,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H842FF1D33FDC40A489A55C6910F380E0\",32,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC9FF1E30713544B4A9EFDBC706429FF7\",33,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HD1B4F89AD7AB4440B85326DE0A3CD9FB\",34,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H7BD885E459AC4C37A68D0646B2B1789D\",35,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H3FD9EC7D9D28490D91467523E23886AA\",36,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HE85ADC06B8CE434FB2BAE4A632831143\",37,59]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC79B53E84C144258A4477E1CD0311508\",39,64]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H64B67A103A1B4FF3981C2A3176C818CA\",40,95]"
+   ],
+   "observed": [
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id2E62F0413D7047B9BDB72A5D3E8EBBAC\",4,20]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id6F67AFBC04BD41B4BB87288874CC1F2D\",5,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idAB8DD978E87E47C982A04ECE698F66E0\",6,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id56679E906A574CD2999B872083B585C8\",7,21]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H28C2B4A56282401B89ABB1F6D6EF0496\",8,23]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H8F1342C5C10F4399BBE581A2248B993A\",11,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HBE25A18341144E4F802D8580A83BE15F\",12,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCE84943256314714844B7C4206C9EEE5\",13,25]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HF21CCD23CFCC4D1F94D0EDF7ED2B2E2B\",16,28]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H13BC0C8B220248C8BD4DDF52FE406751\",18,29]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H71312D9E29F2492B9345DDA6F99FFAD2\",21,30]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id391D86C18A674027A4F24ACA5B72BF63\",23,32]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H008CC077F54D4254A1DFF78AE4A1255C\",25,35]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4BDADBC74FFB479C81AFFA91CFDD2F76\",26,35]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H62F09D480AFC43CCA4A5A9A59E5731AF\",27,37]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H3CC412EC29904E5EB8F18BFC2F407552\",29,39]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H74590EC1B49A4428AA62A08A1857D2DB\",42,51]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id4C6564A2F4A94827823CC6AFC031ADF3\",43,54]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HA455255406D44BA0B7CAC5B48831100F\",46,57]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HDF3F475772C041D8B38DF22D1534D2F9\",47,57]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H14754A1F2E044DD183E15C482B43FB7C\",49,60]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H7F1E7E8A3597444BA02CDA4217A3BE59\",53,67]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id1298040CDE544515AA76CA08C86563B1\",58,90]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id3F0DC73C9BDA4734B039E10767E365EF\",59,91]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H406FDAD023DF45C8A71E821AA6CDDD65\",60,92]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HB092A1529E86427E980461688FF15EA4\",63,94]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H50AA9DF7CAF546EBB565A12B7E32ED25\",64,94]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H4512476C89E14D819E4B1CCE1F57B5D6\",65,95]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCB2B0B1C3CCD4900BD43FA815951E9F8\",68,97]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HD702CA5401B349E4B92AD8CDD1F6CEAD\",70,99]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idFC412A773B43411CAC7AA8BCBA7CA19D\",73,100]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE56DF44D7E454E9898F01E1D6652F69C\",75,101]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE030FC976E27419DA53A4669DE517999\",76,105]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H327ACD92E67E49FB93183EAF25B2F05C\",77,105]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HB19A7BF7DD2243B9A4BE34B229A2EC20\",78,108]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H39D1CF2F6DD04CC6BB36BD389058DBC7\",80,109]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id48E7E82AA89042BB8DE1A9F8ECB5A880\",85,115]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HCE66C02D114A45CD9EA2E7A2B3D65ED3\",93,122]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H440502B7B451409093FE927A90D1A70F\",94,122]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idF8D001406A6243A8838D80C7241CCBDF\",95,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id7B6E2DF0F81A4AFDAAFD9EE47559AA49\",96,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idA6C2B7639F1D40B7913757096579EA7C\",97,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idD50F9E5AE38746D68732969A822E264A\",98,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id3B3816AC51A84923ADA634D768D3CA49\",99,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H506A309468FF4A949672831D165AC5E2\",101,132]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H83CABDD0A60844B294FF6036C9C5CF3A\",0,2]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H5A961F0C10704C7BB15820C290742502\",1,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF7492E96DF014286A8C83E8661FBD17E\",2,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H185E5D91987D4A259D17EAFA3851FF21\",3,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H32F6540DEBEB4D48B546B0F46135EEA3\",4,3]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H6080F001A5054872962FE766EC12F560\",5,4]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H84D3DE10957043D8AC503C0E976A7FD4\",6,11]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC54243F7C7DF40AFB25964407D87BB96\",7,11]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HA698FC87624B49DE88184BC043AC28AF\",8,12]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H9F4C1B03650241FB8463F3834E89E0E2\",9,13]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H8F0E83D54B934790941808AEEC1D464C\",10,14]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H4AEC49930993478E946147D96784AF5D\",11,15]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HAF692D1DAD8A45858DCA0142AB484A68\",12,15]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HEEF1858D2D3047AD826AC348490319F2\",13,16]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF8F2FA7EE6C64C738DED07BDF48CFBA9\",14,16]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF913816B59C34861BBEC58B3ABC546D6\",15,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HA6ABB0CED01542A990738D3130890D40\",16,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H28885A070F614C7CB41CC2D9CD3C0F5E\",18,18]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HFA67B26D3E884932BAB1955052FFAB81\",19,20]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H678E045EEF614CC397A326B1375E18E1\",20,20]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HCB53FDF8764F433A9D38B08EA43E0890\",21,43]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H5BFB8B5395E24CBEAD8F124C098937BF\",22,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H3AAFBF6B6E5E4300A3FA053B7EB13F1A\",23,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HDBFE999FE60A4A57A64943054E0B9738\",24,44]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H6D1C524D551246108CDEE553D9EB01AD\",26,49]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H9C028C40025A4625B7711A1013A4D551\",27,49]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H49E2D7DADD4F40B9B9FBB488C4126775\",28,51]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC308222694524A38859E317746AEB753\",29,56]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HDE3E18C5FE1043DB94B3506799113DE3\",30,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H86A6F791079E4F6B9A1EBB805B81C8F9\",31,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H842FF1D33FDC40A489A55C6910F380E0\",32,57]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC9FF1E30713544B4A9EFDBC706429FF7\",33,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HD1B4F89AD7AB4440B85326DE0A3CD9FB\",34,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H7BD885E459AC4C37A68D0646B2B1789D\",35,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H3FD9EC7D9D28490D91467523E23886AA\",36,58]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HE85ADC06B8CE434FB2BAE4A632831143\",37,59]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HC79B53E84C144258A4477E1CD0311508\",39,64]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H64B67A103A1B4FF3981C2A3176C818CA\",40,95]"
+   ],
+   "pass": true,
+   "fails_when": "eligibility consults H or X"
+  },
+  {
+   "test": "...and so is the na-source ranking's selected 8",
+   "expected": [
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idF8D001406A6243A8838D80C7241CCBDF\",95,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idD50F9E5AE38746D68732969A822E264A\",98,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id391D86C18A674027A4F24ACA5B72BF63\",23,32]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H678E045EEF614CC397A326B1375E18E1\",20,20]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H008CC077F54D4254A1DFF78AE4A1255C\",25,35]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF913816B59C34861BBEC58B3ABC546D6\",15,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H84D3DE10957043D8AC503C0E976A7FD4\",6,11]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE56DF44D7E454E9898F01E1D6652F69C\",75,101]"
+   ],
+   "observed": [
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idF8D001406A6243A8838D80C7241CCBDF\",95,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idD50F9E5AE38746D68732969A822E264A\",98,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id391D86C18A674027A4F24ACA5B72BF63\",23,32]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H678E045EEF614CC397A326B1375E18E1\",20,20]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H008CC077F54D4254A1DFF78AE4A1255C\",25,35]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF913816B59C34861BBEC58B3ABC546D6\",15,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H84D3DE10957043D8AC503C0E976A7FD4\",6,11]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE56DF44D7E454E9898F01E1D6652F69C\",75,101]"
+   ],
+   "pass": true,
+   "fails_when": "ranking or selection consults H or X"
+  },
+  {
+   "test": "the sabotage is real -- calling a disabled path raises",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the monkeypatch did not take, so the control passed because nothing was disabled"
+  },
+  {
+   "test": "N-A eligible population is at least 8",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "fewer than 8 independent N-A sources survive the bridge -- a STOP, not a reason to relax eligibility"
+  },
+  {
+   "test": "N-B eligible population is at least 8",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "fewer than 8 independent N-B sources survive the bridge"
+  },
+  {
+   "test": "the na-source draw is reproducible from the committed identities",
+   "expected": [
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idF8D001406A6243A8838D80C7241CCBDF\",95,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idD50F9E5AE38746D68732969A822E264A\",98,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id391D86C18A674027A4F24ACA5B72BF63\",23,32]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H678E045EEF614CC397A326B1375E18E1\",20,20]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H008CC077F54D4254A1DFF78AE4A1255C\",25,35]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF913816B59C34861BBEC58B3ABC546D6\",15,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H84D3DE10957043D8AC503C0E976A7FD4\",6,11]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE56DF44D7E454E9898F01E1D6652F69C\",75,101]"
+   ],
+   "observed": [
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idF8D001406A6243A8838D80C7241CCBDF\",95,126]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"idD50F9E5AE38746D68732969A822E264A\",98,127]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"id391D86C18A674027A4F24ACA5B72BF63\",23,32]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H678E045EEF614CC397A326B1375E18E1\",20,20]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"H008CC077F54D4254A1DFF78AE4A1255C\",25,35]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"HF913816B59C34861BBEC58B3ABC546D6\",15,17]",
+    "[\"xml-account\",\"tests/corpus/118-hr-8752/1_reported-in-house.xml\",\"H84D3DE10957043D8AC503C0E976A7FD4\",6,11]",
+    "[\"xml-account\",\"tests/corpus/114-hr-2029/4_reported-in-senate.xml\",\"HE56DF44D7E454E9898F01E1D6652F69C\",75,101]"
+   ],
+   "pass": true,
+   "fails_when": "the ranking is not deterministic"
+  }
+ ],
+ "failures": []
+}

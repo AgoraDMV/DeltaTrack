@@ -67,13 +67,17 @@ def _make_form(reviewer: str, n_cards: int) -> str:
 
 
 @pytest.fixture(scope="module")
-def chromium():
+def chromium(request):
     try:
         with sync_playwright() as p:
             b = p.chromium.launch()
             yield b
             b.close()
     except Exception as exc:  # browser binary not installed, etc.
+        # CI's dedicated browser step passes --run-browser: there a launch failure
+        # must fail the run, not skip into a green no-op (#599). Default tier skips.
+        if request.config.getoption("--run-browser"):
+            raise
         pytest.skip(f"Chromium unavailable (run 'playwright install chromium'): {exc}")
 
 

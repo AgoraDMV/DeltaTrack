@@ -1,0 +1,1792 @@
+{
+ "population": "DEVELOPMENT only -- no holdout opened, nothing adjudicated or scored",
+ "contract": "A40 sections 1 and 2 -- independent bridge validation and the provenance split",
+ "anchors": {
+  "114-hr-2029/4": {
+   "n_anchors": 85,
+   "by_class": {
+    "C": 83,
+    "A": 2
+   },
+   "monotonicity": {
+    "n_anchors": 85,
+    "n_adjacent_pairs": 84,
+    "n_inversions": 0,
+    "at": []
+   },
+   "n_physical_lines": 7151,
+   "n_pages": 138
+  },
+  "118-hr-8752/1": {
+   "n_anchors": 111,
+   "by_class": {
+    "C": 89,
+    "A": 22
+   },
+   "monotonicity": {
+    "n_anchors": 111,
+    "n_adjacent_pairs": 110,
+    "n_inversions": 0,
+    "at": []
+   },
+   "n_physical_lines": 5907,
+   "n_pages": 98
+  }
+ },
+ "brackets": {
+  "114-hr-2029/4": {
+   "n_account_records": 105,
+   "n_groups": 28,
+   "n_repeated_groups": 27,
+   "n_paired": 55,
+   "refusals": [
+    {
+     "reason": "UNDISCRIMINATED_GROUP",
+     "text": "(INCLUDING TRANSFER OF FUNDS)",
+     "xml_count": 38
+    },
+    {
+     "reason": "NO_PHYSICAL_OCCURRENCE",
+     "text": "GENERAL OPERATING EXPENSES, VETERANS BENEFITS ADMINISTRATION",
+     "xml_count": 2
+    },
+    {
+     "reason": "NO_PHYSICAL_OCCURRENCE",
+     "text": "GRANTS FOR CONSTRUCTION OF STATE EXTENDED CARE FACILITIES",
+     "xml_count": 2
+    },
+    {
+     "reason": "NO_PHYSICAL_OCCURRENCE",
+     "text": "NATIVE AMERICAN VETERAN HOUSING LOAN PROGRAM ACCOUNT",
+     "xml_count": 2
+    },
+    {
+     "reason": "UNDISCRIMINATED_GROUP",
+     "text": "SALARIES AND EXPENSES",
+     "xml_count": 6
+    }
+   ],
+   "refusal_counts": {
+    "UNDISCRIMINATED_GROUP": 2,
+    "NO_PHYSICAL_OCCURRENCE": 3
+   },
+   "brackets": [
+    {
+     "text": "(INCLUDING RESCISSIONS OF FUNDS)",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 63387,
+       "physical_line": 2638,
+       "page_number": 51,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 152366,
+       "physical_line": 6345,
+       "page_number": 122,
+       "n_anchors_before_in_xml": 78,
+       "n_anchors_before_in_pdf": 78,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "(INCLUDING TRANSFER OF FUNDS)",
+     "xml_count": 38,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": false,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 3584,
+       "physical_line": 134,
+       "page_number": 4,
+       "n_anchors_before_in_xml": 2,
+       "n_anchors_before_in_pdf": 2,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 18300,
+       "physical_line": 761,
+       "page_number": 16,
+       "n_anchors_before_in_xml": 5,
+       "n_anchors_before_in_pdf": 5,
+       "same_interval": true
+      },
+      {
+       "k": 2,
+       "xml_offset": 19933,
+       "physical_line": 825,
+       "page_number": 17,
+       "n_anchors_before_in_xml": 5,
+       "n_anchors_before_in_pdf": 5,
+       "same_interval": true
+      },
+      {
+       "k": 3,
+       "xml_offset": 21715,
+       "physical_line": 895,
+       "page_number": 18,
+       "n_anchors_before_in_xml": 5,
+       "n_anchors_before_in_pdf": 5,
+       "same_interval": true
+      },
+      {
+       "k": 4,
+       "xml_offset": 26807,
+       "physical_line": 1119,
+       "page_number": 23,
+       "n_anchors_before_in_xml": 9,
+       "n_anchors_before_in_pdf": 9,
+       "same_interval": true
+      },
+      {
+       "k": 5,
+       "xml_offset": 35847,
+       "physical_line": 1510,
+       "page_number": 30,
+       "n_anchors_before_in_xml": 11,
+       "n_anchors_before_in_pdf": 11,
+       "same_interval": true
+      },
+      {
+       "k": 6,
+       "xml_offset": 38068,
+       "physical_line": 1628,
+       "page_number": 32,
+       "n_anchors_before_in_xml": 14,
+       "n_anchors_before_in_pdf": 14,
+       "same_interval": true
+      },
+      {
+       "k": 7,
+       "xml_offset": 47827,
+       "physical_line": 2010,
+       "page_number": 39,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 8,
+       "xml_offset": 48362,
+       "physical_line": 2032,
+       "page_number": 39,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 9,
+       "xml_offset": 51503,
+       "physical_line": 2160,
+       "page_number": 42,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 10,
+       "xml_offset": 53186,
+       "physical_line": 2226,
+       "page_number": 43,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 11,
+       "xml_offset": 55427,
+       "physical_line": 2314,
+       "page_number": 45,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 12,
+       "xml_offset": 56311,
+       "physical_line": 2354,
+       "page_number": 46,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 13,
+       "xml_offset": 57751,
+       "physical_line": 2410,
+       "page_number": 47,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 14,
+       "xml_offset": 58547,
+       "physical_line": 2442,
+       "page_number": 47,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 15,
+       "xml_offset": 59783,
+       "physical_line": 2492,
+       "page_number": 48,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 16,
+       "xml_offset": 60992,
+       "physical_line": 2540,
+       "page_number": 49,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 17,
+       "xml_offset": 62065,
+       "physical_line": 2584,
+       "page_number": 50,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 18,
+       "xml_offset": 62962,
+       "physical_line": 2620,
+       "page_number": 51,
+       "n_anchors_before_in_xml": 26,
+       "n_anchors_before_in_pdf": 26,
+       "same_interval": true
+      },
+      {
+       "k": 19,
+       "xml_offset": 68434,
+       "physical_line": 2852,
+       "page_number": 55,
+       "n_anchors_before_in_xml": 28,
+       "n_anchors_before_in_pdf": 28,
+       "same_interval": true
+      },
+      {
+       "k": 20,
+       "xml_offset": 70289,
+       "physical_line": 2924,
+       "page_number": 57,
+       "n_anchors_before_in_xml": 28,
+       "n_anchors_before_in_pdf": 28,
+       "same_interval": true
+      },
+      {
+       "k": 21,
+       "xml_offset": 90053,
+       "physical_line": 3845,
+       "page_number": 74,
+       "n_anchors_before_in_xml": 47,
+       "n_anchors_before_in_pdf": 47,
+       "same_interval": true
+      },
+      {
+       "k": 22,
+       "xml_offset": 103632,
+       "physical_line": 4406,
+       "page_number": 85,
+       "n_anchors_before_in_xml": 51,
+       "n_anchors_before_in_pdf": 51,
+       "same_interval": true
+      },
+      {
+       "k": 23,
+       "xml_offset": 105070,
+       "physical_line": 4460,
+       "page_number": 86,
+       "n_anchors_before_in_xml": 51,
+       "n_anchors_before_in_pdf": 51,
+       "same_interval": true
+      },
+      {
+       "k": 24,
+       "xml_offset": 107224,
+       "physical_line": 4540,
+       "page_number": 87,
+       "n_anchors_before_in_xml": 51,
+       "n_anchors_before_in_pdf": 51,
+       "same_interval": true
+      },
+      {
+       "k": 25,
+       "xml_offset": 113413,
+       "physical_line": 4792,
+       "page_number": 92,
+       "n_anchors_before_in_xml": 59,
+       "n_anchors_before_in_pdf": 59,
+       "same_interval": true
+      },
+      {
+       "k": 26,
+       "xml_offset": 123297,
+       "physical_line": 5180,
+       "page_number": 100,
+       "n_anchors_before_in_xml": 62,
+       "n_anchors_before_in_pdf": 62,
+       "same_interval": true
+      },
+      {
+       "k": 27,
+       "xml_offset": 136273,
+       "physical_line": 5700,
+       "page_number": 110,
+       "n_anchors_before_in_xml": 76,
+       "n_anchors_before_in_pdf": 76,
+       "same_interval": true
+      },
+      {
+       "k": 28,
+       "xml_offset": 136809,
+       "physical_line": 5722,
+       "page_number": 110,
+       "n_anchors_before_in_xml": 76,
+       "n_anchors_before_in_pdf": 76,
+       "same_interval": true
+      },
+      {
+       "k": 29,
+       "xml_offset": 139954,
+       "physical_line": 5846,
+       "page_number": 113,
+       "n_anchors_before_in_xml": 76,
+       "n_anchors_before_in_pdf": 76,
+       "same_interval": true
+      },
+      {
+       "k": 30,
+       "xml_offset": 141638,
+       "physical_line": 5910,
+       "page_number": 114,
+       "n_anchors_before_in_xml": 76,
+       "n_anchors_before_in_pdf": 76,
+       "same_interval": true
+      },
+      {
+       "k": 31,
+       "xml_offset": 143821,
+       "physical_line": 5996,
+       "page_number": 116,
+       "n_anchors_before_in_xml": 77,
+       "n_anchors_before_in_pdf": 77,
+       "same_interval": true
+      },
+      {
+       "k": 32,
+       "xml_offset": 144705,
+       "physical_line": 6034,
+       "page_number": 116,
+       "n_anchors_before_in_xml": 77,
+       "n_anchors_before_in_pdf": 77,
+       "same_interval": true
+      },
+      {
+       "k": 33,
+       "xml_offset": 146476,
+       "physical_line": 6104,
+       "page_number": 118,
+       "n_anchors_before_in_xml": 78,
+       "n_anchors_before_in_pdf": 78,
+       "same_interval": true
+      },
+      {
+       "k": 34,
+       "xml_offset": 147273,
+       "physical_line": 6136,
+       "page_number": 118,
+       "n_anchors_before_in_xml": 78,
+       "n_anchors_before_in_pdf": 78,
+       "same_interval": true
+      },
+      {
+       "k": 35,
+       "xml_offset": 148772,
+       "physical_line": 6196,
+       "page_number": 119,
+       "n_anchors_before_in_xml": 78,
+       "n_anchors_before_in_pdf": 78,
+       "same_interval": true
+      },
+      {
+       "k": 36,
+       "xml_offset": 149981,
+       "physical_line": 6244,
+       "page_number": 120,
+       "n_anchors_before_in_xml": 78,
+       "n_anchors_before_in_pdf": 78,
+       "same_interval": true
+      },
+      {
+       "k": 37,
+       "xml_offset": 151054,
+       "physical_line": 6291,
+       "page_number": 121,
+       "n_anchors_before_in_xml": 78,
+       "n_anchors_before_in_pdf": 78,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "(RESCISSION OF FUNDS)",
+     "xml_count": 8,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 24028,
+       "physical_line": 995,
+       "page_number": 20,
+       "n_anchors_before_in_xml": 5,
+       "n_anchors_before_in_pdf": 5,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 24351,
+       "physical_line": 1011,
+       "page_number": 21,
+       "n_anchors_before_in_xml": 6,
+       "n_anchors_before_in_pdf": 6,
+       "same_interval": true
+      },
+      {
+       "k": 2,
+       "xml_offset": 24679,
+       "physical_line": 1025,
+       "page_number": 21,
+       "n_anchors_before_in_xml": 7,
+       "n_anchors_before_in_pdf": 7,
+       "same_interval": true
+      },
+      {
+       "k": 3,
+       "xml_offset": 25011,
+       "physical_line": 1039,
+       "page_number": 21,
+       "n_anchors_before_in_xml": 8,
+       "n_anchors_before_in_pdf": 8,
+       "same_interval": true
+      },
+      {
+       "k": 4,
+       "xml_offset": 67395,
+       "physical_line": 2806,
+       "page_number": 54,
+       "n_anchors_before_in_xml": 27,
+       "n_anchors_before_in_pdf": 27,
+       "same_interval": true
+      },
+      {
+       "k": 5,
+       "xml_offset": 70820,
+       "physical_line": 2946,
+       "page_number": 57,
+       "n_anchors_before_in_xml": 28,
+       "n_anchors_before_in_pdf": 28,
+       "same_interval": true
+      },
+      {
+       "k": 6,
+       "xml_offset": 112075,
+       "physical_line": 4734,
+       "page_number": 91,
+       "n_anchors_before_in_xml": 58,
+       "n_anchors_before_in_pdf": 58,
+       "same_interval": true
+      },
+      {
+       "k": 7,
+       "xml_offset": 157396,
+       "physical_line": 6561,
+       "page_number": 126,
+       "n_anchors_before_in_xml": 81,
+       "n_anchors_before_in_pdf": 81,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "(RESCISSIONS OF FUNDS)",
+     "xml_count": 6,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 71240,
+       "physical_line": 2966,
+       "page_number": 57,
+       "n_anchors_before_in_xml": 28,
+       "n_anchors_before_in_pdf": 28,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 111450,
+       "physical_line": 4706,
+       "page_number": 90,
+       "n_anchors_before_in_xml": 55,
+       "n_anchors_before_in_pdf": 55,
+       "same_interval": true
+      },
+      {
+       "k": 2,
+       "xml_offset": 156522,
+       "physical_line": 6521,
+       "page_number": 126,
+       "n_anchors_before_in_xml": 78,
+       "n_anchors_before_in_pdf": 78,
+       "same_interval": true
+      },
+      {
+       "k": 3,
+       "xml_offset": 156868,
+       "physical_line": 6537,
+       "page_number": 126,
+       "n_anchors_before_in_xml": 80,
+       "n_anchors_before_in_pdf": 80,
+       "same_interval": true
+      },
+      {
+       "k": 4,
+       "xml_offset": 157548,
+       "physical_line": 6571,
+       "page_number": 127,
+       "n_anchors_before_in_xml": 82,
+       "n_anchors_before_in_pdf": 82,
+       "same_interval": true
+      },
+      {
+       "k": 5,
+       "xml_offset": 157844,
+       "physical_line": 6585,
+       "page_number": 127,
+       "n_anchors_before_in_xml": 83,
+       "n_anchors_before_in_pdf": 83,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "(TRANSFER OF FUNDS)",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 142490,
+       "physical_line": 5944,
+       "page_number": 115,
+       "n_anchors_before_in_xml": 76,
+       "n_anchors_before_in_pdf": 76,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 151951,
+       "physical_line": 6327,
+       "page_number": 122,
+       "n_anchors_before_in_xml": 78,
+       "n_anchors_before_in_pdf": 78,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "BOARD OF VETERANS APPEALS",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 36739,
+       "physical_line": 1554,
+       "page_number": 30,
+       "n_anchors_before_in_xml": 13,
+       "n_anchors_before_in_pdf": 13,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 124001,
+       "physical_line": 5206,
+       "page_number": 100,
+       "n_anchors_before_in_xml": 63,
+       "n_anchors_before_in_pdf": 63,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "COMPENSATION AND PENSIONS",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 26781,
+       "physical_line": 1117,
+       "page_number": 23,
+       "n_anchors_before_in_xml": 9,
+       "n_anchors_before_in_pdf": 9,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 113387,
+       "physical_line": 4790,
+       "page_number": 92,
+       "n_anchors_before_in_xml": 59,
+       "n_anchors_before_in_pdf": 59,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "CONSTRUCTION, MAJOR PROJECTS",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 43138,
+       "physical_line": 1826,
+       "page_number": 35,
+       "n_anchors_before_in_xml": 20,
+       "n_anchors_before_in_pdf": 20,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 130178,
+       "physical_line": 5444,
+       "page_number": 105,
+       "n_anchors_before_in_xml": 70,
+       "n_anchors_before_in_pdf": 70,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "CONSTRUCTION, MINOR PROJECTS",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 45624,
+       "physical_line": 1920,
+       "page_number": 37,
+       "n_anchors_before_in_xml": 23,
+       "n_anchors_before_in_pdf": 23,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 134070,
+       "physical_line": 5610,
+       "page_number": 108,
+       "n_anchors_before_in_xml": 74,
+       "n_anchors_before_in_pdf": 74,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "FOREIGN CURRENCY FLUCTUATIONS ACCOUNT",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 73283,
+       "physical_line": 3092,
+       "page_number": 60,
+       "n_anchors_before_in_xml": 39,
+       "n_anchors_before_in_pdf": 39,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 162999,
+       "physical_line": 6835,
+       "page_number": 132,
+       "n_anchors_before_in_xml": 84,
+       "n_anchors_before_in_pdf": 84,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "GENERAL ADMINISTRATION",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 35824,
+       "physical_line": 1508,
+       "page_number": 30,
+       "n_anchors_before_in_xml": 11,
+       "n_anchors_before_in_pdf": 11,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 123274,
+       "physical_line": 5178,
+       "page_number": 100,
+       "n_anchors_before_in_xml": 62,
+       "n_anchors_before_in_pdf": 62,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "GRANTS FOR CONSTRUCTION OF VETERANS CEMETERIES",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 47529,
+       "physical_line": 1996,
+       "page_number": 39,
+       "n_anchors_before_in_xml": 25,
+       "n_anchors_before_in_pdf": 25,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 135975,
+       "physical_line": 5684,
+       "page_number": 109,
+       "n_anchors_before_in_xml": 75,
+       "n_anchors_before_in_pdf": 75,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "INFORMATION TECHNOLOGY SYSTEMS",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 38037,
+       "physical_line": 1626,
+       "page_number": 32,
+       "n_anchors_before_in_xml": 14,
+       "n_anchors_before_in_pdf": 14,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 125174,
+       "physical_line": 5256,
+       "page_number": 101,
+       "n_anchors_before_in_xml": 64,
+       "n_anchors_before_in_pdf": 64,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "MEDICAL AND PROSTHETIC RESEARCH",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 34959,
+       "physical_line": 1470,
+       "page_number": 29,
+       "n_anchors_before_in_xml": 11,
+       "n_anchors_before_in_pdf": 11,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 122409,
+       "physical_line": 5140,
+       "page_number": 99,
+       "n_anchors_before_in_xml": 62,
+       "n_anchors_before_in_pdf": 62,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "MEDICAL FACILITIES",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 34015,
+       "physical_line": 1432,
+       "page_number": 28,
+       "n_anchors_before_in_xml": 11,
+       "n_anchors_before_in_pdf": 11,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 121318,
+       "physical_line": 5098,
+       "page_number": 98,
+       "n_anchors_before_in_xml": 62,
+       "n_anchors_before_in_pdf": 62,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "MEDICAL SERVICES",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 31161,
+       "physical_line": 1318,
+       "page_number": 26,
+       "n_anchors_before_in_xml": 10,
+       "n_anchors_before_in_pdf": 10,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 117766,
+       "physical_line": 4964,
+       "page_number": 95,
+       "n_anchors_before_in_xml": 60,
+       "n_anchors_before_in_pdf": 60,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "MEDICAL SUPPORT AND COMPLIANCE",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 33374,
+       "physical_line": 1406,
+       "page_number": 28,
+       "n_anchors_before_in_xml": 11,
+       "n_anchors_before_in_pdf": 11,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 120530,
+       "physical_line": 5066,
+       "page_number": 97,
+       "n_anchors_before_in_xml": 62,
+       "n_anchors_before_in_pdf": 62,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "OFFICE OF INSPECTOR GENERAL",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 42834,
+       "physical_line": 1812,
+       "page_number": 35,
+       "n_anchors_before_in_xml": 18,
+       "n_anchors_before_in_pdf": 18,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 129888,
+       "physical_line": 5432,
+       "page_number": 105,
+       "n_anchors_before_in_xml": 68,
+       "n_anchors_before_in_pdf": 68,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "READJUSTMENT BENEFITS",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 28557,
+       "physical_line": 1203,
+       "page_number": 24,
+       "n_anchors_before_in_xml": 9,
+       "n_anchors_before_in_pdf": 9,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 115161,
+       "physical_line": 4856,
+       "page_number": 93,
+       "n_anchors_before_in_xml": 59,
+       "n_anchors_before_in_pdf": 59,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "SALARIES AND EXPENSES",
+     "xml_count": 6,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": false,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 72575,
+       "physical_line": 3062,
+       "page_number": 59,
+       "n_anchors_before_in_xml": 39,
+       "n_anchors_before_in_pdf": 39,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 73608,
+       "physical_line": 3108,
+       "page_number": 60,
+       "n_anchors_before_in_xml": 39,
+       "n_anchors_before_in_pdf": 39,
+       "same_interval": true
+      },
+      {
+       "k": 2,
+       "xml_offset": 74094,
+       "physical_line": 3135,
+       "page_number": 60,
+       "n_anchors_before_in_xml": 39,
+       "n_anchors_before_in_pdf": 39,
+       "same_interval": true
+      },
+      {
+       "k": 3,
+       "xml_offset": 162291,
+       "physical_line": 6807,
+       "page_number": 131,
+       "n_anchors_before_in_xml": 84,
+       "n_anchors_before_in_pdf": 84,
+       "same_interval": true
+      },
+      {
+       "k": 4,
+       "xml_offset": 163324,
+       "physical_line": 6851,
+       "page_number": 132,
+       "n_anchors_before_in_xml": 84,
+       "n_anchors_before_in_pdf": 84,
+       "same_interval": true
+      },
+      {
+       "k": 5,
+       "xml_offset": 163810,
+       "physical_line": 6873,
+       "page_number": 132,
+       "n_anchors_before_in_xml": 84,
+       "n_anchors_before_in_pdf": 84,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "TRUST FUND",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 74762,
+       "physical_line": 3165,
+       "page_number": 61,
+       "n_anchors_before_in_xml": 39,
+       "n_anchors_before_in_pdf": 39,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 164479,
+       "physical_line": 6908,
+       "page_number": 133,
+       "n_anchors_before_in_xml": 85,
+       "n_anchors_before_in_pdf": 85,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "VETERANS HOUSING BENEFIT PROGRAM FUND",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 29579,
+       "physical_line": 1252,
+       "page_number": 25,
+       "n_anchors_before_in_xml": 9,
+       "n_anchors_before_in_pdf": 9,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 116183,
+       "physical_line": 4898,
+       "page_number": 94,
+       "n_anchors_before_in_xml": 59,
+       "n_anchors_before_in_pdf": 59,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "VETERANS INSURANCE AND INDEMNITIES",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 29197,
+       "physical_line": 1236,
+       "page_number": 25,
+       "n_anchors_before_in_xml": 9,
+       "n_anchors_before_in_pdf": 9,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 115801,
+       "physical_line": 4882,
+       "page_number": 94,
+       "n_anchors_before_in_xml": 59,
+       "n_anchors_before_in_pdf": 59,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "VOCATIONAL REHABILITATION LOANS PROGRAM ACCOUNT",
+     "xml_count": 2,
+     "n_usable_anchors": 85,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 30255,
+       "physical_line": 1278,
+       "page_number": 25,
+       "n_anchors_before_in_xml": 9,
+       "n_anchors_before_in_pdf": 9,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 116860,
+       "physical_line": 4926,
+       "page_number": 95,
+       "n_anchors_before_in_xml": 59,
+       "n_anchors_before_in_pdf": 59,
+       "same_interval": true
+      }
+     ]
+    }
+   ]
+  },
+  "118-hr-8752/1": {
+   "n_account_records": 41,
+   "n_groups": 12,
+   "n_repeated_groups": 4,
+   "n_paired": 41,
+   "refusals": [],
+   "refusal_counts": {},
+   "brackets": [
+    {
+     "text": "FEDERAL ASSISTANCE",
+     "xml_count": 2,
+     "n_usable_anchors": 111,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 51635,
+       "physical_line": 2685,
+       "page_number": 44,
+       "n_anchors_before_in_xml": 62,
+       "n_anchors_before_in_pdf": 62,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 68297,
+       "physical_line": 3601,
+       "page_number": 59,
+       "n_anchors_before_in_xml": 103,
+       "n_anchors_before_in_pdf": 103,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "OPERATIONS AND SUPPORT",
+     "xml_count": 15,
+     "n_usable_anchors": 111,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 1069,
+       "physical_line": 55,
+       "page_number": 2,
+       "n_anchors_before_in_xml": 0,
+       "n_anchors_before_in_pdf": 0,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 1768,
+       "physical_line": 95,
+       "page_number": 3,
+       "n_anchors_before_in_xml": 3,
+       "n_anchors_before_in_pdf": 3,
+       "same_interval": true
+      },
+      {
+       "k": 2,
+       "xml_offset": 2514,
+       "physical_line": 131,
+       "page_number": 3,
+       "n_anchors_before_in_xml": 6,
+       "n_anchors_before_in_pdf": 6,
+       "same_interval": true
+      },
+      {
+       "k": 3,
+       "xml_offset": 3061,
+       "physical_line": 172,
+       "page_number": 4,
+       "n_anchors_before_in_xml": 9,
+       "n_anchors_before_in_pdf": 9,
+       "same_interval": true
+      },
+      {
+       "k": 4,
+       "xml_offset": 10741,
+       "physical_line": 598,
+       "page_number": 11,
+       "n_anchors_before_in_xml": 11,
+       "n_anchors_before_in_pdf": 11,
+       "same_interval": true
+      },
+      {
+       "k": 5,
+       "xml_offset": 13297,
+       "physical_line": 720,
+       "page_number": 13,
+       "n_anchors_before_in_xml": 20,
+       "n_anchors_before_in_pdf": 20,
+       "same_interval": true
+      },
+      {
+       "k": 6,
+       "xml_offset": 15847,
+       "physical_line": 845,
+       "page_number": 15,
+       "n_anchors_before_in_xml": 29,
+       "n_anchors_before_in_pdf": 29,
+       "same_interval": true
+      },
+      {
+       "k": 7,
+       "xml_offset": 17105,
+       "physical_line": 916,
+       "page_number": 16,
+       "n_anchors_before_in_xml": 34,
+       "n_anchors_before_in_pdf": 34,
+       "same_interval": true
+      },
+      {
+       "k": 8,
+       "xml_offset": 20292,
+       "physical_line": 1064,
+       "page_number": 18,
+       "n_anchors_before_in_xml": 44,
+       "n_anchors_before_in_pdf": 44,
+       "same_interval": true
+      },
+      {
+       "k": 9,
+       "xml_offset": 50514,
+       "physical_line": 2618,
+       "page_number": 43,
+       "n_anchors_before_in_xml": 54,
+       "n_anchors_before_in_pdf": 54,
+       "same_interval": true
+      },
+      {
+       "k": 10,
+       "xml_offset": 51091,
+       "physical_line": 2656,
+       "page_number": 44,
+       "n_anchors_before_in_xml": 58,
+       "n_anchors_before_in_pdf": 58,
+       "same_interval": true
+      },
+      {
+       "k": 11,
+       "xml_offset": 65388,
+       "physical_line": 3435,
+       "page_number": 56,
+       "n_anchors_before_in_xml": 89,
+       "n_anchors_before_in_pdf": 89,
+       "same_interval": true
+      },
+      {
+       "k": 12,
+       "xml_offset": 65838,
+       "physical_line": 3467,
+       "page_number": 57,
+       "n_anchors_before_in_xml": 91,
+       "n_anchors_before_in_pdf": 91,
+       "same_interval": true
+      },
+      {
+       "k": 13,
+       "xml_offset": 66780,
+       "physical_line": 3505,
+       "page_number": 57,
+       "n_anchors_before_in_xml": 94,
+       "n_anchors_before_in_pdf": 94,
+       "same_interval": true
+      },
+      {
+       "k": 14,
+       "xml_offset": 67576,
+       "physical_line": 3555,
+       "page_number": 58,
+       "n_anchors_before_in_xml": 99,
+       "n_anchors_before_in_pdf": 99,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+     "xml_count": 11,
+     "n_usable_anchors": 111,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 1984,
+       "physical_line": 105,
+       "page_number": 3,
+       "n_anchors_before_in_xml": 4,
+       "n_anchors_before_in_pdf": 4,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 12862,
+       "physical_line": 690,
+       "page_number": 12,
+       "n_anchors_before_in_xml": 17,
+       "n_anchors_before_in_pdf": 17,
+       "same_interval": true
+      },
+      {
+       "k": 2,
+       "xml_offset": 15495,
+       "physical_line": 817,
+       "page_number": 14,
+       "n_anchors_before_in_xml": 25,
+       "n_anchors_before_in_pdf": 25,
+       "same_interval": true
+      },
+      {
+       "k": 3,
+       "xml_offset": 16693,
+       "physical_line": 882,
+       "page_number": 15,
+       "n_anchors_before_in_xml": 31,
+       "n_anchors_before_in_pdf": 31,
+       "same_interval": true
+      },
+      {
+       "k": 4,
+       "xml_offset": 18430,
+       "physical_line": 978,
+       "page_number": 17,
+       "n_anchors_before_in_xml": 39,
+       "n_anchors_before_in_pdf": 39,
+       "same_interval": true
+      },
+      {
+       "k": 5,
+       "xml_offset": 22128,
+       "physical_line": 1154,
+       "page_number": 20,
+       "n_anchors_before_in_xml": 47,
+       "n_anchors_before_in_pdf": 47,
+       "same_interval": true
+      },
+      {
+       "k": 6,
+       "xml_offset": 50826,
+       "physical_line": 2644,
+       "page_number": 44,
+       "n_anchors_before_in_xml": 56,
+       "n_anchors_before_in_pdf": 56,
+       "same_interval": true
+      },
+      {
+       "k": 7,
+       "xml_offset": 51320,
+       "physical_line": 2671,
+       "page_number": 44,
+       "n_anchors_before_in_xml": 59,
+       "n_anchors_before_in_pdf": 59,
+       "same_interval": true
+      },
+      {
+       "k": 8,
+       "xml_offset": 66325,
+       "physical_line": 3487,
+       "page_number": 57,
+       "n_anchors_before_in_xml": 93,
+       "n_anchors_before_in_pdf": 93,
+       "same_interval": true
+      },
+      {
+       "k": 9,
+       "xml_offset": 67138,
+       "physical_line": 3533,
+       "page_number": 58,
+       "n_anchors_before_in_xml": 96,
+       "n_anchors_before_in_pdf": 96,
+       "same_interval": true
+      },
+      {
+       "k": 10,
+       "xml_offset": 67882,
+       "physical_line": 3569,
+       "page_number": 58,
+       "n_anchors_before_in_xml": 101,
+       "n_anchors_before_in_pdf": 101,
+       "same_interval": true
+      }
+     ]
+    },
+    {
+     "text": "RESEARCH AND DEVELOPMENT",
+     "xml_count": 5,
+     "n_usable_anchors": 111,
+     "agrees": true,
+     "discriminating": true,
+     "occurrences": [
+      {
+       "k": 0,
+       "xml_offset": 16913,
+       "physical_line": 904,
+       "page_number": 16,
+       "n_anchors_before_in_xml": 32,
+       "n_anchors_before_in_pdf": 32,
+       "same_interval": true
+      },
+      {
+       "k": 1,
+       "xml_offset": 19006,
+       "physical_line": 1000,
+       "page_number": 17,
+       "n_anchors_before_in_xml": 40,
+       "n_anchors_before_in_pdf": 40,
+       "same_interval": true
+      },
+      {
+       "k": 2,
+       "xml_offset": 22437,
+       "physical_line": 1166,
+       "page_number": 20,
+       "n_anchors_before_in_xml": 50,
+       "n_anchors_before_in_pdf": 50,
+       "same_interval": true
+      },
+      {
+       "k": 3,
+       "xml_offset": 67353,
+       "physical_line": 3543,
+       "page_number": 58,
+       "n_anchors_before_in_xml": 97,
+       "n_anchors_before_in_pdf": 97,
+       "same_interval": true
+      },
+      {
+       "k": 4,
+       "xml_offset": 68108,
+       "physical_line": 3591,
+       "page_number": 59,
+       "n_anchors_before_in_xml": 102,
+       "n_anchors_before_in_pdf": 102,
+       "same_interval": true
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "negatives": {
+  "group": "OPERATIONS AND SUPPORT",
+  "xml_count": 15,
+  "pdf_count": 15,
+  "moved_across": "$281,358,000",
+  "refusals_under_swapped_anchors": {
+   "CROSSES_INDEPENDENT_ANCHOR": 4
+  }
+ },
+ "anchor_uniqueness_negatives": {
+  "cases": {
+   "duplicate class-C money literal elsewhere in the PDF": true,
+   "two class-C occurrences on ONE printed line": true,
+   "duplicate class-A printed header": true
+  },
+  "base_anchor_count": 111
+ },
+ "provenance": {
+  "provenance": {
+   "text_content": "SOURCE-DETERMINED",
+   "punctuation": "SOURCE-DETERMINED",
+   "whitespace": "SOURCE-DETERMINED",
+   "case": "PHYSICALLY-OBSERVED",
+   "margin_number": "PHYSICALLY-OBSERVED"
+  },
+  "n_cross_checked": 96,
+  "helper_cases": {
+   "identical_but_for_case": true,
+   "punctuation_differs": false,
+   "content_differs": false,
+   "whitespace_differs": false
+  },
+  "authority": {
+   "content_case_rules": "billres-details.xsl convertToNeededCase (8279); bills.css approp header classes",
+   "recorded_in": "docs/gpo-render-conventions.md casing table (#53)",
+   "why_case_is_not_source_determined": "those rules govern GPO's HTML renderer. docs/gpo-render-conventions.md (#89) records the measurement that the published PDF is typeset by GPO's separate photocomposition system, whose sizes contradict the CSS em values -- so the PDF's realised case is observed, not asserted"
+  }
+ },
+ "findings_for_ruling": {
+  "parenthetical_qualifier_sources": {
+   "by_document": {
+    "114-hr-2029/4": {
+     "paired": 55,
+     "parenthetical": 18
+    },
+    "118-hr-8752/1": {
+     "paired": 41,
+     "parenthetical": 4
+    }
+   },
+   "n_parenthetical": 22,
+   "n_non_parenthetical": 74,
+   "distinct_texts": [
+    "(INCLUDING RESCISSIONS OF FUNDS)",
+    "(INCLUDING TRANSFER OF FUNDS)",
+    "(INCLUDING TRANSFERS AND RESCISSIONS OF FUNDS)",
+    "(INCLUDING TRANSFERS OF FUNDS)",
+    "(RESCISSION OF FUNDS)",
+    "(RESCISSIONS OF FUNDS)",
+    "(TRANSFER OF FUNDS)"
+   ],
+   "why_it_matters": "A40.3 requires a candidate to be 'a known real account heading'. These records are GPO transfer/rescission qualifiers printed as their own heading line; in the MilCon division the account NAME sits on the preceding appropriations-intermediate. (RESCISSIONS OF FUNDS) is in the CURRENT selected 8 N-B, so this is result-bearing."
+  },
+  "case_sensitive_grouping_defect": {
+   "by_document": {
+    "114-hr-2029/4": {
+     "case_sensitive_groups": 33,
+     "case_insensitive_groups": 28
+    },
+    "118-hr-8752/1": {
+     "case_sensitive_groups": 12,
+     "case_insensitive_groups": 12
+    }
+   },
+   "why_it_matters": "the previous bridge grouped on the case-SENSITIVE XML string while the comparator is case-insensitive, splitting real groups into phantom halves that then refused on count mismatch. It fails closed, so nothing wrong was paired -- but it shrank 114-hr-2029/4 from 55 paired to 45 and mis-labelled the loss."
+  }
+ },
+ "stop_conditions": [],
+ "tests": [
+  {
+   "test": "the independent anchor grid is dense enough for bracketing to mean anything",
+   "expected": {
+    "114-hr-2029/4": true,
+    "118-hr-8752/1": true
+   },
+   "observed": {
+    "114-hr-2029/4": true,
+    "118-hr-8752/1": true
+   },
+   "pass": true,
+   "fails_when": "an anchor grid this sparse makes every occurrence trivially 'inside the interval', so a green bracketing result would carry no information"
+  },
+  {
+   "test": "XML reading order agrees with physical print order, on ANCHORS ONLY -- zero inversions",
+   "expected": {
+    "114-hr-2029/4": 0,
+    "118-hr-8752/1": 0
+   },
+   "observed": {
+    "114-hr-2029/4": 0,
+    "118-hr-8752/1": 0
+   },
+   "pass": true,
+   "fails_when": "independent anchors invert, so XML order does NOT correspond to physical print order on real DEVELOPMENT material -- a STOP, and the ordinal pairing rule would be unlicensed"
+  },
+  {
+   "test": "the independent evidence is far larger than x24's unique-occurrence subset (n=1, n=8)",
+   "expected": {
+    "114-hr-2029/4": true,
+    "118-hr-8752/1": true
+   },
+   "observed": {
+    "114-hr-2029/4": true,
+    "118-hr-8752/1": true
+   },
+   "pass": true,
+   "fails_when": "the anchor population is no better than the subset it replaces"
+  },
+  {
+   "test": "no repeated group that survives is bracket-DISAGREEING (an occurrence outside its interval)",
+   "expected": {
+    "114-hr-2029/4": 0,
+    "118-hr-8752/1": 0
+   },
+   "observed": {
+    "114-hr-2029/4": 0,
+    "118-hr-8752/1": 0
+   },
+   "pass": true,
+   "fails_when": "a paired occurrence sits between a different set of independent anchors than its XML counterpart, i.e. the k-th XML and k-th physical occurrence are NOT the same heading"
+  },
+  {
+   "test": "every group that PAIRS is fully discriminated -- consecutive occurrences separated by an anchor",
+   "expected": {
+    "114-hr-2029/4": true,
+    "118-hr-8752/1": true
+   },
+   "observed": {
+    "114-hr-2029/4": true,
+    "118-hr-8752/1": true
+   },
+   "pass": true,
+   "fails_when": "a group pairs while two of its occurrences share an anchor prefix, so their index-to-index association still rests on the ordering assumption under test rather than on evidence"
+  },
+  {
+   "test": "an undiscriminated group is REFUSED rather than paired",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no group was ever refused for weak bracketing, so the discrimination rule has never once fired and cannot be distinguished from a rule that is not implemented"
+  },
+  {
+   "test": "NEGATIVE -- swapping two repeated physical occurrences BREAKS the bracketing",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "two occurrences of the same heading can be exchanged without the independent anchors noticing, so the bracketing does not actually constrain which physical line pairs with which XML occurrence"
+  },
+  {
+   "test": "NEGATIVE -- moving ONE occurrence across an independent neighbour anchor BREAKS bracketing",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "an occurrence can cross an independently identified anchor without detection, which is exactly the mis-association the interval rule exists to prevent"
+  },
+  {
+   "test": "NEGATIVE -- an ADDED physical occurrence refuses the whole group on GROUP_COUNT_MISMATCH",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "a surplus physical occurrence is paired anyway, so k-to-k pairing would silently associate a heading with the wrong printed line"
+  },
+  {
+   "test": "...and the whole group is removed, not just the surplus occurrence",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": "only the extra occurrence is dropped, leaving the rest of an unverifiable group paired"
+  },
+  {
+   "test": "NEGATIVE -- a REMOVED physical occurrence refuses the whole group on GROUP_COUNT_MISMATCH",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "a missing physical occurrence still pairs, so k XML occurrences would map onto k-1 lines"
+  },
+  {
+   "test": "NEGATIVE -- swapping two independent anchors is detected as an inversion",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the monotonicity check cannot go red, so its zero-inversion result on the real material proves nothing at all"
+  },
+  {
+   "test": "...and it also makes real groups REFUSE, so the corruption reaches the pairing decision",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "corrupted anchors change only a summary field and never refuse a group, so the bracketing rule is not actually consuming the anchors it claims to"
+  },
+  {
+   "test": "NEGATIVES -- each injected duplication REMOVES the anchor it makes ambiguous",
+   "expected": {
+    "duplicate class-C money literal elsewhere in the PDF": true,
+    "two class-C occurrences on ONE printed line": true,
+    "duplicate class-A printed header": true
+   },
+   "observed": {
+    "duplicate class-C money literal elsewhere in the PDF": true,
+    "two class-C occurrences on ONE printed line": true,
+    "duplicate class-A printed header": true
+   },
+   "pass": true,
+   "fails_when": "an anchor survives a duplication that destroys its unique identity, so the zero duplicate counts on the real corpus prove nothing about the filter"
+  },
+  {
+   "test": "the per-dimension provenance rule is committed, not implicit",
+   "expected": {
+    "text_content": "SOURCE-DETERMINED",
+    "punctuation": "SOURCE-DETERMINED",
+    "whitespace": "SOURCE-DETERMINED",
+    "case": "PHYSICALLY-OBSERVED",
+    "margin_number": "PHYSICALLY-OBSERVED"
+   },
+   "observed": {
+    "text_content": "SOURCE-DETERMINED",
+    "punctuation": "SOURCE-DETERMINED",
+    "whitespace": "SOURCE-DETERMINED",
+    "case": "PHYSICALLY-OBSERVED",
+    "margin_number": "PHYSICALLY-OBSERVED"
+   },
+   "pass": true,
+   "fails_when": "the three objects are collapsed, so a PDF reading could silently become the source of account semantics (or a stylesheet rule could be invented for the PDF that governs only HTML)"
+  },
+  {
+   "test": "every paired record's observed line agrees with source truth under CASE FOLDING ALONE",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no record was cross-checked, so the source-vs-physical agreement claim is vacuous"
+  },
+  {
+   "test": "NEGATIVE -- case alone agrees; punctuation, content and whitespace differences REFUSE",
+   "expected": {
+    "identical_but_for_case": true,
+    "punctuation_differs": false,
+    "content_differs": false,
+    "whitespace_differs": false
+   },
+   "observed": {
+    "identical_but_for_case": true,
+    "punctuation_differs": false,
+    "content_differs": false,
+    "whitespace_differs": false
+   },
+   "pass": true,
+   "fails_when": "the cross-check folds away a dimension the source actually determines, so a genuinely different printed heading would be accepted as the expected one"
+  },
+  {
+   "test": "a CASE-only difference in the XML still pairs (case is physically observed)",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "case is being treated as source-determined, which contradicts the measured GPO pipeline and would refuse every real heading"
+  },
+  {
+   "test": "a ONE-LETTER content difference refuses that source instead of pairing it",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "content is being folded away like case, so the printed heading is no longer constrained by the XML at all"
+  }
+ ],
+ "failures": []
+}

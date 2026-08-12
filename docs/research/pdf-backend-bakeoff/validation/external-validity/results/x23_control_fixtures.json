@@ -1,0 +1,1280 @@
+{
+ "population": "DEVELOPMENT + SYNTHETIC -- no confirmatory holdout material anywhere",
+ "contract": "A39.3 (control sources) as amended by A40 (live boundary control)",
+ "manifest": "results/control_fixtures.json",
+ "mutation_classes": {
+  "before": "SALARIES AND EXPENSES",
+  "delete": "AND EXPENSES",
+  "weld": "SALARIESAND EXPENSES",
+  "split": "SALA RIES AND EXPENSES"
+ },
+ "realized": {
+  "counts": {
+   "N-A": 8,
+   "N-B": 8,
+   "N-C": 4
+  },
+  "allocation": {
+   "DELETE_ONE_WORD": 3,
+   "WELD_TWO_WORDS": 3,
+   "SPLIT_ONE_WORD": 2
+  },
+  "eligible_population": {
+   "admitted_account_sources": 96,
+   "na_eligible": 83,
+   "nb_eligible": 96,
+   "per_document": {
+    "114-hr-2029/4": {
+     "xml_account_records": 105,
+     "independent_anchors": 85,
+     "anchor_inversions": 0,
+     "bridge_paired": 55,
+     "bridge_refusals": {
+      "UNDISCRIMINATED_GROUP": 2,
+      "NO_PHYSICAL_OCCURRENCE": 3
+     },
+     "admitted_sources": 55
+    },
+    "118-hr-8752/1": {
+     "xml_account_records": 41,
+     "independent_anchors": 111,
+     "anchor_inversions": 0,
+     "bridge_paired": 41,
+     "bridge_refusals": {},
+     "admitted_sources": 41
+    }
+   }
+  },
+  "na": [
+   {
+    "index": 0,
+    "variant": "DELETE_ONE_WORD",
+    "source": "118-hr-8752/1",
+    "page": 20,
+    "before": "RESEARCH AND DEVELOPMENT",
+    "after": "RESEARCH AND",
+    "boundary_transitions": [],
+    "non_space_unchanged": false,
+    "generated_sha256": "cd1460a092dc44fc"
+   },
+   {
+    "index": 1,
+    "variant": "WELD_TWO_WORDS",
+    "source": "114-hr-2029/4",
+    "page": 126,
+    "before": "(RESCISSIONS OF FUNDS)",
+    "after": "(RESCISSIONSOF FUNDS)",
+    "boundary_transitions": [
+     [
+      1,
+      0
+     ]
+    ],
+    "non_space_unchanged": true,
+    "generated_sha256": "104f85729ac095d0"
+   },
+   {
+    "index": 2,
+    "variant": "SPLIT_ONE_WORD",
+    "source": "114-hr-2029/4",
+    "page": 21,
+    "before": "(RESCISSION OF FUNDS)",
+    "after": "(RESCI SSION OF FUNDS)",
+    "boundary_transitions": [
+     [
+      0,
+      1
+     ]
+    ],
+    "non_space_unchanged": true,
+    "generated_sha256": "61c9178fc8c51ab4"
+   },
+   {
+    "index": 3,
+    "variant": "DELETE_ONE_WORD",
+    "source": "118-hr-8752/1",
+    "page": 58,
+    "before": "OPERATIONS AND SUPPORT",
+    "after": "AND SUPPORT",
+    "boundary_transitions": [],
+    "non_space_unchanged": false,
+    "generated_sha256": "b3f30e24b50424c3"
+   },
+   {
+    "index": 4,
+    "variant": "WELD_TWO_WORDS",
+    "source": "114-hr-2029/4",
+    "page": 25,
+    "before": "VETERANS INSURANCE AND INDEMNITIES",
+    "after": "VETERANSINSURANCE AND INDEMNITIES",
+    "boundary_transitions": [
+     [
+      1,
+      0
+     ]
+    ],
+    "non_space_unchanged": true,
+    "generated_sha256": "d5f67bb44f8490ce"
+   },
+   {
+    "index": 5,
+    "variant": "SPLIT_ONE_WORD",
+    "source": "118-hr-8752/1",
+    "page": 56,
+    "before": "OPERATIONS AND SUPPORT",
+    "after": "OPERA TIONS AND SUPPORT",
+    "boundary_transitions": [
+     [
+      0,
+      1
+     ]
+    ],
+    "non_space_unchanged": true,
+    "generated_sha256": "1bc08acb57b17f12"
+   },
+   {
+    "index": 6,
+    "variant": "DELETE_ONE_WORD",
+    "source": "114-hr-2029/4",
+    "page": 23,
+    "before": "COMPENSATION AND PENSIONS",
+    "after": "AND PENSIONS",
+    "boundary_transitions": [],
+    "non_space_unchanged": false,
+    "generated_sha256": "7f0fddf896985ff9"
+   },
+   {
+    "index": 7,
+    "variant": "WELD_TWO_WORDS",
+    "source": "118-hr-8752/1",
+    "page": 44,
+    "before": "OPERATIONS AND SUPPORT",
+    "after": "OPERATIONSAND SUPPORT",
+    "boundary_transitions": [
+     [
+      1,
+      0
+     ]
+    ],
+    "non_space_unchanged": true,
+    "generated_sha256": "ce75db58bfc020fb"
+   }
+  ],
+  "nb": [
+   {
+    "index": 0,
+    "source": "114-hr-2029/4",
+    "page": 57,
+    "expected_text": "(RESCISSIONS OF FUNDS)",
+    "xml_path": "tests/corpus/114-hr-2029/4_reported-in-senate.xml",
+    "xml_sha256": "68e98a6b0b204cfe"
+   },
+   {
+    "index": 1,
+    "source": "118-hr-8752/1",
+    "page": 49,
+    "expected_text": "NATIONAL FLOOD INSURANCE FUND",
+    "xml_path": "tests/corpus/118-hr-8752/1_reported-in-house.xml",
+    "xml_sha256": "e4bc6b90eeff87d0"
+   },
+   {
+    "index": 2,
+    "source": "114-hr-2029/4",
+    "page": 60,
+    "expected_text": "FOREIGN CURRENCY FLUCTUATIONS ACCOUNT",
+    "xml_path": "tests/corpus/114-hr-2029/4_reported-in-senate.xml",
+    "xml_sha256": "68e98a6b0b204cfe"
+   },
+   {
+    "index": 3,
+    "source": "114-hr-2029/4",
+    "page": 21,
+    "expected_text": "(RESCISSION OF FUNDS)",
+    "xml_path": "tests/corpus/114-hr-2029/4_reported-in-senate.xml",
+    "xml_sha256": "68e98a6b0b204cfe"
+   },
+   {
+    "index": 4,
+    "source": "118-hr-8752/1",
+    "page": 57,
+    "expected_text": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+    "xml_path": "tests/corpus/118-hr-8752/1_reported-in-house.xml",
+    "xml_sha256": "e4bc6b90eeff87d0"
+   },
+   {
+    "index": 5,
+    "source": "118-hr-8752/1",
+    "page": 15,
+    "expected_text": "PROCUREMENT, CONSTRUCTION, AND IMPROVEMENTS",
+    "xml_path": "tests/corpus/118-hr-8752/1_reported-in-house.xml",
+    "xml_sha256": "e4bc6b90eeff87d0"
+   },
+   {
+    "index": 6,
+    "source": "114-hr-2029/4",
+    "page": 94,
+    "expected_text": "VETERANS HOUSING BENEFIT PROGRAM FUND",
+    "xml_path": "tests/corpus/114-hr-2029/4_reported-in-senate.xml",
+    "xml_sha256": "68e98a6b0b204cfe"
+   },
+   {
+    "index": 7,
+    "source": "118-hr-8752/1",
+    "page": 11,
+    "expected_text": "(INCLUDING TRANSFER OF FUNDS)",
+    "xml_path": "tests/corpus/118-hr-8752/1_reported-in-house.xml",
+    "xml_sha256": "e4bc6b90eeff87d0"
+   }
+  ],
+  "nc": [
+   {
+    "index": 0,
+    "generated_sha256": "89c88afa4c4e941e",
+    "expected": []
+   },
+   {
+    "index": 1,
+    "generated_sha256": "1a43384798a0d059",
+    "expected": []
+   },
+   {
+    "index": 2,
+    "generated_sha256": "14a0d4bc036147c7",
+    "expected": []
+   },
+   {
+    "index": 3,
+    "generated_sha256": "e9a091786d020f59",
+    "expected": []
+   }
+  ]
+ },
+ "pdf_id": {
+  "ids": {
+   "na_00_delete_one_word.pdf": "[<3326DFA53C91ABC448E4436423FB1E2C><3326DFA53C91ABC448E4436423FB1E2C>]",
+   "na_01_weld_two_words.pdf": "[<C23502FC9D86809C11AB68723FEC6E43><C23502FC9D86809C11AB68723FEC6E43>]",
+   "na_02_split_one_word.pdf": "[<218DD759D47A3A1CECA6EE25C3E76F00><218DD759D47A3A1CECA6EE25C3E76F00>]",
+   "na_03_delete_one_word.pdf": "[<D9451A8FDEF86348925A1AF0E618AFFF><D9451A8FDEF86348925A1AF0E618AFFF>]",
+   "na_04_weld_two_words.pdf": "[<B17B4A9D566E2C160888E262CC21CABA><B17B4A9D566E2C160888E262CC21CABA>]",
+   "na_05_split_one_word.pdf": "[<FDD85463908D46B8BDBC435D1D3AA91D><FDD85463908D46B8BDBC435D1D3AA91D>]",
+   "na_06_delete_one_word.pdf": "[<81D9ED22EAE74C1BF3808CE6DE961A80><81D9ED22EAE74C1BF3808CE6DE961A80>]",
+   "na_07_weld_two_words.pdf": "[<8DA8ECEDB14A4EAB24AAF7B09887595E><8DA8ECEDB14A4EAB24AAF7B09887595E>]",
+   "nc_00_heading_free.pdf": "[<46990A4C37F9A6DF4AAD1EC8313C5EDC><46990A4C37F9A6DF4AAD1EC8313C5EDC>]",
+   "nc_01_heading_free.pdf": "[<C91001E3AE6EF79F829548A04D8AD486><C91001E3AE6EF79F829548A04D8AD486>]",
+   "nc_02_heading_free.pdf": "[<E59F1B930726A6890204452EAC0461BA><E59F1B930726A6890204452EAC0461BA>]",
+   "nc_03_heading_free.pdf": "[<EB617762A771118DCA9279A683D2CCA6><EB617762A771118DCA9279A683D2CCA6>]"
+  },
+  "selection_stable_under_rename": true
+ },
+ "f3_f4_replay": {
+  "population": 96,
+  "na_eligible": 83,
+  "nb_eligible": 96,
+  "expectations": [
+   {
+    "schedule_index": 0,
+    "variant": "DELETE_ONE_WORD",
+    "expected_before": "RESEARCH AND DEVELOPMENT",
+    "expected_after": "RESEARCH AND"
+   },
+   {
+    "schedule_index": 1,
+    "variant": "WELD_TWO_WORDS",
+    "expected_before": "(RESCISSIONS OF FUNDS)",
+    "expected_after": "(RESCISSIONSOF FUNDS)"
+   },
+   {
+    "schedule_index": 2,
+    "variant": "SPLIT_ONE_WORD",
+    "expected_before": "(RESCISSION OF FUNDS)",
+    "expected_after": "(RESCI SSION OF FUNDS)"
+   },
+   {
+    "schedule_index": 3,
+    "variant": "DELETE_ONE_WORD",
+    "expected_before": "OPERATIONS AND SUPPORT",
+    "expected_after": "AND SUPPORT"
+   },
+   {
+    "schedule_index": 4,
+    "variant": "WELD_TWO_WORDS",
+    "expected_before": "VETERANS INSURANCE AND INDEMNITIES",
+    "expected_after": "VETERANSINSURANCE AND INDEMNITIES"
+   },
+   {
+    "schedule_index": 5,
+    "variant": "SPLIT_ONE_WORD",
+    "expected_before": "OPERATIONS AND SUPPORT",
+    "expected_after": "OPERA TIONS AND SUPPORT"
+   },
+   {
+    "schedule_index": 6,
+    "variant": "DELETE_ONE_WORD",
+    "expected_before": "COMPENSATION AND PENSIONS",
+    "expected_after": "AND PENSIONS"
+   },
+   {
+    "schedule_index": 7,
+    "variant": "WELD_TWO_WORDS",
+    "expected_before": "OPERATIONS AND SUPPORT",
+    "expected_after": "OPERATIONSAND SUPPORT"
+   }
+  ],
+  "f3_negatives": {
+   "A selected N-A replaced by another ELIGIBLE N-A": true,
+   "B selected N-B replaced by another ELIGIBLE N-B": true,
+   "C same text, wrong XML structural identity": true,
+   "D same text, wrong physical occurrence": true,
+   "E 8/8 counts kept, one source substituted": true,
+   "F right members, deterministic order broken": true
+  },
+  "f4_alternative_live": {
+   "DELETE_ONE_WORD": true,
+   "WELD_TWO_WORDS": true,
+   "SPLIT_ONE_WORD": true
+  },
+  "f4_rejected": {
+   "DELETE_ONE_WORD": true,
+   "WELD_TWO_WORDS": true,
+   "SPLIT_ONE_WORD": true
+  }
+ },
+ "g6_falsifications": {
+  "sabotaged_g6": {
+   "defects": [],
+   "allocation": {
+    "DELETE_ONE_WORD": 3,
+    "WELD_TWO_WORDS": 3,
+    "SPLIT_ONE_WORD": 2
+   }
+  },
+  "sabotage_live": {
+   "run_hybrid.run": true,
+   "run_extended.run": true,
+   "pdf_anchors.extract_anchors": true
+  },
+  "stale_x26": [
+   "MUTATION_INPUT_MISMATCH",
+   "ORACLE_EVIDENCE_STALE"
+  ],
+  "fresh_x26_wrong_truth": [
+   "MUTATION_INPUT_MISMATCH"
+  ]
+ },
+ "nc_rendered_distinctness": {
+  "rendered_png_sha256": [
+   "ce7aefae40978180bfe7e81310238808657ec42b8845b0d6c81160fdcc309596",
+   "ebd2572ef7032604dd88ab13cc8aef6364517ff9c97f7a1062172d37f107e2d3",
+   "bb14d96a3c6ddc9a40a7b88bac2f4323b8da4c187bacd335d6f960e36b243b23",
+   "d62985083b9d7b5757d52bb1750b0db40aeb0afd402ad4865c8393fcc974faa2"
+  ],
+  "container_sha256": [
+   "89c88afa4c4e941e",
+   "1a43384798a0d059",
+   "14a0d4bc036147c7",
+   "e9a091786d020f59"
+  ],
+  "distinct_rendered": 4
+ },
+ "reproducibility": {
+  "n_generated": 12
+ },
+ "holdout_identity_guard": {
+  "n_holdout_source_sha256": 17,
+  "counterfactual_reasons": [
+   "HOLDOUT_SOURCE_IDENTITY",
+   "ORACLE_EVIDENCE_STALE",
+   "STALE_SHA256"
+  ]
+ },
+ "g6": {
+  "negatives": {
+   "N-A count wrong": {
+    "expected": "WRONG_CONTROL_COUNT",
+    "fired": true
+   },
+   "N-B count wrong": {
+    "expected": "WRONG_CONTROL_COUNT",
+    "fired": true
+   },
+   "N-C count wrong": {
+    "expected": "WRONG_CONTROL_COUNT",
+    "fired": true
+   },
+   "N-A allocation wrong": {
+    "expected": "WRONG_NA_ALLOCATION",
+    "fired": true
+   },
+   "RETIRED size variant reintroduced": {
+    "expected": "RETIRED_VARIANT_PRESENT",
+    "fired": true
+   },
+   "N-A mutation before == after": {
+    "expected": "DEAD_OR_MISCLASSIFIED_MUTATION",
+    "fired": true
+   },
+   "WELD changes non-space characters": {
+    "expected": "DEAD_OR_MISCLASSIFIED_MUTATION",
+    "fired": true
+   },
+   "SPLIT changes non-space characters": {
+    "expected": "DEAD_OR_MISCLASSIFIED_MUTATION",
+    "fired": true
+   },
+   "WELD moves more than one boundary": {
+    "expected": "DEAD_OR_MISCLASSIFIED_MUTATION",
+    "fired": true
+   },
+   "SPLIT moves a boundary the wrong way": {
+    "expected": "DEAD_OR_MISCLASSIFIED_MUTATION",
+    "fired": true
+   },
+   "stale source SHA": {
+    "expected": "STALE_SHA256",
+    "fired": true
+   },
+   "stale generated PDF SHA": {
+    "expected": "STALE_SHA256",
+    "fired": true
+   },
+   "duplicate control identity": {
+    "expected": "DUPLICATE_CONTROL_IDENTITY",
+    "fired": true
+   },
+   "missing expected truth": {
+    "expected": "MISSING_EXPECTED_TRUTH",
+    "fired": true
+   },
+   "N-B missing XML corroboration": {
+    "expected": "MISSING_XML_CORROBORATION",
+    "fired": true
+   },
+   "N-C expected headings non-empty": {
+    "expected": "NC_EXPECTED_HEADINGS_NOT_EMPTY",
+    "fired": true
+   },
+   "holdout provenance in the chain": {
+    "expected": "HOLDOUT_PROVENANCE",
+    "fired": true
+   },
+   "mutation recipe disagrees with variant": {
+    "expected": "MUTATION_RECIPE_VARIANT_MISMATCH",
+    "fired": true
+   }
+  }
+ },
+ "tests": [
+  {
+   "test": "DELETE changes the NON-SPACE character sequence",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "deleting a word leaves the non-space sequence intact, i.e. nothing was removed"
+  },
+  {
+   "test": "WELD leaves non-space identical and removes exactly ONE boundary (1 -> 0)",
+   "expected": [
+    true,
+    true,
+    [
+     [
+      1,
+      0
+     ]
+    ]
+   ],
+   "observed": [
+    true,
+    true,
+    [
+     [
+      1,
+      0
+     ]
+    ]
+   ],
+   "pass": true,
+   "fails_when": "weld changed a character, or moved more than one boundary -- it would then be a content corruption rather than the missing-boundary class M3 distinguishes"
+  },
+  {
+   "test": "SPLIT leaves non-space identical and inserts exactly ONE boundary (0 -> 1)",
+   "expected": [
+    true,
+    true,
+    [
+     [
+      0,
+      1
+     ]
+    ]
+   ],
+   "observed": [
+    true,
+    true,
+    [
+     [
+      0,
+      1
+     ]
+    ]
+   ],
+   "pass": true,
+   "fails_when": "split changed a character, or moved more than one boundary"
+  },
+  {
+   "test": "SPLIT is the exact complement of WELD",
+   "expected": [
+    [
+     [
+      0,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      0
+     ]
+    ]
+   ],
+   "observed": [
+    [
+     [
+      0,
+      1
+     ]
+    ],
+    [
+     [
+      1,
+      0
+     ]
+    ]
+   ],
+   "pass": true,
+   "fails_when": "the two classes are not complementary, so N-A no longer spans both M3 directions"
+  },
+  {
+   "test": "the SPLIT example matches the A40.2 illustration",
+   "expected": "SALA RIES AND EXPENSES",
+   "observed": "SALA RIES AND EXPENSES",
+   "pass": true,
+   "fails_when": "the frozen floor(len/2) target produces a different string than A40.2 specifies"
+  },
+  {
+   "test": "NEGATIVE -- a DEAD mutation (before == after) is not live",
+   "expected": [
+    false,
+    false
+   ],
+   "observed": [
+    false,
+    false
+   ],
+   "pass": true,
+   "fails_when": "an unchanged string is accepted as a mutation, which is exactly the A39.3 failure the size control was retired for"
+  },
+  {
+   "test": "NEGATIVE -- the RETIRED size variant can never be live",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "PULL_HEADING_TO_BODY_SIZE is still treated as a valid mutation class"
+  },
+  {
+   "test": "both SPLIT pieces are at least 3 characters",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "a split leaves a 1-2 character fragment, which is a different failure mode"
+  },
+  {
+   "test": "the manifest holds exactly 8 N-A, 8 N-B, 4 N-C",
+   "expected": {
+    "N-A": 8,
+    "N-B": 8,
+    "N-C": 4
+   },
+   "observed": {
+    "N-A": 8,
+    "N-B": 8,
+    "N-C": 4
+   },
+   "pass": true,
+   "fails_when": "a control class is under- or over-populated, so a Rule 3 blocker is not satisfied"
+  },
+  {
+   "test": "N-A realizes the frozen 3 / 3 / 2 allocation",
+   "expected": {
+    "DELETE_ONE_WORD": 3,
+    "WELD_TWO_WORDS": 3,
+    "SPLIT_ONE_WORD": 2
+   },
+   "observed": {
+    "DELETE_ONE_WORD": 3,
+    "WELD_TWO_WORDS": 3,
+    "SPLIT_ONE_WORD": 2
+   },
+   "pass": true,
+   "fails_when": "the index-mod-3 schedule was not applied, so the three M3 directions are not balanced as A40.1 freezes them"
+  },
+  {
+   "test": "every N-A mutation is LIVE on the realized fixtures",
+   "expected": [
+    8,
+    true
+   ],
+   "observed": [
+    8,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a realized control cannot fire, so it reports coverage the study does not have"
+  },
+  {
+   "test": "the RETIRED variant appears nowhere in the realized set",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "PULL_HEADING_TO_BODY_SIZE survived the A40 retirement"
+  },
+  {
+   "test": "every N-C expects EXACTLY no headings",
+   "expected": [
+    [],
+    [],
+    [],
+    []
+   ],
+   "observed": [
+    [],
+    [],
+    [],
+    []
+   ],
+   "pass": true,
+   "fails_when": "a constructionally heading-free region expects a heading, so the over-triggering control could never fail"
+  },
+  {
+   "test": "every N-A and N-B carries paired GPO XML corroboration",
+   "expected": [
+    16,
+    16
+   ],
+   "observed": [
+    16,
+    16
+   ],
+   "pass": true,
+   "fails_when": "a control's truth rests on something other than the independent source -- in the worst case on H or X's own output"
+  },
+  {
+   "test": "all 20 control identities are unique",
+   "expected": 20,
+   "observed": 20,
+   "pass": true,
+   "fails_when": "two controls share an identity, so one would silently overwrite the other"
+  },
+  {
+   "test": "every generated N-A prints its mutation in the TARGET REGION exactly once",
+   "expected": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "observed": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "pass": true,
+   "fails_when": "the mutation did not reach the adjudicated region, so the stimulus would not contain the alteration the control exists to test"
+  },
+  {
+   "test": "...and the ORIGINAL heading is absent from that TARGET REGION",
+   "expected": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "observed": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "pass": true,
+   "fails_when": "the unmutated heading survives inside the crop, so the region shows both and the control cannot distinguish an oracle that saw the alteration"
+  },
+  {
+   "test": "DIAGNOSTIC -- some N-A pages legitimately repeat the original heading OUTSIDE the crop",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no fixture exercises the duplicate-elsewhere case, so the occurrence-scoped rule is indistinguishable from the page-scoped one it replaced"
+  },
+  {
+   "test": "NEGATIVE A -- an original heading INSIDE the target region is detected",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "an unmutated heading inside the crop goes unnoticed, so the region rule cannot fail"
+  },
+  {
+   "test": "NEGATIVE B -- a mutation absent from the target region is detected",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": "the mutation counts even when it lies outside the crop, so the rule would pass a stimulus that shows the adjudicator nothing"
+  },
+  {
+   "test": "POSITIVE -- a fixture whose original repeats ELSEWHERE on the page still passes",
+   "expected": [
+    1,
+    0,
+    true
+   ],
+   "observed": [
+    1,
+    0,
+    true
+   ],
+   "pass": true,
+   "fails_when": "the rule still gates on an unrelated duplicate outside the selected region, which is the scope error A40.13 corrects"
+  },
+  {
+   "test": "every generated fixture carries the id its own basename determines",
+   "expected": {
+    "na_00_delete_one_word.pdf": "[<3326DFA53C91ABC448E4436423FB1E2C><3326DFA53C91ABC448E4436423FB1E2C>]",
+    "na_01_weld_two_words.pdf": "[<C23502FC9D86809C11AB68723FEC6E43><C23502FC9D86809C11AB68723FEC6E43>]",
+    "na_02_split_one_word.pdf": "[<218DD759D47A3A1CECA6EE25C3E76F00><218DD759D47A3A1CECA6EE25C3E76F00>]",
+    "na_03_delete_one_word.pdf": "[<D9451A8FDEF86348925A1AF0E618AFFF><D9451A8FDEF86348925A1AF0E618AFFF>]",
+    "na_04_weld_two_words.pdf": "[<B17B4A9D566E2C160888E262CC21CABA><B17B4A9D566E2C160888E262CC21CABA>]",
+    "na_05_split_one_word.pdf": "[<FDD85463908D46B8BDBC435D1D3AA91D><FDD85463908D46B8BDBC435D1D3AA91D>]",
+    "na_06_delete_one_word.pdf": "[<81D9ED22EAE74C1BF3808CE6DE961A80><81D9ED22EAE74C1BF3808CE6DE961A80>]",
+    "na_07_weld_two_words.pdf": "[<8DA8ECEDB14A4EAB24AAF7B09887595E><8DA8ECEDB14A4EAB24AAF7B09887595E>]",
+    "nc_00_heading_free.pdf": "[<46990A4C37F9A6DF4AAD1EC8313C5EDC><46990A4C37F9A6DF4AAD1EC8313C5EDC>]",
+    "nc_01_heading_free.pdf": "[<C91001E3AE6EF79F829548A04D8AD486><C91001E3AE6EF79F829548A04D8AD486>]",
+    "nc_02_heading_free.pdf": "[<E59F1B930726A6890204452EAC0461BA><E59F1B930726A6890204452EAC0461BA>]",
+    "nc_03_heading_free.pdf": "[<EB617762A771118DCA9279A683D2CCA6><EB617762A771118DCA9279A683D2CCA6>]"
+   },
+   "observed": {
+    "na_00_delete_one_word.pdf": "[<3326DFA53C91ABC448E4436423FB1E2C><3326DFA53C91ABC448E4436423FB1E2C>]",
+    "na_01_weld_two_words.pdf": "[<C23502FC9D86809C11AB68723FEC6E43><C23502FC9D86809C11AB68723FEC6E43>]",
+    "na_02_split_one_word.pdf": "[<218DD759D47A3A1CECA6EE25C3E76F00><218DD759D47A3A1CECA6EE25C3E76F00>]",
+    "na_03_delete_one_word.pdf": "[<D9451A8FDEF86348925A1AF0E618AFFF><D9451A8FDEF86348925A1AF0E618AFFF>]",
+    "na_04_weld_two_words.pdf": "[<B17B4A9D566E2C160888E262CC21CABA><B17B4A9D566E2C160888E262CC21CABA>]",
+    "na_05_split_one_word.pdf": "[<FDD85463908D46B8BDBC435D1D3AA91D><FDD85463908D46B8BDBC435D1D3AA91D>]",
+    "na_06_delete_one_word.pdf": "[<81D9ED22EAE74C1BF3808CE6DE961A80><81D9ED22EAE74C1BF3808CE6DE961A80>]",
+    "na_07_weld_two_words.pdf": "[<8DA8ECEDB14A4EAB24AAF7B09887595E><8DA8ECEDB14A4EAB24AAF7B09887595E>]",
+    "nc_00_heading_free.pdf": "[<46990A4C37F9A6DF4AAD1EC8313C5EDC><46990A4C37F9A6DF4AAD1EC8313C5EDC>]",
+    "nc_01_heading_free.pdf": "[<C91001E3AE6EF79F829548A04D8AD486><C91001E3AE6EF79F829548A04D8AD486>]",
+    "nc_02_heading_free.pdf": "[<E59F1B930726A6890204452EAC0461BA><E59F1B930726A6890204452EAC0461BA>]",
+    "nc_03_heading_free.pdf": "[<EB617762A771118DCA9279A683D2CCA6><EB617762A771118DCA9279A683D2CCA6>]"
+   },
+   "pass": true,
+   "fails_when": "a generated fixture's trailer id is not the deterministic one, so its bytes are not reproducible from the committed inputs"
+  },
+  {
+   "test": "all generated trailer ids are DISTINCT",
+   "expected": 12,
+   "observed": 12,
+   "pass": true,
+   "fails_when": "two fixtures share a PDF identity"
+  },
+  {
+   "test": "a renamed copy would carry a DIFFERENT id (so the counterfactual is real)",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the rename does not change the id, so this proves nothing about /ID being ignored"
+  },
+  {
+   "test": "...and neither source selection nor control identity moves",
+   "expected": [
+    [
+     "[\"xml-account\",\"e4bc6b90eeff87d05eaa5ba61792c8a3b24aebcb86e5d6c98bb03de839be536d\",\"H678E045EEF614CC397A326B1375E18E1\",20,20]",
+     "[\"xml-account\",\"68e98a6b0b204cfec7b0d79fdd8e42184fd72cc2872ce93facf6907c1bcbb1a8\",\"id7B6E2DF0F81A4AFDAAFD9EE47559AA49\",96,126]",
+     "[\"xml-account\",\"68e98a6b0b204cfec7b0d79fdd8e42184fd72cc2872ce93facf6907c1bcbb1a8\",\"id6F67AFBC04BD41B4BB87288874CC1F2D\",5,21]",
+     "[\"xml-account\",\"e4bc6b90eeff87d05eaa5ba61792c8a3b24aebcb86e5d6c98bb03de839be536d\",\"H7BD885E459AC4C37A68D0646B2B1789D\",35,58]",
+     "[\"xml-account\",\"68e98a6b0b204cfec7b0d79fdd8e42184fd72cc2872ce93facf6907c1bcbb1a8\",\"H8F1342C5C10F4399BBE581A2248B993A\",11,25]",
+     "[\"xml-account\",\"e4bc6b90eeff87d05eaa5ba61792c8a3b24aebcb86e5d6c98bb03de839be536d\",\"HC308222694524A38859E317746AEB753\",29,56]",
+     "[\"xml-account\",\"68e98a6b0b204cfec7b0d79fdd8e42184fd72cc2872ce93facf6907c1bcbb1a8\",\"H28C2B4A56282401B89ABB1F6D6EF0496\",8,23]",
+     "[\"xml-account\",\"e4bc6b90eeff87d05eaa5ba61792c8a3b24aebcb86e5d6c98bb03de839be536d\",\"H3AAFBF6B6E5E4300A3FA053B7EB13F1A\",23,44]"
+    ],
+    [
+     "[\"control\",\"N-A\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",126,1,\"WELD_TWO_WORDS\"]",
+     "[\"control\",\"N-A\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",21,2,\"SPLIT_ONE_WORD\"]",
+     "[\"control\",\"N-A\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",23,6,\"DELETE_ONE_WORD\"]",
+     "[\"control\",\"N-A\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",25,4,\"WELD_TWO_WORDS\"]",
+     "[\"control\",\"N-A\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",20,0,\"DELETE_ONE_WORD\"]",
+     "[\"control\",\"N-A\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",44,7,\"WELD_TWO_WORDS\"]",
+     "[\"control\",\"N-A\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",56,5,\"SPLIT_ONE_WORD\"]",
+     "[\"control\",\"N-A\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",58,3,\"DELETE_ONE_WORD\"]",
+     "[\"control\",\"N-B\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",21,3,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",57,0,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",60,2,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",94,6,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",11,7,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",15,5,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",49,1,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",57,4,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-C\",\"14a0d4bc036147c7113f9ca2d5b8b77868112b2db725b6a456355f8b1b0abe17\",1,2,\"SYNTHETIC_HEADING_FREE\"]",
+     "[\"control\",\"N-C\",\"1a43384798a0d0595cefb1628bf092c867efa109da82c7d87c48fa3ef45f501d\",1,1,\"SYNTHETIC_HEADING_FREE\"]",
+     "[\"control\",\"N-C\",\"89c88afa4c4e941e2f99eab249212fc607b348ff34326debe668614f05678e24\",1,0,\"SYNTHETIC_HEADING_FREE\"]",
+     "[\"control\",\"N-C\",\"e9a091786d020f59edf0c959a79e4c0ddae3fa59dee139b54e77693571108c94\",1,3,\"SYNTHETIC_HEADING_FREE\"]"
+    ]
+   ],
+   "observed": [
+    [
+     "[\"xml-account\",\"e4bc6b90eeff87d05eaa5ba61792c8a3b24aebcb86e5d6c98bb03de839be536d\",\"H678E045EEF614CC397A326B1375E18E1\",20,20]",
+     "[\"xml-account\",\"68e98a6b0b204cfec7b0d79fdd8e42184fd72cc2872ce93facf6907c1bcbb1a8\",\"id7B6E2DF0F81A4AFDAAFD9EE47559AA49\",96,126]",
+     "[\"xml-account\",\"68e98a6b0b204cfec7b0d79fdd8e42184fd72cc2872ce93facf6907c1bcbb1a8\",\"id6F67AFBC04BD41B4BB87288874CC1F2D\",5,21]",
+     "[\"xml-account\",\"e4bc6b90eeff87d05eaa5ba61792c8a3b24aebcb86e5d6c98bb03de839be536d\",\"H7BD885E459AC4C37A68D0646B2B1789D\",35,58]",
+     "[\"xml-account\",\"68e98a6b0b204cfec7b0d79fdd8e42184fd72cc2872ce93facf6907c1bcbb1a8\",\"H8F1342C5C10F4399BBE581A2248B993A\",11,25]",
+     "[\"xml-account\",\"e4bc6b90eeff87d05eaa5ba61792c8a3b24aebcb86e5d6c98bb03de839be536d\",\"HC308222694524A38859E317746AEB753\",29,56]",
+     "[\"xml-account\",\"68e98a6b0b204cfec7b0d79fdd8e42184fd72cc2872ce93facf6907c1bcbb1a8\",\"H28C2B4A56282401B89ABB1F6D6EF0496\",8,23]",
+     "[\"xml-account\",\"e4bc6b90eeff87d05eaa5ba61792c8a3b24aebcb86e5d6c98bb03de839be536d\",\"H3AAFBF6B6E5E4300A3FA053B7EB13F1A\",23,44]"
+    ],
+    [
+     "[\"control\",\"N-A\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",126,1,\"WELD_TWO_WORDS\"]",
+     "[\"control\",\"N-A\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",21,2,\"SPLIT_ONE_WORD\"]",
+     "[\"control\",\"N-A\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",23,6,\"DELETE_ONE_WORD\"]",
+     "[\"control\",\"N-A\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",25,4,\"WELD_TWO_WORDS\"]",
+     "[\"control\",\"N-A\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",20,0,\"DELETE_ONE_WORD\"]",
+     "[\"control\",\"N-A\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",44,7,\"WELD_TWO_WORDS\"]",
+     "[\"control\",\"N-A\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",56,5,\"SPLIT_ONE_WORD\"]",
+     "[\"control\",\"N-A\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",58,3,\"DELETE_ONE_WORD\"]",
+     "[\"control\",\"N-B\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",21,3,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",57,0,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",60,2,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2\",94,6,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",11,7,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",15,5,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",49,1,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-B\",\"d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0\",57,4,\"XML_CORROBORATED_HEADING\"]",
+     "[\"control\",\"N-C\",\"14a0d4bc036147c7113f9ca2d5b8b77868112b2db725b6a456355f8b1b0abe17\",1,2,\"SYNTHETIC_HEADING_FREE\"]",
+     "[\"control\",\"N-C\",\"1a43384798a0d0595cefb1628bf092c867efa109da82c7d87c48fa3ef45f501d\",1,1,\"SYNTHETIC_HEADING_FREE\"]",
+     "[\"control\",\"N-C\",\"89c88afa4c4e941e2f99eab249212fc607b348ff34326debe668614f05678e24\",1,0,\"SYNTHETIC_HEADING_FREE\"]",
+     "[\"control\",\"N-C\",\"e9a091786d020f59edf0c959a79e4c0ddae3fa59dee139b54e77693571108c94\",1,3,\"SYNTHETIC_HEADING_FREE\"]"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a PDF trailer id reached source selection or control identity, which would make provenance depend on a filename rather than on committed source/SHA identity"
+  },
+  {
+   "test": "F3 -- the committed manifest AGREES with a full independent source replay",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the committed selection cannot be reproduced from the committed XML/PDF and the frozen constants, so either the manifest or the deterministic chain is wrong"
+  },
+  {
+   "test": "F4 -- every N-A variant is derived from the frozen schedule, not read from the manifest",
+   "expected": [
+    "DELETE_ONE_WORD",
+    "WELD_TWO_WORDS",
+    "SPLIT_ONE_WORD",
+    "DELETE_ONE_WORD",
+    "WELD_TWO_WORDS",
+    "SPLIT_ONE_WORD",
+    "DELETE_ONE_WORD",
+    "WELD_TWO_WORDS"
+   ],
+   "observed": [
+    "DELETE_ONE_WORD",
+    "WELD_TWO_WORDS",
+    "SPLIT_ONE_WORD",
+    "DELETE_ONE_WORD",
+    "WELD_TWO_WORDS",
+    "SPLIT_ONE_WORD",
+    "DELETE_ONE_WORD",
+    "WELD_TWO_WORDS"
+   ],
+   "pass": true,
+   "fails_when": "the replay takes the variant from the record it is checking, so a re-scheduled manifest would validate against itself"
+  },
+  {
+   "test": "F3 NEGATIVES -- every deterministically wrong manifest FAILS with its own reason",
+   "expected": {
+    "A selected N-A replaced by another ELIGIBLE N-A": true,
+    "B selected N-B replaced by another ELIGIBLE N-B": true,
+    "C same text, wrong XML structural identity": true,
+    "D same text, wrong physical occurrence": true,
+    "E 8/8 counts kept, one source substituted": true,
+    "F right members, deterministic order broken": true
+   },
+   "observed": {
+    "A selected N-A replaced by another ELIGIBLE N-A": true,
+    "B selected N-B replaced by another ELIGIBLE N-B": true,
+    "C same text, wrong XML structural identity": true,
+    "D same text, wrong physical occurrence": true,
+    "E 8/8 counts kept, one source substituted": true,
+    "F right members, deterministic order broken": true
+   },
+   "pass": true,
+   "fails_when": "a coherent but deterministically wrong manifest validates, which is exactly the false green F3 exists to remove"
+  },
+  {
+   "test": "each ALTERNATIVE mutation is itself LIVE (else the negative proves nothing)",
+   "expected": {
+    "DELETE_ONE_WORD": true,
+    "WELD_TWO_WORDS": true,
+    "SPLIT_ONE_WORD": true
+   },
+   "observed": {
+    "DELETE_ONE_WORD": true,
+    "WELD_TWO_WORDS": true,
+    "SPLIT_ONE_WORD": true
+   },
+   "pass": true,
+   "fails_when": "the alternative is dead, so its rejection shows only that dead mutations fail -- which is a different control"
+  },
+  {
+   "test": "F4 NEGATIVES -- a live but non-deterministic target is REJECTED",
+   "expected": {
+    "DELETE_ONE_WORD": true,
+    "WELD_TWO_WORDS": true,
+    "SPLIT_ONE_WORD": true
+   },
+   "observed": {
+    "DELETE_ONE_WORD": true,
+    "WELD_TWO_WORDS": true,
+    "SPLIT_ONE_WORD": true
+   },
+   "pass": true,
+   "fails_when": "a different-but-live mutation passes, so the deterministic target rule is not enforced"
+  },
+  {
+   "test": "F4 NEGATIVE -- recipe metadata altered while expected_after stays correct is REJECTED",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the recipe is not compared, so the committed target rule is unverifiable"
+  },
+  {
+   "test": "F4 NEGATIVE -- a SELF-CONSISTENT rewrite of before/after/recipe is REJECTED",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the replay takes expected_before from the manifest, so a record that rewrites its own input and recomputes everything from it validates against itself -- F4 would be self-validating rather than independent"
+  },
+  {
+   "test": "a WARM replay cache would mask the sabotage entirely",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the cache does not short-circuit the replay, so this control no longer explains why the cache must be invalidated -- re-derive the sabotage control before trusting it"
+  },
+  {
+   "test": "G6 validates with run_hybrid/run_extended/extract_anchors ALL raising",
+   "expected": [
+    [],
+    96,
+    83,
+    96,
+    8,
+    8,
+    {
+     "DELETE_ONE_WORD": 3,
+     "WELD_TWO_WORDS": 3,
+     "SPLIT_ONE_WORD": 2
+    }
+   ],
+   "observed": [
+    [],
+    96,
+    83,
+    96,
+    8,
+    8,
+    {
+     "DELETE_ONE_WORD": 3,
+     "WELD_TWO_WORDS": 3,
+     "SPLIT_ONE_WORD": 2
+    }
+   ],
+   "pass": true,
+   "fails_when": "an H, X or pdf_anchors dependency has entered the result-bearing G6 replay path, so control source truth would be derived from the architectures under test"
+  },
+  {
+   "test": "every sabotaged entrypoint really raises when called",
+   "expected": {
+    "run_hybrid.run": true,
+    "run_extended.run": true,
+    "pdf_anchors.extract_anchors": true
+   },
+   "observed": {
+    "run_hybrid.run": true,
+    "run_extended.run": true,
+    "pdf_anchors.extract_anchors": true
+   },
+   "pass": true,
+   "fails_when": "a monkeypatch did not take, so the sabotage control passed because nothing was disabled"
+  },
+  {
+   "test": "the mutated control state is still WELL-FORMED (so the negatives cannot pass for the wrong reason)",
+   "expected": [
+    true,
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "the mutation broke a record's structure, so a rejection would demonstrate malformedness rather than the binding invariant under test"
+  },
+  {
+   "test": "a valid-but-different control state is REJECTED while the old x26 evidence still says failures==[]",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "x26 evidence certifies a control/oracle state it was not produced for, which is the exact false green A40.16 closed -- the evidence would only be certifying itself"
+  },
+  {
+   "test": "...and the untouched x26 artifact really did still report success",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the committed evidence already reported failures, so the staleness negative above is not isolating the input binding"
+  },
+  {
+   "test": "even CURRENT x26 evidence cannot certify wrong N-B truth",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "fails_when": "N-B expected truth is not independently replayed from source, so a manifest and its evidence can agree with each other while both disagree with the actual source"
+  },
+  {
+   "test": "the x26 evidence file is byte-restored",
+   "expected": "cc0fd95b152e1dd0b3c5ffd5f8415a514dbc9274597b376087018c82fdc09aee",
+   "observed": "cc0fd95b152e1dd0b3c5ffd5f8415a514dbc9274597b376087018c82fdc09aee",
+   "pass": true,
+   "fails_when": "the regression left the committed evidence modified, which would dirty the tree"
+  },
+  {
+   "test": "and the authoritative state still validates cleanly",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the regression did not restore the state it mutated"
+  },
+  {
+   "test": "the four N-C controls render to FOUR DISTINCT PNG hashes",
+   "expected": 4,
+   "observed": 4,
+   "pass": true,
+   "fails_when": "two heading-free controls are the same image, so the four-item N-C denominator is really fewer -- and container SHA uniqueness would have hidden it"
+  },
+  {
+   "test": "...through the REAL build_oracle.render_region at the frozen primary DPI",
+   "expected": [
+    4,
+    true
+   ],
+   "observed": [
+    4,
+    true
+   ],
+   "pass": true,
+   "fails_when": "the distinctness was measured by some other path than the one that will render the actual stimulus"
+  },
+  {
+   "test": "container SHAs are distinct too, but are NOT the evidence",
+   "expected": 4,
+   "observed": 4,
+   "pass": true,
+   "fails_when": "the generated files are byte-identical, which is a different defect"
+  },
+  {
+   "test": "a clean rebuild reproduces IDENTICAL bytes for every generated fixture",
+   "expected": {
+    "na_00_delete_one_word.pdf": "cd1460a092dc44fc4cf2f7d33b4fd9ece0d21adf2f7f5d0fd1b83cbf037a522f",
+    "na_01_weld_two_words.pdf": "104f85729ac095d06e2a56e3d48bfcc30abe9f298b6c99bf98469c3c8d67c061",
+    "na_02_split_one_word.pdf": "61c9178fc8c51ab4b81fc0c4a7b34303eaabbde27b9db39f59e8c8584642d7bd",
+    "na_03_delete_one_word.pdf": "b3f30e24b50424c3e8f634ddfc501f1029352d7a361fad26a1c71831ec167469",
+    "na_04_weld_two_words.pdf": "d5f67bb44f8490cea2e9d3330cad0b373b7a0253d5f4f8179ff3892d820202ac",
+    "na_05_split_one_word.pdf": "1bc08acb57b17f1220ae35046e931fac73647e46f41bf7da14f1428c9e9da45e",
+    "na_06_delete_one_word.pdf": "7f0fddf896985ff90a9a9fea34593b9cda3022c4cb86d5f8bdbf3740ca73eb4c",
+    "na_07_weld_two_words.pdf": "ce75db58bfc020fb02e20f74eb827f77a8f2f90580ccb3f7900eb31e6f298b28",
+    "nc_00_heading_free.pdf": "89c88afa4c4e941e2f99eab249212fc607b348ff34326debe668614f05678e24",
+    "nc_01_heading_free.pdf": "1a43384798a0d0595cefb1628bf092c867efa109da82c7d87c48fa3ef45f501d",
+    "nc_02_heading_free.pdf": "14a0d4bc036147c7113f9ca2d5b8b77868112b2db725b6a456355f8b1b0abe17",
+    "nc_03_heading_free.pdf": "e9a091786d020f59edf0c959a79e4c0ddae3fa59dee139b54e77693571108c94"
+   },
+   "observed": {
+    "na_00_delete_one_word.pdf": "cd1460a092dc44fc4cf2f7d33b4fd9ece0d21adf2f7f5d0fd1b83cbf037a522f",
+    "na_01_weld_two_words.pdf": "104f85729ac095d06e2a56e3d48bfcc30abe9f298b6c99bf98469c3c8d67c061",
+    "na_02_split_one_word.pdf": "61c9178fc8c51ab4b81fc0c4a7b34303eaabbde27b9db39f59e8c8584642d7bd",
+    "na_03_delete_one_word.pdf": "b3f30e24b50424c3e8f634ddfc501f1029352d7a361fad26a1c71831ec167469",
+    "na_04_weld_two_words.pdf": "d5f67bb44f8490cea2e9d3330cad0b373b7a0253d5f4f8179ff3892d820202ac",
+    "na_05_split_one_word.pdf": "1bc08acb57b17f1220ae35046e931fac73647e46f41bf7da14f1428c9e9da45e",
+    "na_06_delete_one_word.pdf": "7f0fddf896985ff90a9a9fea34593b9cda3022c4cb86d5f8bdbf3740ca73eb4c",
+    "na_07_weld_two_words.pdf": "ce75db58bfc020fb02e20f74eb827f77a8f2f90580ccb3f7900eb31e6f298b28",
+    "nc_00_heading_free.pdf": "89c88afa4c4e941e2f99eab249212fc607b348ff34326debe668614f05678e24",
+    "nc_01_heading_free.pdf": "1a43384798a0d0595cefb1628bf092c867efa109da82c7d87c48fa3ef45f501d",
+    "nc_02_heading_free.pdf": "14a0d4bc036147c7113f9ca2d5b8b77868112b2db725b6a456355f8b1b0abe17",
+    "nc_03_heading_free.pdf": "e9a091786d020f59edf0c959a79e4c0ddae3fa59dee139b54e77693571108c94"
+   },
+   "pass": true,
+   "fails_when": "a rebuild from identical inputs produces different bytes, so every committed hash goes stale on the next run and G6 cannot stay green"
+  },
+  {
+   "test": "the fixtures actually carry a canonicalised PDF /ID",
+   "expected": [
+    12,
+    true
+   ],
+   "observed": [
+    12,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a generated PDF has no /ID array, so the canonicalisation silently did nothing and reproducibility would depend on luck"
+  },
+  {
+   "test": "the authoritative holdout SHA set is non-empty",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the membership manifest yielded no source hashes, so the identity guard would be vacuous and every control would pass it trivially"
+  },
+  {
+   "test": "no committed control carries a holdout source identity",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a control's bytes are a confirmatory source"
+  },
+  {
+   "test": "NEGATIVE -- a DEVELOPMENT-looking record carrying a holdout SHA is REJECTED",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "confirmatory bytes copied in under an innocuous document id and path pass the gate, because nothing about the bytes has to change to defeat a name-based scan"
+  },
+  {
+   "test": "...and the name-based scan alone would NOT have caught it",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "the name scan happens to catch this case, so the identity check is not what is being demonstrated and the control proves less than it claims"
+  },
+  {
+   "test": "the realized manifest carries NO defect except the declared-outstanding replays",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "either the validator rejects a correctly built fixture set, or a real defect is hiding among the outstanding-replay markers"
+  },
+  {
+   "test": "G6 is green ONLY because both replays are actually implemented and pass",
+   "expected": [
+    true,
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "either a replay is switched off while G6 still reports PASS -- the semantic false green A40.12 removed -- or the manifest no longer satisfies a replay that is switched on"
+  },
+  {
+   "test": "EVERY injected defect makes G6 FAIL with its own reason",
+   "expected": {
+    "N-A count wrong": true,
+    "N-B count wrong": true,
+    "N-C count wrong": true,
+    "N-A allocation wrong": true,
+    "RETIRED size variant reintroduced": true,
+    "N-A mutation before == after": true,
+    "WELD changes non-space characters": true,
+    "SPLIT changes non-space characters": true,
+    "WELD moves more than one boundary": true,
+    "SPLIT moves a boundary the wrong way": true,
+    "stale source SHA": true,
+    "stale generated PDF SHA": true,
+    "duplicate control identity": true,
+    "missing expected truth": true,
+    "N-B missing XML corroboration": true,
+    "N-C expected headings non-empty": true,
+    "holdout provenance in the chain": true,
+    "mutation recipe disagrees with variant": true
+   },
+   "observed": {
+    "N-A count wrong": true,
+    "N-B count wrong": true,
+    "N-C count wrong": true,
+    "N-A allocation wrong": true,
+    "RETIRED size variant reintroduced": true,
+    "N-A mutation before == after": true,
+    "WELD changes non-space characters": true,
+    "SPLIT changes non-space characters": true,
+    "WELD moves more than one boundary": true,
+    "SPLIT moves a boundary the wrong way": true,
+    "stale source SHA": true,
+    "stale generated PDF SHA": true,
+    "duplicate control identity": true,
+    "missing expected truth": true,
+    "N-B missing XML corroboration": true,
+    "N-C expected headings non-empty": true,
+    "holdout provenance in the chain": true,
+    "mutation recipe disagrees with variant": true
+   },
+   "pass": true,
+   "fails_when": "an injected defect passes validation -- a green G6 would then certify a fixture set that cannot satisfy its Rule 3 blockers"
+  },
+  {
+   "test": "NEGATIVE -- changing the generated PDF BYTES with a stale manifest hash FAILS",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the validator compares recorded strings rather than recomputing from the file, so a silently edited fixture would keep certifying"
+  },
+  {
+   "test": "...and restoring the bytes clears the byte defect (only the outstanding replays remain)",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the byte-level control left the fixture set permanently invalid"
+  }
+ ],
+ "failures": []
+}

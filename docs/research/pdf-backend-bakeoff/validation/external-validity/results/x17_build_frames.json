@@ -1,0 +1,1380 @@
+{
+ "population": "SYNTHETIC + DEVELOPMENT -- no holdout opened, nothing scored",
+ "canonical_frames_json_created": false,
+ "d_frame_budget_applied": false,
+ "d_frame_sampled_or_truncated": false,
+ "region_size": 8,
+ "c_frame_max_per_document": 8,
+ "c_frame_namespace": "cframe-select",
+ "selection_seed": 20260807,
+ "anchor_equality": "the WHOLE emitted production Anchor value (page, line, kind, text, division); no reduced signature is invented for frames",
+ "development_note": "DEVELOPMENT figures are diagnostics that exercise the code paths. They are not study results and no metric is scored from them.",
+ "public_entrypoint": "build_frames.build_document_frame(sha, id, population, h_pages, x_pages)",
+ "private_synthetic_constructor": "build_frames._build_document_frame_from_inputs(...)",
+ "region_size_is_not_a_parameter_on_any_result_bearing_path": true,
+ "structural_preconditions_fail_closed": [
+  "DUPLICATE_PAGE_NUMBER",
+  "PAGE_SET_MISMATCH",
+  "NEUTRAL_SKELETON_MISMATCH",
+  "PRINT_LINES_EMITTED_DRIFT",
+  "ANCHOR_PLACEMENT_REFUSED",
+  "UNKNOWN_POPULATION"
+ ],
+ "synthetic_precondition_evidence": {
+  "synthetic_scope_document": [
+   [
+    2,
+    1,
+    "account",
+    "OPERATIONS AND SUPPORT",
+    ""
+   ]
+  ],
+  "synthetic_scope_per_page": []
+ },
+ "synthetic_d_evidence": {
+  "text_injection": [
+   "TEXT_DISCORDANCE"
+  ],
+  "merge_injection": [
+   "SEGMENTATION_DISCORDANCE"
+  ],
+  "anchor_injection": [
+   "ANCHOR_DISCORDANCE"
+  ],
+  "d_census_61": 61
+ },
+ "synthetic_c_evidence": {
+  "regions": 15,
+  "selected": 8
+ },
+ "development": {
+  "documents": [
+   {
+    "document": "114-hr-2029/4",
+    "document_sha256": "7e3786d7abb1c54c030903d5ea58471e7827877f4d3c92cae858a79972b56df2",
+    "pages": 60,
+    "neutral_lines": 1594,
+    "regions": 238,
+    "short_trailing_regions": 59,
+    "c_frame_selected": 8,
+    "d_frame_census": 170,
+    "d_text": 170,
+    "d_segmentation": 0,
+    "d_anchor": 0,
+    "both_absent_lines": 118,
+    "m0_risk_set_lines": 1476
+   },
+   {
+    "document": "118-s-4795/1",
+    "document_sha256": "7f7d022501496236b1b3fcc5dea7a8af4eed7ea9d272fd3568d71d8bc01766e8",
+    "pages": 60,
+    "neutral_lines": 1583,
+    "regions": 235,
+    "short_trailing_regions": 58,
+    "c_frame_selected": 8,
+    "d_frame_census": 165,
+    "d_text": 165,
+    "d_segmentation": 0,
+    "d_anchor": 0,
+    "both_absent_lines": 118,
+    "m0_risk_set_lines": 1465
+   },
+   {
+    "document": "115-hr-5895/1",
+    "document_sha256": "3450f4825ff273988f9fe6b77e244a04f163f67fff9c4b8ee42588d81cea5157",
+    "pages": 60,
+    "neutral_lines": 1651,
+    "regions": 239,
+    "short_trailing_regions": 60,
+    "c_frame_selected": 8,
+    "d_frame_census": 177,
+    "d_text": 177,
+    "d_segmentation": 0,
+    "d_anchor": 1,
+    "both_absent_lines": 178,
+    "m0_risk_set_lines": 1473
+   },
+   {
+    "document": "118-hr-8752/1",
+    "document_sha256": "d0751bfbe0e53cd89a1906fb5a720035eb4cb6fa69c0bbfbab024f801bc24ae0",
+    "pages": 60,
+    "neutral_lines": 1654,
+    "regions": 239,
+    "short_trailing_regions": 60,
+    "c_frame_selected": 8,
+    "d_frame_census": 171,
+    "d_text": 171,
+    "d_segmentation": 0,
+    "d_anchor": 1,
+    "both_absent_lines": 178,
+    "m0_risk_set_lines": 1476
+   },
+   {
+    "document": "119-hr-1/1",
+    "document_sha256": "d324ddfc44c2d277ea095938ec94b3f78bb2cffd0bf02c92382d4bd1a40846e0",
+    "pages": 60,
+    "neutral_lines": 1894,
+    "regions": 267,
+    "short_trailing_regions": 58,
+    "c_frame_selected": 8,
+    "d_frame_census": 159,
+    "d_text": 159,
+    "d_segmentation": 0,
+    "d_anchor": 8,
+    "both_absent_lines": 179,
+    "m0_risk_set_lines": 1715
+   },
+   {
+    "document": "118-hr-4366/1",
+    "document_sha256": "9c801bffcf796935315ba8cf17897389430e885a8aa6fc0dab1efe193d5e93df",
+    "pages": 60,
+    "neutral_lines": 1631,
+    "regions": 236,
+    "short_trailing_regions": 60,
+    "c_frame_selected": 8,
+    "d_frame_census": 171,
+    "d_text": 171,
+    "d_segmentation": 0,
+    "d_anchor": 0,
+    "both_absent_lines": 178,
+    "m0_risk_set_lines": 1453
+   }
+  ],
+  "anchor_scope_comparison": [
+   {
+    "document": "114-hr-2029/4",
+    "arm": "H",
+    "document_scope": 138,
+    "per_page_would_have_been": 138,
+    "document_scope_kinds": {
+     "title": 3,
+     "major": 3,
+     "account": 42,
+     "agency": 15,
+     "grouping": 2,
+     "section": 72,
+     "subsection": 1
+    },
+    "per_page_kinds": {
+     "title": 3,
+     "major": 3,
+     "account": 42,
+     "agency": 15,
+     "grouping": 2,
+     "section": 72,
+     "subsection": 1
+    },
+    "identical": true
+   },
+   {
+    "document": "114-hr-2029/4",
+    "arm": "X",
+    "document_scope": 138,
+    "per_page_would_have_been": 138,
+    "document_scope_kinds": {
+     "title": 3,
+     "major": 3,
+     "account": 42,
+     "agency": 15,
+     "grouping": 2,
+     "section": 72,
+     "subsection": 1
+    },
+    "per_page_kinds": {
+     "title": 3,
+     "major": 3,
+     "account": 42,
+     "agency": 15,
+     "grouping": 2,
+     "section": 72,
+     "subsection": 1
+    },
+    "identical": true
+   },
+   {
+    "document": "118-s-4795/1",
+    "arm": "H",
+    "document_scope": 96,
+    "per_page_would_have_been": 96,
+    "document_scope_kinds": {
+     "title": 2,
+     "major": 2,
+     "agency": 25,
+     "account": 53,
+     "grouping": 1,
+     "section": 13
+    },
+    "per_page_kinds": {
+     "title": 2,
+     "major": 2,
+     "agency": 25,
+     "account": 53,
+     "grouping": 1,
+     "section": 13
+    },
+    "identical": true
+   },
+   {
+    "document": "118-s-4795/1",
+    "arm": "X",
+    "document_scope": 96,
+    "per_page_would_have_been": 96,
+    "document_scope_kinds": {
+     "title": 2,
+     "major": 2,
+     "agency": 25,
+     "account": 53,
+     "grouping": 1,
+     "section": 13
+    },
+    "per_page_kinds": {
+     "title": 2,
+     "major": 2,
+     "agency": 25,
+     "account": 53,
+     "grouping": 1,
+     "section": 13
+    },
+    "identical": true
+   },
+   {
+    "document": "115-hr-5895/1",
+    "arm": "H",
+    "document_scope": 121,
+    "per_page_would_have_been": 120,
+    "document_scope_kinds": {
+     "title": 5,
+     "major": 7,
+     "account": 59,
+     "agency": 14,
+     "section": 31,
+     "subsection": 5
+    },
+    "per_page_kinds": {
+     "title": 5,
+     "major": 6,
+     "account": 59,
+     "agency": 14,
+     "section": 31,
+     "subsection": 5
+    },
+    "identical": false
+   },
+   {
+    "document": "115-hr-5895/1",
+    "arm": "X",
+    "document_scope": 121,
+    "per_page_would_have_been": 120,
+    "document_scope_kinds": {
+     "title": 5,
+     "major": 7,
+     "account": 59,
+     "agency": 14,
+     "section": 31,
+     "subsection": 5
+    },
+    "per_page_kinds": {
+     "title": 5,
+     "major": 6,
+     "account": 59,
+     "agency": 14,
+     "section": 31,
+     "subsection": 5
+    },
+    "identical": false
+   },
+   {
+    "document": "118-hr-8752/1",
+    "arm": "H",
+    "document_scope": 137,
+    "per_page_would_have_been": 137,
+    "document_scope_kinds": {
+     "title": 4,
+     "major": 4,
+     "agency": 15,
+     "account": 37,
+     "grouping": 4,
+     "section": 73
+    },
+    "per_page_kinds": {
+     "title": 4,
+     "major": 4,
+     "agency": 15,
+     "account": 37,
+     "grouping": 4,
+     "section": 73
+    },
+    "identical": true
+   },
+   {
+    "document": "118-hr-8752/1",
+    "arm": "X",
+    "document_scope": 137,
+    "per_page_would_have_been": 137,
+    "document_scope_kinds": {
+     "title": 4,
+     "major": 4,
+     "agency": 15,
+     "account": 37,
+     "grouping": 4,
+     "section": 73
+    },
+    "per_page_kinds": {
+     "title": 4,
+     "major": 4,
+     "agency": 15,
+     "account": 37,
+     "grouping": 4,
+     "section": 73
+    },
+    "identical": true
+   },
+   {
+    "document": "119-hr-1/1",
+    "arm": "H",
+    "document_scope": 48,
+    "per_page_would_have_been": 46,
+    "document_scope_kinds": {
+     "section": 16,
+     "title": 1,
+     "account": 15,
+     "subsection": 16
+    },
+    "per_page_kinds": {
+     "section": 16,
+     "title": 1,
+     "account": 13,
+     "subsection": 16
+    },
+    "identical": false
+   },
+   {
+    "document": "119-hr-1/1",
+    "arm": "X",
+    "document_scope": 48,
+    "per_page_would_have_been": 46,
+    "document_scope_kinds": {
+     "section": 16,
+     "title": 1,
+     "account": 15,
+     "subsection": 16
+    },
+    "per_page_kinds": {
+     "section": 16,
+     "title": 1,
+     "account": 13,
+     "subsection": 16
+    },
+    "identical": false
+   },
+   {
+    "document": "118-hr-4366/1",
+    "arm": "H",
+    "document_scope": 123,
+    "per_page_would_have_been": 123,
+    "document_scope_kinds": {
+     "title": 2,
+     "major": 2,
+     "account": 42,
+     "agency": 14,
+     "grouping": 2,
+     "section": 61
+    },
+    "per_page_kinds": {
+     "title": 2,
+     "major": 2,
+     "account": 42,
+     "agency": 14,
+     "grouping": 2,
+     "section": 61
+    },
+    "identical": true
+   },
+   {
+    "document": "118-hr-4366/1",
+    "arm": "X",
+    "document_scope": 123,
+    "per_page_would_have_been": 123,
+    "document_scope_kinds": {
+     "title": 2,
+     "major": 2,
+     "account": 42,
+     "agency": 14,
+     "grouping": 2,
+     "section": 61
+    },
+    "per_page_kinds": {
+     "title": 2,
+     "major": 2,
+     "account": 42,
+     "agency": 14,
+     "grouping": 2,
+     "section": 61
+    },
+    "identical": true
+   }
+  ],
+  "census_mismatch": [],
+  "placement_mismatch": []
+ },
+ "tests": [
+  {
+   "test": "control 10: a 19-line page yields 3 regions, the last a SHORT TRAILING one",
+   "expected": [
+    8,
+    8,
+    3
+   ],
+   "observed": [
+    8,
+    8,
+    3
+   ],
+   "pass": true,
+   "fails_when": "a dropped tail would make the last 1-7 neutral lines of every page unsamplable"
+  },
+  {
+   "test": "...and the trailing region is flagged as such",
+   "expected": [
+    false,
+    false,
+    true
+   ],
+   "observed": [
+    false,
+    false,
+    true
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "control 2: every neutral line belongs to exactly one region",
+   "expected": [
+    [
+     [
+      1,
+      0
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      1,
+      4
+     ],
+     [
+      1,
+      5
+     ],
+     [
+      1,
+      6
+     ],
+     [
+      1,
+      7
+     ],
+     [
+      1,
+      8
+     ],
+     [
+      1,
+      9
+     ],
+     [
+      1,
+      10
+     ],
+     [
+      1,
+      11
+     ],
+     [
+      1,
+      12
+     ],
+     [
+      1,
+      13
+     ],
+     [
+      1,
+      14
+     ],
+     [
+      1,
+      15
+     ],
+     [
+      1,
+      16
+     ],
+     [
+      1,
+      17
+     ],
+     [
+      1,
+      18
+     ]
+    ],
+    19
+   ],
+   "observed": [
+    [
+     [
+      1,
+      0
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      2
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      1,
+      4
+     ],
+     [
+      1,
+      5
+     ],
+     [
+      1,
+      6
+     ],
+     [
+      1,
+      7
+     ],
+     [
+      1,
+      8
+     ],
+     [
+      1,
+      9
+     ],
+     [
+      1,
+      10
+     ],
+     [
+      1,
+      11
+     ],
+     [
+      1,
+      12
+     ],
+     [
+      1,
+      13
+     ],
+     [
+      1,
+      14
+     ],
+     [
+      1,
+      15
+     ],
+     [
+      1,
+      16
+     ],
+     [
+      1,
+      17
+     ],
+     [
+      1,
+      18
+     ]
+    ],
+    19
+   ],
+   "pass": true,
+   "fails_when": "a line in zero regions is unsamplable; a line in two would double-count it"
+  },
+  {
+   "test": "control 11: each page starts its own region grid at ordinal 0",
+   "expected": [
+    [
+     1,
+     0
+    ],
+    [
+     2,
+     0
+    ]
+   ],
+   "observed": [
+    [
+     1,
+     0
+    ],
+    [
+     2,
+     0
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a continuing ordinal would let a region span two pages"
+  },
+  {
+   "test": "control 11b: I5 -- no region contains lines from two pages",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "a 5-line page still yields one short trailing region",
+   "expected": [
+    5
+   ],
+   "observed": [
+    5
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "control 4: a page neither arm emitted creates NO D-frame membership",
+   "expected": [
+    false
+   ],
+   "observed": [
+    false
+   ],
+   "pass": true,
+   "fails_when": "counting a shared drop as discordance would flood the D-frame with page furniture"
+  },
+  {
+   "test": "...and its lines are still IN the artifact and the region grid (I3)",
+   "expected": 4,
+   "observed": 4,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "...and are excluded from the M0 comparative risk set (I3)",
+   "expected": [
+    false,
+    false,
+    false,
+    false
+   ],
+   "observed": [
+    false,
+    false,
+    false,
+    false
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "control 6: a text change on ONE arm puts its region in D",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "if this passed without the injection, the text predicate would never fire"
+  },
+  {
+   "test": "...and ONLY the mutated line is recorded as text-discordant (I4)",
+   "expected": [
+    [
+     1,
+     1
+    ]
+   ],
+   "observed": [
+    [
+     1,
+     1
+    ]
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "control 8: concordant lines inside a D region are NOT individually qualifying (I4)",
+   "expected": [
+    false,
+    true,
+    false,
+    false
+   ],
+   "observed": [
+    false,
+    true,
+    false,
+    false
+   ],
+   "pass": true,
+   "fails_when": "marking the whole region's lines discordant would fabricate M0a numerator entries"
+  },
+  {
+   "test": "...and a text-only difference does NOT move the segmentation signature",
+   "expected": [
+    false,
+    false,
+    false,
+    false
+   ],
+   "observed": [
+    false,
+    false,
+    false,
+    false
+   ],
+   "pass": true,
+   "fails_when": "the two quantities are deliberately orthogonal; coupling them would corrupt M3"
+  },
+  {
+   "test": "control 5: a merge on ONE arm puts its region in D via SEGMENTATION",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a merge that did not move the signature would make M0b structurally blind"
+  },
+  {
+   "test": "...and the merge did NOT move the projected text (grouping vs characters)",
+   "expected": [
+    false,
+    false,
+    false,
+    false
+   ],
+   "observed": [
+    false,
+    false,
+    false,
+    false
+   ],
+   "pass": true,
+   "fails_when": "if a merge moved the text, a segmentation difference would fabricate an M3 boundary error"
+  },
+  {
+   "test": "control 7: an anchor-set difference alone puts the region in D",
+   "expected": [
+    true,
+    [
+     "ANCHOR_DISCORDANCE"
+    ]
+   ],
+   "observed": [
+    true,
+    [
+     "ANCHOR_DISCORDANCE"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "PRE-REGISTRATION 5.8 makes a differing emitted anchor set region-level evidence"
+  },
+  {
+   "test": "...with no line recorded as text- or segmentation-discordant (I4)",
+   "expected": [
+    [],
+    []
+   ],
+   "observed": [
+    [],
+    []
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "baseline: with no injection the region is NOT in D",
+   "expected": [
+    false
+   ],
+   "observed": [
+    false
+   ],
+   "pass": true,
+   "fails_when": "a baseline that was already in D would make all four injections vacuous"
+  },
+  {
+   "test": "control 12: a 61-region D census is emitted in full, not truncated at 60",
+   "expected": 61,
+   "observed": 61,
+   "pass": true,
+   "fails_when": "truncating here would destroy the count A27.3 uses to decide whether Rule 1 may run"
+  },
+  {
+   "test": "...and the artifact says so explicitly",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "the complete region grid is enumerated from the skeleton (I1)",
+   "expected": 15,
+   "observed": 15,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "control 3: a body line BOTH arms dropped is still in the grid, in region 0, BOTH_ABSENT",
+   "expected": [
+    "BOTH_ABSENT",
+    0,
+    false
+   ],
+   "observed": [
+    "BOTH_ABSENT",
+    0,
+    false
+   ],
+   "pass": true,
+   "fails_when": "enumerating regions from EMITTED lines would make this line unsamplable and the shared failure invisible -- exactly what the C-frame exists to catch"
+  },
+  {
+   "test": "...and its region is C-frame ELIGIBLE, i.e. reachable by the frozen draw",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "...and the drop did not put its region in the D-frame (I3)",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "a shared drop belongs to RQ2 via the C-frame, never to the comparative D-frame"
+  },
+  {
+   "test": "the C-frame draw is capped at 8 regions per document",
+   "expected": 8,
+   "observed": 8,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "control 9: the same identities select the same set AND the same order",
+   "expected": [
+    [
+     "region",
+     "devsha",
+     5,
+     2
+    ],
+    [
+     "region",
+     "devsha",
+     4,
+     2
+    ],
+    [
+     "region",
+     "devsha",
+     3,
+     1
+    ],
+    [
+     "region",
+     "devsha",
+     2,
+     2
+    ],
+    [
+     "region",
+     "devsha",
+     1,
+     0
+    ],
+    [
+     "region",
+     "devsha",
+     4,
+     1
+    ],
+    [
+     "region",
+     "devsha",
+     2,
+     0
+    ],
+    [
+     "region",
+     "devsha",
+     2,
+     1
+    ]
+   ],
+   "observed": [
+    [
+     "region",
+     "devsha",
+     5,
+     2
+    ],
+    [
+     "region",
+     "devsha",
+     4,
+     2
+    ],
+    [
+     "region",
+     "devsha",
+     3,
+     1
+    ],
+    [
+     "region",
+     "devsha",
+     2,
+     2
+    ],
+    [
+     "region",
+     "devsha",
+     1,
+     0
+    ],
+    [
+     "region",
+     "devsha",
+     4,
+     1
+    ],
+    [
+     "region",
+     "devsha",
+     2,
+     0
+    ],
+    [
+     "region",
+     "devsha",
+     2,
+     1
+    ]
+   ],
+   "pass": true,
+   "fails_when": "any listing-order dependence would make the sample irreproducible"
+  },
+  {
+   "test": "...and building the document with pages listed in reverse selects the same regions",
+   "expected": [
+    [
+     1,
+     0
+    ],
+    [
+     2,
+     0
+    ],
+    [
+     2,
+     1
+    ],
+    [
+     2,
+     2
+    ],
+    [
+     3,
+     1
+    ],
+    [
+     4,
+     1
+    ],
+    [
+     4,
+     2
+    ],
+    [
+     5,
+     2
+    ]
+   ],
+   "observed": [
+    [
+     1,
+     0
+    ],
+    [
+     2,
+     0
+    ],
+    [
+     2,
+     1
+    ],
+    [
+     2,
+     2
+    ],
+    [
+     3,
+     1
+    ],
+    [
+     4,
+     1
+    ],
+    [
+     4,
+     2
+    ],
+    [
+     5,
+     2
+    ]
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "a selected C region stays selected even when an arm drops all of its content",
+   "expected": [
+    [
+     1,
+     0
+    ],
+    [
+     2,
+     0
+    ],
+    [
+     2,
+     1
+    ],
+    [
+     2,
+     2
+    ],
+    [
+     3,
+     1
+    ],
+    [
+     4,
+     1
+    ],
+    [
+     4,
+     2
+    ],
+    [
+     5,
+     2
+    ]
+   ],
+   "observed": [
+    [
+     1,
+     0
+    ],
+    [
+     2,
+     0
+    ],
+    [
+     2,
+     1
+    ],
+    [
+     2,
+     2
+    ],
+    [
+     3,
+     1
+    ],
+    [
+     4,
+     1
+    ],
+    [
+     4,
+     2
+    ],
+    [
+     5,
+     2
+    ]
+   ],
+   "pass": true,
+   "fails_when": "replacing such a region would delete the shared-failure evidence RQ2 exists to collect"
+  },
+  {
+   "test": "a P-robust document receives NO C-frame selection",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": "the C-frame quantity is defined on P-head only"
+  },
+  {
+   "test": "...but its regions are still enumerated in full",
+   "expected": 15,
+   "observed": 15,
+   "pass": true,
+   "fails_when": "if enumeration were skipped too, the D-frame would silently lose the document"
+  },
+  {
+   "test": "H carries a page X lacks -> ABORT",
+   "expected": "PAGE_SET_MISMATCH",
+   "observed": "PAGE_SET_MISMATCH",
+   "pass": true,
+   "fails_when": "dropping or intersecting the page set would silently shrink every denominator"
+  },
+  {
+   "test": "X carries a page H lacks -> ABORT",
+   "expected": "PAGE_SET_MISMATCH",
+   "observed": "PAGE_SET_MISMATCH",
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "matched page sets do NOT abort",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "if the clean case also aborted, the two controls above would prove nothing"
+  },
+  {
+   "test": "a one-glyph neutral skeleton difference -> ABORT",
+   "expected": "NEUTRAL_SKELETON_MISMATCH",
+   "observed": "NEUTRAL_SKELETON_MISMATCH",
+   "pass": true,
+   "fails_when": "two skeletons would mean the arms' frames are not the same frame"
+  },
+  {
+   "test": "an emitted line DELETED on one arm -> ABORT",
+   "expected": "PRINT_LINES_EMITTED_DRIFT",
+   "observed": "PRINT_LINES_EMITTED_DRIFT",
+   "pass": true,
+   "fails_when": "the bridge reads emitted[i] for print line i; a deletion shifts every later index"
+  },
+  {
+   "test": "an emitted line's TEXT altered at equal list length -> ABORT",
+   "expected": "PRINT_LINES_EMITTED_DRIFT",
+   "observed": "PRINT_LINES_EMITTED_DRIFT",
+   "pass": true,
+   "fails_when": "equal cardinality is not enough; the texts must correspond index for index"
+  },
+  {
+   "test": "an unplaceable anchor in H -> ABORT",
+   "expected": "ANCHOR_PLACEMENT_REFUSED",
+   "observed": "ANCHOR_PLACEMENT_REFUSED",
+   "pass": true,
+   "fails_when": "dropping it and comparing the rest would fabricate an ANCHOR_DISCORDANCE"
+  },
+  {
+   "test": "...and the refusal is NOT interpreted as ANCHOR_DISCORDANCE",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "an unplaceable anchor in X (asymmetric, different refusal class) -> ABORT",
+   "expected": "ANCHOR_PLACEMENT_REFUSED",
+   "observed": "ANCHOR_PLACEMENT_REFUSED",
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "...and it too is NOT interpreted as ANCHOR_DISCORDANCE",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "an UNRECOGNISED population string -> ABORT, not a quiet empty C-frame",
+   "expected": "UNKNOWN_POPULATION",
+   "observed": "UNKNOWN_POPULATION",
+   "pass": true,
+   "fails_when": "'not P-head' would otherwise draw zero C regions and look like a valid frame"
+  },
+  {
+   "test": "...while the two real populations still build",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "an UNRECOGNISED population reaching the PUBLIC entrypoint -> ABORT",
+   "expected": "UNKNOWN_POPULATION",
+   "observed": "UNKNOWN_POPULATION",
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "a duplicate page record in H -> ABORT",
+   "expected": "DUPLICATE_PAGE_NUMBER",
+   "observed": "DUPLICATE_PAGE_NUMBER",
+   "pass": true,
+   "fails_when": "set equality is blind to duplicates, and the later page map silently collapses them"
+  },
+  {
+   "test": "a duplicate page record in X -> ABORT",
+   "expected": "DUPLICATE_PAGE_NUMBER",
+   "observed": "DUPLICATE_PAGE_NUMBER",
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "no result-bearing signature accepts a region size",
+   "expected": [
+    false,
+    false,
+    false
+   ],
+   "observed": [
+    false,
+    false,
+    false
+   ],
+   "pass": true,
+   "fails_when": "a region_size on any of these lets placement and the grid disagree while both look valid"
+  },
+  {
+   "test": "the public entrypoint takes RUNNER OUTPUTS, not PageInputs, so gates cannot be skipped",
+   "expected": [
+    "document_id",
+    "document_sha256",
+    "h_pages",
+    "population",
+    "x_pages"
+   ],
+   "observed": [
+    "document_id",
+    "document_sha256",
+    "h_pages",
+    "population",
+    "x_pages"
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "...and the public path always yields the frozen 8-line grid",
+   "expected": [
+    8,
+    true
+   ],
+   "observed": [
+    8,
+    true
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "per-page extraction produces a DIFFERENT anchor census than document-scope",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "if these agreed, the scope control could not detect the defect it exists to catch"
+  },
+  {
+   "test": "...specifically, document scope finds the account heading and per-page finds nothing",
+   "expected": [
+    [
+     "account"
+    ],
+    []
+   ],
+   "observed": [
+    [
+     "account"
+    ],
+    []
+   ],
+   "pass": true,
+   "fails_when": "size bands are derived over the SUPPLIED collection: page 2 alone carries no body-size prose, so no band exists and the account level vanishes"
+  },
+  {
+   "test": "H anchor census is document-scoped and reaches the frame intact",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a per-page census would re-derive size bands per page and cut cross-page runs"
+  },
+  {
+   "test": "X anchor census is document-scoped and reaches the frame intact",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "H placement reproduces x14's over the DOCUMENT-SCOPE census",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a divergence would mean the frames use a bridge the study never approved"
+  },
+  {
+   "test": "X placement reproduces x14's over the DOCUMENT-SCOPE census",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "every development document retained at least one short trailing region",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "no development document exceeded the 8-region C-frame cap",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": ""
+  }
+ ],
+ "failures": []
+}

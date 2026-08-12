@@ -1,0 +1,69 @@
+{
+ "population": "DEVELOPMENT -- not a holdout",
+ "question": "can M6's amount->account attribution be adjudicated inside a 6-10 printed-line region?",
+ "reference_is_architecture_derived": "distances are to the nearest preceding anchor emitted by production extract_anchors over the HYBRID reconstruction, not to independent truth",
+ "protocol_region_size": "6-10 printed lines (PRE-REGISTRATION.md 5.3)",
+ "pooled_share_answerable_within_region_of_N_lines": {
+  "6": 0.4336,
+  "8": 0.4912,
+  "10": 0.5708,
+  "15": 0.677,
+  "25": 0.7743,
+  "50": 0.823
+ },
+ "amounts_total": 226,
+ "verdict": "On three development documents, the nearest preceding HYBRID-PRODUCED account/agency anchor lies within 6 reconstructed lines for 0.4336 of observed amounts and within 10 for 0.5708; a 50-line span reaches 0.823. The reference is architecture-derived, so this is NOT the share of amounts whose TRUE governing heading is in range. It does show that a 6-10 line viewport cannot support a long-range attribution claim. See PRE-EXECUTION-AMENDMENTS.md A17.",
+ "documents": [
+  {
+   "document": "114-hr-2029/4",
+   "pages_scored": 30,
+   "amounts_found": 74,
+   "amounts_with_a_preceding_heading": 74,
+   "amounts_with_NO_preceding_heading_in_document": 0,
+   "median_lines_to_governing_heading": 5,
+   "max_lines_to_governing_heading": 210,
+   "share_answerable_within_region_of_N_lines": {
+    "6": 0.5135,
+    "8": 0.5676,
+    "10": 0.6622,
+    "15": 0.8243,
+    "25": 0.8649,
+    "50": 0.8919
+   }
+  },
+  {
+   "document": "118-hr-4366/5",
+   "pages_scored": 30,
+   "amounts_found": 70,
+   "amounts_with_a_preceding_heading": 70,
+   "amounts_with_NO_preceding_heading_in_document": 0,
+   "median_lines_to_governing_heading": 12,
+   "max_lines_to_governing_heading": 288,
+   "share_answerable_within_region_of_N_lines": {
+    "6": 0.3714,
+    "8": 0.4429,
+    "10": 0.4714,
+    "15": 0.5286,
+    "25": 0.5571,
+    "50": 0.5714
+   }
+  },
+  {
+   "document": "118-s-4795/1",
+   "pages_scored": 30,
+   "amounts_found": 82,
+   "amounts_with_a_preceding_heading": 82,
+   "amounts_with_NO_preceding_heading_in_document": 0,
+   "median_lines_to_governing_heading": 9,
+   "max_lines_to_governing_heading": 54,
+   "share_answerable_within_region_of_N_lines": {
+    "6": 0.4146,
+    "8": 0.4634,
+    "10": 0.5732,
+    "15": 0.6707,
+    "25": 0.878,
+    "50": 0.9756
+   }
+  }
+ ]
+}

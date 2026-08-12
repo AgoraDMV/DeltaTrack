@@ -10,6 +10,7 @@ from deltatrack.bill_tree import (
     _extract_appropriations_text,
     _extract_metadata,
     _extract_section_text,
+    amount_text,
     build_division_label,
     build_title_label,
     extract_display_text,
@@ -711,6 +712,122 @@ class TestWalkTitle:
         # Third node is parenthetical; should inherit "Real Account" from first,
         # not empty string from second
         assert nodes[2].match_path == ("dept", "real account")
+
+    def test_header_only_sibling_names_the_untitled_body(self):
+        """GPO sometimes splits one account across two siblings: the first carries the
+        <header> and no body, the second the body and no header. The print renders them
+        as one account (heading directly above its own text), so the body node takes the
+        split-off name rather than losing it and filing its money under the agency (#474).
+        """
+        title = ET.fromstring(
+            '<title id="T1">'
+            "<enum>I</enum>"
+            "<header>DEPT</header>"
+            '<appropriations-intermediate id="AI1">'
+            "<header>United States fish and wildlife service</header>"
+            "</appropriations-intermediate>"
+            '<appropriations-small id="AS1">'
+            "<header>RESOURCE MANAGEMENT</header>"
+            "</appropriations-small>"
+            '<appropriations-small id="AS2">'
+            "<text>For necessary expenses, $1,385,096,000, to remain available.</text>"
+            "</appropriations-small>"
+            "</title>"
+        )
+        nodes = walk_title(title, "DEPT", NO_DIVISION)
+        # Still exactly one node for one body-bearing element: the header-only halves
+        # contribute no node of their own, so conservation is unchanged.
+        assert len(nodes) == 1
+        node = nodes[0]
+        assert node.element_id == "AS2"
+        assert node.header_text == "RESOURCE MANAGEMENT"
+        assert node.match_path == (
+            "dept",
+            "united states fish and wildlife service",
+            "resource management",
+        )
+        assert node.display_path == (
+            "DEPT",
+            "United States fish and wildlife service",
+            "RESOURCE MANAGEMENT",
+        )
+        assert "$1,385,096,000" in node.body_text
+
+    def test_header_only_sibling_names_across_levels(self):
+        """The split is not confined to one tag: a header-only element at any
+        appropriations level names the untitled body element that follows it (#474).
+        Measured on the committed corpus as intermediate->small, intermediate->
+        intermediate, major->small and small->intermediate pairs.
+        """
+        title = ET.fromstring(
+            '<title id="T1">'
+            "<enum>I</enum>"
+            "<header>DEPT</header>"
+            '<appropriations-intermediate id="AI1">'
+            "<header>Nuclear Energy</header>"
+            "</appropriations-intermediate>"
+            '<appropriations-small id="AS1">'
+            "<text>For nuclear energy activities, $1,783,000,000.</text>"
+            "</appropriations-small>"
+            "</title>"
+        )
+        nodes = walk_title(title, "DEPT", NO_DIVISION)
+        assert len(nodes) == 1
+        assert nodes[0].element_id == "AS1"
+        assert nodes[0].header_text == "Nuclear Energy"
+        assert nodes[0].match_path == ("dept", "nuclear energy")
+
+    def test_untitled_body_after_a_named_account_keeps_its_parent_address(self):
+        """The join reaches back exactly one sibling, and only to a header-only one.
+        An untitled body following an account that already has BOTH header and body is a
+        continuation of that account, not a split of it: 35 such elements on the
+        committed corpus, 18 carrying amounts. Naming it after its predecessor would
+        collide it with the account it continues, so it keeps today's parent address.
+        """
+        title = ET.fromstring(
+            '<title id="T1">'
+            "<enum>I</enum>"
+            "<header>DEPT</header>"
+            '<appropriations-intermediate id="AI1">'
+            "<header>Real Account</header>"
+            "<text>For expenses, $100,000.</text>"
+            "</appropriations-intermediate>"
+            '<appropriations-intermediate id="AI2">'
+            "<text>Additional amount, $200,000.</text>"
+            "</appropriations-intermediate>"
+            "</title>"
+        )
+        nodes = walk_title(title, "DEPT", NO_DIVISION)
+        assert len(nodes) == 2
+        assert nodes[0].match_path == ("dept", "real account")
+        assert nodes[1].header_text == ""
+        assert nodes[1].match_path == ("dept",)
+
+    def test_parenthetical_header_only_sibling_passes_on_the_real_name(self):
+        """A header-only element whose header is parenthetical carries no name of its
+        own; it resolves to the previous real name, and that is what the untitled body
+        inherits — not the literal "(INCLUDING TRANSFER OF FUNDS)" (#474).
+        """
+        title = ET.fromstring(
+            '<title id="T1">'
+            "<enum>I</enum>"
+            "<header>DEPT</header>"
+            '<appropriations-small id="AS1">'
+            "<header>Real Account</header>"
+            "<text>For expenses, $100,000.</text>"
+            "</appropriations-small>"
+            '<appropriations-small id="AS2">'
+            "<header>(INCLUDING TRANSFER OF FUNDS)</header>"
+            "</appropriations-small>"
+            '<appropriations-small id="AS3">'
+            "<text>Of the funds, $50,000 may transfer.</text>"
+            "</appropriations-small>"
+            "</title>"
+        )
+        nodes = walk_title(title, "DEPT", NO_DIVISION)
+        assert len(nodes) == 2
+        assert nodes[1].element_id == "AS3"
+        assert nodes[1].match_path == ("dept", "real account")
 
     def test_section_with_enum(self):
         """A section produces a node with section_number in the path."""
@@ -2373,3 +2490,99 @@ class TestDivisionBareSectionsOnARealBill:
         tree = normalize_bill(fixture_path("114-hr-2029", "7_enrolled-bill.xml"))
         bare = [n for n in tree.nodes if n.division_label and n.match_path == ("sec. 2",)]
         assert bare, "a division's bare preamble section is absent from the tree"
+
+
+class TestUntitledBillAppropriations:
+    """A bill with no TITLE headings must still resolve its accounts (#485).
+
+    118-hr-9468 is the Veterans Benefits Continuity and Accountability Supplemental
+    Appropriations Act: short enough to be written without TITLE divisions, so its
+    accounts hang off a bare `<section>` under the bill body and are walked by
+    ``walk_body_sections`` rather than the title path. That walker had no
+    appropriations branch, so ``_extract_section_text`` absorbed the entire hierarchy
+    into the section's own text and emitted one 382-character node whose name was blank
+    and whose ``match_path`` was empty — the section carries no ``<enum>``.
+
+    These assert the account NAMES and ADDRESSES, deliberately, not the amounts. Both
+    amounts landed inside that collapsed node's text all along, so every
+    amount-conservation gate passed on this bill while the defect was present; a test
+    that watched the money would have gone green on the broken build. What was lost was
+    the attribution — which account each figure belongs to.
+
+    The published print (GPO's own rendering of this bill) shows these as separate
+    headed accounts, each heading directly above its own money paragraph:
+
+        DEPARTMENT OF VETERANS AFFAIRS
+              Veterans Benefits Administration
+                 compensation and pensions
+        For an additional amount for ``Compensation and Pensions'', $2,285,513,000, ...
+
+    so treating them as one block of prose is a departure from the source, not a
+    defensible simplification of it.
+
+    Both accounts are also #474 split pairs — the name is in one
+    ``<appropriations-small>`` and the money in the next — so these hold that the
+    split-account naming rule reaches this path too, not only the title path.
+    """
+
+    ACCOUNTS = [
+        ("compensation and pensions", "Compensation and Pensions", "$2,285,513,000"),
+        ("readjustment benefits", "Readjustment Benefits", "$596,969,000"),
+    ]
+
+    @staticmethod
+    def _tree(stage="1_introduced-in-house.xml"):
+        return normalize_bill(fixture_path("118-hr-9468", stage))
+
+    @pytest.mark.parametrize("leaf,name,amount", ACCOUNTS)
+    def test_each_account_is_its_own_named_addressed_node(self, leaf, name, amount):
+        tree = self._tree()
+        matches = [n for n in tree.nodes if n.match_path and n.match_path[-1] == leaf]
+        assert len(matches) == 1, (
+            f"{name!r} does not resolve to exactly one node "
+            f"(got {[n.match_path for n in matches]}); its account is collapsed into "
+            f"the enclosing section"
+        )
+        node = matches[0]
+        assert node.header_text == name, f"account node carries no name (header={node.header_text!r})"
+        assert amount in amount_text(node), f"{amount} is not filed under {name!r}"
+
+    def test_accounts_address_off_their_agency_not_the_enum_less_section(self):
+        """The address answer: the section has no ``<enum>`` and so no path of its own.
+
+        The accounts therefore hang off the agency names above them, which is what makes
+        them addressable at all. Pinned because an address that silently degraded to the
+        empty tuple is precisely the failure being fixed, and an empty tuple is falsy —
+        a laxer assertion would pass on it.
+        """
+        tree = self._tree()
+        for leaf, name, _amount in self.ACCOUNTS:
+            node = next(n for n in tree.nodes if n.match_path and n.match_path[-1] == leaf)
+            assert node.match_path == (
+                "department of veterans affairs",
+                "veterans benefits administration",
+                leaf,
+            ), f"{name!r} has address {node.match_path!r}"
+
+    def test_no_node_swallows_the_whole_account_hierarchy(self):
+        """The collapsed entry itself, named rather than inferred from a count.
+
+        Before the fix one unnamed node held both account names and both amounts at
+        once. Assert that no single node does, so the test fails on the old build for
+        the reason it exists rather than on an incidental node tally.
+        """
+        tree = self._tree()
+        for node in tree.nodes:
+            text = amount_text(node)
+            both = "$2,285,513,000" in text and "$596,969,000" in text
+            assert not both, (
+                f"one node (match_path={node.match_path!r}) holds both accounts' money; "
+                f"the account hierarchy is collapsed into it"
+            )
+
+    def test_the_shape_survives_to_the_enrolled_version(self):
+        """The same bill at the other end of its life, so the fixture pair is not
+        pinning a quirk of the introduced print alone."""
+        tree = self._tree("4_enrolled-bill.xml")
+        leaves = {n.match_path[-1] for n in tree.nodes if n.match_path}
+        assert {"compensation and pensions", "readjustment benefits"} <= leaves

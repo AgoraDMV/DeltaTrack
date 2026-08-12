@@ -33,7 +33,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -42,12 +43,12 @@ from mine_common import make_candidate, write_pool  # noqa: E402
 from deltatrack.bill_tree import normalize_bill  # noqa: E402
 from deltatrack.diff_bill import (  # noqa: E402
     _normalize_text,
-    _text_similarity,
     compute_financial_change,
     diff_bills,
 )
+from deltatrack.similarity import text_similarity  # noqa: E402
 
-_BILLS = REPO / "bills"
+_BILLS = merged_root()
 _OUT = Path(__file__).with_name("candidates_financial_lines.json")
 
 SPLIT_SIM = 0.50  # text-similarity floor to re-pair a removed<->added financial line
@@ -135,7 +136,7 @@ def main() -> None:
                 ro = _normalize_text(rc.old_text)
                 best = None
                 for ac, an in add:
-                    s = _text_similarity(ro, an)
+                    s = text_similarity(ro, an)
                     if s >= SPLIT_SIM and (best is None or s > best[0]):
                         best = (s, ac)
                 if best is None:

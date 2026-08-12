@@ -12,9 +12,10 @@ from __future__ import annotations
 from pathlib import Path
 
 from deltatrack.bill_tree import normalize_bill, normalize_header
-from deltatrack.diff_bill import _match_collision_group, _normalize_text, _text_similarity, diff_bills
+from deltatrack.diff_bill import _match_collision_group, _normalize_text, diff_bills
+from deltatrack.similarity import text_similarity
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
+REPO = Path(__file__).resolve().parents[4]
 ta = normalize_bill(REPO / "bills/119-hr-1/1_reported-in-house.xml")
 tb = normalize_bill(REPO / "bills/119-hr-1/2_engrossed-in-house.xml")
 
@@ -47,8 +48,8 @@ print("\n=== pairwise body similarity within the collision candidates (old x new
 new_cands = new_secs  # both 10012 and 10013 in engrossed are candidates for the old 10012s
 for o in old_coll:
     for n in new_cands:
-        sim = _text_similarity(_normalize_text(o.body_text), _normalize_text(n.body_text))
-        hdr = _text_similarity(normalize_header(o.header_text), normalize_header(n.header_text)) if (o.header_text and n.header_text) else 0.0
+        sim = text_similarity(_normalize_text(o.body_text), _normalize_text(n.body_text))
+        hdr = text_similarity(normalize_header(o.header_text), normalize_header(n.header_text)) if (o.header_text and n.header_text) else 0.0
         print(f"  OLD[{o.header_text!r}] x NEW[{n.section_number} {n.header_text!r}]  body_sim={sim:.3f}  hdr_sim={hdr:.3f}")
 
 print("\n=== current _match_collision_group result (body-similarity only) ===")

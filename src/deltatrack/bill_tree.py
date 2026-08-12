@@ -2,7 +2,7 @@
 
 import re
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from deltatrack.parsers.pdf_anchors import _RUNIN_QUOTED_LINE, _match_runin_subsection
@@ -47,6 +47,18 @@ class BillNode:
     # body_text stays collapsed for diff matching; display_text adds enum spacing and
     # list line breaks. Empty for nodes built without it (callers fall back to body_text).
     display_text: str = ""
+    # Which top-level <legis-body> this node came from, 0-based (#434). Almost always 0;
+    # non-zero only for the second text of a reported bill carrying a committee
+    # substitute. Recorded because concatenating the bodies otherwise destroys the only
+    # record of which text a node belongs to, and #186 (marking where the second text
+    # begins) cannot be built without re-deriving it.
+    #
+    # NOT a cross-version identity, and must not be used to constrain diff matching. It
+    # is a position within ONE document: when a committee substitute is adopted, it moves
+    # from index 1 to index 0 by becoming the only body, so pairing on equal index maps
+    # the superseded base text onto its replacement. That was tried and reverted -- see
+    # the comment in diff_bill._match_collision_group. Nothing reads it yet.
+    body_index: int = 0
 
 
 def amount_text(node: BillNode) -> str:
@@ -166,6 +178,43 @@ def find_bill_body(root: ET.Element) -> ET.Element:
         return nested if nested is not None else block
 
     raise ValueError("Could not find bill body in XML")
+
+
+def find_bill_bodies(root: ET.Element) -> list[ET.Element]:
+    """Every top-level body of a bill, in document order (#434).
+
+    A reported bill carrying a committee substitute prints TWO complete texts, held as
+    two sibling <legis-body> elements. ``find_bill_body`` returns the first, so the
+    second reached no node, no full-bill view and no money diff: 459 documents in the
+    local collection, 3,736 sections and 1,180 dollar amounts, silently.
+
+    All of them are walked, in document order, because that is what GPO's own stylesheet
+    does — ``print-legis-body`` has an explicit ``preceding-sibling::legis-body`` branch
+    wrapping later bodies in their own block rather than skipping them. Rendering both is
+    also the only handling correct for every shape the corpus actually holds. A corpus
+    audit found four, and no attribute selects the right single body across them:
+
+    - 427 base text + committee substitute (body[0] struck, body[1] the reported text)
+    - 11 TWO competing committee substitutes, from a bill sequentially referred to two
+      committees ("Report No. 118-167, Parts I and II"). Both carry changed="added" with
+      their own committee-id; neither is struck and nothing says which prevails.
+    - 13 where one body is an empty <legis-body/>. In 10 of those the EMPTY one is
+      first, so taking the first lost the whole bill rather than half of it.
+    - 8 where the two bodies are complementary rather than alternative — one bill split
+      in two (118-s-79: body[0] is section 1, body[1] is sections 2-4; 118-s-2226:
+      body[0] is divisions A-D, body[1] the funding tables). Selecting either loses
+      real text.
+
+    Which of two alternative texts is authoritative, and how to mark where the second
+    begins, is #186's question. This function only guarantees no text is dropped.
+
+    Falls back to ``find_bill_body`` for the resolution and amendment-doc shapes, which
+    are single-body (and, for paired resolution variants, still fail loudly per #427).
+    """
+    bodies = root.findall("legis-body")
+    if bodies:
+        return bodies
+    return [find_bill_body(root)]
 
 
 _LIST_MARKER_RE = re.compile(r" (?=\((?:[0-9]{1,2}|[a-z]{1,4}|[A-Z])\))")
@@ -445,13 +494,24 @@ def _subsection_label(sub: ET.Element) -> tuple[str, str]:
     text_el = sub.find("text")
     if text_el is not None:
         opening = extract_text_content(text_el)
-        # Mirror the PDF's physical bounds: its matcher sees one print line plus
-        # two continuations, so a probe over unbounded flattened text fabricates
-        # "catchlines" from a period+dash deep in plain prose (113-hr-83 §415(a):
-        # "…U.S.–E.U.…" produced a 335-char label). Window ≈ three print lines;
-        # cap ≈ the longest real catchline with wide margin (corpus max 90, the
-        # three fabrications 303–335). A quote-opening text is quoting other law —
-        # its catchline is not this subsection's (the PDF self-exclusion).
+        # Bound the probe in CHARACTERS: a probe over unbounded flattened text
+        # fabricates "catchlines" from a period+dash deep in plain prose (113-hr-83
+        # §415(a): "…U.S.–E.U.…" produced a 335-char label). Cap ≈ the longest real
+        # catchline ON THIS PATH with wide margin (corpus max 90, the three
+        # fabrications 303–335). A quote-opening text is quoting other law — its
+        # catchline is not this subsection's (the PDF self-exclusion).
+        #
+        # These bounds are independent of the PDF matcher's line window
+        # (`_RUNIN_MAX_CONTINUATIONS`), which does not apply here: this call passes NO
+        # continuation lines, so the character window is the only limit. They used to be
+        # described as mirroring that window at "one print line plus two continuations",
+        # which stopped being true when it widened to six (#473) — the numbers below did
+        # not move, because they were never derived from it.
+        #
+        # This path runs only for a subsection with NO <header> element; one that has a
+        # header returns above, uncapped. So the long catchlines #473 recovered on the PDF
+        # side (up to 250 chars) do not reach this cap. Whether a HEADERLESS subsection
+        # can carry an inline catchline longer than the cap is unmeasured.
         if not _RUNIN_QUOTED_LINE.match(opening):
             matched = _match_runin_subsection(f"{enum} {opening[:_RUNIN_PROBE_WINDOW]}", [])
             if matched is not None:
@@ -639,21 +699,44 @@ def _process_appro_element(
     current_major: str | None,
     current_intermediate: str | None,
     prev_name: str | None,
+    pending_header: str | None,
     nodes: list[BillNode],
-) -> tuple[str | None, str | None, str | None]:
+) -> tuple[str | None, str | None, str | None, str | None]:
     """Process one appropriations-* element, updating context and appending nodes.
 
-    Returns updated (current_major, current_intermediate, prev_name).
+    Returns updated (current_major, current_intermediate, prev_name, pending_header).
+
+    ``pending_header`` carries the name of the immediately preceding header-only sibling,
+    the half of a split account that holds the ``<header>`` and no body. GPO sometimes
+    marks one account up as two siblings — name in the first, money in the second — while
+    the print renders them as a single account, its heading directly above its own text,
+    identical to the un-split accounts around it. Because a node is emitted only for an
+    element with body text, the named half produced nothing and the moneyed half had no
+    header to end its address with, so it took its parent agency's address and the money
+    read as the agency's own (#474: ``RESOURCE MANAGEMENT`` and its $1,385,096,000 in
+    118-hr-8998). Adopting the pending name joins the two into the one account the bill
+    prints, and since the named half never produced a node, the node count is unchanged.
+
+    The reach is deliberately one sibling, and only to a header-only one. An untitled
+    element following a sibling that has BOTH header and body is a continuation of that
+    account rather than a split of it, and naming it would collide it with the account it
+    continues; those keep the parent address they have today.
     """
     tag = child.tag
 
+    own_header = get_header_text(child)
+    body_text = _extract_appropriations_text(child)
+    display_text = extract_display_text(child)
+    # An element with neither name nor body is not part of a split pair; it emits no node
+    # and leaves the pending name for whichever sibling does carry the body.
+    inherited = pending_header if not own_header and body_text else None
+
     if tag == "appropriations-major":
-        current_major = get_header_text(child)
+        current_major = own_header or inherited or ""
         current_intermediate = None
         prev_name = current_major
+        effective_header = current_major
 
-        body_text = _extract_appropriations_text(child)
-        display_text = extract_display_text(child)
         if body_text:
             match_path, display_path = _build_paths(
                 title_header,
@@ -678,7 +761,7 @@ def _process_appro_element(
             )
 
     elif tag == "appropriations-intermediate":
-        header = get_header_text(child)
+        header = own_header or inherited or ""
         current_intermediate = header
 
         if header and _PARENTHETICAL_RE.match(header):
@@ -688,8 +771,6 @@ def _process_appro_element(
                 prev_name = header
             effective_header = header
 
-        body_text = _extract_appropriations_text(child)
-        display_text = extract_display_text(child)
         if body_text:
             match_path, display_path = _build_paths(
                 title_header,
@@ -714,7 +795,7 @@ def _process_appro_element(
             )
 
     elif tag == "appropriations-small":
-        header = get_header_text(child)
+        header = own_header or inherited or ""
 
         if header and _PARENTHETICAL_RE.match(header):
             effective_header = prev_name
@@ -723,8 +804,6 @@ def _process_appro_element(
                 prev_name = header
             effective_header = header
 
-        body_text = _extract_appropriations_text(child)
-        display_text = extract_display_text(child)
         if body_text:
             match_path, display_path = _build_paths(
                 title_header,
@@ -748,7 +827,70 @@ def _process_appro_element(
                 )
             )
 
-    return current_major, current_intermediate, prev_name
+    else:
+        effective_header = None
+
+    # A body ends any pending name (it either consumed one or is a named account in its
+    # own right); a header-only element becomes the pending name for its next sibling.
+    # ``effective_header`` rather than the raw header, so a parenthetical header-only
+    # element passes on the real account name it stands for, not the parenthetical.
+    if body_text:
+        pending_header = None
+    elif own_header:
+        pending_header = effective_header
+
+    return current_major, current_intermediate, prev_name, pending_header
+
+
+def _walk_section_appro_children(
+    section: ET.Element,
+    title_header: str,
+    division: Division,
+    current_major: str | None,
+    current_intermediate: str | None,
+    prev_name: str | None,
+    nodes: list[BillNode],
+) -> None:
+    """Walk a section's ``appropriations-*`` children, emitting a node for each.
+
+    Shared by both section walkers. A section holding appropriations children is the
+    same arrangement wherever it sits, so the account naming (#474's split-account
+    pending header) and the address rules must not depend on whether a <title> happens
+    to wrap it: ``walk_body_sections`` had no appropriations branch at all, so for a
+    bill written without TITLE divisions ``_extract_section_text`` absorbed the whole
+    account hierarchy into the section's own text and no account node was ever created
+    (#485).
+
+    Only this walk is shared, not the section's own node. The two callers build that
+    node's display_path by different conventions (``walk_body_sections`` keeps the
+    section number cased as "Sec. 101", the title path lowercases it through
+    ``_build_paths``), and unifying them here would have re-cased 24,662 of the 25,191
+    plain body-level sections in the corpus to fix 7 — a cosmetic regression far wider
+    than the defect. That difference is real but separate; it is not this function's to
+    settle.
+
+    Context (``current_major`` / ``current_intermediate`` / ``prev_name``) is scoped to
+    the caller and not written back: the callers pass their own copies and neither wants
+    a section's internal agency context leaking into its siblings.
+    """
+    sec_major = current_major
+    sec_intermediate = current_intermediate
+    sec_prev = prev_name
+    # A split pair is a pair of siblings, so the pending name never crosses into a
+    # section from outside it.
+    sec_pending: str | None = None
+    for sub in section:
+        if sub.tag.startswith("appropriations-"):
+            sec_major, sec_intermediate, sec_prev, sec_pending = _process_appro_element(
+                sub,
+                title_header,
+                division,
+                sec_major,
+                sec_intermediate,
+                sec_prev,
+                sec_pending,
+                nodes,
+            )
 
 
 def _process_section_element(
@@ -814,21 +956,15 @@ def _process_section_element(
                 )
             )
 
-        # Walk appropriations children with scoped context
-        sec_major = current_major
-        sec_intermediate = current_intermediate
-        sec_prev = prev_name
-        for sub in section:
-            if sub.tag.startswith("appropriations-"):
-                sec_major, sec_intermediate, sec_prev = _process_appro_element(
-                    sub,
-                    title_header,
-                    division,
-                    sec_major,
-                    sec_intermediate,
-                    sec_prev,
-                    nodes,
-                )
+        _walk_section_appro_children(
+            section,
+            title_header,
+            division,
+            current_major,
+            current_intermediate,
+            prev_name,
+            nodes,
+        )
     else:
         sub_specs = _node_subsections(section)
         carve = frozenset(id(el) for el, _label, _catch in sub_specs)
@@ -873,10 +1009,11 @@ def _walk_structural_children(
     current_major: str | None,
     current_intermediate: str | None,
     prev_name: str | None,
+    pending_header: str | None,
     nodes: list[BillNode],
     *,
     _in_structural_container: bool = False,
-) -> tuple[str | None, str | None, str | None]:
+) -> tuple[str | None, str | None, str | None, str | None]:
     """Walk children of a structural element, dispatching by tag.
 
     Handles appropriations-*, section, and structural containers
@@ -890,17 +1027,19 @@ def _walk_structural_children(
         tag = child.tag
 
         if tag.startswith("appropriations-"):
-            current_major, current_intermediate, prev_name = _process_appro_element(
+            current_major, current_intermediate, prev_name, pending_header = _process_appro_element(
                 child,
                 title_header,
                 division,
                 current_major,
                 current_intermediate,
                 prev_name,
+                pending_header,
                 nodes,
             )
 
         elif tag == "section":
+            pending_header = None
             _process_section_element(
                 child,
                 title_header,
@@ -917,6 +1056,7 @@ def _walk_structural_children(
             saved_major = current_major
             saved_intermediate = current_intermediate
             saved_prev = prev_name
+            saved_pending = pending_header
             # Container header always becomes new major for its children.
             # If we're already inside a container (major was set by parent
             # container), push the existing major to intermediate.
@@ -939,14 +1079,16 @@ def _walk_structural_children(
                 sub_major,
                 sub_intermediate,
                 None,
+                None,
                 nodes,
                 _in_structural_container=True,
             )
             current_major = saved_major
             current_intermediate = saved_intermediate
             prev_name = saved_prev
+            pending_header = saved_pending
 
-    return current_major, current_intermediate, prev_name
+    return current_major, current_intermediate, prev_name, pending_header
 
 
 def walk_title(
@@ -970,6 +1112,7 @@ def walk_title(
         title_element,
         title_header,
         division,
+        None,
         None,
         None,
         None,
@@ -1070,12 +1213,24 @@ def walk_body_sections(parent: ET.Element, division: Division = NO_DIVISION) -> 
         if child.tag != "section":
             continue
 
-        sub_specs = _node_subsections(child)
-        carve = frozenset(id(el) for el, _label, _catch in sub_specs)
+        # A section holding appropriations children carves those out instead of its
+        # subsections, mirroring the title path: each account becomes its own node
+        # below, so leaving them in the section's own text would both hide the accounts
+        # and double-count their money (#485).
+        appro_carve = frozenset(id(c) for c in child if c.tag.startswith("appropriations-"))
+        if appro_carve:
+            sub_specs: list[tuple[ET.Element, str, str]] = []
+            carve = appro_carve
+        else:
+            sub_specs = _node_subsections(child)
+            carve = frozenset(id(el) for el, _label, _catch in sub_specs)
         body_text = _extract_section_text(child, carve)
         display_text = extract_display_text(child, skip_children=carve)
-        # Empty own body is fine when the section parents node-ized subsections (#188).
-        if not body_text and not sub_specs:
+        # Empty own body is fine when the section parents node-ized subsections (#188)
+        # or appropriations accounts (#485) — both emit their own nodes below. Without
+        # the appropriations arm here a section that is nothing but accounts, which is
+        # exactly 118-hr-9468's shape, would `continue` before they were ever walked.
+        if not body_text and not sub_specs and not appro_carve:
             continue
 
         enum_el = child.find("enum")
@@ -1087,20 +1242,34 @@ def walk_body_sections(parent: ET.Element, division: Division = NO_DIVISION) -> 
         match_path = (sec_label,) if sec_label else ()
         display_path = ((division.label,) if division.label else ()) + ((section_num,) if section_num else ())
 
-        nodes.append(
-            BillNode(
-                match_path=match_path,
-                display_path=display_path,
-                tag="section",
-                element_id=child.attrib.get("id", ""),
-                header_text=get_header_text(child),
-                body_text=body_text,
-                display_text=display_text,
-                section_number=section_num,
-                division_label=division.label,
-                division_key=division.key,
+        # An appropriations section with no text of its own emits no node, exactly as the
+        # title path does: the accounts below carry the content, and an empty node here
+        # would be a second address competing with theirs. 118-hr-9468's section is that
+        # case — every child is an account — so the collapsed unnamed entry the reader
+        # sees today is replaced by the accounts rather than joined by them.
+        if body_text or not appro_carve:
+            nodes.append(
+                BillNode(
+                    match_path=match_path,
+                    display_path=display_path,
+                    tag="section",
+                    element_id=child.attrib.get("id", ""),
+                    header_text=get_header_text(child),
+                    body_text=body_text,
+                    display_text=display_text,
+                    section_number=section_num,
+                    division_label=division.label,
+                    division_key=division.key,
+                )
             )
-        )
+        if appro_carve:
+            # No title context here, which is the shape `_build_paths` already handles by
+            # omitting an empty title from both paths. The accounts therefore address off
+            # their own agency names — ("department of veterans affairs", "veterans
+            # benefits administration", "compensation and pensions") — rather than off the
+            # section, which is what makes them addressable at all: this section carries no
+            # <enum>, so its own match_path is empty and could anchor nothing.
+            _walk_section_appro_children(child, "", division, None, None, None, nodes)
         _append_subsection_nodes(sub_specs, match_path, display_path, section_num, division, nodes)
 
     return nodes
@@ -1305,14 +1474,34 @@ def normalize_bill(xml_path: Path) -> BillTree:
     - With divisions: body > division > title > appropriations-*
     - Without divisions, with titles: body > title > appropriations-*
     - Without titles: body > section (simple bills)
+
+    A document may carry more than one top-level <legis-body> (#434); every one is
+    walked, in document order. See ``find_bill_bodies``.
     """
     tree = ET.parse(xml_path)
     root = tree.getroot()
-    body = find_bill_body(root)
+    bodies = find_bill_bodies(root)
     congress, bill_type, bill_number, version, official_title = _extract_metadata(root, xml_path)
 
     # Front matter (form block + enacting clause) renders above the bill body (#48).
-    all_nodes: list[BillNode] = extract_front_matter_nodes(root, body)
+    # Built from the FIRST body only: it is the enacting clause and form block of the
+    # document, printed once, and GPO suppresses it on later bodies through
+    # display-enacting-clause="no-display-enacting-clause" (carried by the second body
+    # in 459 of 459 audited documents).
+    all_nodes: list[BillNode] = extract_front_matter_nodes(root, bodies[0])
+
+    for index, body in enumerate(bodies):
+        body_nodes = _walk_one_body(body)
+        # Stamped here rather than threaded through the ~10 BillNode construction sites
+        # in the walk, so a new site cannot silently ship without it.
+        all_nodes.extend(replace(node, body_index=index) for node in body_nodes)
+
+    return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)
+
+
+def _walk_one_body(body: ET.Element) -> list[BillNode]:
+    """Every content node under one top-level body, in document order."""
+    all_nodes: list[BillNode] = []
 
     # Check for divisions first
     divisions = body.findall("division")
@@ -1341,31 +1530,25 @@ def normalize_bill(xml_path: Path) -> BillTree:
                     key=normalize_header(div_header_text),
                 )
 
-                # A division's own bare sections, before its titles. Reaching them only
-                # through <title> children left every section that is a direct child of a
-                # <division> walked by nothing, so it entered no node, no full-bill view
-                # and no money diff, silently (#465). That is the same arrangement
-                # walk_body_sections already handles one level up, which is why it is the
-                # same call: the body-level path has always done this for bare sections,
-                # and the division branch simply never did.
-                #
-                # It is not only divisions that lack titles entirely. A division can carry
-                # titles AND bare sections (a short-title/definitions preamble ahead of
-                # TITLE I), and that mixed shape looked complete while dropping the
-                # preamble. Measured on the committed corpus: 177 sections, across both
-                # shapes, reached no node before this.
+                # A division's own bare sections, before its titles. Reached through the
+                # same walk_body_sections call the body-level path uses, because it is
+                # the same arrangement one level up: a division can hold sections
+                # directly, either with no titles at all or as a short-title/definitions
+                # preamble ahead of TITLE I.
                 #
                 # Ordered before the titles because that is where these sections sit in
-                # the document, and it mirrors the body-level call, which likewise emits
-                # bare sections ahead of the structures that follow them. No bill in the
-                # committed fixtures or the local collection places a bare section after
-                # a title inside one division, so this ordering is not a choice between
-                # two real arrangements.
+                # the document, mirroring the body-level call. No bill in the committed
+                # fixtures or the local collection places a bare section after a title
+                # inside one division, so this ordering is not a choice between two real
+                # arrangements.
                 #
                 # Passed the whole Division, not just its label: these sections share a
                 # division-stripped match_path with the same-numbered section of every
                 # other division, so the key is what tells them apart when the diff
                 # resolves that collision (#468).
+                #
+                # History: #465 — reaching these sections only through <title> children
+                # left them in no node, no full-bill view and no money diff, silently.
                 all_nodes.extend(walk_body_sections(child, current_division))
 
                 for title in child.findall("title"):
@@ -1374,7 +1557,7 @@ def normalize_bill(xml_path: Path) -> BillTree:
             elif child.tag == "title":
                 title_header = build_title_label(child)
                 all_nodes.extend(walk_title(child, title_header, current_division))
-        return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)
+        return all_nodes
 
     # Check for titles directly under body
     titles = body.findall("title")
@@ -1383,8 +1566,8 @@ def normalize_bill(xml_path: Path) -> BillTree:
         for title in titles:
             title_header = build_title_label(title)
             all_nodes.extend(walk_title(title, title_header, NO_DIVISION))
-        return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)
+        return all_nodes
 
     # Fallback: sections directly under body
     all_nodes.extend(walk_body_sections(body))
-    return BillTree(congress, bill_type, bill_number, version, all_nodes, official_title)
+    return all_nodes

@@ -26,13 +26,8 @@ _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT))
 
 from deltatrack.bill_tree import normalize_bill  # noqa: E402
-from deltatrack.diff_bill import (  # noqa: E402
-    _MOVE_THRESHOLD,
-    _SIMILARITY_THRESHOLD,
-    _normalize_text,
-    _text_similarity,
-    diff_bills,
-)
+from deltatrack.diff_bill import _normalize_text, diff_bills  # noqa: E402
+from deltatrack.similarity import MOVE_THRESHOLD, SIMILARITY_THRESHOLD, text_similarity  # noqa: E402
 from tests.corpus_paths import DATA_DIR, fixture_path  # noqa: E402
 
 _OUT = DATA_DIR / "similarity_labels.json"
@@ -60,7 +55,7 @@ def _find_move(d, needle: str):
 
 
 def _threshold(decision: str) -> float:
-    return _SIMILARITY_THRESHOLD if decision == "split" else _MOVE_THRESHOLD
+    return SIMILARITY_THRESHOLD if decision == "split" else MOVE_THRESHOLD
 
 
 def _build_specs() -> list[dict]:
@@ -389,7 +384,7 @@ def _to_record(s: dict) -> dict:
         match_path = s["match_path"]
         display_path_old, display_path_new = s["display_path_old"], s["display_path_new"]
 
-    sim = _text_similarity(_normalize_text(old_text), _normalize_text(new_text))
+    sim = text_similarity(_normalize_text(old_text), _normalize_text(new_text))
     predicted = "same" if sim >= _threshold(s["decision"]) else "different"
 
     return {
@@ -423,9 +418,9 @@ def main() -> None:
             "0.078, far below the floor). Body-text-only ON PURPOSE: it measures "
             "that pure text similarity fails in the dead zone, which is the evidence for #170 "
             "(structural context as the disambiguating signal). Thresholds under test: split "
-            "floor _SIMILARITY_THRESHOLD=0.40, move _MOVE_THRESHOLD=0.60 in diff_bill.py. "
+            "floor SIMILARITY_THRESHOLD=0.40, move MOVE_THRESHOLD=0.60 in diff_bill.py. "
             "text_old/text_new are frozen verbatim from the corpus; the test recomputes "
-            "similarity live via _text_similarity(_normalize_text(...)). Regenerate with "
+            "similarity live via text_similarity(_normalize_text(...)). Regenerate with "
             "scripts/build_similarity_labels.py."
         ),
         "pairs": records,

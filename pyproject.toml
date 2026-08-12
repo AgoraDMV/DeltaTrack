@@ -56,8 +56,8 @@ dependencies = [
 [dependency-groups]
 # Web delivery channel (web/) — wraps the diff engine as a FastAPI app served by uvicorn.
 web = [
-    "fastapi>=0.140.13",
-    "uvicorn[standard]>=0.51.0",
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.52.1",
     "python-multipart>=0.0.18",  # 0.0.18 fixes CVE-2024-53981 (multipart DoS); also the floor pip-audit checks
     "slowapi>=0.1.9",  # per-IP rate limiting on /api/compare (#64); chosen over a hand-rolled counter on the issue thread
 ]
@@ -76,7 +76,8 @@ dev = [
     "pyyaml>=6.0",  # tests/test_ci_workflow.py parses ci.yml; transitive today, declared so CI cannot lose it
     "reportlab>=5.0.0",
     "respx>=0.22",
-    "ruff==0.16.0",  # pinned exactly so local `ruff format` matches CI (format output varies by version)
+    "ruff==0.16.1",  # pinned exactly so local `ruff format` matches CI (format output varies by version)
+    "tomlkit>=0.13",  # scripts/update_manifest_with_reports.py rewrites corpus_manifest.toml in place; a load-and-dump through a plain TOML writer deletes the file's documentation comments
     "xmldiff>=3.0",  # off-the-shelf baseline for scripts/compare_differs.py; see docs/decisions/0001
 ]
 
@@ -105,7 +106,15 @@ src = ["src", ".", "tools"]
 # Research reproducibility scripts are frozen artifacts (hardcoded paths, ad-hoc
 # one-liners) that reproduce a study's numbers, not maintained source. Exclude them
 # from lint/format so they stay verbatim. Applies to future studies' probes too.
-extend-exclude = ["docs/research/**/probes"]
+#
+# The `.md` rule is the same principle one level up: `ruff format` reformats Python inside
+# fenced code blocks, and a study's write-up quotes its own probes verbatim. Formatting
+# those quotes edits a finished research document to satisfy a style rule it was never written
+# against, and several of these files are hashed into a frozen preservation manifest, so a
+# whitespace change there reads as tampering. Scoped to markdown deliberately: the probes
+# are excluded wholesale, but `validation/*.py` and any future maintained research module
+# stay linted.
+extend-exclude = ["docs/research/**/probes", "docs/research/**/*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
@@ -162,7 +171,7 @@ pythonpath = [".", "tools"]
 addopts = ["-n", "auto", "-rs"]
 markers = [
     "slow: tests that require real bill XML files (deselect with '-m not slow')",
-    "browser: end-to-end tests that drive a real browser via Playwright (run with '-m browser'; need 'playwright install chromium')",
+    "browser: end-to-end tests that drive a real browser via Playwright (run with '-m browser'; need 'playwright install chromium'; pass '--run-browser' to fail closed on a launch failure, which CI's browser step does)",
     "network: tests that fetch from a live external service (skipped unless '--run-network'; also deselectable with '-m not network')",
 ]
 

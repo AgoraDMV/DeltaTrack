@@ -1,0 +1,1760 @@
+{
+ "population": "SYNTHETIC only -- no PDF opened, no architecture run, nothing scored",
+ "adequacy_kinds": [
+  "account",
+  "agency",
+  "grouping"
+ ],
+ "selection_seed": 20260807,
+ "primary_dpi": 300,
+ "r1_repeat_dpi": 330,
+ "a37_bootstrap": {
+  "statistic_identity": [
+   "section8",
+   "document-heading-discordance",
+   "P-head"
+  ],
+  "namespace": "bootstrap-document",
+  "resamples": 10000,
+  "endpoint_indices": [
+   249,
+   9749
+  ],
+  "gate_vector": [
+   "R1",
+   "N-A",
+   "N-B",
+   "N-C",
+   "S1",
+   "confirmatory X2-a",
+   "confirmatory X2-b",
+   "M9 evaluability",
+   "4.5 adequacy"
+  ],
+  "fixture_n_documents": 9,
+  "fixture_events": 3,
+  "interval": [
+   0.0,
+   0.6666666666666666
+  ],
+  "replicates_with_a_repeated_document_in_200": 200,
+  "zero_event_branch": {
+   "reported": false,
+   "reason": "ZERO_EVENTS_BOOTSTRAP_REFUSED",
+   "n_documents": 14,
+   "events": 0,
+   "clopper_pearson_upper_bound": 0.19263617565013536,
+   "gating": false
+  }
+ },
+ "a39_rule0_margin": {
+  "rule": "count of Page.lines where line_number is not None; any positive deficit fires"
+ },
+ "a39_cross_engine": {
+  "namespace": "cross-engine-page",
+  "fraction": 0.1,
+  "gate_owner": "x09_skeleton_cross_engine.gate -- not duplicated here",
+  "k_by_page_count": {
+   "1": 1,
+   "5": 1,
+   "9": 1,
+   "10": 1,
+   "11": 2,
+   "20": 2,
+   "21": 3
+  },
+  "sample_40_pages": [
+   14,
+   22,
+   34,
+   37
+  ]
+ },
+ "tests": [
+  {
+   "test": "4.5 state machine matches the frozen rows on every branch",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...and all three states are reachable",
+   "expected": [
+    "GENERALISABLE",
+    "INADEQUATE",
+    "LIMITED"
+   ],
+   "observed": [
+    "GENERALISABLE",
+    "INADEQUATE",
+    "LIMITED"
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "no (strata, occurrences) pair is unclassified",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "one physical occurrence emitted by BOTH arms counts once",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "an occurrence emitted by ONE arm still counts",
+   "expected": 2,
+   "observed": 2,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "one arm missing an occurrence cannot remove the other arm's key",
+   "expected": 3,
+   "observed": 3,
+   "pass": true,
+   "implication": "an arm's own failure must never shrink the adequacy denominator"
+  },
+  {
+   "test": "two occurrences on ONE neutral line stay distinct",
+   "expected": 2,
+   "observed": 2,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "only account/agency/grouping contribute to adequacy",
+   "expected": 3,
+   "observed": 3,
+   "pass": true,
+   "implication": "title/section/division must not inflate the denominator the frozen quantity is compared against"
+  },
+  {
+   "test": "adding 120 P-robust account/agency/grouping keys does not change adequacy_occurrences",
+   "expected": 3,
+   "observed": 3,
+   "pass": true,
+   "implication": "the frozen P-head clause is now a gate rather than a caller obligation"
+  },
+  {
+   "test": "...and the intruders really were adequacy-KIND keys, so the control is not vacuous",
+   "expected": 120,
+   "observed": 120,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "a P-robust key is excluded even when it is the ONLY input",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "selection is reproducible",
+   "expected": [
+    [
+     "region",
+     "sha1",
+     1,
+     1
+    ],
+    [
+     "region",
+     "sha1",
+     1,
+     2
+    ],
+    [
+     "region",
+     "sha0",
+     3,
+     1
+    ],
+    [
+     "region",
+     "sha0",
+     2,
+     2
+    ],
+    [
+     "region",
+     "sha0",
+     2,
+     1
+    ]
+   ],
+   "observed": [
+    [
+     "region",
+     "sha1",
+     1,
+     1
+    ],
+    [
+     "region",
+     "sha1",
+     1,
+     2
+    ],
+    [
+     "region",
+     "sha0",
+     3,
+     1
+    ],
+    [
+     "region",
+     "sha0",
+     2,
+     2
+    ],
+    [
+     "region",
+     "sha0",
+     2,
+     1
+    ]
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "selection does not depend on input listing order",
+   "expected": [
+    [
+     "region",
+     "sha1",
+     1,
+     1
+    ],
+    [
+     "region",
+     "sha1",
+     1,
+     2
+    ],
+    [
+     "region",
+     "sha0",
+     3,
+     1
+    ],
+    [
+     "region",
+     "sha0",
+     2,
+     2
+    ],
+    [
+     "region",
+     "sha0",
+     2,
+     1
+    ]
+   ],
+   "observed": [
+    [
+     "region",
+     "sha1",
+     1,
+     1
+    ],
+    [
+     "region",
+     "sha1",
+     1,
+     2
+    ],
+    [
+     "region",
+     "sha0",
+     3,
+     1
+    ],
+    [
+     "region",
+     "sha0",
+     2,
+     2
+    ],
+    [
+     "region",
+     "sha0",
+     2,
+     1
+    ]
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "different purposes select differently",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "domain separation, so one namespace's draw cannot leak into another's"
+  },
+  {
+   "test": "canonical form is stable across tuple/list spelling",
+   "expected": "821b664b1f62c2f97820a841cb1dbbf8d86fbe27251750b992134afdf83ebeb4",
+   "observed": "821b664b1f62c2f97820a841cb1dbbf8d86fbe27251750b992134afdf83ebeb4",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "changing the blind-ID scheme changes NO selection and NO presentation rank",
+   "expected": {
+    "audit": [
+     [
+      "region",
+      "sha1",
+      3,
+      2
+     ],
+     [
+      "region",
+      "sha1",
+      2,
+      1
+     ],
+     [
+      "region",
+      "sha0",
+      1,
+      2
+     ],
+     [
+      "region",
+      "sha0",
+      1,
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "region",
+      "sha0",
+      3,
+      1
+     ],
+     [
+      "region",
+      "sha1",
+      3,
+      1
+     ],
+     [
+      "region",
+      "sha0",
+      2,
+      1
+     ]
+    ],
+    "order": [
+     [
+      "region",
+      "sha0",
+      1,
+      1
+     ],
+     [
+      "region",
+      "sha1",
+      2,
+      2
+     ],
+     [
+      "r1-repeat",
+      [
+       "region",
+       "sha0",
+       1,
+       2
+      ]
+     ],
+     [
+      "region",
+      "sha0",
+      2,
+      1
+     ],
+     [
+      "region",
+      "sha1",
+      3,
+      2
+     ],
+     [
+      "r1-repeat",
+      [
+       "region",
+       "sha0",
+       1,
+       1
+      ]
+     ],
+     [
+      "region",
+      "sha1",
+      1,
+      2
+     ],
+     [
+      "region",
+      "sha0",
+      2,
+      2
+     ],
+     [
+      "region",
+      "sha1",
+      1,
+      0
+     ],
+     [
+      "r1-repeat",
+      [
+       "region",
+       "sha0",
+       2,
+       0
+      ]
+     ],
+     [
+      "region",
+      "sha1",
+      2,
+      1
+     ],
+     [
+      "region",
+      "sha0",
+      3,
+      2
+     ],
+     [
+      "region",
+      "sha1",
+      3,
+      0
+     ],
+     [
+      "region",
+      "sha0",
+      3,
+      0
+     ],
+     [
+      "region",
+      "sha0",
+      3,
+      1
+     ],
+     [
+      "region",
+      "sha1",
+      3,
+      1
+     ],
+     [
+      "region",
+      "sha0",
+      2,
+      0
+     ],
+     [
+      "region",
+      "sha0",
+      1,
+      0
+     ],
+     [
+      "region",
+      "sha0",
+      1,
+      2
+     ],
+     [
+      "r1-repeat",
+      [
+       "region",
+       "sha0",
+       1,
+       0
+      ]
+     ],
+     [
+      "region",
+      "sha1",
+      1,
+      1
+     ],
+     [
+      "region",
+      "sha1",
+      2,
+      0
+     ]
+    ]
+   },
+   "observed": {
+    "audit": [
+     [
+      "region",
+      "sha1",
+      3,
+      2
+     ],
+     [
+      "region",
+      "sha1",
+      2,
+      1
+     ],
+     [
+      "region",
+      "sha0",
+      1,
+      2
+     ],
+     [
+      "region",
+      "sha0",
+      1,
+      1
+     ]
+    ],
+    "r1": [
+     [
+      "region",
+      "sha0",
+      3,
+      1
+     ],
+     [
+      "region",
+      "sha1",
+      3,
+      1
+     ],
+     [
+      "region",
+      "sha0",
+      2,
+      1
+     ]
+    ],
+    "order": [
+     [
+      "region",
+      "sha0",
+      1,
+      1
+     ],
+     [
+      "region",
+      "sha1",
+      2,
+      2
+     ],
+     [
+      "r1-repeat",
+      [
+       "region",
+       "sha0",
+       1,
+       2
+      ]
+     ],
+     [
+      "region",
+      "sha0",
+      2,
+      1
+     ],
+     [
+      "region",
+      "sha1",
+      3,
+      2
+     ],
+     [
+      "r1-repeat",
+      [
+       "region",
+       "sha0",
+       1,
+       1
+      ]
+     ],
+     [
+      "region",
+      "sha1",
+      1,
+      2
+     ],
+     [
+      "region",
+      "sha0",
+      2,
+      2
+     ],
+     [
+      "region",
+      "sha1",
+      1,
+      0
+     ],
+     [
+      "r1-repeat",
+      [
+       "region",
+       "sha0",
+       2,
+       0
+      ]
+     ],
+     [
+      "region",
+      "sha1",
+      2,
+      1
+     ],
+     [
+      "region",
+      "sha0",
+      3,
+      2
+     ],
+     [
+      "region",
+      "sha1",
+      3,
+      0
+     ],
+     [
+      "region",
+      "sha0",
+      3,
+      0
+     ],
+     [
+      "region",
+      "sha0",
+      3,
+      1
+     ],
+     [
+      "region",
+      "sha1",
+      3,
+      1
+     ],
+     [
+      "region",
+      "sha0",
+      2,
+      0
+     ],
+     [
+      "region",
+      "sha0",
+      1,
+      0
+     ],
+     [
+      "region",
+      "sha0",
+      1,
+      2
+     ],
+     [
+      "r1-repeat",
+      [
+       "region",
+       "sha0",
+       1,
+       0
+      ]
+     ],
+     [
+      "region",
+      "sha1",
+      1,
+      1
+     ],
+     [
+      "region",
+      "sha1",
+      2,
+      0
+     ]
+    ]
+   },
+   "pass": true,
+   "implication": "sampling ranks canonical pre-blinding identities; the blind id is an alias only"
+  },
+  {
+   "test": "...and the alias itself did change, so the control is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "blind ids are unique across distinct stimuli",
+   "expected": 22,
+   "observed": 22,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the realized-set check passes on a clean stimulus set",
+   "expected": 22,
+   "observed": 22,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "an injected blind-ID collision aborts the build",
+   "expected": "BlindIdCollision",
+   "observed": "BlindIdCollision",
+   "pass": true,
+   "implication": "no overwrite, merge, last-write-wins, salt or re-roll is permitted"
+  },
+  {
+   "test": "a duplicated stimulus identity aborts the build",
+   "expected": "DuplicateStimulusIdentity",
+   "observed": "DuplicateStimulusIdentity",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...and the collision injection did not leak past its scope",
+   "expected": 22,
+   "observed": 22,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "primary stimuli render at exactly 300 dpi",
+   "expected": 300,
+   "observed": 300,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "R1 repeats render at exactly 330 dpi",
+   "expected": 330,
+   "observed": 330,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the R1 scale is the frozen 300 x 1.10",
+   "expected": 330,
+   "observed": 330,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "primary and repeat scales differ, so R1 is a re-render and not a cache hit",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "1. identical inputs reproduce resample 0 exactly",
+   "expected": [
+    [
+     "doc-4",
+     false
+    ],
+    [
+     "doc-5",
+     false
+    ],
+    [
+     "doc-2",
+     false
+    ],
+    [
+     "doc-8",
+     false
+    ],
+    [
+     "doc-3",
+     true
+    ],
+    [
+     "doc-2",
+     false
+    ],
+    [
+     "doc-0",
+     true
+    ],
+    [
+     "doc-5",
+     false
+    ],
+    [
+     "doc-6",
+     true
+    ]
+   ],
+   "observed": [
+    [
+     "doc-4",
+     false
+    ],
+    [
+     "doc-5",
+     false
+    ],
+    [
+     "doc-2",
+     false
+    ],
+    [
+     "doc-8",
+     false
+    ],
+    [
+     "doc-3",
+     true
+    ],
+    [
+     "doc-2",
+     false
+    ],
+    [
+     "doc-0",
+     true
+    ],
+    [
+     "doc-5",
+     false
+    ],
+    [
+     "doc-6",
+     true
+    ]
+   ],
+   "pass": true,
+   "implication": "the draw consults something other than the committed identity and the two ordinals"
+  },
+  {
+   "test": "2. identical inputs reproduce the WHOLE result",
+   "expected": {
+    "reported": true,
+    "statistic": [
+     "section8",
+     "document-heading-discordance",
+     "P-head"
+    ],
+    "resamples": 10000,
+    "namespace": "bootstrap-document",
+    "seed": 20260807,
+    "unit": "document",
+    "n_documents": 9,
+    "events": 3,
+    "observed_rate": 0.3333333333333333,
+    "endpoint_indices": [
+     249,
+     9749
+    ],
+    "interval": [
+     0.0,
+     0.6666666666666666
+    ],
+    "gating": false
+   },
+   "observed": {
+    "reported": true,
+    "statistic": [
+     "section8",
+     "document-heading-discordance",
+     "P-head"
+    ],
+    "resamples": 10000,
+    "namespace": "bootstrap-document",
+    "seed": 20260807,
+    "unit": "document",
+    "n_documents": 9,
+    "events": 3,
+    "observed_rate": 0.3333333333333333,
+    "endpoint_indices": [
+     249,
+     9749
+    ],
+    "interval": [
+     0.0,
+     0.6666666666666666
+    ],
+    "gating": false
+   },
+   "pass": true,
+   "implication": "two runs of the same committed inputs print different intervals"
+  },
+  {
+   "test": "3. REVERSED input order reproduces every resample",
+   "expected": [
+    [
+     [
+      "doc-4",
+      false
+     ],
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-8",
+      false
+     ],
+     [
+      "doc-3",
+      true
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-6",
+      true
+     ]
+    ],
+    [
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-8",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-5",
+      false
+     ]
+    ],
+    [
+     [
+      "doc-7",
+      false
+     ],
+     [
+      "doc-3",
+      true
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-4",
+      false
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-6",
+      true
+     ]
+    ],
+    [
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-3",
+      true
+     ],
+     [
+      "doc-8",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-3",
+      true
+     ],
+     [
+      "doc-2",
+      false
+     ]
+    ],
+    [
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-4",
+      false
+     ],
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-8",
+      false
+     ],
+     [
+      "doc-7",
+      false
+     ],
+     [
+      "doc-2",
+      false
+     ]
+    ]
+   ],
+   "observed": [
+    [
+     [
+      "doc-4",
+      false
+     ],
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-8",
+      false
+     ],
+     [
+      "doc-3",
+      true
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-6",
+      true
+     ]
+    ],
+    [
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-8",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-5",
+      false
+     ]
+    ],
+    [
+     [
+      "doc-7",
+      false
+     ],
+     [
+      "doc-3",
+      true
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-4",
+      false
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-6",
+      true
+     ]
+    ],
+    [
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-3",
+      true
+     ],
+     [
+      "doc-8",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-3",
+      true
+     ],
+     [
+      "doc-2",
+      false
+     ]
+    ],
+    [
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-4",
+      false
+     ],
+     [
+      "doc-5",
+      false
+     ],
+     [
+      "doc-2",
+      false
+     ],
+     [
+      "doc-1",
+      false
+     ],
+     [
+      "doc-0",
+      true
+     ],
+     [
+      "doc-8",
+      false
+     ],
+     [
+      "doc-7",
+      false
+     ],
+     [
+      "doc-2",
+      false
+     ]
+    ]
+   ],
+   "pass": true,
+   "implication": "canonical sorting is missing or ineffective, so the caller's listing order selects different documents -- the defect withdrawn A29 measured"
+  },
+  {
+   "test": "4. several permuted input orders give the IDENTICAL interval",
+   "expected": [
+    [
+     0.0,
+     0.6666666666666666
+    ],
+    [
+     0.0,
+     0.6666666666666666
+    ],
+    [
+     0.0,
+     0.6666666666666666
+    ],
+    [
+     0.0,
+     0.6666666666666666
+    ]
+   ],
+   "observed": [
+    [
+     0.0,
+     0.6666666666666666
+    ],
+    [
+     0.0,
+     0.6666666666666666
+    ],
+    [
+     0.0,
+     0.6666666666666666
+    ],
+    [
+     0.0,
+     0.6666666666666666
+    ]
+   ],
+   "pass": true,
+   "implication": "the reported interval depends on how the caller happened to list its documents"
+  },
+  {
+   "test": "5. a different event pattern CHANGES the interval, so the statistic is live",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "the interval is constant across event patterns, so it measures nothing and every reproducibility control above would pass on a dead quantity"
+  },
+  {
+   "test": "6. changing the statistic identity CHANGES the draws, so domain separation is live",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "two different statistics share a draw sequence, so the population component of the identity is decorative and a P-robust variant could silently reuse P-head's draws"
+  },
+  {
+   "test": "7. NEGATIVE -- a duplicate document identity REFUSES",
+   "expected": "DUPLICATE_DOCUMENT_IDENTITY",
+   "observed": "DUPLICATE_DOCUMENT_IDENTITY",
+   "pass": true,
+   "implication": "a repeated document is silently weighted twice, though the document is the independent unit (8.3, red-team #7)"
+  },
+  {
+   "test": "8. NEGATIVE -- an empty document set REFUSES",
+   "expected": "EMPTY_DOCUMENT_SET",
+   "observed": "EMPTY_DOCUMENT_SET",
+   "pass": true,
+   "implication": "N = 0 produces a division by zero or a vacuous interval instead of refusing"
+  },
+  {
+   "test": "9. NEGATIVE -- a non-boolean event REFUSES",
+   "expected": "NON_BOOLEAN_EVENT",
+   "observed": "NON_BOOLEAN_EVENT",
+   "pass": true,
+   "implication": "a bare 0/1 is accepted -- it would work silently in sum() because bool subclasses int, so the wrong type would never be seen"
+  },
+  {
+   "test": "17. NEGATIVE -- a HEADINGS-as-rows table cannot be passed as documents",
+   "expected": "DUPLICATE_DOCUMENT_IDENTITY",
+   "observed": "DUPLICATE_DOCUMENT_IDENTITY",
+   "pass": true,
+   "implication": "headings enter as independent observations, which is exactly the per-heading probability 8.3 forbids (8.1 measured 0.1926 vs 0.00498, a 39x ratio)"
+  },
+  {
+   "test": "10. zero events REFUSE the bootstrap",
+   "expected": [
+    false,
+    "ZERO_EVENTS_BOOTSTRAP_REFUSED"
+   ],
+   "observed": [
+    false,
+    "ZERO_EVENTS_BOOTSTRAP_REFUSED"
+   ],
+   "pass": true,
+   "implication": "a bootstrap is reported at zero events, where 8.1 measured every resample degenerate"
+  },
+  {
+   "test": "11. ...and no [0, 0] interval is emitted",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "a degenerate [0.0, 0.0] is emitted and would read as a real confidence interval"
+  },
+  {
+   "test": "...and the zero-event branch still yields the frozen closed form 1 - 0.05**(1/N)",
+   "expected": 0.19263617565013536,
+   "observed": 0.19263617565013536,
+   "pass": true,
+   "implication": "the licensed number is missing, leaving only an absence where 8.3 specifies a bound"
+  },
+  {
+   "test": "12. a non-zero statistic executes ALL 10,000 replicates",
+   "expected": 10000,
+   "observed": 10000,
+   "pass": true,
+   "implication": "fewer replicates run than the frozen B, so the interval is computed on a smaller resample set than the amendment states"
+  },
+  {
+   "test": "13. every replicate draws EXACTLY N documents",
+   "expected": [
+    9
+   ],
+   "observed": [
+    9
+   ],
+   "pass": true,
+   "implication": "a replicate draws a different number of documents than the vector holds"
+  },
+  {
+   "test": "14. replacement is REAL -- documents repeat within a replicate",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "no replicate ever picks a document twice in 200 tries, which would mean the draw is a permutation rather than sampling with replacement"
+  },
+  {
+   "test": "...and the counted run agrees with the uninstrumented one",
+   "expected": {
+    "reported": true,
+    "statistic": [
+     "section8",
+     "document-heading-discordance",
+     "P-head"
+    ],
+    "resamples": 10000,
+    "namespace": "bootstrap-document",
+    "seed": 20260807,
+    "unit": "document",
+    "n_documents": 9,
+    "events": 3,
+    "observed_rate": 0.3333333333333333,
+    "endpoint_indices": [
+     249,
+     9749
+    ],
+    "interval": [
+     0.0,
+     0.6666666666666666
+    ],
+    "gating": false
+   },
+   "observed": {
+    "reported": true,
+    "statistic": [
+     "section8",
+     "document-heading-discordance",
+     "P-head"
+    ],
+    "resamples": 10000,
+    "namespace": "bootstrap-document",
+    "seed": 20260807,
+    "unit": "document",
+    "n_documents": 9,
+    "events": 3,
+    "observed_rate": 0.3333333333333333,
+    "endpoint_indices": [
+     249,
+     9749
+    ],
+    "interval": [
+     0.0,
+     0.6666666666666666
+    ],
+    "gating": false
+   },
+   "pass": true,
+   "implication": "instrumenting the resample changed the result, so control 12 measured a different run"
+  },
+  {
+   "test": "15. the endpoint ranks are exactly 249 and 9749 at B = 10,000",
+   "expected": [
+    249,
+    9749
+   ],
+   "observed": [
+    249,
+    9749
+   ],
+   "pass": true,
+   "implication": "the order statistics move, so the interval is not the one A37.6 froze"
+  },
+  {
+   "test": "16. the endpoints are OBSERVED replicate values -- no interpolation",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "implication": "an endpoint lies between two achievable k/N rates, i.e. a library interpolated it (NumPy's percentile default would) and the value was never actually resampled"
+  },
+  {
+   "test": "...and the reported endpoint indices are the frozen ones",
+   "expected": [
+    249,
+    9749
+   ],
+   "observed": [
+    249,
+    9749
+   ],
+   "pass": true,
+   "implication": "the result reports different indices from the ones it used"
+  },
+  {
+   "test": "18. the gate vector is exactly A27.6's nine decision-blocking conditions",
+   "expected": [
+    "R1",
+    "N-A",
+    "N-B",
+    "N-C",
+    "S1",
+    "confirmatory X2-a",
+    "confirmatory X2-b",
+    "M9 evaluability",
+    "4.5 adequacy"
+   ],
+   "observed": [
+    "R1",
+    "N-A",
+    "N-B",
+    "N-C",
+    "S1",
+    "confirmatory X2-a",
+    "confirmatory X2-b",
+    "M9 evaluability",
+    "4.5 adequacy"
+   ],
+   "pass": true,
+   "implication": "a condition was added to or removed from the decision gate"
+  },
+  {
+   "test": "18b. NO bootstrap field appears anywhere in the gate vector",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "the bootstrap became a decision-blocking condition, promoting a supplementary number into evidence"
+  },
+  {
+   "test": "18c. ...and no key of the bootstrap result is a gate input",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "a field the bootstrap emits is consumed by the architecture decision"
+  },
+  {
+   "test": "18d. ...and both branches declare themselves non-gating",
+   "expected": [
+    false,
+    false
+   ],
+   "observed": [
+    false,
+    false
+   ],
+   "pass": true,
+   "implication": "a result does not carry gating: False, so a downstream reader could treat it as evidence"
+  },
+  {
+   "test": "19. WITHOUT canonical sorting the same set in another order resamples DIFFERENTLY",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "the unsorted counterfactual is also order-independent, which would mean control 3 passes for some other reason and proves nothing about the sorting"
+  },
+  {
+   "test": "H recovering FEWER margin lines makes H the loser",
+   "expected": [
+    "H",
+    true,
+    1
+   ],
+   "observed": [
+    "H",
+    true,
+    1
+   ],
+   "pass": true,
+   "implication": "a one-line deficit does not fire, i.e. a tolerance was invented where the frozen text says 'loses', not 'loses more than N'"
+  },
+  {
+   "test": "X recovering FEWER margin lines makes X the loser",
+   "expected": [
+    "X",
+    true,
+    1
+   ],
+   "observed": [
+    "X",
+    true,
+    1
+   ],
+   "pass": true,
+   "implication": "the clause is not symmetric between the two architectures"
+  },
+  {
+   "test": "EQUAL counts do not fire the margin-line clause",
+   "expected": [
+    null,
+    false,
+    0
+   ],
+   "observed": [
+    null,
+    false,
+    0
+   ],
+   "pass": true,
+   "implication": "equality fires, so every document would carry a Rule 0 margin loss"
+  },
+  {
+   "test": "a LARGE deficit fires exactly as a one-line deficit does",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "implication": "the clause is graded by severity, which the frozen text does not license"
+  },
+  {
+   "test": "zero recovered on BOTH sides is still not a comparative loss",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "implication": "a document where neither architecture recovers a margin line is reported as one architecture losing to the other"
+  },
+  {
+   "test": "the same inputs select the same pages",
+   "expected": [
+    14,
+    22,
+    34,
+    37
+   ],
+   "observed": [
+    14,
+    22,
+    34,
+    37
+   ],
+   "pass": true,
+   "implication": "selection is not reproducible from committed inputs"
+  },
+  {
+   "test": "input page PERMUTATION changes nothing",
+   "expected": [
+    [
+     14,
+     22,
+     34,
+     37
+    ],
+    [
+     14,
+     22,
+     34,
+     37
+    ]
+   ],
+   "observed": [
+    [
+     14,
+     22,
+     34,
+     37
+    ],
+    [
+     14,
+     22,
+     34,
+     37
+    ]
+   ],
+   "pass": true,
+   "implication": "the sample depends on the order the caller happened to list pages in"
+  },
+  {
+   "test": "changing the document SHA changes the ranking",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "two documents share a page sample, so the identity component is not consumed"
+  },
+  {
+   "test": "changing the NAMESPACE changes the ranking",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "domain separation is not live, so another purpose could reuse this draw sequence"
+  },
+  {
+   "test": "k = max(1, ceil(0.10 * page_count)) on every boundary",
+   "expected": {
+    "1": 1,
+    "5": 1,
+    "9": 1,
+    "10": 1,
+    "11": 2,
+    "20": 2,
+    "21": 3
+   },
+   "observed": {
+    "1": 1,
+    "5": 1,
+    "9": 1,
+    "10": 1,
+    "11": 2,
+    "20": 2,
+    "21": 3
+   },
+   "pass": true,
+   "implication": "a short document selects ZERO pages and silently escapes the control, or a boundary rounds the wrong way"
+  },
+  {
+   "test": "every document gets at least one sampled page",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "the per-document consequence could attach to a document with no sampled page"
+  },
+  {
+   "test": "an empty page set selects nothing rather than inventing a page",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "a document with no pages yields a sampled page that does not exist"
+  },
+  {
+   "test": "this module exposes NO cross-engine gate of its own",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "a second executable copy of the gate exists here, so it can drift from X09.gate without any control noticing"
+  }
+ ],
+ "failures": []
+}

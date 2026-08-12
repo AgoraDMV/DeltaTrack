@@ -98,9 +98,9 @@ def test_sidebar_groups_changes_by_section():
         )
     )
     assert sidebar.count('<details class="nav-group">') == 3  # collapsed (no open attr)
-    assert '<summary>TITLE I <span class="nav-group__count">(2)</span></summary>' in sidebar
-    assert '<summary>TITLE II <span class="nav-group__count">(1)</span></summary>' in sidebar
-    assert '<summary>Uncategorized <span class="nav-group__count">(1)</span></summary>' in sidebar
+    assert '<summary class="disclosure">TITLE I <span class="nav-group__count">(2)</span></summary>' in sidebar
+    assert '<summary class="disclosure">TITLE II <span class="nav-group__count">(1)</span></summary>' in sidebar
+    assert '<summary class="disclosure">Uncategorized <span class="nav-group__count">(1)</span></summary>' in sidebar
     assert sidebar.count("<li ") == 4  # every change still rendered
 
 

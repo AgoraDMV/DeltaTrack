@@ -119,6 +119,79 @@ class TestMatchNodes:
         assert len(added) == 1
 
 
+class TestCommitteeSubstituteMatching:
+    """Matching across a document that carries two complete bill texts (#434).
+
+    A reported bill holds the base text and the committee substitute as two top-level
+    bodies, so both restate the same section numbers and every section collides with its
+    counterpart. Nodes record which body they came from, and the tempting fix is to pair
+    only within equal body positions. These two tests are why that is wrong: the index is
+    a position within ONE document, and the same position is not the same text across
+    versions.
+
+    Both directions are locked, because a rule can be right in one and wrong in the other
+    -- which is exactly what happened. Pairing on equal index was added for the one-body
+    to two-bodies direction, did not change its result (similarity already had it right),
+    and inverted the two-bodies to one-body direction.
+    """
+
+    BASE = "the base provision concerning aviation safety inspections and reporting"
+    SUBSTITUTE = "the committee substitute concerning maritime commerce and port funding"
+
+    def test_one_body_becomes_two_pairs_the_base_text(self):
+        """Referred (one text) to reported (base + substitute).
+
+        The surviving base text must pair with its unchanged self, and the substitute
+        must read as added rather than claiming the pairing.
+        """
+        old = _tree([_node(("sec. 1",), self.BASE, body_index=0)])
+        new = _tree(
+            [
+                _node(("sec. 1",), self.BASE, body_index=0),
+                _node(("sec. 1",), self.SUBSTITUTE, body_index=1),
+            ]
+        )
+        pairs = match_nodes(old, new)
+        matched = [(o, n) for o, n in pairs if o is not None and n is not None]
+        added = [n for o, n in pairs if o is None]
+
+        assert len(matched) == 1
+        assert matched[0][0].body_text == self.BASE
+        assert matched[0][1].body_text == self.BASE, "the base text must pair with itself, not the substitute"
+        assert [n.body_text for n in added] == [self.SUBSTITUTE]
+
+    def test_two_bodies_become_one_pairs_the_surviving_substitute(self):
+        """Reported (base + substitute) to the next version, which adopted the substitute.
+
+        The adopted text is now the ONLY body, so it sits at index 0 -- the index the
+        superseded base text held in the previous version. Pairing on equal index maps
+        the base onto its own replacement and reports the text that actually survived as
+        removed, which is a false match in both directions at once.
+
+        Measured on the committed corpus, not only here: 114-hr-2029 v5 scores 0.809
+        word-similarity to v4's body[1] and 0.532 to body[0], and pairing on the index
+        turned 145 unchanged sections into 76 unchanged plus 41 modified and 30 moved.
+        """
+        old = _tree(
+            [
+                _node(("sec. 1",), self.BASE, body_index=0),
+                _node(("sec. 1",), self.SUBSTITUTE, body_index=1),
+            ]
+        )
+        new = _tree([_node(("sec. 1",), self.SUBSTITUTE, body_index=0)])
+        pairs = match_nodes(old, new)
+        matched = [(o, n) for o, n in pairs if o is not None and n is not None]
+        removed = [o for o, n in pairs if n is None]
+
+        assert len(matched) == 1
+        assert matched[0][0].body_text == self.SUBSTITUTE, (
+            "the adopted substitute must pair with itself; pairing on body_index maps the "
+            "superseded base text onto it instead"
+        )
+        assert matched[0][1].body_text == self.SUBSTITUTE
+        assert [o.body_text for o in removed] == [self.BASE]
+
+
 @pytest.mark.slow
 class TestMatchNodesIntegration:
     """Integration: match nodes across structurally different versions."""
@@ -848,6 +921,62 @@ class TestCompareVersionAddressableForm:
         )
         data = json.loads(capsys.readouterr().out)
         assert data["financial_summary"] == {"sections_with_financial_changes": 1}
+
+
+class TestCompareBillsDirAbsoluteConflict:
+    """``--bills-dir`` vs. an absolute target is a hard CLI-boundary error (#454).
+
+    ``Path(bills_dir) / target`` discards ``bills_dir`` outright when ``target`` is
+    absolute, so an explicit ``--bills-dir`` combined with an absolute slug/target used
+    to resolve silently against the absolute path and disagree with the flag, with
+    nothing in the output to say so -- a diff of the wrong two files renders exactly
+    like a diff of the right two. The bare-absolute-directory listing #426 added is
+    unaffected: it never names ``--bills-dir``, so there is nothing to conflict with
+    (pinned by
+    ``TestCompareVersionListing.test_a_lone_absolute_directory_that_has_versions_gets_the_listing``).
+    """
+
+    def test_three_positional_form_rejects_an_absolute_slug_with_explicit_bills_dir(
+        self, synthetic_bills_dir, monkeypatch, capsys
+    ):
+        absolute_slug = str(synthetic_bills_dir / "118-hr-4366")
+        with pytest.raises(SystemExit) as exc:
+            _run_compare(monkeypatch, absolute_slug, "1", "6", "--bills-dir", str(synthetic_bills_dir))
+        assert exc.value.code == 2, "a rejected argument combination is a usage error, like the arity check"
+        err = capsys.readouterr().err
+        assert "--bills-dir" in err
+        assert str(synthetic_bills_dir) in err
+        assert absolute_slug in err
+
+    def test_bare_absolute_target_form_rejects_explicit_bills_dir(self, synthetic_bills_dir, monkeypatch, capsys):
+        absolute_target = str(synthetic_bills_dir / "118-hr-4366")
+        with pytest.raises(SystemExit) as exc:
+            _run_compare(monkeypatch, absolute_target, "--bills-dir", str(synthetic_bills_dir))
+        assert exc.value.code == 2
+        assert "--bills-dir" in capsys.readouterr().err
+
+    def test_two_corpora_reproduction_fails_closed_instead_of_reading_the_wrong_one(
+        self, synthetic_bills_dir, tmp_path, monkeypatch
+    ):
+        """The issue's exact shape: --bills-dir names one corpus, the target another.
+
+        Before the fix this silently diffed the corpus named by the target and ignored
+        --bills-dir; it now refuses instead of answering from the wrong corpus.
+        """
+        other_bill = tmp_path / "other-bills" / "118-hr-4366"
+        other_bill.mkdir(parents=True)
+        (other_bill / "1_reported-in-house.xml").write_text(_synthetic_bill_xml("Reported-in-House", "$9,000,000"))
+        (other_bill / "2_engrossed-in-house.xml").write_text(_synthetic_bill_xml("Engrossed-in-House", "$9,500,000"))
+        with pytest.raises(SystemExit) as exc:
+            _run_compare(monkeypatch, str(other_bill), "1", "2", "--bills-dir", str(synthetic_bills_dir))
+        assert exc.value.code == 2
+
+    def test_a_relative_slug_with_explicit_bills_dir_is_unaffected(self, synthetic_bills_dir, monkeypatch, capsys):
+        """The conflict check only fires on an absolute target; the common case is untouched."""
+        _run_compare(monkeypatch, "118-hr-4366", "1", "6", "--bills-dir", str(synthetic_bills_dir), "--format", "json")
+        data = json.loads(capsys.readouterr().out)
+        assert data["old_version_number"] == 1
+        assert data["new_version_number"] == 6
 
 
 class TestCompareVersionListing:

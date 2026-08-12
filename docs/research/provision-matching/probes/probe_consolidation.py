@@ -16,10 +16,14 @@ from collections import Counter
 from pathlib import Path
 
 from deltatrack.bill_tree import normalize_bill
-from deltatrack.diff_bill import _normalize_text, _text_similarity, diff_bills
+from deltatrack.diff_bill import _normalize_text, diff_bills
+from deltatrack.similarity import text_similarity
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
-BILLS = REPO / "bills"
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+BILLS = merged_root()
 _word = re.compile(r"[a-z0-9]+")
 
 
@@ -86,7 +90,7 @@ for rc, ro, rv in rem_vec:
     best_wr = best_c = 0.0
     best_wr_pair = best_c_pair = None
     for ac, ao, av in add_vec:
-        wr = _text_similarity(ro, ao)
+        wr = text_similarity(ro, ao)
         c = contain(rv, av)
         if wr > best_wr:
             best_wr, best_wr_pair = wr, ac

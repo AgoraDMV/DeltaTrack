@@ -1,0 +1,254 @@
+{
+ "population": "DEVELOPMENT + synthetic -- no holdout opened, nothing scored",
+ "chain": "Anchor(page, margin line_number) -> Page.print_lines index -> emitted[i] -> ngid -> NeutralLine -> region",
+ "bilateral": "the SAME rule is applied to H and X; neither arm has a private matching rule",
+ "text_matching_used": false,
+ "fallback_exists": false,
+ "region_size_neutral_lines": 8,
+ "documents": [
+  {
+   "document": "114-hr-2029/4",
+   "pages": 8,
+   "arms": [
+    {
+     "arm": "H",
+     "anchors_total": 11,
+     "placed_uniquely": 11,
+     "unplaceable": {},
+     "examples": [
+      {
+       "kind": "title",
+       "page": 2,
+       "margin_line": 8,
+       "region": 1,
+       "neutral_line": [
+        2,
+        8
+       ]
+      },
+      {
+       "kind": "major",
+       "page": 2,
+       "margin_line": 9,
+       "region": 1,
+       "neutral_line": [
+        2,
+        9
+       ]
+      }
+     ]
+    },
+    {
+     "arm": "X",
+     "anchors_total": 11,
+     "placed_uniquely": 11,
+     "unplaceable": {},
+     "examples": [
+      {
+       "kind": "title",
+       "page": 2,
+       "margin_line": 8,
+       "region": 1,
+       "neutral_line": [
+        2,
+        8
+       ]
+      },
+      {
+       "kind": "major",
+       "page": 2,
+       "margin_line": 9,
+       "region": 1,
+       "neutral_line": [
+        2,
+        9
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "document": "118-s-4795/1",
+   "pages": 8,
+   "arms": [
+    {
+     "arm": "H",
+     "anchors_total": 16,
+     "placed_uniquely": 16,
+     "unplaceable": {},
+     "examples": [
+      {
+       "kind": "title",
+       "page": 2,
+       "margin_line": 1,
+       "region": 0,
+       "neutral_line": [
+        2,
+        1
+       ]
+      },
+      {
+       "kind": "major",
+       "page": 2,
+       "margin_line": 2,
+       "region": 0,
+       "neutral_line": [
+        2,
+        2
+       ]
+      }
+     ]
+    },
+    {
+     "arm": "X",
+     "anchors_total": 16,
+     "placed_uniquely": 16,
+     "unplaceable": {},
+     "examples": [
+      {
+       "kind": "title",
+       "page": 2,
+       "margin_line": 1,
+       "region": 0,
+       "neutral_line": [
+        2,
+        1
+       ]
+      },
+      {
+       "kind": "major",
+       "page": 2,
+       "margin_line": 2,
+       "region": 0,
+       "neutral_line": [
+        2,
+        2
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "tests": [
+  {
+   "test": "114-hr-2029/4: both arms bridge onto the SAME neutral skeleton",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "114-hr-2029/4 [H]: print_lines matches emitted index-for-index on EVERY page",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "the bridge's index step is only sound while this holds, on every consumed page"
+  },
+  {
+   "test": "114-hr-2029/4 [H]: every anchor on a sampled page places uniquely",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "implication": "any residue makes anchor discordance non-executable as frozen"
+  },
+  {
+   "test": "114-hr-2029/4 [X]: print_lines matches emitted index-for-index on EVERY page",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "the bridge's index step is only sound while this holds, on every consumed page"
+  },
+  {
+   "test": "114-hr-2029/4 [X]: every anchor on a sampled page places uniquely",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "implication": "any residue makes anchor discordance non-executable as frozen"
+  },
+  {
+   "test": "118-s-4795/1: both arms bridge onto the SAME neutral skeleton",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "118-s-4795/1 [H]: print_lines matches emitted index-for-index on EVERY page",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "the bridge's index step is only sound while this holds, on every consumed page"
+  },
+  {
+   "test": "118-s-4795/1 [H]: every anchor on a sampled page places uniquely",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "implication": "any residue makes anchor discordance non-executable as frozen"
+  },
+  {
+   "test": "118-s-4795/1 [X]: print_lines matches emitted index-for-index on EVERY page",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "the bridge's index step is only sound while this holds, on every consumed page"
+  },
+  {
+   "test": "118-s-4795/1 [X]: every anchor on a sampled page places uniquely",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "implication": "any residue makes anchor discordance non-executable as frozen"
+  },
+  {
+   "test": "negative: a margin number present twice on a page is refused, not guessed",
+   "expected": "AMBIGUOUS_MARGIN_NUMBER_ON_PAGE",
+   "observed": "AMBIGUOUS_MARGIN_NUMBER_ON_PAGE",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "negative: a margin number on no print line is refused, not guessed",
+   "expected": "NO_PRINT_LINE_WITH_THAT_MARGIN_NUMBER",
+   "observed": "NO_PRINT_LINE_WITH_THAT_MARGIN_NUMBER",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "negative: an emitted line with no neutral ink is refused, not guessed",
+   "expected": "EMITTED_LINE_CARRIES_NO_NEUTRAL_INK",
+   "observed": "EMITTED_LINE_CARRIES_NO_NEUTRAL_INK",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "negative: a first gid the skeleton does not own is refused, not guessed",
+   "expected": "FIRST_GID_NOT_OWNED_BY_ANY_NEUTRAL_LINE",
+   "observed": "FIRST_GID_NOT_OWNED_BY_ANY_NEUTRAL_LINE",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "positive: a clean anchor places on its region",
+   "expected": [
+    0,
+    [
+     1,
+     0
+    ]
+   ],
+   "observed": [
+    0,
+    [
+     1,
+     0
+    ]
+   ],
+   "pass": true,
+   "implication": ""
+  }
+ ],
+ "failures": []
+}

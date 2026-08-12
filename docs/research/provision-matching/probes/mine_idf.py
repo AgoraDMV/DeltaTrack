@@ -28,7 +28,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
+REPO = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(REPO))
 
 from deltatrack.bill_tree import normalize_bill  # noqa: E402

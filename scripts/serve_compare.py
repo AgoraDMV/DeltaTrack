@@ -47,6 +47,27 @@ from tests.corpus_paths import FIXTURES_DIR
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
+# CSP header value matching the production middleware (#282).
+_CSP_HEADER = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "object-src 'none'; "
+    "base-uri 'none'; "
+    "frame-ancestors 'none'"
+)
+
+
+class _SecureHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+    """SimpleHTTPRequestHandler with baseline security headers (#282)."""
+
+    def end_headers(self):
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Content-Security-Policy", _CSP_HEADER)
+        self.send_header("Referrer-Policy", "no-referrer")
+        super().end_headers()
+
 
 def _resolve_bill_dir(arg: str) -> Path:
     """Accept either a path to a bill dir, or a bill id among the committed fixtures.
@@ -177,7 +198,7 @@ def main() -> None:
     (out_dir / "xml.html").write_text(xml_html)
     (out_dir / "index.html").write_text(_index_html(bill_dir.name, v1_label, v2_label))
 
-    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(out_dir))
+    handler = functools.partial(_SecureHTTPRequestHandler, directory=str(out_dir))
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("127.0.0.1", args.port), handler) as httpd:
         url = f"http://127.0.0.1:{args.port}/"

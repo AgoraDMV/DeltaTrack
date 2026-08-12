@@ -1,0 +1,793 @@
+{
+ "population": "SYNTHETIC + DEVELOPMENT -- no holdout opened, nothing scored",
+ "contract": "A32, committed before this probe existed; no pass threshold is stated here",
+ "supersedes_a30_3": false,
+ "primary_dpi": 300,
+ "r1_dpi": 330,
+ "translation_invariant": true,
+ "crop_rule_used": null,
+ "resolver": {
+  "controls": "10 boundary controls + translation invariance, both sides injected"
+ },
+ "development": {
+  "documents": [
+   {
+    "document": "114-hr-2029/4",
+    "G_min_margin_px_300": 2.7708053588867188,
+    "H_min_margin_px_300": 7.699998219807942,
+    "C_min_margin_px_300": 8.224995930989584,
+    "n_G": 154243,
+    "n_H": 339,
+    "n_C": 4
+   },
+   {
+    "document": "118-s-4795/1",
+    "G_min_margin_px_300": 4.695828755696614,
+    "H_min_margin_px_300": 9.35665766398112,
+    "C_min_margin_px_300": null,
+    "n_G": 153563,
+    "n_H": 212,
+    "n_C": 0
+   },
+   {
+    "document": "115-hr-5895/1",
+    "G_min_margin_px_300": 2.3697535196940103,
+    "H_min_margin_px_300": 7.699998219807942,
+    "C_min_margin_px_300": 9.12917455037435,
+    "n_G": 74932,
+    "n_H": 129,
+    "n_C": 4
+   },
+   {
+    "document": "118-hr-8752/1",
+    "G_min_margin_px_300": 2.3697535196940103,
+    "H_min_margin_px_300": 7.699998219807942,
+    "C_min_margin_px_300": 9.12917455037435,
+    "n_G": 110393,
+    "n_H": 203,
+    "n_C": 2
+   },
+   {
+    "document": "119-hr-1/1",
+    "G_min_margin_px_300": 2.3697535196940103,
+    "H_min_margin_px_300": 5.5708567301432295,
+    "C_min_margin_px_300": null,
+    "n_G": 153962,
+    "n_H": 169,
+    "n_C": 0
+   },
+   {
+    "document": "118-hr-4366/1",
+    "G_min_margin_px_300": 2.3697535196940103,
+    "H_min_margin_px_300": 7.699998219807942,
+    "C_min_margin_px_300": 9.129142761230469,
+    "n_G": 107277,
+    "n_H": 197,
+    "n_C": 4
+   }
+  ],
+  "populations": {
+   "G": {
+    "dpi_300": {
+     "dpi": 300,
+     "n_targets": 754370,
+     "n_exact_x_ambiguous": 0,
+     "n_no_competitor_on_line": 50,
+     "n_in_margin_stats": 754320,
+     "margin_px": {
+      "min": 2.3697535196940103,
+      "p01": 4.9833933512369795,
+      "p05": 7.3396046956380205,
+      "median": 11.637528737386068,
+      "p95": 16.712443033854168
+     },
+     "guaranteed_integer_error_px": {
+      "min": 1,
+      "n_none": 0,
+      "p01": 4,
+      "p05": 6,
+      "median": 11.0
+     },
+     "k_buckets": {
+      "1": 812,
+      "2": 504,
+      "3": 4682,
+      "4": 5154,
+      "5": 7800,
+      "6": 49613,
+      "7": 87032,
+      "8+": 598773
+     }
+    },
+    "dpi_330": {
+     "dpi": 330,
+     "n_targets": 754370,
+     "n_exact_x_ambiguous": 0,
+     "n_no_competitor_on_line": 50,
+     "n_in_margin_stats": 754320,
+     "margin_px": {
+      "min": 2.6067288716634116,
+      "p01": 5.481732686360677,
+      "p05": 8.073565165201822,
+      "median": 12.801281611124674,
+      "p95": 18.383687337239582
+     },
+     "guaranteed_integer_error_px": {
+      "min": 2,
+      "n_none": 0,
+      "p01": 4,
+      "p05": 7,
+      "median": 12.0
+     },
+     "k_buckets": {
+      "2": 1308,
+      "3": 2250,
+      "4": 4172,
+      "5": 5625,
+      "6": 10594,
+      "7": 80413,
+      "8+": 650008
+     }
+    }
+   },
+   "H": {
+    "dpi_300": {
+     "dpi": 300,
+     "n_targets": 1249,
+     "n_exact_x_ambiguous": 0,
+     "n_no_competitor_on_line": 0,
+     "n_in_margin_stats": 1249,
+     "margin_px": {
+      "min": 5.5708567301432295,
+      "p01": 7.554181416829427,
+      "p05": 8.254178365071615,
+      "median": 15.580622355143229,
+      "p95": 21.706231435139973
+     },
+     "guaranteed_integer_error_px": {
+      "min": 5,
+      "n_none": 0,
+      "p01": 7,
+      "p05": 7,
+      "median": 15
+     },
+     "k_buckets": {
+      "5": 1,
+      "6": 1,
+      "7": 67,
+      "8+": 1180
+     }
+    },
+    "dpi_330": {
+     "dpi": 330,
+     "n_targets": 1249,
+     "n_exact_x_ambiguous": 0,
+     "n_no_competitor_on_line": 0,
+     "n_in_margin_stats": 1249,
+     "margin_px": {
+      "min": 6.127942403157552,
+      "p01": 8.30959955851237,
+      "p05": 9.079596201578775,
+      "median": 17.13868459065755,
+      "p95": 23.876854578653973
+     },
+     "guaranteed_integer_error_px": {
+      "min": 5,
+      "n_none": 0,
+      "p01": 7,
+      "p05": 8,
+      "median": 16
+     },
+     "k_buckets": {
+      "5": 1,
+      "7": 59,
+      "8+": 1189
+     }
+    }
+   },
+   "C": {
+    "dpi_300": {
+     "dpi": 300,
+     "n_targets": 14,
+     "n_exact_x_ambiguous": 0,
+     "n_no_competitor_on_line": 0,
+     "n_in_margin_stats": 14,
+     "margin_px": {
+      "min": 8.224995930989584,
+      "p01": 8.224995930989584,
+      "p05": 8.224995930989584,
+      "median": 12.346156438191732,
+      "p95": 15.580622355143229
+     },
+     "guaranteed_integer_error_px": {
+      "min": 7,
+      "n_none": 0,
+      "p01": 7,
+      "p05": 7,
+      "median": 11.5
+     },
+     "k_buckets": {
+      "7": 1,
+      "8+": 13
+     }
+    },
+    "dpi_330": {
+     "dpi": 330,
+     "n_targets": 14,
+     "n_exact_x_ambiguous": 0,
+     "n_no_competitor_on_line": 0,
+     "n_in_margin_stats": 14,
+     "margin_px": {
+      "min": 9.047495524088541,
+      "p01": 9.047495524088541,
+      "p05": 9.047495524088541,
+      "median": 13.580772082010906,
+      "p95": 17.13868459065755
+     },
+     "guaranteed_integer_error_px": {
+      "min": 8,
+      "n_none": 0,
+      "p01": 8,
+      "p05": 8,
+      "median": 12.5
+     },
+     "k_buckets": {
+      "8+": 14
+     }
+    }
+   }
+  },
+  "per_document_minima": [
+   {
+    "document": "114-hr-2029/4",
+    "G_min_margin_px_300": 2.7708053588867188,
+    "H_min_margin_px_300": 7.699998219807942,
+    "C_min_margin_px_300": 8.224995930989584,
+    "n_G": 154243,
+    "n_H": 339,
+    "n_C": 4
+   },
+   {
+    "document": "118-s-4795/1",
+    "G_min_margin_px_300": 4.695828755696614,
+    "H_min_margin_px_300": 9.35665766398112,
+    "C_min_margin_px_300": null,
+    "n_G": 153563,
+    "n_H": 212,
+    "n_C": 0
+   },
+   {
+    "document": "115-hr-5895/1",
+    "G_min_margin_px_300": 2.3697535196940103,
+    "H_min_margin_px_300": 7.699998219807942,
+    "C_min_margin_px_300": 9.12917455037435,
+    "n_G": 74932,
+    "n_H": 129,
+    "n_C": 4
+   },
+   {
+    "document": "118-hr-8752/1",
+    "G_min_margin_px_300": 2.3697535196940103,
+    "H_min_margin_px_300": 7.699998219807942,
+    "C_min_margin_px_300": 9.12917455037435,
+    "n_G": 110393,
+    "n_H": 203,
+    "n_C": 2
+   },
+   {
+    "document": "119-hr-1/1",
+    "G_min_margin_px_300": 2.3697535196940103,
+    "H_min_margin_px_300": 5.5708567301432295,
+    "C_min_margin_px_300": null,
+    "n_G": 153962,
+    "n_H": 169,
+    "n_C": 0
+   },
+   {
+    "document": "118-hr-4366/1",
+    "G_min_margin_px_300": 2.3697535196940103,
+    "H_min_margin_px_300": 7.699998219807942,
+    "C_min_margin_px_300": 9.129142761230469,
+    "n_G": 107277,
+    "n_H": 197,
+    "n_C": 4
+   }
+  ],
+  "exact_x_collisions": {
+   "n": 0,
+   "n_involving_heading_start_or_collision": 0,
+   "cases": []
+  },
+  "kind_strata_H": {
+   "account": 363,
+   "agency": 121,
+   "grouping": 18,
+   "major": 30,
+   "section": 598,
+   "subsection": 88,
+   "title": 31
+  },
+  "worst_cases": {
+   "H": [
+    {
+     "document": "119-hr-1/1",
+     "page": 51,
+     "line": [
+      51,
+      9
+     ],
+     "ngid": 404,
+     "m_pt": 1.337005615234375,
+     "exact_x_same": false,
+     "kind": "subsection",
+     "x0": 179.23159790039062,
+     "x1": 182.05960083007812,
+     "y0": 496.6091003417969,
+     "y1": 508.5931091308594,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/119-hr-1/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "119-hr-1/1",
+     "page": 86,
+     "line": [
+      86,
+      10
+     ],
+     "ngid": 424,
+     "m_pt": 1.7430038452148438,
+     "exact_x_same": false,
+     "kind": "subsection",
+     "x0": 179.23226928710938,
+     "x1": 182.06027221679688,
+     "y0": 470.6114196777344,
+     "y1": 482.5954284667969,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/119-hr-1/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "119-hr-1/1",
+     "page": 16,
+     "line": [
+      16,
+      20
+     ],
+     "ngid": 942,
+     "m_pt": 1.8130035400390625,
+     "exact_x_same": false,
+     "kind": "account",
+     "x0": 206.8962860107422,
+     "x1": 208.6182861328125,
+     "y0": 218.6394500732422,
+     "y1": 222.6014404296875,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/119-hr-1/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "119-hr-1/1",
+     "page": 22,
+     "line": [
+      22,
+      5
+     ],
+     "ngid": 203,
+     "m_pt": 1.8130035400390625,
+     "exact_x_same": false,
+     "kind": "account",
+     "x0": 234.8961944580078,
+     "x1": 236.61819458007812,
+     "y0": 612.63037109375,
+     "y1": 616.5924072265625,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/119-hr-1/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "119-hr-1/1",
+     "page": 23,
+     "line": [
+      23,
+      17
+     ],
+     "ngid": 647,
+     "m_pt": 1.8130035400390625,
+     "exact_x_same": false,
+     "kind": "account",
+     "x0": 206.89639282226562,
+     "x1": 208.61839294433594,
+     "y0": 296.6329040527344,
+     "y1": 300.59490966796875,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/119-hr-1/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "119-hr-1/1",
+     "page": 25,
+     "line": [
+      25,
+      18
+     ],
+     "ngid": 776,
+     "m_pt": 1.8130035400390625,
+     "exact_x_same": false,
+     "kind": "account",
+     "x0": 234.8961944580078,
+     "x1": 236.61819458007812,
+     "y0": 274.6304931640625,
+     "y1": 278.5924987792969,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/119-hr-1/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "119-hr-1/1",
+     "page": 28,
+     "line": [
+      28,
+      19
+     ],
+     "ngid": 832,
+     "m_pt": 1.8130035400390625,
+     "exact_x_same": false,
+     "kind": "account",
+     "x0": 206.89599609375,
+     "x1": 208.6179962158203,
+     "y0": 244.62989807128906,
+     "y1": 248.59188842773438,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/119-hr-1/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "119-hr-1/1",
+     "page": 31,
+     "line": [
+      31,
+      13
+     ],
+     "ngid": 529,
+     "m_pt": 1.8130035400390625,
+     "exact_x_same": false,
+     "kind": "account",
+     "x0": 206.89547729492188,
+     "x1": 208.6174774169922,
+     "y0": 400.6304931640625,
+     "y1": 404.5924987792969,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/119-hr-1/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    }
+   ],
+   "C": [
+    {
+     "document": "114-hr-2029/4",
+     "page": 136,
+     "line": [
+      136,
+      24
+     ],
+     "ngid": 1262,
+     "m_pt": 1.9739990234375,
+     "exact_x_same": false,
+     "kind": "subsection",
+     "x0": 237.55599975585938,
+     "x1": 242.03599548339844,
+     "y0": 106.59210205078125,
+     "y1": 118.6041030883789,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/114-hr-2029/4_reported-in-senate.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "118-hr-4366/1",
+     "page": 88,
+     "line": [
+      88,
+      23
+     ],
+     "ngid": 1256,
+     "m_pt": 2.1909942626953125,
+     "exact_x_same": false,
+     "kind": "subsection",
+     "x0": 241.9912109375,
+     "x1": 244.81919860839844,
+     "y0": 132.60610961914062,
+     "y1": 144.59010314941406,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/118-hr-4366/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "114-hr-2029/4",
+     "page": 66,
+     "line": [
+      66,
+      12
+     ],
+     "ngid": 627,
+     "m_pt": 2.1910018920898438,
+     "exact_x_same": false,
+     "kind": "subsection",
+     "x0": 241.97869873046875,
+     "x1": 244.80670166015625,
+     "y0": 418.6060791015625,
+     "y1": 430.590087890625,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/114-hr-2029/4_reported-in-senate.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "115-hr-5895/1",
+     "page": 49,
+     "line": [
+      49,
+      21
+     ],
+     "ngid": 1105,
+     "m_pt": 2.1910018920898438,
+     "exact_x_same": false,
+     "kind": "subsection",
+     "x0": 239.8323974609375,
+     "x1": 242.660400390625,
+     "y0": 184.60610961914062,
+     "y1": 196.59010314941406,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/115-hr-5895/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "115-hr-5895/1",
+     "page": 52,
+     "line": [
+      52,
+      3
+     ],
+     "ngid": 159,
+     "m_pt": 2.1910018920898438,
+     "exact_x_same": false,
+     "kind": "subsection",
+     "x0": 246.19119262695312,
+     "x1": 249.01919555664062,
+     "y0": 652.6060180664062,
+     "y1": 664.5900268554688,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/115-hr-5895/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "118-hr-8752/1",
+     "page": 92,
+     "line": [
+      92,
+      4
+     ],
+     "ngid": 190,
+     "m_pt": 2.1910018920898438,
+     "exact_x_same": false,
+     "kind": "subsection",
+     "x0": 244.14999389648438,
+     "x1": 246.97799682617188,
+     "y0": 626.6061401367188,
+     "y1": 638.5901489257812,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/118-hr-8752/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "118-hr-4366/1",
+     "page": 90,
+     "line": [
+      90,
+      12
+     ],
+     "ngid": 639,
+     "m_pt": 2.1910018920898438,
+     "exact_x_same": false,
+     "kind": "subsection",
+     "x0": 245.07119750976562,
+     "x1": 247.89920043945312,
+     "y0": 418.6060791015625,
+     "y1": 430.590087890625,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/118-hr-4366/1_reported-in-house.pdf",
+     "ink_within_6pt_left": []
+    },
+    {
+     "document": "114-hr-2029/4",
+     "page": 136,
+     "line": [
+      136,
+      24
+     ],
+     "ngid": 1252,
+     "m_pt": 3.7351531982421875,
+     "exact_x_same": false,
+     "kind": "section",
+     "x0": 178.33599853515625,
+     "x1": 185.91000366210938,
+     "y0": 108.69691467285156,
+     "y1": 118.59491729736328,
+     "pdf": "/Users/williamhea/Documents/Code/civictech/appropriations_bills/.claude/worktrees/a30-occurrence-identity/tests/corpus/114-hr-2029/4_reported-in-senate.pdf",
+     "ink_within_6pt_left": []
+    }
+   ]
+  }
+ },
+ "hard_stop_conditions": [],
+ "tests": [
+  {
+   "test": "1. a clean isolated target resolves to itself",
+   "expected": [
+    10,
+    null
+   ],
+   "observed": [
+    10,
+    null
+   ],
+   "pass": true,
+   "fails_when": "if the exact geometric start did not resolve, the interface would be unusable"
+  },
+  {
+   "test": "2a. just BEFORE the midpoint resolves to the left candidate",
+   "expected": 10,
+   "observed": 10,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "2b. just AFTER the midpoint resolves to the right candidate",
+   "expected": 20,
+   "observed": 20,
+   "pass": true,
+   "fails_when": "both sides are injected; a one-sided test could not locate the boundary"
+  },
+  {
+   "test": "3. the EXACT midpoint is UNMATCHED",
+   "expected": [
+    null,
+    "AMBIGUOUS_SOURCE_POSITION"
+   ],
+   "observed": [
+    null,
+    "AMBIGUOUS_SOURCE_POSITION"
+   ],
+   "pass": true,
+   "fails_when": "no tie is broken by ngid, text, kind, order or y"
+  },
+  {
+   "test": "4. a duplicate candidate x, when nearest, is UNMATCHED",
+   "expected": [
+    null,
+    "AMBIGUOUS_SOURCE_POSITION"
+   ],
+   "observed": [
+    null,
+    "AMBIGUOUS_SOURCE_POSITION"
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "4b. ...but a duplicate elsewhere does NOT block a clear winner",
+   "expected": 30,
+   "observed": 30,
+   "pass": true,
+   "fails_when": "if this refused too, control 4 would prove only that duplicates always fail"
+  },
+  {
+   "test": "5. an absent physical line is UNMATCHED",
+   "expected": [
+    null,
+    "NO_NEUTRAL_INK_ON_LINE"
+   ],
+   "observed": [
+    null,
+    "NO_NEUTRAL_INK_ON_LINE"
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "6. a line with no neutral ink is UNMATCHED",
+   "expected": [
+    null,
+    "NO_NEUTRAL_INK_ON_LINE"
+   ],
+   "observed": [
+    null,
+    "NO_NEUTRAL_INK_ON_LINE"
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "7. heading TEXT cannot change resolution (it is not an input)",
+   "expected": [
+    10,
+    null
+   ],
+   "observed": [
+    10,
+    null
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "8. anchor KIND cannot change resolution (it is not an input)",
+   "expected": [
+    10,
+    null
+   ],
+   "observed": [
+    10,
+    null
+   ],
+   "pass": true,
+   "fails_when": "reversing candidate order stands in for any kind/order-derived ranking"
+  },
+  {
+   "test": "9. an H/X spacing disagreement does not move the target's geometry identity",
+   "expected": [
+    10,
+    null
+   ],
+   "observed": [
+    10,
+    null
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "10a. same-line section start resolves to the section",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "10b. same-line inline-subsection start resolves to the subsection",
+   "expected": 8,
+   "observed": 8,
+   "pass": true,
+   "fails_when": "if these collapsed, A30's whole reason for existing would be defeated"
+  },
+  {
+   "test": "translation invariance: the crop origin cannot change any resolution",
+   "expected": {
+    "0.0": 10,
+    "36.0": 10,
+    "-12.5": 10,
+    "1000.0": 10
+   },
+   "observed": {
+    "0.0": 10,
+    "36.0": 10,
+    "-12.5": 10,
+    "1000.0": 10
+   },
+   "pass": true,
+   "fails_when": "if it could, this study would require the unfrozen crop rule"
+  },
+  {
+   "test": "...and the pixel driver agrees with the point-space resolver",
+   "expected": 10,
+   "observed": 10,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "population H is non-empty, so the task-relevant result is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "population C is non-empty, so the adversarial case was actually exercised",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "no HARD stop condition on DEVELOPMENT",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": ""
+  }
+ ],
+ "failures": []
+}

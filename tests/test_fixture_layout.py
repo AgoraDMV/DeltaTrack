@@ -45,9 +45,9 @@ from tests.engine_guard import engine_is_foreign
 # committed. Each entry is a deliberate exception, not a waiver — see the comment.
 _DOWNLOAD_TIER_FILES = {
     # The fetchers: bills/ is their output directory, which is the point.
-    "fetch_bills.py",
-    "fetch_bill_archives.py",
-    "fetch_bill_text_archives.py",
+    "tools/fetch_bills.py",
+    "tools/fetch_bill_archives.py",
+    "tools/fetch_bill_text_archives.py",
     "tests/test_fetch_bills.py",
     "tests/test_fetch_bill_archives.py",
     "tests/test_fetch_bill_archives_extract.py",
@@ -178,10 +178,14 @@ def _python_sources() -> list[Path]:
     in them left the scan while the suite stayed green. Keep these paths in step with the
     tree — the completeness floor below can catch a total collapse, but not a partial
     shortfall, which is the shape a move produces.
+
+    ``tools`` is named as a whole rather than subpackage by subpackage for the same reason
+    (#424). Naming ``tools/shared`` and ``tools/bill_index`` covered the two subpackages that
+    existed when the roster was written and silently excluded everything beside them — which
+    after #367 meant the fetch cluster, the code these rules most obviously apply to. A root
+    admits a new sibling automatically; a list of its children has to be remembered.
     """
-    roots = [
-        PROJECT_ROOT / d for d in ("tests", "scripts", "src/deltatrack", "web", "tools/shared", "tools/bill_index")
-    ]
+    roots = [PROJECT_ROOT / d for d in ("tests", "scripts", "src/deltatrack", "web", "tools")]
     files = [f for r in roots if r.is_dir() for f in r.rglob("*.py")]
     files += sorted(PROJECT_ROOT.glob("*.py"))
     return files
@@ -369,6 +373,11 @@ def test_the_source_scan_actually_covers_the_engine() -> None:
         "tests/conftest.py",
         "scripts/serve_compare.py",
         "web/app.py",
+        # The acquisition tier. Named at two depths deliberately: the roster reached
+        # `tools/shared/` while the fetchers beside it were outside the scan entirely
+        # (#424), so a member from a subpackage cannot stand in for one at the root.
+        "tools/fetch_bills.py",
+        "tools/shared/http.py",
         # The repository root, which since #401 holds only the two command wrappers.
         "diff_bill.py",
     ):
@@ -377,6 +386,34 @@ def test_the_source_scan_actually_covers_the_engine() -> None:
             "of step with the tree, so the rules below are policing a subset. Discovery is "
             "broken, not the code."
         )
+
+
+def test_every_exemption_names_a_file_the_scan_reaches() -> None:
+    """An exemption that matches no scanned file is a hole wearing the shape of a policy (#424).
+
+    Both sets below are keyed by repo-relative path and consulted with `rel in ...`, so a key
+    that no longer matches anything is inert. That is invisible in the direction a reader
+    checks: the exemption is still written down, still commented, and still reads as "this
+    file is deliberately allowed" — while the file it names is either gone or, as in #424,
+    silently outside `_python_sources`. #367 produced exactly that, moving the fetchers to
+    `tools/` while these keys kept their root-level spelling and the roster kept naming only
+    two of `tools/`'s subpackages, so the acquisition tier — the code most entitled to name
+    `bills/`, and therefore the code whose exemptions most need to be real — was policed by
+    no rule at all.
+
+    The completeness floor above cannot see this: it asserts the scan reaches a set of named
+    modules, which says nothing about whether an *exemption* still resolves. The two failures
+    also point opposite ways — a missing root under-scans, a dead key over-exempts on paper
+    while the file is unscanned in fact — so neither substitutes for the other.
+    """
+    scanned = {p.relative_to(PROJECT_ROOT).as_posix() for p in _python_sources()}
+    dead = sorted(k for k in _DOWNLOAD_TIER_FILES | _DOWNLOAD_ROOT_NAMERS if k not in scanned)
+    assert not dead, (
+        f"{len(dead)} exemption key(s) name a file the scan does not reach: {dead}. Either the "
+        "file moved and the key needs repathing, or the roster in `_python_sources` no longer "
+        "covers its directory, or the file is gone and the key should be deleted. Until then "
+        "the exemption is inert and the file it names is unpoliced — the #367/#424 shape."
+    )
 
 
 def test_no_source_reaches_into_bills_for_a_committed_fixture() -> None:
@@ -438,7 +475,7 @@ def test_stale_fixture_path_rule_can_fire() -> None:
     assert find_stale_fixture_paths(uncommitted, committed) == {}
 
     # An exempt module may name bills/ freely.
-    exempt = {"fetch_bills.py": 'default = Path("bills/118-hr-4366")'}
+    exempt = {"tools/fetch_bills.py": 'default = Path("bills/118-hr-4366")'}
     assert find_stale_fixture_paths(exempt, committed) == {}
 
     # A synthetic tree under a temp dir may name a real committed bill: it is not the
@@ -506,7 +543,7 @@ def test_download_tree_name_rule_can_fire() -> None:
 
     # tests/corpus_paths.py itself defines them, and the fetchers own the directory.
     assert find_download_tree_names({"tests/corpus_paths.py": 'DOWNLOADS_DIR = PROJECT_ROOT / "bills"'}) == {}
-    assert find_download_tree_names({"fetch_bills.py": 'default=Path("bills")'}) == {}
+    assert find_download_tree_names({"tools/fetch_bills.py": 'default=Path("bills")'}) == {}
     # ...and the compare CLI's --bills-dir default, which addresses the tier by design.
     assert find_download_tree_names({"src/deltatrack/diff_bill.py": 'default=Path("bills")'}) == {}
 

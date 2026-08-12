@@ -1,0 +1,106 @@
+{
+ "population": "DEVELOPMENT -- no holdout opened",
+ "superseded_rule": "valid finite positive-area box AND upright; no codepoint consulted",
+ "frozen_rule_A24_2": "source char exists AND codepoint != U+0020 AND valid positive-area box AND upright",
+ "why": "positive-area PDFium geometry does not identify ink: a content-stream U+0020 gets a ~3.6 x 0.014 pt box. A21 measured only the exclusion direction, so the inclusion was invisible. The exception is lexical but legitimate -- U+0020 is a below-seam source fact, X-2 already froze it as carrying no ink, it reads no H/X output, and it cannot favour either arm.",
+ "scope": "ONLY U+0020. Not a whitespace blacklist; no ink-height threshold is introduced.",
+ "documents": [
+  {
+   "document": "114-hr-2029/4",
+   "pages": 8,
+   "u0020_source_chars": 229,
+   "u0020_admitted_by_superseded_rule": 229,
+   "u0020_admitted_by_A24_2_rule": 0,
+   "space_box_median_width": 3.626,
+   "space_box_median_height": 0.014,
+   "capital_box_median_height": 7.944,
+   "height_ratio_capital_over_space": 568.4,
+   "neutral_lines_before": 205,
+   "neutral_lines_after": 205,
+   "lines_touching_a_space_before": 141,
+   "pages_where_INK_membership_changed": 0,
+   "neutral_lines_whose_x_extent_changed": 132,
+   "x_loss_lines_after": 188,
+   "x_loss_lines_SHARED_with_H": 188,
+   "x_loss_lines_X_ONLY": 0,
+   "neutral_lines_scored_after": 205
+  },
+  {
+   "document": "118-s-4795/1",
+   "pages": 8,
+   "u0020_source_chars": 1398,
+   "u0020_admitted_by_superseded_rule": 1398,
+   "u0020_admitted_by_A24_2_rule": 0,
+   "space_box_median_width": 3.626,
+   "space_box_median_height": 0.014,
+   "capital_box_median_height": 7.4651,
+   "height_ratio_capital_over_space": 532.9,
+   "neutral_lines_before": 205,
+   "neutral_lines_after": 205,
+   "lines_touching_a_space_before": 190,
+   "pages_where_INK_membership_changed": 0,
+   "neutral_lines_whose_x_extent_changed": 138,
+   "x_loss_lines_after": 188,
+   "x_loss_lines_SHARED_with_H": 188,
+   "x_loss_lines_X_ONLY": 0,
+   "neutral_lines_scored_after": 205
+  }
+ ],
+ "tests": [
+  {
+   "test": "114-hr-2029/4: no remaining X loss is X's own",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "implication": "what survives is SHARED loss -- the GPO margin number, which 3.3 has both arms strip identically. X fails to carry nothing that H also does not carry, so the diagnostic is interpretable again rather than saturated by excluded spaces"
+  },
+  {
+   "test": "114-hr-2029/4: the repair removes every U+0020 from the skeleton",
+   "expected": [
+    true,
+    0
+   ],
+   "observed": [
+    true,
+    0
+   ],
+   "pass": true,
+   "implication": "before/after paired on one population and one page limit"
+  },
+  {
+   "test": "114-hr-2029/4: the INK partition is unchanged by removing spaces",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "implication": "removing non-ink glyphs must not move which ink glyphs share a physical line; if this ever fires, the clustering tolerance shifted enough to matter"
+  },
+  {
+   "test": "118-s-4795/1: no remaining X loss is X's own",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "implication": "what survives is SHARED loss -- the GPO margin number, which 3.3 has both arms strip identically. X fails to carry nothing that H also does not carry, so the diagnostic is interpretable again rather than saturated by excluded spaces"
+  },
+  {
+   "test": "118-s-4795/1: the repair removes every U+0020 from the skeleton",
+   "expected": [
+    true,
+    0
+   ],
+   "observed": [
+    true,
+    0
+   ],
+   "pass": true,
+   "implication": "before/after paired on one population and one page limit"
+  },
+  {
+   "test": "118-s-4795/1: the INK partition is unchanged by removing spaces",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "implication": "removing non-ink glyphs must not move which ink glyphs share a physical line; if this ever fires, the clustering tolerance shifted enough to matter"
+  }
+ ],
+ "failures": []
+}

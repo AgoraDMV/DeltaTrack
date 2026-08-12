@@ -104,6 +104,16 @@ docs/research/provision-matching/probes/form_*.html
 docs/research/provision-matching/probes/labels/
 docs/research/provision-matching/probes/merged_labels.json
 
+# The PDF bake-off's P2 holdout corpus: 88 govinfo documents, 16.4 MB, downloaded by
+# probes/fetch_holdout.py. Same reasoning as /bills and bills_corpus above — bill source
+# material is fetched, not vendored. What makes this safe here specifically is that
+# results/holdout_membership.json (committed, and covered by the spike's frozen
+# PRESERVED-MANIFEST.txt) records the govinfo package id, sha256 and byte count of every
+# one of the 88 files, and the fetcher verifies each download against it. A re-issued or
+# withdrawn package therefore fails loudly instead of being scored as the historical input.
+# No trailing slash, per the #319 symlink reasoning above.
+docs/research/pdf-backend-bakeoff/holdout
+
 # Build artifacts. The project became buildable in #398, so `uv build` now produces
 # these where it never used to. `build/` matters beyond tidiness: some backends copy
 # the package's own .py files into it, and a directory holding Python that is neither

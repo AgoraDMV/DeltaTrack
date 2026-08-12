@@ -1,0 +1,785 @@
+{
+ "population": "SYNTHETIC + DEVELOPMENT -- no holdout opened, nothing adjudicated, nothing scored",
+ "contract": "A38 (the score_metrics input contract)",
+ "question": "can every score_metrics obligation be satisfied from committed artifacts, with no PDF access, no runner access, no text matching, and no implementation-time choice?",
+ "document": "118-hr-8752/1",
+ "page_limit": 16,
+ "note": "PAGE_LIMIT is a machinery demonstration window, not a census",
+ "artifacts_created": "NONE of frames.json, oracle_key.json, oracle_blind.json, oracle_adjudicated.json, metrics.json, scores.json, EXECUTION-START.json",
+ "identity_candidates": {
+  "n_neutral_lines": 433,
+  "n_with_candidates": 433,
+  "n_candidates": 17842
+ },
+ "bilateral_gate": {
+  "limit": "one skeleton by A19 -- both runners call run_hybrid.neutral_skeleton; this gate catches divergence in what each arm RETURNS, not two independent derivations"
+ },
+ "architecture_occurrences": {
+  "H": {
+   "total": 33,
+   "MATCHABLE": 33,
+   "UNMATCHED": 0
+  },
+  "X": {
+   "total": 33,
+   "MATCHABLE": 33,
+   "UNMATCHED": 0
+  }
+ },
+ "occurrence_scope": {
+  "ordinals_reused_across_pages": {
+   "0": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    11,
+    13,
+    15,
+    16
+   ],
+   "1": [
+    2,
+    3,
+    4,
+    5
+   ],
+   "2": [
+    3,
+    8,
+    12,
+    14,
+    15
+   ]
+  },
+  "n_stimuli": 51,
+  "n_occurrence_rows_in_key": 50,
+  "counterfactual_contaminated_rows": 425
+ },
+ "genuine_unmatched": {
+  "lever": "merged-line text perturbation -> MERGE_RECONSTRUCTION_MISMATCH; placement reads print_lines/emitted and is unaffected",
+  "page": 2,
+  "region_ordinal": 0,
+  "unmatched_reason": "MERGE_RECONSTRUCTION_MISMATCH",
+  "stimuli_carrying_it": 1
+ },
+ "immediate_parent": {
+  "checked": 33,
+  "agree": 33,
+  "kinds": {
+   "title": {
+    "n": 2,
+    "with_parent": 0
+   },
+   "major": {
+    "n": 2,
+    "with_parent": 2
+   },
+   "agency": {
+    "n": 8,
+    "with_parent": 8
+   },
+   "account": {
+    "n": 14,
+    "with_parent": 14
+   },
+   "grouping": {
+    "n": 1,
+    "with_parent": 1
+   },
+   "section": {
+    "n": 6,
+    "with_parent": 6
+   }
+  },
+  "n_root": 2
+ },
+ "m9_raw": {
+  "H": {
+   "derive_size_bands_returns_a_band": true,
+   "coverage": 1.0,
+   "coverage_floor": 0.85,
+   "coverage_meets_floor": true,
+   "n_lines_total": 293,
+   "n_margin_numbered_lines": 277,
+   "n_margin_numbered_with_glyph_size": 277,
+   "rule0_comparison": "RAW FACTS ONLY -- Rule 0 margin-line interpretation frozen by A39.1 (count of Page.lines where line_number is not None; any positive deficit fires); application belongs to the later architecture decision"
+  },
+  "X": {
+   "derive_size_bands_returns_a_band": true,
+   "coverage": 1.0,
+   "coverage_floor": 0.85,
+   "coverage_meets_floor": true,
+   "n_lines_total": 387,
+   "n_margin_numbered_lines": 370,
+   "n_margin_numbered_with_glyph_size": 370,
+   "rule0_comparison": "RAW FACTS ONLY -- Rule 0 margin-line interpretation frozen by A39.1 (count of Page.lines where line_number is not None; any positive deficit fires); application belongs to the later architecture decision"
+  }
+ },
+ "s1": {
+  "schema": "s1_control/1",
+  "advance_scale": 1.25,
+  "sabotaged_arm": "X",
+  "primary": {
+   "risk_set_lines": 387,
+   "text_discordant_lines": 100,
+   "m0a_rate": 0.25839793281653745
+  },
+  "sabotaged": {
+   "risk_set_lines": 387,
+   "text_discordant_lines": 125,
+   "m0a_rate": 0.32299741602067183
+  },
+  "fires": true,
+  "reason": null
+ },
+ "cross_engine": {
+  "document": "118-hr-8752/1",
+  "limited_page_count": 16,
+  "whole_document_page_count": 98,
+  "sampled_pages": [
+   13,
+   15
+  ],
+  "matched": 55,
+  "denominator": 55,
+  "gate": {
+   "matched_fraction": 1.0,
+   "worst_page": 13,
+   "worst_page_fraction": 1.0,
+   "document_threshold": 0.95,
+   "page_threshold": 0.75,
+   "pass": true,
+   "failed_on": []
+  },
+  "qualification": null,
+  "oversegmentation": {
+   "pdfium_over_120": 0.8333,
+   "pymupdf_over_120": 0.8333
+  },
+  "whole_document_gate": {
+   "matched_fraction": 1.0,
+   "worst_page": 13,
+   "worst_page_fraction": 1.0,
+   "document_threshold": 0.95,
+   "page_threshold": 0.75,
+   "pass": true,
+   "failed_on": []
+  }
+ },
+ "reachability": {
+  "reachable": {
+   "M0a text discordance": true,
+   "M0b segmentation discordance": true,
+   "M0c anchor discordance": true,
+   "both_absent": true,
+   "M1-M3 emitted occurrences": true,
+   "M4 immediate parent": true,
+   "M5 emitted kind": true,
+   "M7 emitted text": true,
+   "M9 raw facts": true,
+   "occurrence join candidates": true,
+   "occurrence join geometry": true,
+   "adjudication routing": true
+  }
+ },
+ "oracle_key_schema": "oracle_key/3",
+ "forward_ambiguities": [],
+ "resolved_ambiguities": [
+  {
+   "was": "RULE0_MARGIN_LINE_QUANTITY",
+   "status": "RESOLVED_BY_A39_1",
+   "ruling": "margin_lines_recovered = count of Page.lines where line_number is not None; any strictly positive per-document deficit fires; no tolerance. The glyph-size count and per-line keys remain diagnostics and do not determine the clause."
+  }
+ ],
+ "tests": [
+  {
+   "test": "every committed neutral line's candidates are EXACTLY its gids",
+   "expected": [
+    433,
+    true
+   ],
+   "observed": [
+    433,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a gid has no candidate, or a candidate names a gid outside the line -- either way the A30.3 resolver would search the wrong glyph set"
+  },
+  {
+   "test": "the candidate population is non-empty, so the check above is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no line carries candidates, so 'all lines agree' passed on nothing"
+  },
+  {
+   "test": "no candidate exists outside the committed gid sets (U+0020 among them)",
+   "expected": "set()",
+   "observed": "set()",
+   "pass": true,
+   "fails_when": "a candidate was invented from a source glyph the skeleton rejected, e.g. a word space"
+  },
+  {
+   "test": "candidate x0 is UNROUNDED source geometry",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "every x0 lands on a 4-decimal grid, i.e. it was rounded for serialization -- rounding here can move a nearest-glyph decision"
+  },
+  {
+   "test": "candidates serialize in ngid order (determinism ONLY, never reading order)",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "serialization order varies between runs, so the committed frame is not reproducible"
+  },
+  {
+   "test": "NEGATIVE -- mutating ONE arm's candidate x0 ABORTS frame construction",
+   "expected": "NEUTRAL_SKELETON_MISMATCH",
+   "observed": "NEUTRAL_SKELETON_MISMATCH",
+   "pass": true,
+   "fails_when": "the arms' candidate geometry can diverge without the frame noticing, so the committed candidates would silently be whichever arm was read first"
+  },
+  {
+   "test": "...and the UNMUTATED pair still builds, so the gate is not refusing everything",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "construction refuses even on clean input, making the control above meaningless"
+  },
+  {
+   "test": "both arms produced occurrence records",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "an arm produced no occurrences, so M1-M5 would have an empty emitted side"
+  },
+  {
+   "test": "every record is MATCHABLE or UNMATCHED and none is silently absent",
+   "expected": [
+    33,
+    33
+   ],
+   "observed": [
+    33,
+    33
+   ],
+   "pass": true,
+   "fails_when": "a record carries neither status, i.e. an occurrence was dropped rather than reported"
+  },
+  {
+   "test": "a MATCHABLE record carries the A30 4-component occurrence key",
+   "expected": [
+    4
+   ],
+   "observed": [
+    4
+   ],
+   "pass": true,
+   "fails_when": "the key is not the frozen (doc_sha, page, neutral_line_key, start_ngid) shape"
+  },
+  {
+   "test": "records are in DOCUMENT order, never ngid order",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "occurrences are ordered by ngid, which A30.1 forbids -- ngid order disagreed with printed order on 10 of 33,602 emitted lines"
+  },
+  {
+   "test": "the DEVELOPMENT material really does reuse region ordinals across pages",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no ordinal repeats across pages here, so this material could not have exposed the contamination and the controls below would be vacuous"
+  },
+  {
+   "test": "EVERY private-key occurrence satisfies anchor.page == stimulus.page AND region == region",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a stimulus carries an occurrence printed on another page or in another region, which would put headings the adjudicator never saw on the emitted side of the M1-M5 join"
+  },
+  {
+   "test": "NEGATIVE -- the retired region-ordinal-only filter DOES contaminate this material",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the old filter happens to be equivalent here, so the repair is unproven and the control above passes for the wrong reason"
+  },
+  {
+   "test": "no architecture occurrence is duplicated into multiple PRIMARY stimuli",
+   "expected": {},
+   "observed": {},
+   "pass": true,
+   "fails_when": "one emitted heading is counted in two regions, inflating the emitted set twice over"
+  },
+  {
+   "test": "a MATCHABLE occurrence's A30 key page AGREES with its stimulus page",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "the identity key names a different page from the stimulus carrying it, so the join would bind an adjudication to a heading printed elsewhere"
+  },
+  {
+   "test": "a GENUINE A30 refusal is UNMATCHED with an explicit reason",
+   "expected": [
+    "UNMATCHED",
+    null,
+    true
+   ],
+   "observed": [
+    "UNMATCHED",
+    null,
+    true
+   ],
+   "pass": true,
+   "fails_when": "the perturbation did not actually induce an identity refusal, so this control proves nothing about how refusals are handled"
+  },
+  {
+   "test": "...and it KEEPS its A28.5 physical page and region",
+   "expected": [
+    2,
+    0
+   ],
+   "observed": [
+    2,
+    0
+   ],
+   "pass": true,
+   "fails_when": "an identity refusal erased the physical placement, so the occurrence would vanish from every region-scoped record and shrink an M1-M5 denominator invisibly"
+  },
+  {
+   "test": "the UNMATCHED occurrence SURVIVES into its exact stimulus",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the refused occurrence reaches no private key at all, i.e. it was silently dropped"
+  },
+  {
+   "test": "...and appears in NO other page/region",
+   "expected": [
+    "0edf34ebb764cd39"
+   ],
+   "observed": [
+    "0edf34ebb764cd39"
+   ],
+   "pass": true,
+   "fails_when": "the refused occurrence also leaked into a stimulus for a different page or region"
+  },
+  {
+   "test": "every committed immediate_parent EQUALS production breadcrumb_for's penultimate element",
+   "expected": [
+    33,
+    33
+   ],
+   "observed": [
+    33,
+    33
+   ],
+   "pass": true,
+   "fails_when": "the parent was derived by a NEW hierarchy walk that disagrees with production, so M4 would score the emitted side against a hierarchy production never produced"
+  },
+  {
+   "test": "the parent comparison is non-empty",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no occurrence matched a production anchor, so the equality above compared nothing"
+  },
+  {
+   "test": "a root/no-parent case exists and is represented as null",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "no one-element breadcrumb appears, so the no-parent branch was never exercised"
+  },
+  {
+   "test": "M9 raw facts are committed for BOTH arms",
+   "expected": [
+    [
+     "coverage",
+     "coverage_floor",
+     "coverage_meets_floor",
+     "derive_size_bands_returns_a_band",
+     "margin_numbered_line_keys",
+     "n_lines_total",
+     "n_margin_numbered_lines",
+     "n_margin_numbered_with_glyph_size"
+    ],
+    [
+     "coverage",
+     "coverage_floor",
+     "coverage_meets_floor",
+     "derive_size_bands_returns_a_band",
+     "margin_numbered_line_keys",
+     "n_lines_total",
+     "n_margin_numbered_lines",
+     "n_margin_numbered_with_glyph_size"
+    ]
+   ],
+   "observed": [
+    [
+     "coverage",
+     "coverage_floor",
+     "coverage_meets_floor",
+     "derive_size_bands_returns_a_band",
+     "margin_numbered_line_keys",
+     "n_lines_total",
+     "n_margin_numbered_lines",
+     "n_margin_numbered_with_glyph_size"
+    ],
+    [
+     "coverage",
+     "coverage_floor",
+     "coverage_meets_floor",
+     "derive_size_bands_returns_a_band",
+     "margin_numbered_line_keys",
+     "n_lines_total",
+     "n_margin_numbered_lines",
+     "n_margin_numbered_with_glyph_size"
+    ]
+   ],
+   "pass": true,
+   "fails_when": "a raw M9 quantity is missing, so score_metrics would have to rerun production anchor extraction to discover it"
+  },
+  {
+   "test": "the frozen coverage floor is production's own 0.85",
+   "expected": [
+    0.85,
+    0.85
+   ],
+   "observed": [
+    0.85,
+    0.85
+   ],
+   "pass": true,
+   "fails_when": "the floor drifted from production's _COVERAGE_MIN, i.e. a threshold was invented here"
+  },
+  {
+   "test": "per-line margin keys are recorded, so a SET comparison stays possible",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "only counts are recorded, foreclosing the set-difference reading of Rule 0 before it has been ruled on"
+  },
+  {
+   "test": "this stage still records FACTS and does not APPLY Rule 0",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "frame construction applies the Rule 0 comparison, which belongs to the later architecture decision"
+  },
+  {
+   "test": "RULE0_MARGIN_LINE_QUANTITY is RESOLVED_BY_A39_1, and the ruling is implemented",
+   "expected": {
+    "H_loses": [
+     "H",
+     true,
+     1
+    ],
+    "X_loses": [
+     "X",
+     true,
+     1
+    ],
+    "equal": [
+     null,
+     false,
+     0
+    ]
+   },
+   "observed": {
+    "H_loses": [
+     "H",
+     true,
+     1
+    ],
+    "X_loses": [
+     "X",
+     true,
+     1
+    ],
+    "equal": [
+     null,
+     false,
+     0
+    ]
+   },
+   "pass": true,
+   "fails_when": "the frozen A39.1 clause -- count of line_number is not None, ANY positive deficit fires, no tolerance -- is not what margin_line_loss implements, so the ledger would be claiming a resolution the code does not deliver"
+  },
+  {
+   "test": "the S1 sabotage scale is exactly the frozen 1.25",
+   "expected": 1.25,
+   "observed": 1.25,
+   "pass": true,
+   "fails_when": "the scale drifted from the frozen value, or became a tunable dial"
+  },
+  {
+   "test": "S1 FIRES on DEVELOPMENT -- sabotage raises M0",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "advances x 1.25 does not raise the discordance count, which would mean M0 cannot detect a change it certainly should -- the comparator is not live"
+  },
+  {
+   "test": "...and the sabotage really changed the input, so firing is not an artifact",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the two runs report the same discordance, so nothing was actually sabotaged"
+  },
+  {
+   "test": "primary and sabotaged M0 are reported SEPARATELY",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": "only one number is reported, so a reader cannot see what the control established"
+  },
+  {
+   "test": "the risk set is unchanged by sabotage, so only the TEXT moved",
+   "expected": 387,
+   "observed": 387,
+   "pass": true,
+   "fails_when": "the sabotage moved the neutral skeleton, i.e. it changed the frame rather than the seam decision under test"
+  },
+  {
+   "test": "NEGATIVE -- a DEAD comparator (sabotage changes nothing) reports S1 FAIL",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "a comparator that cannot move still reports S1 firing, which is precisely the phase-1 defect S1 exists to catch"
+  },
+  {
+   "test": "the producer RUNS on a real DEVELOPMENT PDF without raising",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the producer cannot execute at all -- which is how a nonexistent row key and the wrong denominator survived: nothing ever ran it on real measurements"
+  },
+  {
+   "test": "sampled pages equal the independently derived A39.2 sample",
+   "expected": [
+    13,
+    15
+   ],
+   "observed": [
+    13,
+    15
+   ],
+   "pass": true,
+   "fails_when": "the producer measures a different page set from the frozen sample"
+  },
+  {
+   "test": "matched count and DENOMINATOR equal the direct x09 computation",
+   "expected": [
+    55,
+    55
+   ],
+   "observed": [
+    55,
+    55
+   ],
+   "pass": true,
+   "fails_when": "the producer counts a different numerator or denominator than the frozen rule -- the exact defect: matched/pdfium instead of matched/max(pdfium, pymupdf)"
+  },
+  {
+   "test": "the whole GATE VERDICT equals X09.gate on the same rows",
+   "expected": {
+    "matched_fraction": 1.0,
+    "worst_page": 13,
+    "worst_page_fraction": 1.0,
+    "document_threshold": 0.95,
+    "page_threshold": 0.75,
+    "pass": true,
+    "failed_on": []
+   },
+   "observed": {
+    "matched_fraction": 1.0,
+    "worst_page": 13,
+    "worst_page_fraction": 1.0,
+    "document_threshold": 0.95,
+    "page_threshold": 0.75,
+    "pass": true,
+    "failed_on": []
+   },
+   "pass": true,
+   "fails_when": "the producer's verdict differs from the frozen rule applied directly, i.e. it is recomputing the rule rather than calling it"
+  },
+  {
+   "test": "document fraction, worst page and pass all agree",
+   "expected": [
+    1.0,
+    13,
+    true
+   ],
+   "observed": [
+    1.0,
+    13,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a reported field disagrees with the gate that produced it"
+  },
+  {
+   "test": "cross-engine failure is NEVER decision-blocking",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "a cross-engine failure blocks the architecture decision, which A27.6 forbids"
+  },
+  {
+   "test": "PyMuPDF over-segmentation scores 100/120, not 100/100",
+   "expected": 0.8333,
+   "observed": 0.8333,
+   "pass": true,
+   "fails_when": "the denominator is the PDFium count, so over-segmentation by the SECOND engine is invisible -- the control would report perfect agreement while the engines disagree"
+  },
+  {
+   "test": "PDFium over-segmentation scores 100/120 too -- the gate is SYMMETRIC",
+   "expected": 0.8333,
+   "observed": 0.8333,
+   "pass": true,
+   "fails_when": "the gate favours one engine, so which engine over-segments changes the verdict"
+  },
+  {
+   "test": "...and both are capable of FAILING the frozen thresholds",
+   "expected": [
+    false,
+    false
+   ],
+   "observed": [
+    false,
+    false
+   ],
+   "pass": true,
+   "fails_when": "an 0.833 agreement passes, so the thresholds cannot see over-segmentation at all"
+  },
+  {
+   "test": "NEGATIVE -- a wrong document SHA REFUSES before any sample or measurement",
+   "expected": "SOURCE_SHA256_MISMATCH",
+   "observed": "SOURCE_SHA256_MISMATCH",
+   "pass": true,
+   "fails_when": "a caller-supplied SHA that does not match the bytes selects a different page sample for the same document, silently and reproducibly"
+  },
+  {
+   "test": "...and the correct SHA is accepted",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "fails_when": "verification refuses the real document, making the control above meaningless"
+  },
+  {
+   "test": "mutating a NON-sampled page changes nothing",
+   "expected": {
+    "matched_fraction": 1.0,
+    "worst_page": 13,
+    "worst_page_fraction": 1.0,
+    "document_threshold": 0.95,
+    "page_threshold": 0.75,
+    "pass": true,
+    "failed_on": []
+   },
+   "observed": {
+    "matched_fraction": 1.0,
+    "worst_page": 13,
+    "worst_page_fraction": 1.0,
+    "document_threshold": 0.95,
+    "page_threshold": 0.75,
+    "pass": true,
+    "failed_on": []
+   },
+   "pass": true,
+   "fails_when": "an unsampled page reaches the gate, so this is not a 10 % sampled control at all"
+  },
+  {
+   "test": "...while mutating a SAMPLED page DOES change the verdict",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "a sampled page cannot move the verdict, so sample membership is dead and the control above passed for the wrong reason"
+  },
+  {
+   "test": "an unsampled page exists, so the membership control is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "every page is sampled here, so 'unsampled changes nothing' was trivially true"
+  },
+  {
+   "test": "limit=None is a valid WHOLE-DOCUMENT call",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "the canonical writer's default path raises or silently measures a prefix -- a truncated confirmatory measurement would qualify a frame on a fraction of its pages"
+  },
+  {
+   "test": "...and it measures MORE pages than the limited call, so None is not read as a prefix",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "limit=None produced the same page count as the limited run, i.e. it was reinterpreted"
+  },
+  {
+   "test": "EVERY listed score input is reachable from committed JSON, with no PDF or runner",
+   "expected": {
+    "M0a text discordance": true,
+    "M0b segmentation discordance": true,
+    "M0c anchor discordance": true,
+    "both_absent": true,
+    "M1-M3 emitted occurrences": true,
+    "M4 immediate parent": true,
+    "M5 emitted kind": true,
+    "M7 emitted text": true,
+    "M9 raw facts": true,
+    "occurrence join candidates": true,
+    "occurrence join geometry": true,
+    "adjudication routing": true
+   },
+   "observed": {
+    "M0a text discordance": true,
+    "M0b segmentation discordance": true,
+    "M0c anchor discordance": true,
+    "both_absent": true,
+    "M1-M3 emitted occurrences": true,
+    "M4 immediate parent": true,
+    "M5 emitted kind": true,
+    "M7 emitted text": true,
+    "M9 raw facts": true,
+    "occurrence join candidates": true,
+    "occurrence join geometry": true,
+    "adjudication routing": true
+   },
+   "pass": true,
+   "fails_when": "a fact score_metrics needs survives only in a live Python object, so the scorer would have to reopen a PDF or rerun an architecture to get it"
+  },
+  {
+   "test": "NEGATIVE -- removing the occurrence records makes the reachability answer FALSE",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "the reachability check cannot detect a missing producer, so it would report success on an artifact chain that cannot actually feed the scorer"
+  }
+ ],
+ "failures": []
+}

@@ -19,10 +19,14 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from deltatrack.bill_tree import normalize_bill
-from deltatrack.diff_bill import _normalize_text, _text_similarity, match_nodes
+from deltatrack.diff_bill import _normalize_text, match_nodes
+from deltatrack.similarity import text_similarity
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
-BILLS = REPO / "bills"
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+BILLS = merged_root()
 ACCOUNT_TAGS = {"appropriations-major", "appropriations-intermediate", "appropriations-small"}
 SPLIT_FLOOR = 0.40
 HIGH_KEEP = 0.60
@@ -87,7 +91,7 @@ for bill_dir in sorted(BILLS.iterdir()):
             o_norm, n_norm = _normalize_text(old.body_text), _normalize_text(new.body_text)
             if o_norm == n_norm:
                 continue
-            body_sim = _text_similarity(o_norm, n_norm)
+            body_sim = text_similarity(o_norm, n_norm)
             if old.match_path != new.match_path:
                 renumbered += 1
             if body_sim >= SPLIT_FLOOR:

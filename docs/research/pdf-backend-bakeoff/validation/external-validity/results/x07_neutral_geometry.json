@@ -1,0 +1,366 @@
+{
+ "population": "SYNTHETIC + DEVELOPMENT -- no holdout opened",
+ "purpose": "test the neutral ink-line skeleton proposed to resolve A17.2-A17.4",
+ "rule": {
+  "neutral_facts": [
+   "baseline (pen origin y)",
+   "glyph box x0/y0/x1/y1",
+   "page number"
+  ],
+  "forbidden": [
+   "codepoint",
+   "font name",
+   "word spacing",
+   "case",
+   "heading label",
+   "architecture line ordinal"
+  ],
+  "tolerance": "0.5 * median ink height on the page (derived, not a constant)",
+  "ordering": "descending baseline = top-to-bottom; ordinal is the index",
+  "anchor": "first glyph of the cluster, so drift cannot walk a cluster down the page",
+  "regions": "non-overlapping windows of 8 neutral lines, aligned to page start, short tail kept",
+  "projection": "nearest neutral baseline within tolerance; no text similarity"
+ },
+ "synthetic_tests": [
+  {
+   "test": "two ordinary adjacent lines",
+   "expected": 2,
+   "observed": 2,
+   "pass": true,
+   "implication": "ordinary leading separates"
+  },
+  {
+   "test": "two lines 2pt apart merge (tol=5pt)",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": "sub-tolerance baselines are one physical line; this is the documented limit"
+  },
+  {
+   "test": "superscript rides with its body line",
+   "expected": 2,
+   "observed": 2,
+   "pass": true,
+   "implication": "footnote markers do not fabricate a line"
+  },
+  {
+   "test": "subscript rides with its body line",
+   "expected": 2,
+   "observed": 2,
+   "pass": true,
+   "implication": "same, downward"
+  },
+  {
+   "test": "large heading then body",
+   "expected": 2,
+   "observed": 2,
+   "pass": true,
+   "implication": "display type does not swallow body"
+  },
+  {
+   "test": "letter-spaced display heading is one line",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": "the C O N T E N T S case does not become 8 lines"
+  },
+  {
+   "test": "margin line number joins its body line",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": "GPO sets the number on the body baseline"
+  },
+  {
+   "test": "one physical line from 3 text objects",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": "text-object boundaries are invisible to the skeleton"
+  },
+  {
+   "test": "two-column page MERGES columns (known limit)",
+   "expected": 2,
+   "observed": 2,
+   "pass": true,
+   "implication": "single-column GPO bills are unaffected; report tables are not, and A17-N records it"
+  },
+  {
+   "test": "table row of fragments is one line",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": "column fragments on a shared baseline are one neutral row"
+  },
+  {
+   "test": "neutral ids are (page, ordinal) top-to-bottom",
+   "expected": [
+    [
+     7,
+     0
+    ],
+    [
+     7,
+     1
+    ],
+    [
+     7,
+     2
+    ]
+   ],
+   "observed": [
+    [
+     7,
+     0
+    ],
+    [
+     7,
+     1
+    ],
+    [
+     7,
+     2
+    ]
+   ],
+   "pass": true,
+   "implication": "identity is a pure function of geometry"
+  },
+  {
+   "test": "identity is stable when glyph ORDER is shuffled",
+   "expected": [
+    [
+     7,
+     0
+    ],
+    [
+     7,
+     1
+    ],
+    [
+     7,
+     2
+    ]
+   ],
+   "observed": [
+    [
+     7,
+     0
+    ],
+    [
+     7,
+     1
+    ],
+    [
+     7,
+     2
+    ]
+   ],
+   "pass": true,
+   "implication": "input order cannot change identity"
+  },
+  {
+   "test": "H line projects onto its neutral line",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": "geometric projection, no text similarity"
+  },
+  {
+   "test": "X line at a 1pt offset still projects to the same neutral line",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": "sub-tolerance jitter does not move the slot"
+  },
+  {
+   "test": "a line far from any neutral baseline projects to None",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "implication": "fails closed rather than snapping to the nearest"
+  },
+  {
+   "test": "baseline-proximity projection LOSES a merged line",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "implication": "why membership projection replaces it"
+  },
+  {
+   "test": "membership projection puts a merged line on one slot",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "implication": "plurality of glyphs; ties to the lowest ordinal"
+  },
+  {
+   "test": "membership projection handles a SPLIT line",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": "a split half lands on its own neutral line"
+  },
+  {
+   "test": "membership projection with no glyphs is None",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "implication": "fails closed"
+  },
+  {
+   "test": "centred-narrow flags the centred line only",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": "separates a heading from body prose and from a left-aligned paragraph tail"
+  },
+  {
+   "test": "20 neutral lines -> 3 non-overlapping regions",
+   "expected": 3,
+   "observed": 3,
+   "pass": true,
+   "implication": "aligned to page start"
+  },
+  {
+   "test": "regions partition the lines exactly once",
+   "expected": 20,
+   "observed": 20,
+   "pass": true,
+   "implication": "no line is dropped or double-counted"
+  },
+  {
+   "test": "the short trailing region is kept",
+   "expected": 4,
+   "observed": 4,
+   "pass": true,
+   "implication": "page bottoms carry continuation text and must not be silently dropped"
+  }
+ ],
+ "synthetic_failures": [],
+ "development": [
+  {
+   "document": "114-hr-2029/4",
+   "pages": 20,
+   "neutral_lines": 522,
+   "lines_per_page_median": 26.1,
+   "body_height_q0.5": 6.5,
+   "pages_enriched_q0.5": 20,
+   "pages_enriched_share": 1.0,
+   "quantum_sensitivity": {
+    "0.25": {
+     "body_height": 6.25,
+     "pages_enriched": 20
+    },
+    "0.5": {
+     "body_height": 6.5,
+     "pages_enriched": 20
+    },
+    "1.0": {
+     "body_height": 6.0,
+     "pages_enriched": 1
+    }
+   },
+   "centred_narrow_lines": 25,
+   "centred_narrow_validation": {
+    "pages_with_a_hybrid_account_or_agency_anchor": 9,
+    "pages_flagged_by_centred_narrow": 20,
+    "overlap": 9,
+    "recall_of_anchor_pages": 1.0,
+    "share_of_all_pages_flagged": 1.0
+   }
+  },
+  {
+   "document": "118-hr-4366/5",
+   "pages": 20,
+   "neutral_lines": 550,
+   "lines_per_page_median": 27.5,
+   "body_height_q0.5": 6.5,
+   "pages_enriched_q0.5": 20,
+   "pages_enriched_share": 1.0,
+   "quantum_sensitivity": {
+    "0.25": {
+     "body_height": 6.25,
+     "pages_enriched": 20
+    },
+    "0.5": {
+     "body_height": 6.5,
+     "pages_enriched": 20
+    },
+    "1.0": {
+     "body_height": 6.0,
+     "pages_enriched": 2
+    }
+   },
+   "centred_narrow_lines": 23,
+   "centred_narrow_validation": {
+    "pages_with_a_hybrid_account_or_agency_anchor": 12,
+    "pages_flagged_by_centred_narrow": 20,
+    "overlap": 12,
+    "recall_of_anchor_pages": 1.0,
+    "share_of_all_pages_flagged": 1.0
+   }
+  },
+  {
+   "document": "118-s-4795/1",
+   "pages": 20,
+   "neutral_lines": 527,
+   "lines_per_page_median": 26.4,
+   "body_height_q0.5": 6.5,
+   "pages_enriched_q0.5": 20,
+   "pages_enriched_share": 1.0,
+   "quantum_sensitivity": {
+    "0.25": {
+     "body_height": 6.25,
+     "pages_enriched": 20
+    },
+    "0.5": {
+     "body_height": 6.5,
+     "pages_enriched": 20
+    },
+    "1.0": {
+     "body_height": 6.0,
+     "pages_enriched": 1
+    }
+   },
+   "centred_narrow_lines": 23,
+   "centred_narrow_validation": {
+    "pages_with_a_hybrid_account_or_agency_anchor": 13,
+    "pages_flagged_by_centred_narrow": 20,
+    "overlap": 13,
+    "recall_of_anchor_pages": 1.0,
+    "share_of_all_pages_flagged": 1.0
+   }
+  },
+  {
+   "document": "CRPT-118srpt198",
+   "pages": 20,
+   "neutral_lines": 942,
+   "lines_per_page_median": 47.1,
+   "body_height_q0.5": 5.0,
+   "pages_enriched_q0.5": 7,
+   "pages_enriched_share": 0.35,
+   "quantum_sensitivity": {
+    "0.25": {
+     "body_height": 5.0,
+     "pages_enriched": 14
+    },
+    "0.5": {
+     "body_height": 5.0,
+     "pages_enriched": 7
+    },
+    "1.0": {
+     "body_height": 5.0,
+     "pages_enriched": 7
+    }
+   },
+   "centred_narrow_lines": 44,
+   "centred_narrow_validation": {
+    "pages_with_a_hybrid_account_or_agency_anchor": 0,
+    "pages_flagged_by_centred_narrow": 20,
+    "overlap": 0,
+    "recall_of_anchor_pages": null,
+    "share_of_all_pages_flagged": 1.0
+   }
+  }
+ ]
+}

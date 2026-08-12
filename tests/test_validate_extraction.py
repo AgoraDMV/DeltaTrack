@@ -223,6 +223,23 @@ _MAX_UNVALIDATED = {
     # (amount correctly extracted under the right agency), 2 absent (Coast Guard mandatory
     # health-care accrual, fee-funded USCIS Operations and Support).
     "homeland_security": 5,
+    # Legislative Branch FY2025: 2 unvalidated, both arithmetic the recall check cannot do,
+    # each confirmed against the bill XML rather than inferred from the fixture's `bureau`
+    # (which carries the nearest preceding report heading, not the account's actual bureau):
+    #   - CAPITOL POLICE $832,556,000 — the report states the agency rollup; the bill itemizes
+    #     it as SALARIES $620,401,000 + GENERAL EXPENSES $212,155,000 under a "capitol police"
+    #     agency node that holds no amount of its own, so no single mapped node's components
+    #     sum to it. `match_path` is null by design here (see map_account_path's rollup guard).
+    #   - Copyright Office SALARIES AND EXPENSES $60,238,000 — the report states the net
+    #     appropriation; the bill states gross $106,133,000 less $45,895,000 in offsetting fee
+    #     receipts. _component_sum only adds, so a net-of-offset figure is out of its reach.
+    # Scope caveat: this bill's top-level match_path element is the title itself, so unlike
+    # the other jurisdictions "under the correct agency" here means "anywhere in this bill"
+    # (one agency, 107 amounts). The three generic "SALARIES AND EXPENSES" accounts rest on
+    # that weaker channel because the report's account names are not unique and the fixture's
+    # `bureau` cannot break the tie; mapping them by amount instead would make the check
+    # circular, so the depth is accepted and recorded rather than engineered away.
+    "legislative_branch": 2,
 }
 
 # Parameterize over the registry directly, NOT `[j for j in JURISDICTIONS if

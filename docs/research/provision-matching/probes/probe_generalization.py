@@ -24,10 +24,14 @@ from itertools import product
 from pathlib import Path
 
 from deltatrack.bill_tree import normalize_bill
-from deltatrack.diff_bill import _normalize_text, _text_similarity
+from deltatrack.diff_bill import _normalize_text
+from deltatrack.similarity import text_similarity
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
-BILLS = REPO / "bills"
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+BILLS = merged_root()
 FIXTURE = REPO / "tests" / "data" / "similarity_labels.json"
 _word = re.compile(r"[a-z0-9]+")
 
@@ -74,7 +78,7 @@ full_df, full_n = build_idf()
 
 def sig(p, df, n):
     o, nw = _normalize_text(p["text_old"]), _normalize_text(p["text_new"])
-    return _text_similarity(o, nw), contain(vec(o, df, n), vec(nw, df, n))
+    return text_similarity(o, nw), contain(vec(o, df, n), vec(nw, df, n))
 
 
 def keep(wr, c, decision, W, C):

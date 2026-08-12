@@ -1167,7 +1167,8 @@
       "excel_name": "Office of the Legislative Counsel of the Senate",
       "match_path": [
         "legislative branch",
-        "senate"
+        "senate",
+        "office of the legislative counsel of the senate"
       ],
       "expected_amount": 5808500
     },
@@ -1458,7 +1459,8 @@
       "chamber": "senate",
       "excel_name": "Office of the Legislative Counsel of the Senate",
       "match_path": [
-        "senate"
+        "senate",
+        "office of the legislative counsel of the senate"
       ],
       "expected_amount": 5408500
     },
@@ -1741,7 +1743,8 @@
       "chamber": "senate",
       "excel_name": "Office of the Legislative Counsel of the Senate",
       "match_path": [
-        "senate"
+        "senate",
+        "office of the legislative counsel of the senate"
       ],
       "expected_amount": 5408500
     },
@@ -1985,7 +1988,8 @@
       "chamber": "senate",
       "excel_name": "Office of the Legislative Counsel of the Senate",
       "match_path": [
-        "senate"
+        "senate",
+        "office of the legislative counsel of the senate"
       ],
       "expected_amount": 5192000
     },
@@ -2207,7 +2211,8 @@
       "excel_name": "GOVERNMENT PUBLISHING OFFICE REVOLVING FUND",
       "match_path": [
         "legislative branch",
-        "government publishing office"
+        "government publishing office",
+        "government publishing office business operations revolving fund"
       ],
       "expected_amount": 6704000
     },
@@ -2740,7 +2745,7 @@
       "match_path": [
         "legislative branch",
         "house of representatives",
-        "including members\u2019 clerk hire, official expenses of members, and official mail"
+        "including members’ clerk hire, official expenses of members, and official mail"
       ],
       "expected_amount": 562632498
     },
@@ -3337,7 +3342,7 @@
       "match_path": [
         "legislative branch",
         "house of representatives",
-        "including members\u2019 clerk hire, official expenses of members, and official mail"
+        "including members’ clerk hire, official expenses of members, and official mail"
       ],
       "expected_amount": 562632498
     },
@@ -4005,7 +4010,7 @@
       "excel_name": "Member Representation Allowance",
       "match_path": [
         "house of representatives",
-        "including members\u2019 clerk hire, official expenses of members, and official mail"
+        "including members’ clerk hire, official expenses of members, and official mail"
       ],
       "expected_amount": 554317732
     },
@@ -4292,7 +4297,8 @@
       "chamber": "house",
       "excel_name": "ARCHITECT OF THE CAPITOL (general administration)",
       "match_path": [
-        "architect of the capitol"
+        "architect of the capitol",
+        "capital construction and operations"
       ],
       "expected_amount": 91589000
     },
@@ -4725,7 +4731,7 @@
       "excel_name": "Member Representation Allowance",
       "match_path": [
         "house of representatives",
-        "including members\u2019 clerk hire, official expenses of members, and official mail"
+        "including members’ clerk hire, official expenses of members, and official mail"
       ],
       "expected_amount": 554317732
     },

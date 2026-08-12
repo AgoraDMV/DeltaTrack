@@ -2,10 +2,6 @@
 
 - Status: Accepted
 - Date: 2026-06-27
-- Amended: 2026-07-27 — recorded the currently-deployed hosted upload channel as a
-  known, deliberate, interim exception to this rule (see Consequences); its
-  retirement is tracked in
-  [DeltaTrack#112](https://github.com/AgoraDMV/DeltaTrack/issues/112).
 
 ## Context
 
@@ -27,10 +23,9 @@ one.
 
 This question is live because the delivery channel is unsettled. Candidates include a
 static HTML file, a local native app, a packaged executable, a browser extension, and
-a server-rendered web app (the FastAPI path explored in DeltaTrack PR #15). They differ
-precisely on this axis: a server-rendered web app that ingests an uploaded bill sends
-that content to a server we operate; the others can run the comparison entirely on the
-user's machine.
+a server-rendered web app (the FastAPI path). They differ precisely on this axis: a
+server-rendered web app that ingests an uploaded bill sends that content to a server we
+operate; the others can run the comparison entirely on the user's machine.
 
 Two further constraints from the staffer environment bear on the channel choice, though
 not on the privacy rule itself. Congressional offices gate software through different
@@ -90,9 +85,10 @@ Alternatives:
   also by the SAA/CAO install-gate reality above — is a separate open question to be
   decided on its own, tracked in
   [DeltaTrack#112](https://github.com/AgoraDMV/DeltaTrack/issues/112).
-- The server-rendered web channel (PR #15) is not invalidated as a way to serve the UI
-  or to work with already-public bills, but it **cannot be the path for user-supplied
-  drafts.** If a web channel ships, the sensitive-input path has to run client-side.
+- The server-rendered web channel is not invalidated as a way to serve the UI, or to
+  work with already-public bills where no user-provided content is transmitted. But a
+  hosted path that ingests uploaded bills **is noncompliant with this rule**, whoever
+  operates it. The sensitive-input path has to run client-side.
 - This is why the client-side PDF.js extraction result ([0003](0003-pdfjs-client-side-viability.md))
   matters beyond convenience: it is what makes a browser channel able to honor this rule
   for the hardest input.
@@ -102,14 +98,3 @@ Alternatives:
 - Telemetry, crash reporting, or "send us the file that failed" diagnostics that would
   carry bill content off-device are foreclosed by this rule. Diagnostics must be local
   or content-free.
-- **Known interim exception (2026-07-27).** The hosted upload page currently deployed
-  at deltatrack.agoradmv.org ([docs/web-compare.md](../web-compare.md)) processes
-  uploaded PDFs server-side and therefore does not meet this rule. It is a deliberate,
-  transitional state while the compliant channel (browser extension or similarly light
-  local install) is built, not a revision of the decision: the rule stands, the
-  deployment is out of compliance and known to be. The upload page carries a notice
-  telling users their files are processed on the project's server and warning against
-  uploading non-public drafts there. Retiring the exception is tracked in
-  [DeltaTrack#112](https://github.com/AgoraDMV/DeltaTrack/issues/112); this bullet
-  should be deleted when that lands.
-</content>

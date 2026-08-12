@@ -1,0 +1,478 @@
+{
+  "source": "CRPT-118srpt192, Legislative Branch explanatory statement for BILLS-118s4678rs",
+  "note": "Legislative Branch FY 2025 (Reported in Senate) account amounts, extracted from the committee report's 3-line summary blocks (committee-recommendation amounts, in actual dollars) and validated against the bill XML. `match_path` is the mapped bill node when the account name resolves uniquely (strict node-level check); null otherwise, where the test falls back to agency-scoped recall via `title`. External ground truth for GitHub #8. Regenerate with scripts/build_validation.py.",
+  "accounts": [
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "OFFICE OF THE VICE PRESIDENT",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "office of the vice president"
+      ],
+      "expected_amount": 3102000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "OFFICE OF THE PRESIDENT PRO TEMPORE",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "office of the president pro tempore"
+      ],
+      "expected_amount": 873000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "OFFICE OF THE PRESIDENT PRO TEMPORE EMERITUS",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "office of the president pro tempore emeritus"
+      ],
+      "expected_amount": 377000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "OFFICES OF THE MAJORITY AND MINORITY LEADERS",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "offices of the majority and minority leaders"
+      ],
+      "expected_amount": 6486000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "OFFICES OF THE MAJORITY AND MINORITY WHIPS",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "offices of the majority and minority whips"
+      ],
+      "expected_amount": 4070000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "COMMITTEE ON APPROPRIATIONS",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "committee on appropriations"
+      ],
+      "expected_amount": 20785000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "CONFERENCE COMMITTEES",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "conference committees"
+      ],
+      "expected_amount": 3960000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "CONFERENCE OF THE MINORITY",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "offices of the secretaries of the conference of the majority and the conference of the minority"
+      ],
+      "expected_amount": 986000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "POLICY COMMITTEES",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "policy committees"
+      ],
+      "expected_amount": 4044000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "OFFICE OF THE CHAPLAIN",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "office of the chaplain"
+      ],
+      "expected_amount": 616000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "OFFICE OF THE SECRETARY",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "office of the secretary"
+      ],
+      "expected_amount": 32462000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Salaries, Officers, and Employees",
+      "excel_name": "OFFICE OF THE SERGEANT AT ARMS AND DOORKEEPER",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "office of the sergeant at arms and doorkeeper"
+      ],
+      "expected_amount": 121739000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Capitol Police Board and Chief Law Enforcement Officer",
+      "excel_name": "OFFICES OF THE SECRETARIES FOR THE MAJORITY AND MINORITY",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "offices of the secretaries for the majority and minority"
+      ],
+      "expected_amount": 2689000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Capitol Police Board and Chief Law Enforcement Officer",
+      "excel_name": "AGENCY CONTRIBUTIONS",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "salaries, officers and employees",
+        "agency contributions and related expenses"
+      ],
+      "expected_amount": 91581000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Contingent Expenses of the Senate",
+      "excel_name": "INQUIRIES AND INVESTIGATIONS",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "contingent expenses of the senate",
+        "inquiries and investigations"
+      ],
+      "expected_amount": 187200000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Contingent Expenses of the Senate",
+      "excel_name": "U.S. SENATE CAUCUS ON INTERNATIONAL NARCOTICS CONTROL",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "contingent expenses of the senate",
+        "u.s. senate caucus on international narcotics control"
+      ],
+      "expected_amount": 591000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Contingent Expenses of the Senate",
+      "excel_name": "SECRETARY OF THE SENATE",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "contingent expenses of the senate",
+        "secretary of the senate"
+      ],
+      "expected_amount": 17299000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Contractual Legal and Administrative Services and",
+      "excel_name": "SERGEANT AT ARMS AND DOORKEEPER OF THE SENATE",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "contingent expenses of the senate",
+        "sergeant at arms and doorkeeper of the senate"
+      ],
+      "expected_amount": 204000000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Enhancing Effectiveness of Constituent Casework",
+      "excel_name": "MISCELLANEOUS ITEMS",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "contingent expenses of the senate",
+        "miscellaneous items"
+      ],
+      "expected_amount": 29028000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Senate Employees' Child Care Center: Training Classes and",
+      "excel_name": "SENATORS' OFFICIAL PERSONNEL AND OFFICE EXPENSE ACCOUNT",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "contingent expenses of the senate",
+        "senators' official personnel and office expense account"
+      ],
+      "expected_amount": 588381000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Administrative",
+      "excel_name": "OFFICIAL MAIL COSTS",
+      "match_path": [
+        "legislative branch",
+        "senate",
+        "contingent expenses of the senate",
+        "official mail costs"
+      ],
+      "expected_amount": 300000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Office of Congressional Accessibility Services",
+      "excel_name": "CAPITOL POLICE",
+      "match_path": null,
+      "expected_amount": 832556000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "General Expenses",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": null,
+      "expected_amount": 8200000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "General Expenses",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": null,
+      "expected_amount": 73000000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Administrative Provision",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": null,
+      "expected_amount": 611948000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Copyright Office",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "legislative branch",
+        "library of congress",
+        "copyright office",
+        "salaries and expenses"
+      ],
+      "expected_amount": 60238000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Congressional Research Service",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "legislative branch",
+        "library of congress",
+        "congressional research service",
+        "salaries and expenses"
+      ],
+      "expected_amount": 141000000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "National Library Services for the Blind and Print Disabled",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "legislative branch",
+        "library of congress",
+        "national library service for the blind and print disabled",
+        "salaries and expenses"
+      ],
+      "expected_amount": 65600000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "Documents",
+      "excel_name": "SALARIES AND EXPENSES",
+      "match_path": [
+        "legislative branch",
+        "government publishing office",
+        "public information programs of the superintendent of documents",
+        "salaries and expenses"
+      ],
+      "expected_amount": 39000000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "GAO Study on Agency Responsiveness to Congressional",
+      "excel_name": "CONGRESSIONAL OFFICE FOR INTERNATIONAL LEADERSHIP FUND",
+      "match_path": [
+        "legislative branch",
+        "congressional office for international leadership fund"
+      ],
+      "expected_amount": 6500000
+    },
+    {
+      "bill": "118-s-4678",
+      "version": "1_reported-in-senate.xml",
+      "fy": "FY 2025",
+      "chamber": "senate",
+      "title": "LEGISLATIVE BRANCH APPROPRIATIONS",
+      "bureau": "GAO Study on Agency Responsiveness to Congressional",
+      "excel_name": "JOHN C. STENNIS CENTER FOR PUBLIC SERVICE TRAINING AND DEVELOPMENT",
+      "match_path": [
+        "legislative branch",
+        "john c. stennis center for public service training and development"
+      ],
+      "expected_amount": 430000
+    }
+  ]
+}

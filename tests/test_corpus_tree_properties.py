@@ -38,7 +38,7 @@ from pathlib import Path
 
 import pytest
 
-from deltatrack.bill_tree import extract_text_content, find_bill_body, normalize_bill
+from deltatrack.bill_tree import extract_text_content, find_bill_bodies, find_bill_body, normalize_bill
 from deltatrack.diff_bill import extract_amounts
 from deltatrack.formatters.canonical import _pdf_tree_payload
 from deltatrack.formatters.diff_html import _build_toc_from_tree
@@ -159,6 +159,22 @@ _PDF_MONEY_SKIP: set[str] = {"116-hr-133/7_enrolled-bill.pdf"}
 # direction. Value is the reason the layout carries no anchors.
 _PDF_NO_ANCHOR_LAYOUTS: dict[str, str] = {
     "115-hr-5895/5_enrolled-bill.pdf": "enrolled print — no GPO margin line numbers (#141)",
+    # The enrolled prints committed by #126, which took format parity to 52 of 57
+    # manifested versions so far more pairings can be tested. Carried for the
+    # dollar-amount cross-check (that gate reads PDF text, so it needs no anchors) and for
+    # the enacted text itself,
+    # rather than for structure. Same #141 layout as the entry above, and held to the same
+    # assertions: documented member, unnumbered layout, text layer intact. Only the anchor
+    # layer declines.
+    "117-hr-2471/6_enrolled-bill.pdf": "enrolled print — no GPO margin line numbers (#141)",
+    "116-hr-1865/6_enrolled-bill.pdf": "enrolled print — no GPO margin line numbers (#141)",
+    "115-hr-1625/6_enrolled-bill.pdf": "enrolled print — no GPO margin line numbers (#141)",
+    "115-hr-244/6_enrolled-bill.pdf": "enrolled print — no GPO margin line numbers (#141)",
+    "118-hr-4366/6_enrolled-bill.pdf": "enrolled print — no GPO margin line numbers (#141)",
+    "113-hr-3547/6_enrolled-bill.pdf": "enrolled print — no GPO margin line numbers (#141)",
+    "114-hr-2029/7_enrolled-bill.pdf": "enrolled print — no GPO margin line numbers (#141)",
+    "113-hr-83/7_enrolled-bill.pdf": "enrolled print — no GPO margin line numbers (#141)",
+    "118-hr-9468/4_enrolled-bill.pdf": "enrolled print — no GPO margin line numbers (#141)",
 }
 
 
@@ -196,9 +212,26 @@ def _walk(nodes: list[dict]):
 
 def _raw_xml_body_amounts(path: Path) -> Counter:
     """Independent reference: amounts in the raw XML body, parsed directly (NOT via
-    the tree's nodes) so the gate can't tautologically pass over dropped money."""
-    body = find_bill_body(ET.parse(path).getroot())
-    return Counter(extract_amounts(extract_text_content(body)))
+    the tree's nodes) so the gate can't tautologically pass over dropped money.
+
+    Sums EVERY top-level body (#434). It used to call ``find_bill_body``, which returns
+    only the first, so for a reported bill carrying a committee substitute the reference
+    counted one of the document's two texts -- the same text the tree was built from.
+    Both sides then agreed, and the gate reported conservation over a document that had
+    silently lost 126 amounts. A reference derived through the selector under test cannot
+    see that selector's mistakes.
+
+    So BODY SELECTION, the thing #434 changed, is done here with a direct ``findall``
+    rather than through production code: if ``find_bill_bodies`` ever starts skipping a
+    body again, this reference still counts it and the gate fails. Only the resolution
+    and amendment-doc shapes, which have no top-level ``legis-body`` at all, fall back to
+    production traversal -- reimplementing that lookup here would be a second copy free
+    to drift, and those shapes carry exactly one body, so the failure this guards against
+    cannot arise in them.
+    """
+    root = ET.parse(path).getroot()
+    bodies = root.findall("legis-body") or find_bill_bodies(root)
+    return Counter(amount for body in bodies for amount in extract_amounts(extract_text_content(body)))
 
 
 def _assert_schema_and_levels(roots: list[dict]) -> None:
@@ -223,7 +256,7 @@ def _assert_no_blank_toc_rows(roots: list[dict], full_text: str) -> None:
     leaves = re.findall(r'<li class="toc-child">(.*?)</li>', html, re.S)
     blank_leaves = [leaf for leaf in leaves if not re.sub(r"<[^>]+>", "", leaf).strip()]
     assert not blank_leaves, f"{len(blank_leaves)} blank TOC leaf row(s)"
-    summaries = re.findall(r"<summary>(.*?)</summary>", html, re.S)
+    summaries = re.findall(r"<summary[^>]*>(.*?)</summary>", html, re.S)
     blank_groups = [s for s in summaries if not re.sub(r"<[^>]+>", "", s).strip()]
     assert not blank_groups, f"{len(blank_groups)} blank TOC group heading(s)"
     # Completeness floor: the renderer DROPS unlabeled leaves and HOISTS the children
@@ -278,9 +311,36 @@ def _assert_zero_anchor_layout(path: Path, test_id: str, full_text: str, anchors
 
     # Text layer intact. The anchor layer declining must not mean the document is
     # unreadable — a PDF that extracted to nothing would otherwise land here and pass.
-    assert len(full_text.strip()) > 10_000, f"{test_id}: text layer extracted only {len(full_text.strip())} chars"
+    #
+    # Measured against the version's OWN XML, which #126 committed beside every PDF this
+    # registry names — they are all dual-format versions. A pdf-only entry would fall to
+    # the absolute floors in the `else` below rather than going unmeasured. The floors
+    # this replaced (>10,000 chars, >=10 `SEC.` enumerators) encoded "omnibus-sized" and
+    # so could not admit a genuinely short enrolled print: 118-hr-9468 is 3 pages and 4
+    # sections, and its PDF text slightly
+    # EXCEEDS its XML (5,222 vs 4,594 chars) — extraction is perfect and the floor was
+    # simply the wrong instrument. The relative form is also STRICTER where it matters: a
+    # multi-thousand-page omnibus that extracted 10,001 chars passed the old floor and
+    # fails this one. Absolute floors remain the fallback under CORPUS_SWEEP, whose
+    # fetched supersets may have no XML twin to measure against.
+    body_chars = len(full_text.strip())
     sections = re.findall(r"\bSEC\. \d+", full_text)
-    assert len(sections) >= 10, f"{test_id}: text layer carries only {len(sections)} section enumerator(s)"
+    xml_path = path.with_suffix(".xml")
+    xml_body = find_bill_body(ET.parse(xml_path).getroot()) if xml_path.exists() else None
+    if xml_body is not None:
+        xml_text = extract_text_content(xml_body).strip()
+        assert body_chars >= len(xml_text) * 0.8, (
+            f"{test_id}: text layer extracted {body_chars} chars against {len(xml_text)} in its "
+            "own XML — the body did not survive extraction"
+        )
+        xml_sections = re.findall(r"\bSEC(?:TION)?\.?\s+\d+", xml_text)
+        assert len(sections) >= len(xml_sections) * 0.8, (
+            f"{test_id}: text layer carries {len(sections)} section enumerator(s) against "
+            f"{len(xml_sections)} in its own XML"
+        )
+    else:
+        assert body_chars > 10_000, f"{test_id}: text layer extracted only {body_chars} chars"
+        assert len(sections) >= 10, f"{test_id}: text layer carries only {len(sections)} section enumerator(s)"
 
 
 def _assert_money_conserves(roots: list[dict], reference: Counter, max_drop: int, label: str) -> None:
@@ -382,3 +442,87 @@ def test_enrolled_pdf_text_layer_is_whole_though_its_tree_is_empty() -> None:
     assert len(re.findall(r"\bDIVISION [A-Z]\b", full_text)) >= 5
     assert len(re.findall(r"\bTITLE [IVXL]+\b", full_text)) >= 10
     assert len(re.findall(r"\bSEC\. \d+", full_text)) >= 100
+
+
+# --- Split accounts (#474) -----------------------------------------------------
+
+
+def _has_appropriations_body(element: ET.Element) -> bool:
+    """True if an appropriations element carries body text of its own.
+
+    Deliberately reimplemented here rather than importing the parser's own
+    ``_extract_appropriations_text``: a gate that calls the same helper the parser
+    calls cannot see that helper change underneath it, and would pass by agreeing
+    with the code it is meant to check.
+    """
+    return any(extract_text_content(child).strip() for child in element if child.tag not in ("enum", "header"))
+
+
+def _split_account_pairs(xml_path: Path) -> dict[str, str]:
+    """Map each split account's moneyed element id -> the name its other half carries.
+
+    GPO sometimes marks one account up as two adjacent siblings, the first holding the
+    ``<header>`` and no body and the second the body and no header, where the print shows
+    a single account (#474). Adjacency is in DOCUMENT order: an intervening ``<section>``
+    means the two are not one printed block, so they are not a pair.
+    """
+    pairs: dict[str, str] = {}
+    root = ET.parse(xml_path).getroot()
+    for parent in root.iter():
+        children = list(parent)
+        for i, child in enumerate(children):
+            if i == 0 or not child.tag.startswith("appropriations-"):
+                continue
+            if child.find("header") is not None and extract_text_content(child.find("header")).strip():
+                continue
+            if not _has_appropriations_body(child):
+                continue
+            prev = children[i - 1]
+            if not prev.tag.startswith("appropriations-") or _has_appropriations_body(prev):
+                continue
+            header = prev.find("header")
+            name = extract_text_content(header).strip() if header is not None else ""
+            if name:
+                pairs[child.attrib.get("id", "")] = name
+    return pairs
+
+
+def test_split_accounts_keep_their_name_corpus_wide() -> None:
+    """Every split account is addressed under its own name, corpus-wide (#474).
+
+    Before the join, the half carrying the money had no header, so its address stopped at
+    the agency above it and the money read as the agency's own — in 118-hr-8998,
+    ``RESOURCE MANAGEMENT`` vanished from the report and its $1,385,096,000 was filed
+    under ``United States fish and wildlife service``.
+
+    Not parametrized per bill, because the floors below are the point: a per-bill gate
+    that found zero pairs would pass, and this whole class of defect is invisible when the
+    check silently measures nothing (``feedback_property_tests_fail_open``). The floors
+    assert the gate actually ran on real pairs before it asserts they are all named.
+    """
+    total = 0
+    bills: set[str] = set()
+    unnamed: list[str] = []
+    for xml_path in ALL_XML_FILES:
+        if not xml_path.exists():
+            continue
+        pairs = _split_account_pairs(xml_path)
+        if not pairs:
+            continue
+        bills.add(xml_path.parent.name)
+        by_id = {n.element_id: n for n in normalize_bill(xml_path).nodes}
+        for element_id, name in pairs.items():
+            total += 1
+            node = by_id.get(element_id)
+            if node is None or not node.header_text:
+                got = "no node emitted" if node is None else "node has no name"
+                unnamed.append(f"{_corpus_id(xml_path)}: {name!r} -> {got}")
+
+    # Observed 841 pairs across 21 bills on the committed manifest. The floors sit well
+    # under those so ordinary corpus curation does not trip them, while a collapse to a
+    # handful of pairs — the way this gate would go quietly vacuous — does.
+    assert total >= 700, f"only {total} split pairs found; the gate is no longer measuring the corpus"
+    assert len(bills) >= 18, f"only {len(bills)} bills carry split pairs; expected the gate to span the corpus"
+    assert unnamed == [], f"{len(unnamed)} of {total} split accounts lost their name:\n" + "\n".join(
+        f"  {u}" for u in unnamed[:10]
+    )

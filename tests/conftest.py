@@ -13,42 +13,30 @@ import pytest
 from tests.corpus_paths import FIXTURES_DIR, PROJECT_ROOT, fixture_path, sweep_bill_dirs
 from tests.engine_guard import engine_is_foreign
 
-# --- The suite must import the tree it is running in (#435) --------------------
-# `pythonpath` deliberately excludes `src` (see pyproject), so the engine is importable
-# only through the installed package -- which records ONE absolute path, the checkout
-# where `uv sync` last ran. Running from a git worktree against another checkout's
-# interpreter therefore collects this worktree's tests (`pythonpath = ["."]`) while
-# `deltatrack` comes from somewhere else entirely, and the suite reports green about
-# code nobody is editing. Red-green is then meaningless: reverting the file under review
-# changes nothing the run can see.
-#
-# Measured, not hypothetical: a top-level `raise RuntimeError` in a worktree's
-# src/deltatrack/bill_tree.py left tests/test_bill_tree.py at 133 passed.
+# --- The suite must import the tree it is running in (#435, #439) --------------
+# `pythonpath` deliberately excludes `src` (see pyproject), so the engine resolves only
+# through the installed package, which records ONE absolute path: the checkout where
+# `uv sync` last ran. A run whose `deltatrack` resolves outside this checkout's own
+# `src/` is reporting on code nobody is editing, so it is refused here. Red-green is
+# otherwise meaningless: reverting the file under review changes nothing the run sees.
 #
 # Checked at conftest import rather than in a test, because a guard *test* is only as
-# reachable as the selection that collects it. `pytest tests/test_bill_tree.py` never
-# collects it, and neither does any `-k` or `-m` run -- and a single-module run is exactly
-# the scenario measured above. conftest imports on every selection under `tests/`, so it
-# is the one place the check cannot be selected away.
+# reachable as the selection that collects it -- a single-module run, `-k` and `-m` all
+# skip past one. conftest imports on every selection under `tests/`, so it is the one
+# place the check cannot be selected away.
 #
-# Rejecting the violation rather than adding `src` to `pythonpath`, which would resolve
-# the engine off disk and make this symptom disappear. Not for wheel fidelity -- under an
-# editable install the suite already reports on the working tree, which is exactly why
-# tests/test_engine_installs.py exists and says so. The reason is that `pythonpath` would
-# make pytest the ONLY consumer with its own import story: in an env-less worktree the
-# suite would quietly pass against that worktree while `./diff_bill.py` beside it imports
-# another checkout or fails outright. A split brain is worse than a hard stop, and the
-# stop names the real problem (a tree running on a foreign environment) instead of
-# papering over the one symptom that happened to surface.
+# Checked on `import deltatrack` ALONE, before any submodule (#439). A foreign engine
+# whose layout does not match this tree (a partial install, or one rolled back past a
+# submodule) otherwise dies on the submodule import below, raising a
+# `ModuleNotFoundError` named `deltatrack.bill_tree` that the handler correctly reads as
+# a branch fault -- sending the developer to inspect their own diff over an environment
+# fault. The two submodules below are long-standing, so this is narrow today; nothing
+# holds the import list at two.
 #
-# Checked on `import deltatrack` ALONE, before anything is imported off the engine (#439).
-# A foreign engine whose layout does not match this tree -- a partial install, or one rolled
-# back past a submodule -- would otherwise die on the submodule import below, and that
-# exception is a `ModuleNotFoundError` named `deltatrack.bill_tree`, which the handler
-# correctly re-raises as a branch fault because by that test it genuinely is one. The
-# developer then inspects their own diff over an environment fault. The two submodules named
-# below are long-standing, so this is narrow today; nothing holds the import list at two, and
-# the first addition makes it reachable for anyone reviewing THAT change from a worktree.
+# Why not add `src` to `pythonpath`: it would make pytest the only consumer with its own
+# import story, so an env-less worktree would pass here while `./diff_bill.py` beside it
+# imports another checkout or fails outright. A split brain is worse than a hard stop.
+# AGENTS.md ("Test conventions") carries the anchoring details and the measurement.
 try:
     import deltatrack
 
@@ -153,6 +141,19 @@ def manifest_xml_files() -> list[Path]:
     if CORPUS_SWEEP:
         return sorted(f for d in sweep_bill_dirs() for f in d.glob("[0-9]*_*.xml"))
     return _manifest_paths("xml")
+
+
+def manifest_xml_ids() -> frozenset[str]:
+    """``"<bill>/<stage>.xml"`` for every manifested XML fixture, IGNORING CORPUS_SWEEP.
+
+    For the staleness guards over baseline dicts. Those dicts are calibrated against the
+    committed corpus, so a guard asking "does this key still name a live fixture?" has to
+    key on the manifest itself. Reading the answer off ``manifest_xml_files()`` would widen
+    with the sweep, so on a machine with a fetched corpus a sweep-only key would look live
+    and the guard would pass — the fail-open #496 found, where four keys named a version no
+    run can evaluate and nothing said so.
+    """
+    return frozenset(f"{p.parent.name}/{p.name}" for p in _manifest_paths("xml"))
 
 
 def manifest_pdf_files() -> list[Path]:
@@ -292,30 +293,32 @@ def assert_manifest_committed(collected: Sequence, kind: str) -> None:
 # that any ASSERTION ran. The corpus gates skip per-case on content conditions ("no
 # bill body", "no dollar amounts", "no anchors / no offset table"), so a corpus-wide
 # parser regression that turned every case into a content-skip would keep CI green
-# while asserting nothing — the one structural fail-open left after #217.
+# while asserting nothing — the one structural fail-open the manifest floor leaves open.
 #
-# This closes that channel: every content-skip in the three corpus gate modules must
-# be named in ALLOWED_CORPUS_SKIPS below, AND skip for the reason recorded there. An
-# unlisted skip fails the session; so does an allowlisted nodeid that starts skipping
-# for a different reason (a bare count, or a nodeid-only match, would miss both — the
-# second is precisely a regression on a case already known to be fragile).
+# This closes that channel: every content-skip in the modules below must be named in
+# ALLOWED_CORPUS_SKIPS, AND skip for the reason recorded there. An unlisted skip fails
+# the session; so does an allowlisted nodeid that starts skipping for a different
+# reason (a bare count, or a nodeid-only match, would miss both — the second is
+# precisely a regression on a case already known to be fragile).
 #
 # Adding an entry is a deliberate act: it records a fixture the gates cannot assert
 # on, which is a coverage gap, not a neutral fact. Say why in the comment.
 #
 # Scope: the three gates that skip per-case on content, plus
 # test_financial_callout_whole_item, whose channel is fixture ABSENCE rather than
-# content: its three XML cases carry skipif(not (_V1.exists() and _V2.exists())). That
-# skip used to be routine, because v2 was uncommitted; now that both versions are
-# committed and manifested, an absent fixture means someone deleted it, and the #86
-# headline gate going quiet is exactly what this ceiling exists to catch. It is not a
-# manifest-parametrized module, so the #217 fixture floor does not cover it.
+# content — its three XML cases carry skipif(not (_V1.exists() and _V2.exists())).
+# Both versions are committed and manifested, so an absent fixture means someone
+# deleted it, and the #86 headline gate going quiet is what this ceiling exists to
+# catch. It is not a manifest-parametrized module, so the #217 fixture floor does not
+# cover it.
 #
-# The other corpus modules migrated onto the manifest in #220 Part 1
-# (test_node_join_corpus, test_xml_subsection_nodes, test_pdf_subsection_recall)
-# hard-assert denominators instead of skipping, so they have no content-skip channel to
-# watch — they are left out deliberately rather than by oversight. Add one here if it
-# ever grows a content-skip.
+# Why not watch the other corpus modules: test_node_join_corpus,
+# test_xml_subsection_nodes, test_pdf_subsection_recall and
+# test_pdf_xml_withheld_recall hard-assert denominators instead of skipping, so
+# they have no content-skip channel. The last of those reads one fixture named in the
+# manifest and carries no skipif at all: a deleted fixture raises rather than skips,
+# so there is nothing here to allow. Left out deliberately; add one here if any of
+# them ever grows a content-skip.
 CORPUS_GATE_MODULES = (
     "tests/test_corpus_properties.py",
     "tests/test_corpus_tree_properties.py",
@@ -336,12 +339,12 @@ ALLOWED_CORPUS_SKIPS = {
     # uncovered, only outside this one gate's channel.
     "tests/test_corpus_properties.py::test_every_appropriations_element_with_text_produces_node"
     "[119-hr-1/2_engrossed-in-house.xml]": "No appropriations elements with text",
-    # 115-hr-5895 v5 (the ENROLLED print, no GPO margin line numbers) used to live here:
-    # its tree comes back empty, so the PDF gate skipped it and this entry recorded why.
-    # #262 closed that — the gate now ASSERTS on a zero-anchor document instead of
-    # skipping it (_assert_zero_anchor_layout in test_corpus_tree_properties.py), so
-    # there is no skip left to allow. The layout reason it used to carry lives in
-    # _PDF_NO_ANCHOR_LAYOUTS, next to the assertions that now check it.
+    # No entry for 115-hr-5895 v5 (the ENROLLED print, no GPO margin line numbers): the
+    # PDF gate ASSERTS on a zero-anchor document rather than skipping it
+    # (_assert_zero_anchor_layout in test_corpus_tree_properties.py), so there is no skip
+    # to allow. Its layout reason lives in _PDF_NO_ANCHOR_LAYOUTS, beside those
+    # assertions.
+    # History: #262 — an allowlisted skip before the gate learned to assert.
     # --- 113-hr-3547 v4 (added to the manifest by #220 Part 1 / #277) -----------
     # 113-hr-3547 v4 is the Senate's FIRST engrossed amendment to what was then a
     # shell bill: a single section extending commercial space-launch liability (2.6 KB,
@@ -361,13 +364,74 @@ ALLOWED_CORPUS_SKIPS = {
     "[118-hr-2882/4_engrossed-amendment-senate.xml]": "No appropriations elements with text",
     "tests/test_corpus_properties.py::test_every_dollar_amount_appears_in_a_node"
     "[118-hr-2882/4_engrossed-amendment-senate.xml]": "No dollar amounts in bill body",
+    # --- Introduced/early stages committed for per-version format parity -----------
+    # These six versions gained an XML, taking format parity to 52 of 57 versions, which
+    # is what lets the PDF-vs-XML gates run per version instead of only where a
+    # counterpart happened to exist. Each is an INTRODUCED or early-stage print, and an
+    # appropriations bill at that stage is a shell: the money is added later in markup, so
+    # they genuinely carry no <appropriations-*> elements and (mostly) no dollar amounts.
+    #
+    # Worth stating plainly, because the entry count is the honest cost of the parity
+    # change: of the nine XMLs added, the three substantive ones (114-hr-2029 v1 and v3,
+    # 118-hr-4366 v3) assert and appear nowhere below; these six only ever had shells to
+    # offer, so parity buys them no assertion in THESE gates and costs a declaration each.
+    # They still earn their place in the pdf/xml pair gates, which is why they are here
+    # rather than withheld.
+    "tests/test_corpus_properties.py::test_every_appropriations_element_with_text_produces_node"
+    "[113-hr-3547/1_introduced-in-house.xml]": "No appropriations elements with text",
+    "tests/test_corpus_properties.py::test_every_appropriations_element_with_text_produces_node"
+    "[113-hr-3547/2_engrossed-in-house.xml]": "No appropriations elements with text",
+    "tests/test_corpus_properties.py::test_every_appropriations_element_with_text_produces_node"
+    "[113-hr-3547/3_received-in-senate.xml]": "No appropriations elements with text",
+    "tests/test_corpus_properties.py::test_every_appropriations_element_with_text_produces_node"
+    "[117-hr-2471/1_introduced-in-house.xml]": "No appropriations elements with text",
+    "tests/test_corpus_properties.py::test_every_appropriations_element_with_text_produces_node"
+    "[118-hr-2882/1_introduced-in-house.xml]": "No appropriations elements with text",
+    "tests/test_corpus_properties.py::test_every_appropriations_element_with_text_produces_node"
+    "[118-hr-8282/1_introduced-in-house.xml]": "No appropriations elements with text",
+    "tests/test_corpus_properties.py::test_every_dollar_amount_appears_in_a_node"
+    "[113-hr-3547/1_introduced-in-house.xml]": "No dollar amounts in bill body",
+    "tests/test_corpus_properties.py::test_every_dollar_amount_appears_in_a_node"
+    "[113-hr-3547/2_engrossed-in-house.xml]": "No dollar amounts in bill body",
+    "tests/test_corpus_properties.py::test_every_dollar_amount_appears_in_a_node"
+    "[113-hr-3547/3_received-in-senate.xml]": "No dollar amounts in bill body",
+    "tests/test_corpus_properties.py::test_every_dollar_amount_appears_in_a_node"
+    "[118-hr-2882/1_introduced-in-house.xml]": "No dollar amounts in bill body",
+    "tests/test_corpus_properties.py::test_every_dollar_amount_appears_in_a_node"
+    "[118-hr-8282/1_introduced-in-house.xml]": "No dollar amounts in bill body",
+    # 117-hr-2471 v1 (the FY22 omnibus as introduced) is the one that is not quite empty:
+    # it carries two amounts, below the gate's own shell threshold, so it skips with a
+    # different reason than its five siblings. Recorded as-is -- matching on the reason is
+    # the point of this allowlist, and collapsing the two would lose the distinction.
+    "tests/test_corpus_properties.py::test_every_dollar_amount_appears_in_a_node"
+    "[117-hr-2471/1_introduced-in-house.xml]": ("Shell bill: only 2 amounts, too few for meaningful coverage"),
+    # 118-hr-9468 (both committed versions) trips the same "shell bill" threshold without
+    # being one. It is a complete, enacted supplemental appropriations act that simply
+    # appropriates to two accounts, so it carries exactly two amounts and falls under the
+    # gate's own <3 cutoff. The threshold is not wrong -- 0 or 1 miss out of 2 is noise as
+    # a coverage RATIO -- it just cannot distinguish "too small to measure" from "small
+    # because the bill is small".
+    #
+    # Unlike the entries above, this is NOT a coverage gap, and it should not be read as
+    # one when this list is next audited. Both amounts are asserted by name, against the
+    # named account each belongs to, in tests/test_bill_tree.py
+    # TestUntitledBillAppropriations -- a stronger claim than this gate makes, since it
+    # checks WHICH account holds each figure rather than only that the digits survive
+    # somewhere. That bill is committed for exactly that test (#485), so the fixture earns
+    # its place regardless of this gate's channel.
+    "tests/test_corpus_properties.py::test_every_dollar_amount_appears_in_a_node"
+    "[118-hr-9468/1_introduced-in-house.xml]": ("Shell bill: only 2 amounts, too few for meaningful coverage"),
+    "tests/test_corpus_properties.py::test_every_dollar_amount_appears_in_a_node[118-hr-9468/4_enrolled-bill.xml]": (
+        "Shell bill: only 2 amounts, too few for meaningful coverage"
+    ),
 }
 
 # --- The CI slow suite (#288) ---------------------------------------------------
-# These @slow modules run against committed fixtures and were named by no CI step, so
-# ~95 real assertions passed on any fresh clone in about 20 seconds and never once ran
-# in CI. Committing a fixture makes a gate RUNNABLE; only naming its module in the
-# workflow makes it RUN — the same distinction #220 called out for the corpus gates.
+# These @slow modules run against committed fixtures and are named by a CI step.
+# Committing a fixture makes a gate RUNNABLE; only naming its module in the workflow
+# makes it RUN — the same distinction #220 called out for the corpus gates.
+# History: #288 — named by no CI step, their assertions passed on any fresh clone and
+# never once ran in CI.
 #
 # They are watched here for the same reason the corpus gates are: adding a module to CI
 # also adds its skip channel to CI, and a skip asserts nothing. Kept as a SEPARATE
@@ -392,6 +456,7 @@ CI_SLOW_MODULES = (
     "tests/test_financial_diff.py",
     "tests/test_pipeline_parity.py",
     "tests/test_pdf_xml_amount_recall.py",
+    "tests/test_pdf_xml_prose_recall.py",
     "tests/test_front_matter_parity.py",
     "tests/test_xml_compare.py",
     "tests/test_toc_tree.py",
@@ -430,21 +495,105 @@ ALLOWED_CI_SLOW_SKIPS = {
     # assert. This one will not go away by committing anything.
     "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf"
     "[113-hr-3547/4_engrossed-amendment-senate]": "No amounts in XML (shell / procedural version)",
+    # --- The same parity change, seen from the pair gate --------------------------
+    # Committing an XML beside an existing PDF makes this gate COLLECT the version for the
+    # first time, and for an introduced-stage shell there are no amounts to recall. The
+    # skip is the version's nature, not a fixture absence, so unlike the entries above it
+    # will not go away by committing anything -- these belong to the same six versions
+    # declared in ALLOWED_CORPUS_SKIPS.
+    #
+    # The gate is not thereby weakened: the three substantive XMLs added in the same change
+    # are collected here too and assert normally, so parity's net effect on this gate is
+    # more real comparisons, plus these four declarations.
+    "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf"
+    "[113-hr-3547/1_introduced-in-house]": "No amounts in XML (shell / procedural version)",
+    "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf"
+    "[113-hr-3547/2_engrossed-in-house]": "No amounts in XML (shell / procedural version)",
+    "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf"
+    "[113-hr-3547/3_received-in-senate]": "No amounts in XML (shell / procedural version)",
+    "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf"
+    "[118-hr-2882/1_introduced-in-house]": "No amounts in XML (shell / procedural version)",
+    "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf"
+    "[118-hr-8282/1_introduced-in-house]": "No amounts in XML (shell / procedural version)",
+    # Same shape, seen from the other direction: #126 committed this version's PDF beside
+    # its existing XML, so the pair gate collects it for the first time. 118-hr-2882 v4 is
+    # the 4 KB procedural Senate amendment already declared in ALLOWED_CORPUS_SKIPS above
+    # for carrying no dollar amounts, so there is nothing for the recall case to assert
+    # either. A property of the document, not a fixture absence — committing more cannot
+    # retire it. Its PDF is carried for the v4->v5 anchor pair, not for amounts.
+    "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf"
+    "[118-hr-2882/4_engrossed-amendment-senate]": "No amounts in XML (shell / procedural version)",
 }
+
+# --- Fast-tier PDF gates -------------------------------------------------------
+# The two ceilings above watch the corpus gates and the modules the slow CI steps name.
+# Neither reaches these, because they carry no `slow` marker and so run in the FAST step
+# (`pytest -m "not slow and not browser"`) — they were RUNNING in CI all along, but their
+# skips were declared nowhere and could drift silently. That is the same fail-open channel
+# #220 and #288 closed, in the one tier neither covered.
+#
+# A THIRD group rather than more entries in CI_SLOW_MODULES, because that tuple's name is
+# load-bearing: it means "named by a slow CI step", and the comment above it reasons from
+# that. Filing fast-tier modules there would make the name false for a third of its
+# contents and quietly break the next reader's model of which step a skip belongs to.
+#
+# test_pdf_division_recall.py is deliberately ABSENT: every skip channel it once carried
+# is now an assertion rather than a skip (the #141 zero-anchor channel, and the two
+# pytest.skip() guards on manifested fixtures in _fixture() and
+# test_single_division_bill_has_no_division_labels — #539), so it has no skip surface to
+# declare. Adding it would be inert today and would invite re-opening a skip later as the
+# cheap way to green it.
+#
+# test_pdf_text.py (#539): 18 modules skipped their way to a green run with no watch on any
+# of them. Of those, this was the one with a live, currently-firing skip: 115-hr-5895 v3
+# (Placed on Calendar, Senate) was not manifested, so TestUnbulletedFooterConsumedOutput's
+# skipif fired on every run and the #140 footer-strip regression gate had never once
+# asserted in CI — a shipped fix with no live guard, reported as a green run.
+#
+# The v3 PDF is committed now (manifested PDF-only, ~355 KB), so those two cases EXECUTE
+# rather than skip and the allowlist below is empty. That is the point of the fix: the
+# earlier draft of this change declared the absence as permanent, which would have made
+# the dead guard visible but kept it dead. "The stage was never added to the corpus"
+# described the corpus's history, not a constraint on it.
+#
+# So this module now has NO declared skip, and must not acquire one: every skip channel it
+# carries (the v3 skipif, and the three _HR8752_V1 guards) keys on a manifested fixture, so
+# any of them firing means a fixture went missing, not a documented gap. Declaring one here
+# to green a run would restore exactly the channel #539 closed — commit the fixture instead.
+FAST_GATE_MODULES = (
+    "tests/test_pdf_anchor_golden.py",
+    "tests/test_pdf_diff_recall.py",
+    "tests/test_pdf_text.py",
+)
+
+# Deliberately EMPTY, and that is the useful state: all three modules above have no skip
+# channel left. The entries this dict has held were each retired the same way — by
+# committing the fixture the skip keyed on, not by declaring the gap. The account-vocab
+# floor's 117-hr-4432 and 118-hr-4820 pointed at gitignored `bills/` and so had never run
+# in CI; 115-hr-5895 v3 was the #140 footer print (#539). All are committed now, so those
+# cases assert instead of skipping.
+#
+# An empty allowlist is not an inert one: the group stays in _SKIP_WATCH_GROUPS, so the
+# FIRST skip any of the three grows fails the session and has to be justified. Deleting the
+# dict instead would silently restore the fail-open channel these gates just came out of.
+ALLOWED_FAST_GATE_SKIPS: dict[str, str] = {}
 
 # (label, modules, allowlist) — each group's skips are watched and must be declared.
 _SKIP_WATCH_GROUPS = (
     ("corpus content-skip ceiling (#220)", CORPUS_GATE_MODULES, ALLOWED_CORPUS_SKIPS),
     ("CI slow-suite skip ceiling (#288)", CI_SLOW_MODULES, ALLOWED_CI_SLOW_SKIPS),
+    ("fast-tier PDF gate ceiling", FAST_GATE_MODULES, ALLOWED_FAST_GATE_SKIPS),
 )
 
-_WATCHED_SKIP_MODULES = CORPUS_GATE_MODULES + CI_SLOW_MODULES
+_WATCHED_SKIP_MODULES = CORPUS_GATE_MODULES + CI_SLOW_MODULES + FAST_GATE_MODULES
 
 # --- Cases CI can never collect ------------------------------------------------
-# Every watched module parametrizes over the committed manifest EXCEPT these two, which
-# glob bills/ directly (tests/pdf_corpus.py: dual_format_versions, adjacent_pdf_pairs).
-# Their case list therefore grows with whatever a machine has fetched: 6 and 30 cases in
-# CI, 90 and 432 on a full working checkout.
+# Every watched module parametrizes over the committed manifest EXCEPT the ones below,
+# which build their case list from the bill trees directly (tests/pdf_corpus.py:
+# dual_format_versions, adjacent_pdf_pairs). Their case list therefore grows with
+# whatever a machine has fetched: for the two original modules, 6 and 30 cases in CI
+# against 90 and 432 on a full working checkout. The prose gate added in #7 shares the
+# amount gate's dual_format_versions denominator exactly, so it expands the same way.
 #
 # That breaks the assumption the allowlist rests on. An allowlist calibrated against the
 # committed corpus cannot name cases that only exist on one developer's disk, so those
@@ -452,7 +601,7 @@ _WATCHED_SKIP_MODULES = CORPUS_GATE_MODULES + CI_SLOW_MODULES
 # branch where nothing is wrong. A ceiling that cries wolf on every maintainer's machine
 # gets muted, which costs more than the channel it guards.
 #
-# So for these two modules a case is watched only if the manifest declares every FILE the
+# So for these modules a case is watched only if the manifest declares every FILE the
 # case reads. A case CI cannot collect cannot regress in CI, and there is nothing
 # meaningful to declare about it. Cases that ARE manifested stay watched exactly as
 # before, so the channel is narrowed to what CI runs, not switched off. This is the same
@@ -460,15 +609,18 @@ _WATCHED_SKIP_MODULES = CORPUS_GATE_MODULES + CI_SLOW_MODULES
 # construction.
 #
 # Format matters, and collapsing it is the trap here. The manifest declares (bill, stage,
-# FORMAT), and a stage is often committed in one format only -- 113-hr-3547 v1 is
-# pdf-only. The amount-recall gate reads the xml AND the pdf of a stage, so a pdf-only
-# stage yields no case in CI even though the manifest names it. Each module therefore
-# declares which formats its cases actually need.
+# FORMAT), and five of the 57 manifested versions are deliberately committed in one format
+# only -- the five #519 engrossed amendments are xml-only. The amount-recall
+# gate reads the xml AND the pdf of a stage, so a single-format stage yields no case in CI
+# even though the manifest names it. Each module therefore declares which formats its
+# cases actually need.
 _CORPUS_EXPANDING_MODULES = {
     # adjacent_pdf_pairs(): consecutive PDFs within a bill.
     "tests/test_pdf_corpus_smoke.py": ("pdf",),
     # dual_format_versions(): a stage present in BOTH formats.
     "tests/test_pdf_xml_amount_recall.py": ("xml", "pdf"),
+    # dual_format_versions() as well: the same stage-in-both-formats denominator.
+    "tests/test_pdf_xml_prose_recall.py": ("xml", "pdf"),
 }
 
 # The two id shapes these modules generate: "<bill>/<stem>" and, for a pair case,
@@ -610,12 +762,12 @@ def pytest_sessionfinish(session, exitstatus) -> None:
 
 
 # --- Live-network opt-in (#278) ------------------------------------------------
-# REQUIRE_CORPUS used to live here. #220 put every corpus correctness gate on the
-# committed manifest and #278 committed the Legislative Branch validation set, so the
-# only requirement left that a fixture cannot satisfy is a NETWORK: test_govinfo_corpus
-# _parity fetches live BILLSTATUS per bill to confirm the on-disk filenames are still
-# what govinfo enumeration produces today. That is a real requirement, so it gets a
-# marker that says so rather than an env var whose name described neither consumer.
+# The only requirement a committed fixture cannot satisfy is a NETWORK: test_govinfo
+# _corpus_parity fetches live BILLSTATUS per bill to confirm the on-disk filenames are
+# still what govinfo enumeration produces today. It carries a marker saying so, rather
+# than an env var whose name would describe neither consumer.
+# History: #220 put every corpus correctness gate on the committed manifest and #278
+# committed the Legislative Branch validation set, retiring REQUIRE_CORPUS from here.
 #
 # The marker alone does not deselect: `-m slow` (what CI runs) would select the parity
 # gate right along with everything else, so the requirement has to be enforced at
@@ -628,12 +780,36 @@ def pytest_sessionfinish(session, exitstatus) -> None:
 # committed fixtures, where a failure is real news rather than a merge blocker.
 
 
+# --- Browser-tier strictness (#599) --------------------------------------------
+# CI runs the `browser` tier on dedicated hardware with Chromium guaranteed. Its
+# launch helper (the module-scoped `chromium` fixture in both browser modules) skips
+# when the browser cannot start — the right behavior for the default tier, where a
+# contributor's machine may lack Playwright, but under that CI step a skip is a
+# silent no-op: every test "passes" by skipping and the step reports green while
+# asserting nothing. `--run-browser` is the CI step's signal to treat a launch
+# failure as a test failure instead. A flag rather than an env var, mirroring
+# `--run-network`: the distinction is an invocation, not an environment.
+#
+# The Python-package channel needs no guard: `importorskip("playwright")` skips the
+# whole module at collection if the package is missing, but CI's preceding
+# `playwright install chromium` step would already fail loudly if the package were
+# absent from the environment, so that channel cannot silently no-op.
 def pytest_addoption(parser):
     parser.addoption(
         "--run-network",
         action="store_true",
         default=False,
         help="Run tests marked `network` (live external fetches). They are skipped by default.",
+    )
+    parser.addoption(
+        "--run-browser",
+        action="store_true",
+        default=False,
+        help=(
+            "Treat a Chromium launch failure in the `browser` tier as a test failure "
+            "instead of a skip. The default tier skips; CI's dedicated browser step "
+            "passes this so a broken browser cannot pass green while asserting nothing."
+        ),
     )
 
 
@@ -835,6 +1011,7 @@ def make_bill_node(
     header_text="",
     tag="appropriations-intermediate",
     division_label="",
+    body_index=0,
 ):
     """Build a BillNode with defaults for testing."""
     return BillNode(
@@ -846,6 +1023,7 @@ def make_bill_node(
         body_text=body_text,
         section_number="",
         division_label=division_label,
+        body_index=body_index,
     )
 
 

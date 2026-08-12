@@ -19,13 +19,16 @@ from pathlib import Path
 from deltatrack.bill_tree import normalize_bill, normalize_header
 from deltatrack.diff_bill import (
     _normalize_text,
-    _text_similarity,
     diff_bills,
     match_nodes,
 )
+from deltatrack.similarity import text_similarity  # noqa: E402
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
-BILLS = REPO / "bills"
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+BILLS = merged_root()
 ACCOUNT_TAGS = {"appropriations-major", "appropriations-intermediate", "appropriations-small"}
 _num = re.compile(r"^(\d+)_")
 
@@ -40,7 +43,7 @@ def version_pairs(bill_dir: Path):
 def hsim(a, b):
     if not a or not b:
         return 0.0
-    return _text_similarity(normalize_header(a), normalize_header(b))
+    return text_similarity(normalize_header(a), normalize_header(b))
 
 
 r1_false_keep_candidates = []  # header match, body_sim<0.40, section (not account)
@@ -61,7 +64,7 @@ for bill_dir in sorted(BILLS.iterdir()):
             o, n = _normalize_text(old.body_text), _normalize_text(new.body_text)
             if o == n:
                 continue
-            sim = _text_similarity(o, n)
+            sim = text_similarity(o, n)
             if sim >= 0.40:
                 continue
             leaf_account = old.tag in ACCOUNT_TAGS and new.tag in ACCOUNT_TAGS
@@ -97,7 +100,7 @@ for bill_dir in sorted(BILLS.iterdir()):
                 continue
             parent_equal = no.match_path[:-1] == nn.match_path[:-1]
             header_match = no.header_text.strip() and nn.header_text.strip() and hsim(no.header_text, nn.header_text) >= 0.8
-            sim = _text_similarity(_normalize_text(c.old_text or ""), _normalize_text(c.new_text or ""))
+            sim = text_similarity(_normalize_text(c.old_text or ""), _normalize_text(c.new_text or ""))
             if not parent_equal and not header_match:
                 r2_gate_demotions.append((
                     bill_dir.name, round(sim, 3),

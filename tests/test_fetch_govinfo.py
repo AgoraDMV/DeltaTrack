@@ -1296,8 +1296,10 @@ def test_gap_records_empty_when_every_version_is_served():
 
 @respx.mock
 def test_fetch_billstatus_bill_raises_on_a_failed_response(monkeypatch):
-    # The loud-failure contract enumerate_versions used to own directly: a bad
-    # BILLSTATUS must never degrade into a silent "bill has no versions" (#10).
+    # The loud-failure contract (#10): a bad BILLSTATUS must never degrade into a
+    # silent "bill has no versions".
+    # History: enumerate_versions owned this contract directly before fetch_billstatus
+    # _bill was split out.
     monkeypatch.setattr("shared.http.time.sleep", lambda *_: None)
     respx.get(gi.billstatus_url(999, "hr", 1)).mock(return_value=httpx.Response(500))
     with httpx.Client() as client, pytest.raises(httpx.HTTPError):

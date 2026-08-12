@@ -20,6 +20,24 @@ def _page(page_number: int, *lines: tuple[int | None, str]) -> Page:
     return Page(page_number, tuple(Line(ln, txt) for ln, txt in lines))
 
 
+# Glyph sizes for the two bands the account detector needs (mirrors
+# test_pdf_size_detection). Account anchors come ONLY from the size path (#114
+# retired the `For necessary expenses` text trigger), so a test that needs an
+# account block must supply sizes — a size-less page yields TITLE/SEC only.
+BODY = 14.0
+HEAD = 11.2
+
+
+def _sized_page(page_number: int, *lines: tuple[int | None, str, float | None]) -> Page:
+    """A page whose lines carry glyph sizes, so the production size path runs.
+
+    Prefer this over `_page` for anything asserting on account blocks: it exercises
+    the same detector real GPO PDFs go through, instead of a size-less shape no
+    published bill actually presents.
+    """
+    return Page(page_number, tuple(Line(ln, txt, sz) for ln, txt, sz in lines))
+
+
 def _block(anchor: Anchor | None, *lines: tuple[int, int, str]) -> _Block:
     """Build a test _Block from (page_number, line_number, text) tuples."""
     return _Block(anchor, tuple(_IndexedLine(text, p, ln) for p, ln, text in lines))
@@ -292,19 +310,19 @@ class TestPageLineCitations:
         # first prose line, not the bled-in heading (#56). The breadcrumb anchor
         # still carries the heading, so no navigation is lost.
         v1 = [
-            _page(
+            _sized_page(
                 2,
-                (14, "OPERATIONS AND SUPPORT"),
-                (15, "For necessary expenses of operations, $5,000."),
-                (16, "and for related activities."),
+                (14, "OPERATIONS AND SUPPORT", HEAD),
+                (15, "For necessary expenses of operations, $5,000.", BODY),
+                (16, "and for related activities.", BODY),
             )
         ]
         v2 = [
-            _page(
+            _sized_page(
                 2,
-                (14, "OPERATIONS AND SUPPORT"),
-                (15, "For necessary expenses of operations, $6,000."),
-                (16, "and for related activities."),
+                (14, "OPERATIONS AND SUPPORT", HEAD),
+                (15, "For necessary expenses of operations, $6,000.", BODY),
+                (16, "and for related activities.", BODY),
             )
         ]
         h = diff_pdfs(v1, v2).hunks[0]
@@ -443,8 +461,20 @@ class TestAccountHeadingRename:
     captured-account rename with an unchanged body would otherwise vanish."""
 
     def test_rename_with_identical_body_emits_moved_hunk(self):
-        v1 = [_page(1, (1, "OPERATIONS AND SUPPORT"), (2, "For necessary expenses of operations, $5,000."))]
-        v2 = [_page(1, (1, "OPERATIONS AND SUPPORT, DEFENSE"), (2, "For necessary expenses of operations, $5,000."))]
+        v1 = [
+            _sized_page(
+                1,
+                (1, "OPERATIONS AND SUPPORT", HEAD),
+                (2, "For necessary expenses of operations, $5,000.", BODY),
+            )
+        ]
+        v2 = [
+            _sized_page(
+                1,
+                (1, "OPERATIONS AND SUPPORT, DEFENSE", HEAD),
+                (2, "For necessary expenses of operations, $5,000.", BODY),
+            )
+        ]
         hunks = diff_pdfs(v1, v2).hunks
         assert len(hunks) == 1
         h = hunks[0]
@@ -458,21 +488,21 @@ class TestAccountHeadingRename:
         # disambiguates them, so the changed one pairs as modified (not split
         # into added + removed).
         v1 = [
-            _page(
+            _sized_page(
                 1,
-                (1, "SALARIES AND EXPENSES"),
-                (2, "For necessary expenses of agency A, $1,000."),
-                (3, "SALARIES AND EXPENSES"),
-                (4, "For necessary expenses of agency B, $2,000."),
+                (1, "SALARIES AND EXPENSES", HEAD),
+                (2, "For necessary expenses of agency A, $1,000.", BODY),
+                (3, "SALARIES AND EXPENSES", HEAD),
+                (4, "For necessary expenses of agency B, $2,000.", BODY),
             )
         ]
         v2 = [
-            _page(
+            _sized_page(
                 1,
-                (1, "SALARIES AND EXPENSES"),
-                (2, "For necessary expenses of agency A, $1,500."),
-                (3, "SALARIES AND EXPENSES"),
-                (4, "For necessary expenses of agency B, $2,000."),
+                (1, "SALARIES AND EXPENSES", HEAD),
+                (2, "For necessary expenses of agency A, $1,500.", BODY),
+                (3, "SALARIES AND EXPENSES", HEAD),
+                (4, "For necessary expenses of agency B, $2,000.", BODY),
             )
         ]
         hunks = diff_pdfs(v1, v2).hunks

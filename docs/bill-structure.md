@@ -27,6 +27,25 @@ encoded by **reading order + level**, and a parser reconstructs it. `src/deltatr
 does exactly this, tracking `current_major` / `current_intermediate` as it scans
 siblings (`_walk_structural_children`).
 
+Not every header-only element is a grouping header. GPO also splits a single account
+across **two** siblings — the first carrying the `<header>` and no body, the second the
+body and no header — where the print shows one account, its heading directly above its
+own text, indistinguishable from the un-split accounts either side of it:
+
+```
+<appropriations-intermediate header="United States fish and wildlife service">  <!-- agency -->
+<appropriations-small   header="RESOURCE MANAGEMENT">        <!-- the name, no money -->
+<appropriations-small>                                       <!-- the money, no name -->
+  <text> For necessary expenses ... $1,385,096,000 ...
+```
+
+The two shapes are told apart by what follows: a grouping header is followed by sibling
+`<section>`s or by further named accounts, a split account by an immediately adjacent
+sibling that has a body and no header of its own. `bill_tree.py` joins that pair, so the
+moneyed half is addressed under the account's own name rather than under the agency above
+it (#474). The split occurs at every level, in both same-tag and cross-tag pairs, and is
+not always consistent between versions of the same bill.
+
 This is why glyph size is the right PDF signal (DeltaTrack#89): GPO marks heading
 level two mirror-image ways — in XML as a **level tag**, in the PDF as a **font
 size** — on an otherwise flat stream. Recovering the level from the size is the

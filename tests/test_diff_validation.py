@@ -19,11 +19,11 @@ import pytest
 from deltatrack.bill_tree import normalize_bill
 from deltatrack.diff_bill import (
     _normalize_text,
-    _text_similarity,
     compute_financial_change,
     diff_bills,
     extract_amounts,
 )
+from deltatrack.similarity import MOVE_THRESHOLD, SIMILARITY_THRESHOLD, text_similarity
 from tests.conftest import assert_manifest_committed, manifest_version_pairs
 from tests.division_labels import cross_division_mismatches
 
@@ -107,20 +107,20 @@ class TestControlledDiff:
     def test_no_false_matches(self, hr4366_v1_v2_diff):
         """No modified section should have similarity below the split threshold."""
         for c in _changes_by_type(hr4366_v1_v2_diff, "modified"):
-            sim = _text_similarity(
+            sim = text_similarity(
                 _normalize_text(c.old_text or ""),
                 _normalize_text(c.new_text or ""),
             )
-            assert sim >= 0.4, f"False match not caught (sim={sim:.2f}): {c.match_path}"
+            assert sim >= SIMILARITY_THRESHOLD, f"False match not caught (sim={sim:.2f}): {c.match_path}"
 
     def test_no_dead_zone_cases(self, hr4366_v1_v2_diff):
         """In this controlled diff, all modified sections should have high similarity."""
         for c in _changes_by_type(hr4366_v1_v2_diff, "modified"):
-            sim = _text_similarity(
+            sim = text_similarity(
                 _normalize_text(c.old_text or ""),
                 _normalize_text(c.new_text or ""),
             )
-            assert sim >= 0.6, f"Unexpected dead-zone case (sim={sim:.2f}): {c.match_path}"
+            assert sim >= MOVE_THRESHOLD, f"Unexpected dead-zone case (sim={sim:.2f}): {c.match_path}"
 
     def test_summary_baseline(self, hr4366_v1_v2_diff):
         """Regression baseline for summary counts.
@@ -280,11 +280,11 @@ class TestStructureExpansion:
         """
         dead_zone = []
         for c in _changes_by_type(hr4366_v1_v6_diff, "modified"):
-            sim = _text_similarity(
+            sim = text_similarity(
                 _normalize_text(c.old_text or ""),
                 _normalize_text(c.new_text or ""),
             )
-            if sim < 0.6:
+            if sim < MOVE_THRESHOLD:
                 dead_zone.append((sim, c.match_path))
 
         # Should not grow; currently 1
@@ -298,7 +298,7 @@ class TestStructureExpansion:
 
 @pytest.mark.slow
 class TestDeadZoneBaseline:
-    """Documents the 0.4-0.6 similarity gap with real examples.
+    """Documents the gap between the two similarity cutoffs, with real examples.
 
     115-hr-5895 (Energy & Water / Legislative Branch / MilCon-VA, FY2019)
     v4 (engrossed-amendment-senate) -> v5 (enrolled-bill) has the most
@@ -309,7 +309,7 @@ class TestDeadZoneBaseline:
     """
 
     def test_dead_zone_sections_documented(self, hr5895_v4_v5_diff):
-        """Document sections in the 0.4-0.6 dead zone.
+        """Document sections between the split and move cutoffs.
 
         These are classified as "modified" but have low text similarity,
         meaning they might be better classified as removed+added or as moved
@@ -317,11 +317,11 @@ class TestDeadZoneBaseline:
         """
         dead_zone = []
         for c in _changes_by_type(hr5895_v4_v5_diff, "modified"):
-            sim = _text_similarity(
+            sim = text_similarity(
                 _normalize_text(c.old_text or ""),
                 _normalize_text(c.new_text or ""),
             )
-            if 0.4 <= sim < 0.6:
+            if SIMILARITY_THRESHOLD <= sim < MOVE_THRESHOLD:
                 dead_zone.append((sim, c.match_path))
 
         # Baseline: 5 cases. Allow range for parser improvements.
@@ -330,14 +330,14 @@ class TestDeadZoneBaseline:
         )
 
     def test_move_threshold_respected(self, hr5895_v4_v5_diff):
-        """All moved sections must have text similarity >= the move threshold (0.6)."""
+        """All moved sections must have text similarity >= MOVE_THRESHOLD."""
         for c in _changes_by_type(hr5895_v4_v5_diff, "moved"):
             if c.old_text and c.new_text:
-                sim = _text_similarity(
+                sim = text_similarity(
                     _normalize_text(c.old_text),
                     _normalize_text(c.new_text),
                 )
-                assert sim >= 0.6, f"Moved section below threshold (sim={sim:.2f}): {c.match_path}"
+                assert sim >= MOVE_THRESHOLD, f"Moved section below threshold (sim={sim:.2f}): {c.match_path}"
 
     def test_move_detection_baseline(self, hr5895_v4_v5_diff):
         """Regression baseline for move detection.
@@ -429,17 +429,17 @@ class TestCorpusDiffSmoke:
         assert len(result.changes) > 0
 
     def test_no_false_matches(self, old_path, new_path):
-        """No modified section should have similarity below the split threshold (0.4)."""
+        """No modified section should have similarity below SIMILARITY_THRESHOLD."""
         _skip_pair_if_absent(old_path, new_path)
         result = _cached_diff(old_path, new_path)
 
         for c in result.changes:
             if c.change_type == "modified" and c.old_text and c.new_text:
-                sim = _text_similarity(
+                sim = text_similarity(
                     _normalize_text(c.old_text),
                     _normalize_text(c.new_text),
                 )
-                assert sim >= 0.4, f"False match leaked through (sim={sim:.2f}): {c.match_path}"
+                assert sim >= SIMILARITY_THRESHOLD, f"False match leaked through (sim={sim:.2f}): {c.match_path}"
 
     def test_unique_element_id_pairs(self, old_path, new_path):
         """Every change should have a unique (element_id_old, element_id_new) pair.

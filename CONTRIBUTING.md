@@ -109,7 +109,8 @@ Not sure whether an issue is a good fit? Ask in a comment or at the regular sync
 ### Branch workflow
 
 `develop` is the integration branch; `main` is the protected release branch. Day-to-day
-work targets `develop`, not `main`.
+work targets `develop`, not `main`. Promoting `develop` to `main` is a separate,
+maintainer-initiated step: see [docs/release.md](docs/release.md).
 
 1. Create a branch from `develop` for your work
 2. Make your changes in small, focused commits
@@ -199,12 +200,14 @@ as an undocumented command.
 Tests are split into groups by speed and dependencies:
 
 - **Fast tests** (`uv run pytest -m "not slow and not browser"`) -- unit tests on inline XML and mocked data; no bill files needed.
-- **Browser tests** (`uv run pytest -m browser`) -- Playwright/Chromium front-end tests. One-time setup: `uv run playwright install chromium`.
+- **Browser tests** (`uv run pytest -m browser`) -- Playwright/Chromium front-end tests. One-time setup: `uv run playwright install chromium`. The default tier skips when Chromium can't launch; CI's dedicated step passes `--run-browser` so a launch failure there fails the run instead of skipping into a green no-op (#599).
 - **Slow tests** (`uv run pytest -m slow`) -- integration and external-validation tests against real bill files. Nearly all of them run in CI against fixtures committed to the repo, so they need no downloads and their counts are reproducible; the corpus correctness gates additionally fail closed if a manifested bill is uncommitted. The exception is the live-network govinfo parity gate, marked `network` and skipped unless you pass `--run-network`. `CORPUS_SWEEP=1` opts into sweeping both trees — the committed fixtures plus every locally-fetched bill under `bills/` — for non-CI exploration. [TESTING.md](TESTING.md) has the details and says which suites still want a download.
 
 Adding or renaming a CLI subcommand? Add its row to the README "Command reference" table in the same change -- `tests/test_docs_consistency.py` introspects each root command script's parser and fails if a command has no row. Adding a whole new command? See ["Adding a CLI command"](#adding-a-cli-command) above for the convention the gate enforces.
 
 When adding code, write tests for it. Test files live in `tests/`; mark tests that need real XML files with `@pytest.mark.slow`, front-end tests with `@pytest.mark.browser`, and anything fetching from a live external service with `@pytest.mark.network`. Shared helpers are in `tests/conftest.py`. [TESTING.md](TESTING.md) is the home for the full command catalog and what each validation layer proves.
+
+Adding a committed corpus fixture? Follow the fixture-selection guidance in [ADR 0015](docs/decisions/0015-corpus-test-fixtures.md).
 
 ### What CI checks
 
@@ -214,14 +217,14 @@ Every pull request runs the gates defined in [`.github/workflows/ci.yml`](.githu
 uv run ruff check .                          # 1. Lint
 uv run ruff format --check .                 # 2. Formatting (run `ruff format .` to fix)
 uv run pytest -m "not slow and not browser"  # 3. Fast tests
-uv run pytest -m browser                     # 4. Browser tests (needs `playwright install chromium`)
+uv run pytest -m browser --run-browser         # 4. Browser tests (needs `playwright install chromium`; `--run-browser` mirrors CI's fail-closed step)
 uv run pytest -m slow \
   --deselect tests/test_govinfo_corpus_parity.py   # 5. Every slow gate CI runs
 ```
 
 CI splits gate 5 across three steps so a red build names the area it came from; run whole it covers all of them, against vendored and committed fixtures, with no downloads or API key. The deselection is CI's one deliberate omission: a live-network gate that cannot run offline.
 
-This used to enumerate each step's modules, and it fell out of date every time one was added, because nothing ties prose to the workflow. Selecting by marker instead means a module joining a CI step is covered here automatically.
+Selecting by marker means a module joining a CI step is covered here automatically. History: #220, #320, #288 — this block enumerated each step's modules and went stale in three consecutive pull requests, because nothing ties prose to the workflow.
 
 The pre-commit hooks cover gates 1 and 2 on each commit, but `ruff format --check` still fails CI if you committed without them.
 
@@ -258,7 +261,7 @@ the merge that is actually about to happen.
 
 What it changes for you:
 
-- **Merging is no longer instant.** Your pull request waits while its merge-group
+- **Merging is not instant.** Your pull request waits while its merge-group
   checks run — roughly the length of one CI run.
 - **You still don't rebase on `develop` before merging.** The queue does that work,
   which is why it was chosen over requiring every branch to be up to date; that
@@ -299,7 +302,7 @@ What to look at, roughly in priority order:
   - **Parser accuracy** (`src/deltatrack/bill_tree.py`, `src/deltatrack/parsers/`) -- does the bill's structure come through intact? A missing or mis-nested section corrupts everything downstream. See [docs/parser-validation.md](docs/parser-validation.md).
   - **Financial diff** (`src/deltatrack/diff_bill.py` and its financial filtering) -- dollar amounts and their changes must be exact.
   - **The canonical schema contract** (`src/deltatrack/formatters/canonical.py`) -- both pipelines and the renderer depend on it, so a breaking change there ripples everywhere.
-- **Tests for the change.** New behavior should come with a test that would fail without the fix. Judge that by the red-green delta on your own machine, not by the totals the author reported — test counts legitimately differ between machines here, and [TESTING.md](TESTING.md#test-counts-are-not-comparable-between-machines) explains why.
+- **Tests for the change.** New behavior should come with a test that would fail without the fix. Judge that by the red-green delta on your own machine rather than by the totals the author reported, and compare like-for-like selections — [TESTING.md](TESTING.md#reading-test-counts) explains what a count does and does not tell you, including which differences are a fail-open signal rather than an environment difference.
 - **Docs and decisions.** A non-obvious choice belongs in a code comment or a [decision record](docs/decisions/); a user-facing change belongs in the README.
 
 Leave specific comments, then approve or request changes. A maintainer does the actual merge.

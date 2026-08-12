@@ -136,12 +136,18 @@ The index is read from BILLSTATUS ZIPs in `bills/`, which are **not** part of a 
 # Include unchanged sections
 ./diff_bill.py compare old.xml new.xml --include-unchanged
 
-# Save machine-readable JSON to a file (output defaults to HTML, so request json explicitly)
-./diff_bill.py compare old.xml new.xml --format json -o diff.json
+# Save the engine's internal diff dictionary (output defaults to HTML, so request json explicitly)
+./diff_bill.py compare old.xml new.xml --format json -o internal-diff.json
 
 # Generate a standalone HTML report
 ./diff_bill.py compare old.xml new.xml --format html -o reports/report.html
 ```
+
+**Building something against the output?** `--format json` emits the engine's current
+*internal* diff dictionary, not the versioned canonical JSON that is the published
+interchange contract between the engine and its consumers. Use the canonical document
+instead: [`schema/canonical-diff.md`](schema/canonical-diff.md) specifies it, and the HTML
+report's **Export and share → Download `diff.json`** button produces one.
 
 ### HTML report
 
@@ -264,7 +270,7 @@ See [TESTING.md](TESTING.md) for how the test suite is organized, how diff accur
 
 Nearly every slow suite asserts against fixtures committed to the repo, so a fresh clone needs no downloads. The one check that still wants a network is the live-network parity gate, and [TESTING.md](TESTING.md#what-still-wants-a-download) lists them with the fetch commands. That list moves whenever fixture coverage changes, so it lives in one place rather than being mirrored here.
 
-The validation tests compare extracted line items across Legislative Branch bills (both chambers, multiple fiscal years) against amounts from a curated appropriations spreadsheet. The corpus property tests (`test_corpus_properties.py`) check dollar coverage, path uniqueness, and character coverage across the committed corpus (`tests/corpus_manifest.toml`); `CORPUS_SWEEP=1` extends them across both trees (the committed fixtures plus every locally-fetched bill in `bills/`). See [TESTING.md](TESTING.md) for what each validation layer proves and where the gaps are.
+The validation tests compare extracted line items across Legislative Branch bills (both chambers, multiple fiscal years) against amounts from a curated appropriations spreadsheet. The corpus property tests (`test_corpus_properties.py`) check dollar coverage, path uniqueness, and section coverage across the committed corpus (`tests/corpus_manifest.toml`); `CORPUS_SWEEP=1` extends them across both trees (the committed fixtures plus every locally-fetched bill in `bills/`). See [TESTING.md](TESTING.md) for what each validation layer proves and where the gaps are.
 
 ## Contributing
 

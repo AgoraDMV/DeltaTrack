@@ -19,10 +19,14 @@ from collections import Counter
 from pathlib import Path
 
 from deltatrack.bill_tree import normalize_bill
-from deltatrack.diff_bill import _normalize_text, _text_similarity, match_nodes
+from deltatrack.diff_bill import _normalize_text, match_nodes
+from deltatrack.similarity import text_similarity
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
-BILLS = REPO / "bills"
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+BILLS = merged_root()
 FIXTURE = REPO / "tests" / "data" / "similarity_labels.json"
 _num = re.compile(r"^(\d+)_")
 _word = re.compile(r"[a-z0-9]+")
@@ -72,7 +76,7 @@ def contain(a, b):
 
 def signals(o, n):
     o, n = _normalize_text(o), _normalize_text(n)
-    return _text_similarity(o, n), contain(vec(o), vec(n))
+    return text_similarity(o, n), contain(vec(o), vec(n))
 
 
 def rule_keep(wr, c, decision="split", w=W, cc=C):
@@ -140,7 +144,7 @@ for d in sorted(BILLS.iterdir()):
             if not o or not n or o == n:
                 continue
             total += 1
-            wr, c = _text_similarity(o, n), contain(vec(o), vec(n))
+            wr, c = text_similarity(o, n), contain(vec(o), vec(n))
             base_keep = wr >= 0.40
             new_keep = rule_keep(wr, c, "split")
             row = (d.name, round(wr, 3), round(c, 3), "/".join(old.match_path[-2:]), len(o), len(n), o[:75], n[:75])

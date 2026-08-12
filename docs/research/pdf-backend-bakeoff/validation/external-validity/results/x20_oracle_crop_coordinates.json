@@ -1,0 +1,1256 @@
+{
+ "population": "SYNTHETIC + DEVELOPMENT -- no holdout opened, nothing scored",
+ "contract": "A33 (crop + transform), corrected forward by A34 (renderer epsilon)",
+ "renderer": "MuPDF (pymupdf)",
+ "renderer_version": "('1.28.2', '1.28.2', None)",
+ "region_bbox_rule": "minimal axis-aligned union of COMMITTED neutral-line bboxes, zero padding",
+ "mupdf_round_eps_px": 0.001,
+ "frozen_inversion": "s = DPI/72; eps = 0.001 px; device_x0 = floor(bbox_x0*s + eps); pdf_x = (device_x0 + start_x_px) / s",
+ "frozen_width_validation": "ceil(bbox_x1*s - eps) - floor(bbox_x0*s + eps)",
+ "a33_stated_was": "device_x0 = floor(bbox_x0 * DPI/72)  -- epsilon-free, corrected by A34",
+ "a30_3_sketch_was": "pdf_x = bbox_x0 + (start_x_px / image_width) * (bbox_x1 - bbox_x0)",
+ "metadata_insufficient": false,
+ "bbox": {
+  "synthetic_bbox": [
+   98.5,
+   672.0,
+   505.5,
+   712.0
+  ]
+ },
+ "mupdf_mapping": {
+  "n_cases": 80,
+  "origin_rule": "pix.x == floor(bbox_x0 * DPI/72 + MUPDF_ROUND_EPS)  [A34]",
+  "width_rule": "pix.width == ceil(bbox_x1*s - eps) - floor(bbox_x0*s + eps)  [A34]",
+  "n_cases_where_width_differs_from_bbox_width_times_scale": 69,
+  "metadata_needed_beyond_bbox_and_dpi": null,
+  "cases": [
+   {
+    "dpi": 300,
+    "x0": 100.0,
+    "x1": 110.0,
+    "pix_x": 416,
+    "pix_width": 43,
+    "predicted_origin": 416,
+    "predicted_width": 43
+   },
+   {
+    "dpi": 300,
+    "x0": 100.0,
+    "x1": 110.37,
+    "pix_x": 416,
+    "pix_width": 44,
+    "predicted_origin": 416,
+    "predicted_width": 44
+   },
+   {
+    "dpi": 300,
+    "x0": 100.0,
+    "x1": 112.5,
+    "pix_x": 416,
+    "pix_width": 53,
+    "predicted_origin": 416,
+    "predicted_width": 53
+   },
+   {
+    "dpi": 300,
+    "x0": 100.0,
+    "x1": 140.0,
+    "pix_x": 416,
+    "pix_width": 168,
+    "predicted_origin": 416,
+    "predicted_width": 168
+   },
+   {
+    "dpi": 300,
+    "x0": 100.05,
+    "x1": 110.05,
+    "pix_x": 416,
+    "pix_width": 43,
+    "predicted_origin": 416,
+    "predicted_width": 43
+   },
+   {
+    "dpi": 300,
+    "x0": 100.05,
+    "x1": 110.42,
+    "pix_x": 416,
+    "pix_width": 45,
+    "predicted_origin": 416,
+    "predicted_width": 45
+   },
+   {
+    "dpi": 300,
+    "x0": 100.05,
+    "x1": 112.55,
+    "pix_x": 416,
+    "pix_width": 53,
+    "predicted_origin": 416,
+    "predicted_width": 53
+   },
+   {
+    "dpi": 300,
+    "x0": 100.05,
+    "x1": 140.05,
+    "pix_x": 416,
+    "pix_width": 168,
+    "predicted_origin": 416,
+    "predicted_width": 168
+   },
+   {
+    "dpi": 300,
+    "x0": 100.1,
+    "x1": 110.1,
+    "pix_x": 417,
+    "pix_width": 42,
+    "predicted_origin": 417,
+    "predicted_width": 42
+   },
+   {
+    "dpi": 300,
+    "x0": 100.1,
+    "x1": 110.47,
+    "pix_x": 417,
+    "pix_width": 44,
+    "predicted_origin": 417,
+    "predicted_width": 44
+   },
+   {
+    "dpi": 300,
+    "x0": 100.1,
+    "x1": 112.6,
+    "pix_x": 417,
+    "pix_width": 53,
+    "predicted_origin": 417,
+    "predicted_width": 53
+   },
+   {
+    "dpi": 300,
+    "x0": 100.1,
+    "x1": 140.1,
+    "pix_x": 417,
+    "pix_width": 167,
+    "predicted_origin": 417,
+    "predicted_width": 167
+   }
+  ]
+ },
+ "epsilon_boundary": {
+  "epsilon_px": 0.001,
+  "origin_boundary": [
+   {
+    "dpi": 300,
+    "target_device_x": 500,
+    "delta_px": 0.0005,
+    "bbox_x0": 119.99987999999999,
+    "x0_times_s": 499.9995,
+    "mupdf_pix_x": 500,
+    "zero_epsilon_prediction": 499,
+    "epsilon_aware_prediction": 500,
+    "inside_epsilon_band": true
+   },
+   {
+    "dpi": 300,
+    "target_device_x": 500,
+    "delta_px": 0.001,
+    "bbox_x0": 119.99976,
+    "x0_times_s": 499.999,
+    "mupdf_pix_x": 500,
+    "zero_epsilon_prediction": 499,
+    "epsilon_aware_prediction": 500,
+    "inside_epsilon_band": true
+   },
+   {
+    "dpi": 300,
+    "target_device_x": 500,
+    "delta_px": 0.0011,
+    "bbox_x0": 119.99973599999998,
+    "x0_times_s": 499.9989,
+    "mupdf_pix_x": 499,
+    "zero_epsilon_prediction": 499,
+    "epsilon_aware_prediction": 499,
+    "inside_epsilon_band": false
+   },
+   {
+    "dpi": 300,
+    "target_device_x": 500,
+    "delta_px": 0.002,
+    "bbox_x0": 119.99951999999999,
+    "x0_times_s": 499.998,
+    "mupdf_pix_x": 499,
+    "zero_epsilon_prediction": 499,
+    "epsilon_aware_prediction": 499,
+    "inside_epsilon_band": false
+   },
+   {
+    "dpi": 330,
+    "target_device_x": 500,
+    "delta_px": 0.0005,
+    "bbox_x0": 109.09080000000002,
+    "x0_times_s": 499.9995,
+    "mupdf_pix_x": 500,
+    "zero_epsilon_prediction": 499,
+    "epsilon_aware_prediction": 500,
+    "inside_epsilon_band": true
+   },
+   {
+    "dpi": 330,
+    "target_device_x": 500,
+    "delta_px": 0.001,
+    "bbox_x0": 109.09069090909092,
+    "x0_times_s": 499.999,
+    "mupdf_pix_x": 500,
+    "zero_epsilon_prediction": 499,
+    "epsilon_aware_prediction": 500,
+    "inside_epsilon_band": true
+   },
+   {
+    "dpi": 330,
+    "target_device_x": 500,
+    "delta_px": 0.0011,
+    "bbox_x0": 109.0906690909091,
+    "x0_times_s": 499.99890000000005,
+    "mupdf_pix_x": 499,
+    "zero_epsilon_prediction": 499,
+    "epsilon_aware_prediction": 499,
+    "inside_epsilon_band": false
+   },
+   {
+    "dpi": 330,
+    "target_device_x": 500,
+    "delta_px": 0.002,
+    "bbox_x0": 109.09047272727273,
+    "x0_times_s": 499.99799999999993,
+    "mupdf_pix_x": 499,
+    "zero_epsilon_prediction": 499,
+    "epsilon_aware_prediction": 499,
+    "inside_epsilon_band": false
+   }
+  ],
+  "right_edge_boundary": [
+   {
+    "dpi": 300,
+    "target_device_x1": 600,
+    "delta_px": 0.0005,
+    "bbox_x1": 144.00011999999998,
+    "x1_times_s": 600.0005,
+    "mupdf_right_edge": 600,
+    "bbox_x0": 119.99999999999999,
+    "mupdf_width": 100,
+    "zero_epsilon_prediction": 601,
+    "epsilon_aware_prediction": 600,
+    "inside_epsilon_band": true
+   },
+   {
+    "dpi": 300,
+    "target_device_x1": 600,
+    "delta_px": 0.001,
+    "bbox_x1": 144.00024,
+    "x1_times_s": 600.001,
+    "mupdf_right_edge": 600,
+    "bbox_x0": 119.99999999999999,
+    "mupdf_width": 100,
+    "zero_epsilon_prediction": 601,
+    "epsilon_aware_prediction": 600,
+    "inside_epsilon_band": true
+   },
+   {
+    "dpi": 300,
+    "target_device_x1": 600,
+    "delta_px": 0.0011,
+    "bbox_x1": 144.000264,
+    "x1_times_s": 600.0011,
+    "mupdf_right_edge": 601,
+    "bbox_x0": 119.99999999999999,
+    "mupdf_width": 101,
+    "zero_epsilon_prediction": 601,
+    "epsilon_aware_prediction": 601,
+    "inside_epsilon_band": false
+   },
+   {
+    "dpi": 300,
+    "target_device_x1": 600,
+    "delta_px": 0.002,
+    "bbox_x1": 144.00047999999998,
+    "x1_times_s": 600.002,
+    "mupdf_right_edge": 601,
+    "bbox_x0": 119.99999999999999,
+    "mupdf_width": 101,
+    "zero_epsilon_prediction": 601,
+    "epsilon_aware_prediction": 601,
+    "inside_epsilon_band": false
+   },
+   {
+    "dpi": 330,
+    "target_device_x1": 600,
+    "delta_px": 0.0005,
+    "bbox_x1": 130.9092,
+    "x1_times_s": 600.0005,
+    "mupdf_right_edge": 600,
+    "bbox_x0": 109.0909090909091,
+    "mupdf_width": 100,
+    "zero_epsilon_prediction": 601,
+    "epsilon_aware_prediction": 600,
+    "inside_epsilon_band": true
+   },
+   {
+    "dpi": 330,
+    "target_device_x1": 600,
+    "delta_px": 0.001,
+    "bbox_x1": 130.9093090909091,
+    "x1_times_s": 600.001,
+    "mupdf_right_edge": 600,
+    "bbox_x0": 109.0909090909091,
+    "mupdf_width": 100,
+    "zero_epsilon_prediction": 601,
+    "epsilon_aware_prediction": 600,
+    "inside_epsilon_band": true
+   },
+   {
+    "dpi": 330,
+    "target_device_x1": 600,
+    "delta_px": 0.0011,
+    "bbox_x1": 130.9093309090909,
+    "x1_times_s": 600.0011,
+    "mupdf_right_edge": 601,
+    "bbox_x0": 109.0909090909091,
+    "mupdf_width": 101,
+    "zero_epsilon_prediction": 601,
+    "epsilon_aware_prediction": 601,
+    "inside_epsilon_band": false
+   },
+   {
+    "dpi": 330,
+    "target_device_x1": 600,
+    "delta_px": 0.002,
+    "bbox_x1": 130.90952727272727,
+    "x1_times_s": 600.002,
+    "mupdf_right_edge": 601,
+    "bbox_x0": 109.0909090909091,
+    "mupdf_width": 101,
+    "zero_epsilon_prediction": 601,
+    "epsilon_aware_prediction": 601,
+    "inside_epsilon_band": false
+   }
+  ],
+  "zero_epsilon_origin_matches": 0
+ },
+ "roundtrip": {
+  "n_identity_crossings_under_wrong_transform": 48,
+  "identity_crossing_examples": [
+   {
+    "dpi": 300,
+    "bbox_width": 200.0,
+    "phase": 0.0,
+    "col": 0,
+    "drift_pt": 0.1600000000000108,
+    "drift_px": 0.6666666666667117,
+    "separation_pt": 0.25600000000001727,
+    "correct_transform_ngid": 1,
+    "wrong_transform_ngid": 2,
+    "wrong_refusal": null
+   },
+   {
+    "dpi": 300,
+    "bbox_width": 200.0,
+    "phase": 0.11,
+    "col": 833,
+    "drift_pt": -0.12980815347719954,
+    "drift_px": -0.5408673061549981,
+    "separation_pt": 0.20769304556351928,
+    "correct_transform_ngid": 1,
+    "wrong_transform_ngid": 2,
+    "wrong_refusal": null
+   },
+   {
+    "dpi": 300,
+    "bbox_width": 200.0,
+    "phase": 0.23,
+    "col": 0,
+    "drift_pt": 0.15000000000000568,
+    "drift_px": 0.6250000000000238,
+    "separation_pt": 0.2400000000000091,
+    "correct_transform_ngid": 1,
+    "wrong_transform_ngid": 2,
+    "wrong_refusal": null
+   },
+   {
+    "dpi": 300,
+    "bbox_width": 200.0,
+    "phase": 0.37,
+    "col": 833,
+    "drift_pt": -0.10980815347716089,
+    "drift_px": -0.4575339728215037,
+    "separation_pt": 0.17569304556345744,
+    "correct_transform_ngid": 1,
+    "wrong_transform_ngid": 2,
+    "wrong_refusal": null
+   },
+   {
+    "dpi": 300,
+    "bbox_width": 200.0,
+    "phase": 0.5,
+    "col": 834,
+    "drift_pt": -0.21952095808381955,
+    "drift_px": -0.9146706586825815,
+    "separation_pt": 0.3512335329341113,
+    "correct_transform_ngid": 1,
+    "wrong_transform_ngid": 2,
+    "wrong_refusal": null
+   }
+  ],
+  "n_arithmetic_cases": 60,
+  "frozen_inverse_ok": 60,
+  "sketch_ok": 49,
+  "worst_sketch_error_pt": 0.3523809523809689,
+  "worst_sketch_error_px_300": 1.468253968254037,
+  "renderer_agreement": [
+   {
+    "dpi": 300,
+    "bbox_x0": 100.0,
+    "mark_x": 117.3,
+    "leftmost_inked_col": 72,
+    "predicted_col": 72,
+    "delta_col": 0
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.29,
+    "mark_x": 117.59,
+    "leftmost_inked_col": 72,
+    "predicted_col": 72,
+    "delta_col": 0
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.5,
+    "mark_x": 117.8,
+    "leftmost_inked_col": 72,
+    "predicted_col": 72,
+    "delta_col": 0
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.77,
+    "mark_x": 118.07,
+    "leftmost_inked_col": 72,
+    "predicted_col": 72,
+    "delta_col": 0
+   },
+   {
+    "dpi": 330,
+    "bbox_x0": 100.0,
+    "mark_x": 117.3,
+    "leftmost_inked_col": 79,
+    "predicted_col": 79,
+    "delta_col": 0
+   },
+   {
+    "dpi": 330,
+    "bbox_x0": 100.29,
+    "mark_x": 117.59,
+    "leftmost_inked_col": 79,
+    "predicted_col": 79,
+    "delta_col": 0
+   },
+   {
+    "dpi": 330,
+    "bbox_x0": 100.5,
+    "mark_x": 117.8,
+    "leftmost_inked_col": 79,
+    "predicted_col": 79,
+    "delta_col": 0
+   },
+   {
+    "dpi": 330,
+    "bbox_x0": 100.77,
+    "mark_x": 118.07,
+    "leftmost_inked_col": 80,
+    "predicted_col": 80,
+    "delta_col": 0
+   }
+  ],
+  "cases": [
+   {
+    "dpi": 300,
+    "bbox_x0": 100.0,
+    "mark_x": 100.0,
+    "col": 0,
+    "frozen_inverse": 99.83999999999999,
+    "frozen_err_pt": -0.1600000000000108,
+    "a30_3_sketch_inverse": 100.0,
+    "sketch_err_pt": 0.0
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.0,
+    "mark_x": 117.3,
+    "col": 72,
+    "frozen_inverse": 117.11999999999999,
+    "frozen_err_pt": -0.18000000000000682,
+    "a30_3_sketch_inverse": 117.14285714285714,
+    "sketch_err_pt": -0.15714285714285836
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.0,
+    "mark_x": 139.4,
+    "col": 164,
+    "frozen_inverse": 139.2,
+    "frozen_err_pt": -0.20000000000001705,
+    "a30_3_sketch_inverse": 139.04761904761904,
+    "sketch_err_pt": -0.3523809523809689
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.07,
+    "mark_x": 100.07,
+    "col": 0,
+    "frozen_inverse": 99.83999999999999,
+    "frozen_err_pt": -0.23000000000000398,
+    "a30_3_sketch_inverse": 100.07,
+    "sketch_err_pt": 0.0
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.07,
+    "mark_x": 117.36999999999999,
+    "col": 73,
+    "frozen_inverse": 117.35999999999999,
+    "frozen_err_pt": -0.010000000000005116,
+    "a30_3_sketch_inverse": 117.45095238095237,
+    "sketch_err_pt": 0.08095238095238244
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.07,
+    "mark_x": 139.47,
+    "col": 165,
+    "frozen_inverse": 139.44,
+    "frozen_err_pt": -0.030000000000001137,
+    "a30_3_sketch_inverse": 139.35571428571427,
+    "sketch_err_pt": -0.11428571428572809
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.13,
+    "mark_x": 100.13,
+    "col": 0,
+    "frozen_inverse": 100.08,
+    "frozen_err_pt": -0.04999999999999716,
+    "a30_3_sketch_inverse": 100.13,
+    "sketch_err_pt": 0.0
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.13,
+    "mark_x": 117.42999999999999,
+    "col": 72,
+    "frozen_inverse": 117.35999999999999,
+    "frozen_err_pt": -0.07000000000000739,
+    "a30_3_sketch_inverse": 117.37550898203592,
+    "sketch_err_pt": -0.05449101796406808
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.13,
+    "mark_x": 139.53,
+    "col": 164,
+    "frozen_inverse": 139.44,
+    "frozen_err_pt": -0.09000000000000341,
+    "a30_3_sketch_inverse": 139.4114371257485,
+    "sketch_err_pt": -0.11856287425149503
+   },
+   {
+    "dpi": 300,
+    "bbox_x0": 100.29,
+    "mark_x": 100.29,
+    "col": 0,
+    "frozen_inverse": 100.08,
+    "frozen_err_pt": -0.21000000000000796,
+    "a30_3_sketch_inverse": 100.29,
+    "sketch_err_pt": 0.0
+   }
+  ]
+ },
+ "rotation": {
+  "synthetic": [
+   {
+    "rotation": 0,
+    "naive_clip_has_ink": true,
+    "rotated_clip_has_ink": true,
+    "image_x_axis_is_pdf_x": true,
+    "image_x_axis_direction": "same"
+   },
+   {
+    "rotation": 90,
+    "naive_clip_has_ink": false,
+    "rotated_clip_has_ink": true,
+    "image_x_axis_is_pdf_x": false,
+    "image_x_axis_direction": "pdf_y"
+   },
+   {
+    "rotation": 180,
+    "naive_clip_has_ink": false,
+    "rotated_clip_has_ink": true,
+    "image_x_axis_is_pdf_x": true,
+    "image_x_axis_direction": "mirrored"
+   },
+   {
+    "rotation": 270,
+    "naive_clip_has_ink": false,
+    "rotated_clip_has_ink": true,
+    "image_x_axis_is_pdf_x": false,
+    "image_x_axis_direction": "pdf_y"
+   }
+  ],
+  "ruling": "RATIFIED fail-closed NONZERO_PAGE_ROTATION -- ABORTS oracle construction and may never skip a page/region, drop a stimulus or reduce a denominator. The clip carries exactly, but at 90/270 the image x axis is the PDF y axis and at 180 it is mirrored, so start_x_px stops corresponding to a neutral glyph x0"
+ },
+ "development": {
+  "n_regions": 1164,
+  "n_regions_rendered": 1164,
+  "render_sample_rule": "none -- all regions rendered",
+  "n_short_trailing": 282,
+  "n_invalid_bbox": 0,
+  "n_out_of_page_bbox": 0,
+  "n_empty_render": 0,
+  "n_render_determinism_failures": 0,
+  "n_width_derivation_failures": 0,
+  "page_rotation_census": {
+   "0": 285
+  },
+  "end_to_end_recovery": {
+   "C_300": {
+    "recovered": 4,
+    "n": 4
+   },
+   "C_330": {
+    "recovered": 4,
+    "n": 4
+   },
+   "H_300": {
+    "recovered": 541,
+    "n": 541
+   },
+   "H_330": {
+    "recovered": 541,
+    "n": 541
+   }
+  },
+  "end_to_end_failures": [],
+  "bbox_width_pt": {
+   "min": 52.83600000000001,
+   "median": 358.995,
+   "max": 461.7408
+  },
+  "bbox_height_pt": {
+   "min": 6.008000000000003,
+   "median": 192.16414999999995,
+   "max": 721.5965
+  },
+  "clipped_lines": [],
+  "sampled_renders": [
+   {
+    "document": "114-hr-2029/4",
+    "page": 1,
+    "region": 0,
+    "bbox": [
+     127.008,
+     479.2221,
+     485.81,
+     717.62
+    ],
+    "w300": 1496,
+    "w330": 1645
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page": 1,
+    "region": 1,
+    "bbox": [
+     126.266,
+     263.8594,
+     484.9894,
+     472.9356
+    ],
+    "w300": 1495,
+    "w330": 1645
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page": 1,
+    "region": 2,
+    "bbox": [
+     150.0702,
+     244.027,
+     202.9062,
+     252.889
+    ],
+    "w300": 221,
+    "w330": 243
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page": 2,
+    "region": 0,
+    "bbox": [
+     133.1679,
+     548.0601,
+     486.5101,
+     740.212
+    ],
+    "w300": 1474,
+    "w330": 1620
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page": 2,
+    "region": 1,
+    "bbox": [
+     127.5533,
+     340.0601,
+     486.5283,
+     534.4641
+    ],
+    "w300": 1497,
+    "w330": 1646
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page": 2,
+    "region": 2,
+    "bbox": [
+     126.4198,
+     132.0601,
+     485.8984,
+     326.5761
+    ],
+    "w300": 1499,
+    "w330": 1649
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page": 2,
+    "region": 3,
+    "bbox": [
+     126.4201,
+     36.888,
+     485.3437,
+     118.4641
+    ],
+    "w300": 1497,
+    "w330": 1646
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page": 3,
+    "region": 0,
+    "bbox": [
+     133.1678,
+     548.0601,
+     486.2344,
+     740.212
+    ],
+    "w300": 1472,
+    "w330": 1619
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page": 3,
+    "region": 1,
+    "bbox": [
+     127.5533,
+     340.0601,
+     486.7357,
+     534.5901
+    ],
+    "w300": 1498,
+    "w330": 1647
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page": 3,
+    "region": 2,
+    "bbox": [
+     126.4198,
+     132.0601,
+     486.5283,
+     326.5901
+    ],
+    "w300": 1502,
+    "w330": 1651
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page": 3,
+    "region": 3,
+    "bbox": [
+     126.4195,
+     36.888,
+     486.0058,
+     118.6041
+    ],
+    "w300": 1500,
+    "w330": 1649
+   },
+   {
+    "document": "114-hr-2029/4",
+    "page": 4,
+    "region": 0,
+    "bbox": [
+     133.1681,
+     548.2281,
+     486.4961,
+     740.24
+    ],
+    "w300": 1474,
+    "w330": 1620
+   }
+  ]
+ },
+ "stop_conditions": [],
+ "tests": [
+  {
+   "test": "1. bbox is exactly the min/max union of the committed line bboxes",
+   "expected": [
+    98.5,
+    672.0,
+    505.5,
+    712.0
+   ],
+   "observed": [
+    98.5,
+    672.0,
+    505.5,
+    712.0
+   ],
+   "pass": true,
+   "fails_when": "any other rectangle means padding, a column, or a re-derivation crept in"
+  },
+  {
+   "test": "2. input line ORDER cannot change the bbox",
+   "expected": [
+    98.5,
+    672.0,
+    505.5,
+    712.0
+   ],
+   "observed": [
+    98.5,
+    672.0,
+    505.5,
+    712.0
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "3+4. H/X text and anchor content cannot change the bbox",
+   "expected": [
+    98.5,
+    672.0,
+    505.5,
+    712.0
+   ],
+   "observed": [
+    98.5,
+    672.0,
+    505.5,
+    712.0
+   ],
+   "pass": true,
+   "fails_when": "if either moved it, the renderer would be reading architecture output"
+  },
+  {
+   "test": "5. no padding is added on any side",
+   "expected": [
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "observed": [
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "pass": true,
+   "fails_when": "a non-zero delta is a free parameter the protocol never froze"
+  },
+  {
+   "test": "6. every region line bbox is contained by the region bbox",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "7. a neighbouring line outside the region does not expand the crop",
+   "expected": [
+    98.5,
+    672.0,
+    505.5,
+    712.0
+   ],
+   "observed": [
+    98.5,
+    672.0,
+    505.5,
+    712.0
+   ],
+   "pass": true,
+   "fails_when": "the crop would otherwise show content the frozen region does not claim"
+  },
+  {
+   "test": "8. a short trailing region follows the identical rule",
+   "expected": [
+    100.0,
+    700.0,
+    500.0,
+    712.0
+   ],
+   "observed": [
+    100.0,
+    700.0,
+    500.0,
+    712.0
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "9a. non-finite committed geometry ABORTS",
+   "expected": "NON_FINITE_LINE_BBOX",
+   "observed": "NON_FINITE_LINE_BBOX",
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "9b. a missing line bbox ABORTS",
+   "expected": "MISSING_LINE_BBOX",
+   "observed": "MISSING_LINE_BBOX",
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "9c. a degenerate sole line ABORTS via the stricter per-line check",
+   "expected": "NON_POSITIVE_LINE_BBOX",
+   "observed": "NON_POSITIVE_LINE_BBOX",
+   "pass": true,
+   "fails_when": "the region-union guard alone would not have caught a single degenerate line"
+  },
+  {
+   "test": "9d. ...while the clean frame does NOT abort, so 9a-9c prove something",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "9e. one degenerate line among eight valid ones ABORTS (union alone would pass)",
+   "expected": "NON_POSITIVE_LINE_BBOX",
+   "observed": "NON_POSITIVE_LINE_BBOX",
+   "pass": true,
+   "fails_when": "a union-only check passes here, so the bad line would be rendered and never reported"
+  },
+  {
+   "test": "9f. ...and a zero-HEIGHT line aborts the same way",
+   "expected": "NON_POSITIVE_LINE_BBOX",
+   "observed": "NON_POSITIVE_LINE_BBOX",
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "9g. ...while the eight valid lines alone do NOT abort",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "a region bbox past the left page edge is REFUSED, not clipped",
+   "expected": "REGION_BBOX_OUTSIDE_PAGE",
+   "observed": "REGION_BBOX_OUTSIDE_PAGE",
+   "pass": true,
+   "fails_when": "clipping to the page would hand the adjudicator a stimulus that is not the region the frame committed to"
+  },
+  {
+   "test": "a region bbox past the bottom page edge is REFUSED, not clipped",
+   "expected": "REGION_BBOX_OUTSIDE_PAGE",
+   "observed": "REGION_BBOX_OUTSIDE_PAGE",
+   "pass": true,
+   "fails_when": "clipping to the page would hand the adjudicator a stimulus that is not the region the frame committed to"
+  },
+  {
+   "test": "a region bbox past the right page edge is REFUSED, not clipped",
+   "expected": "REGION_BBOX_OUTSIDE_PAGE",
+   "observed": "REGION_BBOX_OUTSIDE_PAGE",
+   "pass": true,
+   "fails_when": "clipping to the page would hand the adjudicator a stimulus that is not the region the frame committed to"
+  },
+  {
+   "test": "a region bbox past the top page edge is REFUSED, not clipped",
+   "expected": "REGION_BBOX_OUTSIDE_PAGE",
+   "observed": "REGION_BBOX_OUTSIDE_PAGE",
+   "pass": true,
+   "fails_when": "clipping to the page would hand the adjudicator a stimulus that is not the region the frame committed to"
+  },
+  {
+   "test": "...while a bbox inside the page passes, so the four refusals prove something",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "image column 0 is floor(bbox_x0 * DPI/72 + eps), on EVERY fractional phase and both scales",
+   "expected": [
+    80,
+    true
+   ],
+   "observed": [
+    80,
+    true
+   ],
+   "pass": true,
+   "fails_when": "A30.3 sketched column 0 == bbox_x0; if that were right this control would fail"
+  },
+  {
+   "test": "the returned width is ceil(x1*s - eps) - floor(x0*s + eps), so it needs no extra metadata",
+   "expected": 80,
+   "observed": 80,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "INSIDE the epsilon band the renderer matches the EPSILON-AWARE origin, not floor",
+   "expected": [
+    4,
+    0
+   ],
+   "observed": [
+    4,
+    0
+   ],
+   "pass": true,
+   "fails_when": "if the renderer agreed with plain floor here, MUPDF_ROUND_EPS would be unfounded and device_origin_px must be reverted"
+  },
+  {
+   "test": "...and the two predictions genuinely DIFFER there, so the case is discriminating",
+   "expected": 4,
+   "observed": 4,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "OUTSIDE the band both predictions agree and match the renderer (boundary bracketed)",
+   "expected": [
+    4,
+    4
+   ],
+   "observed": [
+    4,
+    4
+   ],
+   "pass": true,
+   "fails_when": "without the outside bracket this would show one favourable coordinate, not a threshold"
+  },
+  {
+   "test": "RIGHT edge: inside the band the renderer matches the epsilon-aware ceil, not ceil",
+   "expected": [
+    4,
+    0
+   ],
+   "observed": [
+    4,
+    0
+   ],
+   "pass": true,
+   "fails_when": "the code claims the epsilon applies symmetrically; this is that claim's evidence"
+  },
+  {
+   "test": "RIGHT edge: outside the band both agree, bracketing the threshold",
+   "expected": [
+    4,
+    4
+   ],
+   "observed": [
+    4,
+    4
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "with MUPDF_ROUND_EPS = 0 the origin boundary control FAILS on every band case",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": "if it still matched, the constant would not be load-bearing and should be dropped"
+  },
+  {
+   "test": "with MUPDF_ROUND_EPS = 0 the WIDTH derivation also stops matching in the band",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": "this is the symmetry claim's negative control, not an argument from the code comment"
+  },
+  {
+   "test": "...and the epsilon is restored afterwards, so the injection did not leak",
+   "expected": 0.001,
+   "observed": 0.001,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "12. the frozen inverse recovers the source position at every fractional origin",
+   "expected": [
+    60,
+    true
+   ],
+   "observed": [
+    60,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a failure means the encoded transform is not the renderer's actual mapping"
+  },
+  {
+   "test": "13. the deliberately wrong (linear-across-bbox) convention does NOT always recover it",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "fails_when": "if the wrong convention also passed, control 12 would prove nothing"
+  },
+  {
+   "test": "the RENDERER's leftmost inked column matches the forward map within 1 px",
+   "expected": [
+    8,
+    true
+   ],
+   "observed": [
+    8,
+    true
+   ],
+   "pass": true,
+   "fails_when": "a larger gap would mean the device origin rule is wrong, not merely antialiased"
+  },
+  {
+   "test": "the wrong transform can cross a nearest-x boundary and change the IDENTITY",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": "without this the wrong-transform control only shows arithmetic drift, never that the resolver would return a different ngid"
+  },
+  {
+   "test": "a clip in UNROTATED pdf space renders no ink on a rotated page",
+   "expected": [
+    true,
+    false,
+    false,
+    false
+   ],
+   "observed": [
+    true,
+    false,
+    false,
+    false
+   ],
+   "pass": true,
+   "fails_when": "if it did render, rotation would be a non-issue and the refusal unnecessary"
+  },
+  {
+   "test": "...the rotation matrix carries the clip exactly, at every rotation",
+   "expected": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "14. a non-zero rotation is REFUSED, fail-closed",
+   "expected": "NONZERO_PAGE_ROTATION",
+   "observed": "NONZERO_PAGE_ROTATION",
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "14b. ...and rotation 0 is not refused",
+   "expected": null,
+   "observed": null,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "end-to-end: every H/C start recovers its own ngid through the A33 transform + A30 resolver",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "a failure means the frozen transform and the frozen resolver do not compose"
+  },
+  {
+   "test": "...and the end-to-end population is non-empty at both scales, so it is not vacuous",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "10. every rendered region matches the frozen width derivation at BOTH scales",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "11. re-rendering the same bbox/renderer/DPI reproduces the PNG hash",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "no committed neutral line is clipped by the zero-padding union",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "fails_when": "if the union clipped committed content, A33.1 would need review -- padding is NOT tuned"
+  },
+  {
+   "test": "no DEVELOPMENT region produced an empty render",
+   "expected": 0,
+   "observed": 0,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "every region enumerated was also rendered, so render denominators are not a sample",
+   "expected": 1164,
+   "observed": 1164,
+   "pass": true,
+   "fails_when": ""
+  },
+  {
+   "test": "every DEVELOPMENT page consumed has rotation 0",
+   "expected": [
+    0
+   ],
+   "observed": [
+    0
+   ],
+   "pass": true,
+   "fails_when": ""
+  }
+ ],
+ "failures": []
+}

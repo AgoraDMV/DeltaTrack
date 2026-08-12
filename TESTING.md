@@ -19,7 +19,7 @@ comparison needs no key and no internet connection.
 
 ## How accuracy is checked
 
-Accuracy is checked in five ways. Each one answers a different question, and
+Accuracy is checked in six ways. Each one answers a different question, and
 each has limits worth being honest about. There is no single accuracy
 percentage that would be truthful across all of appropriations, so we describe
 what each layer does and does not establish.
@@ -29,17 +29,16 @@ what each layer does and does not establish.
 This is the strongest check. It now covers all twelve regular appropriations
 subcommittees, through two kinds of independent source:
 
-- **A separately maintained spreadsheet (Legislative Branch).** We took an
-  appropriations spreadsheet kept by other people for Legislative Branch bills,
-  covering both the House and Senate across several years, and confirmed that the
-  dollar amounts our tool pulls out of the official bill text match the amounts in
-  that spreadsheet, in the right place in the bill's structure.
-- **Senate committee reports (the other eleven subcommittees).** For each of the
-  remaining subcommittees we read the account-level amounts out of the Senate
-  Appropriations committee report and confirmed that each amount the committee
-  recommended appears in what our tool extracts from the reported bill. A committee
-  report is written by different people for a different purpose than the bill, so
-  it is a genuinely outside source.
+- **Senate committee reports (all twelve subcommittees).** For each subcommittee we
+  read the account-level amounts out of the Senate Appropriations committee report
+  and confirmed that each amount the committee recommended appears in what our tool
+  extracts from the reported bill. A committee report is written by different people
+  for a different purpose than the bill, so it is a genuinely outside source.
+- **A separately maintained spreadsheet (Legislative Branch).** In addition to the
+  committee report, Legislative Branch is also checked against an appropriations
+  spreadsheet kept by other people, covering both the House and Senate across
+  several years, confirming that the dollar amounts match in the right place in the
+  bill's structure.
 
 Because every source was built independently of our tool, this catches mistakes
 that checking the tool against itself never could. Across the committee-report
@@ -49,16 +48,20 @@ their parts, and a few report typos the report's own summary tables contradict),
 not extraction errors. The per-subcommittee counts are tracked so they cannot
 quietly rise.
 
-**Limit:** the twelve subcommittees are checked to different depths. Legislative
-Branch is checked structurally, meaning the right amount in the right place,
-across several bills and both chambers. The other eleven are checked as
-amount-recall, meaning the right amounts are present under the right agency, on a
-single Senate-reported bill each, because the report and the bill name accounts
-differently. Two consequences follow, and we track both on purpose: an amount that
-landed on the wrong account inside the right agency would still pass the recall
-check, and the House versions of those eleven subcommittees have no outside-source
-check at all, because House committee reports print their account tables as images
-we cannot read.
+**Limit:** the twelve subcommittees are checked to different depths. All twelve are
+now checked at amount-recall depth (the right amount under the right agency) on a
+single Senate-reported bill each via committee reports. Legislative Branch is *also*
+checked structurally (the right amount in the right place) across several bills and
+both chambers via the spreadsheet, giving it two independent validation layers. Three
+consequences follow, and we track all three on purpose: an amount that landed on the
+wrong account inside the right agency would still pass the recall check; the
+House versions of the eleven non-Legislative Branch subcommittees have no
+outside-source check at all, because House committee reports print their account
+tables as images we cannot read; and "the right agency" is a weaker constraint for
+the Legislative Branch bill than for the others, because that bill has only one
+top-level agency, so its recall check asks whether the amount appears anywhere in
+the bill. That is why the spreadsheet's structural check still carries the weight
+there, and why removing it would be a real loss of depth rather than a tidy-up.
 
 ### 2. Sanity checks across every bill we have
 
@@ -100,7 +103,9 @@ including where each change appears (page and line) and what kind of change it
 is. The tool's PDF comparison is then checked against that list.
 
 **Limit:** this is the newest and thinnest area, and the hand-built list so far
-covers a single draft bill.
+covers a single draft bill. It is also the only place the wording of a bill is
+checked against a human reading of it: for published bills, check 6 uses the
+official text instead, which no draft has.
 
 ### 5. Cross-checking the PDF reading against the official text
 
@@ -124,6 +129,49 @@ merged a dollar figure with an adjacent percentage in non-spending statutory
 tables; that has since been fixed.) The soundness pass covers every bill,
 including the largest omnibus in the collection.
 
+### 6. Cross-checking the PDF reading against the official *wording*
+
+Check 5 asks whether the dollar figures survive when the tool reads a PDF. This
+one asks the same question of the words. The official machine-readable version of
+a bill is an independent transcription of the same document, so for every bill we
+have in both forms we take passages of its body text and confirm each one turns
+up in what the tool read out of the PDF. Punctuation, capitalisation, accents, and
+hyphens are ignored: the two formats set them differently, and the question here
+is whether the wording survived at all, not whether it was reproduced character
+for character.
+
+Not every word in the file is compared, and the gaps are deliberate. The passages
+are cut at sentence punctuation and only those of eight words or more are used, so
+a fragment too short to match distinctively is left out. Repeated passages are
+counted once, since bills repeat boilerplate provisos verbatim and counting them
+each time would weight the score toward whichever bill repeats itself most. Two
+kinds of text are excluded outright: the table of contents, which is set in a
+dot-leadered layout that reads as a different string entirely, and quoted blocks
+(the passages an amendment inserts into another law), which are set as indented
+block quotations with their own numbering. What remains is the body prose, which
+is the part a reader of the change report is actually reading.
+
+Most versions score 100%. Two kinds of print fall short, and in both cases we
+know why. Congress prints a bill differently at different stages, and two of
+those print styles defeat the tool's handling of the page furniture: the enrolled
+print (the final enacted text) and the Senate engrossed amendment both splice a
+running page header or footer into the middle of a sentence, and the enrolled
+print additionally loses a number that begins a line. So the allowance is written
+against the print style rather than against a named bill, along with the defect
+that causes it. A new bill is then covered the moment it is added if it is printed
+the same way, and held to the full standard if it is not. If the underlying defect
+is ever fixed, the check fails and tells us to remove the allowance, so it cannot
+quietly outlive its reason.
+
+**Limit:** because the same clean-up is applied to both sides before comparing,
+this check is blind to changes in that clean-up — it confirms the words are
+there, not that they are rendered exactly as printed. Exact rendering is held in
+place separately, by frozen copies of what the tool reads out of specific pages
+(`tests/test_pdf_extraction_golden.py`). Matching is by containment rather than
+position, so it confirms a passage is present somewhere in the version, not that
+it appears in the right place. It also cannot cover draft bills at all, which have
+no official version to compare against; that is check 4's job.
+
 ## Known soft spots
 
 We keep these in the open rather than papering over them:
@@ -144,9 +192,10 @@ We keep these in the open rather than papering over them:
   section numbers repeat across areas, which makes matching harder. The tool
   handles this, but it is the trickiest case.
 - **Outside-source depth varies.** As noted in check 1, all twelve subcommittees
-  now have an outside-source check, but only Legislative Branch is checked for the
-  right place rather than just the right amount, and only it is checked on the
-  House side. The other eleven rest on a single Senate-reported bill each.
+  now have an outside-source committee-report check at amount-recall depth.
+  Legislative Branch additionally has a structural check via the spreadsheet across
+  several bills and both chambers, making it the most strongly validated
+  jurisdiction. The other eleven rest on a single Senate-reported bill each.
 
 ## Running the tests
 
@@ -172,21 +221,32 @@ or `-m "not network"` to deselect it outright. It replaced the `REQUIRE_CORPUS=1
 environment variable in #278, whose name described neither of the two unrelated things
 it had come to gate.
 
-### Test counts are not comparable between machines
+`browser` skips when Chromium can't launch, which is right for the default tier (a
+contributor's machine may lack Playwright) but a silent no-op under CI's dedicated
+`-m browser` step, which exists to run these tests with Chromium guaranteed. CI passes
+`--run-browser` there, turning a launch failure into a test failure instead of a skip,
+so a drifted or uninstallable browser reddens CI rather than passing green while
+asserting nothing (#599).
 
-A large share of the suite is data-driven, parametrized over real bill files that
-live in gitignored directories (`bills/`, `bills_corpus/`). How many tests collect,
-pass, or skip therefore depends on how much bill data that particular machine has
-fetched — a full working checkout and a fresh clone legitimately report very
-different totals for the same commit.
+### Reading test counts
 
-So an absolute count proves nothing on its own, and comparing one across machines
-proves less than nothing: a reviewer who measures a contributor's reported total
-against their own is reading corpus difference as a defect. The signal that does
-carry is the **red-green delta on a single machine**: revert the change and
-confirm the tests it added go red. Within one machine, a change in the *skip*
-count is worth reading too — `-rs` prints the reasons, and a category that
-quietly started skipping is coverage disappearing with no failure to show for it.
+The corpus correctness gates parametrize over the committed manifest, so **their
+declared cases are the same across comparable runs** — a fresh clone, a worktree and
+CI collect the same set. A differing case count there is a **fail-open signal**, not
+an expected consequence of which bills a machine happens to have fetched. Chase it;
+do not explain it away as environment.
+
+Whole-suite totals can still differ legitimately, but for a narrower reason: the
+invocation. Optional capabilities are marker-gated — `browser` needs
+`playwright install chromium`, `network` is skipped unless you pass `--run-network` —
+and `CORPUS_SWEEP=1` deliberately widens the sweeping modules beyond the committed
+set. Compare like for like: the same selection, the same markers.
+
+An absolute count still proves little on its own. The signal that carries is the
+**red-green delta on a single machine**: revert the change and confirm the tests it
+added go red. A change in the *skip* count is worth reading too — `-rs` prints the
+reasons, and a category that quietly started skipping is coverage disappearing with
+no failure to show for it.
 
 ### The corpus gates run against committed fixtures
 
@@ -200,21 +260,35 @@ counts are reproducible. Every bill the manifest names is committed to git
 Each of those modules carries a `test_manifest_fixtures_committed` floor that
 **fails closed**: if a manifested bill is missing from the checkout, the gate
 goes red rather than silently collecting fewer cases. That is what CI relies on.
-It replaces the old opt-in `REQUIRE_CORPUS=1` mode *for these three gates*, which
-existed only because they used to parametrize over a fetched glob that was empty --
-and so green, asserting nothing -- on a clean checkout (the fail-open pattern).
-(#220 brought the last three modules -- `test_node_join_corpus`,
-`test_xml_subsection_nodes`, `test_pdf_subsection_recall` -- onto the same manifest
-and the same fail-closed floor, and deleted `require_corpus_or_skip` /
-`REQUIRED_CORPUS_BILLS` with them. #278 committed the Legislative Branch validation
-set and retired `REQUIRE_CORPUS` outright; the one requirement no fixture can supply
-is a live network, and that is now the `network` marker.)
+The one requirement no fixture can supply is a live network, and that is the
+`network` marker.
+
+History: #220, #278 -- an opt-in `REQUIRE_CORPUS=1` mode covered these three
+gates, and existed only because they parametrized over a fetched glob that was
+empty -- and so green, asserting nothing -- on a clean checkout (the fail-open
+pattern). #220 brought the last three modules (`test_node_join_corpus`,
+`test_xml_subsection_nodes`, `test_pdf_subsection_recall`) onto the same manifest
+and the same fail-closed floor, deleting `require_corpus_or_skip` /
+`REQUIRED_CORPUS_BILLS` with them; #278 committed the Legislative Branch
+validation set and retired `REQUIRE_CORPUS` outright.
 
 To sweep every bill you have fetched locally -- broader than the committed set,
 and useful for finding bugs a few clean bills don't -- set `CORPUS_SWEEP=1`. It
-spans both trees (the committed fixtures in `tests/corpus/` *and* `bills/`), so it
-is a strict superset of what the gates collect. This is exploration, not a gate;
-CI never runs it.
+spans both trees (the committed fixtures in `tests/corpus/` *and* `bills/`). This
+is exploration, not a gate; CI never runs it.
+
+It widens by BILL, not by version, and so is **not** a strict superset: one
+directory is taken per bill id with the committed copy winning, so a
+download-only *version* of a bill committed at some other stage stays invisible
+even under the sweep (deliberate -- a download must not shadow committed bytes).
+
+Because the sweep is uncalibrated, a file it reaches that the manifest does not
+name is **reported rather than asserted** against a per-file baseline: it is
+parsed (so a crash or empty tree still fails), and `-rs` prints the measured
+count. Baselines calibrated on the committed corpus cannot be kept current for a
+bill no CI run sees, and pinning one anyway is what left four numbers failing the
+sweep for anyone who turned it on (#496). To hold a bill to a baseline, commit and
+manifest it (#126).
 
 ```bash
 # The committed corpus gates (what CI runs):
@@ -360,10 +434,11 @@ they resolve through `resolve_bill_file`, which returns the `bills/` path when n
 fixture exists precisely so the caller's own `.exists()` check reports on the file it
 would really read.
 
-The Legislative Branch validation set used to be on that list. #278 committed its
-five remaining bills, so its completeness floor is now an ordinary fail-closed
-check that runs everywhere, and CI validates all seven of the fixture's bills
-instead of the two that happened to be committed.
+The Legislative Branch validation set is not on that list: its completeness floor
+is an ordinary fail-closed check that runs everywhere, and CI validates all seven
+of the fixture's bills. History: #278 -- it was listed above until its five
+remaining bills were committed, leaving CI to validate only the two that happened
+to be.
 
 Everything else in the slow group asserts on a clean clone, against
 `tests/corpus/`. A download never changes what those gates assert, and since #308
@@ -443,7 +518,9 @@ uv run python scripts/serve_compare.py path/to/bill-dir --port 8765 --no-browser
 
 With no `--v1`/`--v2` it picks the two lowest-numbered versions that have both a
 `.pdf` and an `.xml`. A bare bill id resolves against the committed fixtures in
-`tests/corpus/`, many of which carry both formats; to view a bill you downloaded
+`tests/corpus/`, 52 of whose 57 versions carry both formats since #126; the five
+single-format versions (all XML-only, the five #519 engrossed amendments) are each
+deliberate and each says why at its manifest entry. To view a bill you downloaded
 into `bills/` instead, pass its directory path (and fetch it with `--format
 both`). Rendered HTML goes to a temp dir, nothing committed. The panes reflect the current checkout, so run it on the branch whose
 diff output you're inspecting. This is a manual debugging aid, not a test.

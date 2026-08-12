@@ -55,12 +55,29 @@ def test_returns_empty_when_no_changes_have_amount_pairs():
 
 def test_table_includes_canonical_headers():
     html = _build_financial_summary(_view([_change(amount_pairs=((1000, 1500),))]))
-    assert "<h2>Financial Summary</h2>" in html
+    assert '<h2 class="disclosure">Financial Summary</h2>' in html
     assert "<th>Section</th>" in html
     assert "<th>Old Amount</th>" in html
     assert "<th>New Amount</th>" in html
     assert "<th>Change ($)</th>" in html
     assert "<th>Change (%)</th>" in html
+
+
+def test_table_is_collapsed_by_default_with_an_entry_count():
+    """The table is a <details> with no `open`, so the bill text starts on the
+    first screen instead of below hundreds of amount rows. The count lives in the
+    summary so its size is legible while closed.
+    """
+    html = _build_financial_summary(_view([_change(amount_pairs=((1000, 1500), (200, 300)))]))
+    assert '<details class="financial-summary">' in html
+    assert '<details class="financial-summary" open' not in html
+    assert '<span class="count">2 amount changes</span>' in html
+    assert html.rstrip().endswith("</details>")
+
+
+def test_entry_count_is_singular_for_one_amount():
+    html = _build_financial_summary(_view([_change(amount_pairs=((1000, 1500),))]))
+    assert '<span class="count">1 amount change</span>' in html
 
 
 def test_single_pair_row_has_no_rowspan_attribute():

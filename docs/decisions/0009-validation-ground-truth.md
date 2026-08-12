@@ -1,4 +1,4 @@
- # 9. Validate the parser against independently-authored committee reports
+# 9. Validate the parser against independently-authored committee reports
 
 - Status: Accepted
 - Date: 2026-06-27
@@ -31,15 +31,21 @@ not an abandoned product feature. It is test infrastructure.
 
 ## Decision
 
-We will validate the parser by comparing the amounts it extracts from a bill against
-amounts **independently authored in published committee reports** (Senate
-Appropriations `CRPT-…` documents). These cover eleven of the twelve regular
-appropriations subcommittees; the twelfth, Legislative Branch, is covered by a second
-independent source — a separately maintained appropriations spreadsheet — checked
-structurally (the right amount in the right place). Together the two sources reach all
-twelve. The living figures, coverage, and the case-by-case remainder live in
+We validate the parser by comparing the amounts it extracts from a bill against amounts
+**independently authored in published committee reports** (Senate Appropriations
+`CRPT-…` documents), across the regular appropriations subcommittees. Legislative
+Branch additionally carries a second independent source — a separately maintained
+appropriations spreadsheet — checked structurally (the right amount in the right
+place), so one jurisdiction is held to two independently authored sources rather than
+one. Current coverage, the figures, and the case-by-case remainder live in
 [docs/parser-validation.md](../parser-validation.md), which is generated from the
 validation suite; this record is the *why*, not the numbers.
+
+**What this evidence establishes.** The independent check validates appropriations
+**amount recall and attribution to the correct agency**. It does not by itself
+establish the correctness of provision correspondence
+([0020](0020-matching-stages.md)), structural interpretation, or PDF layout — those
+need evidence of their own, and a high match rate here is not a claim about them.
 
 Two further commitments make the check trustworthy rather than self-serving:
 
@@ -52,11 +58,16 @@ Two further commitments make the check trustworthy rather than self-serving:
   account with no fixed number in the bill, a report total the bill itemizes into
   parts, or a typo in the report itself — never the parser misreading the bill. We do
   not tune the parser to chase those numbers, because a match has to mean genuine
-  agreement, not a figure massaged until it lines up.
+  agreement, not a figure massaged until it lines up. A hand-traced miss has to stay
+  tied to the exact parsed observation it names, which is what
+  [0019](0019-observation-identity.md) defines.
 
-Committee-report handling is **validation infrastructure, not a product
-feature**. DeltaTrack has no externally-facing use case for committee reports; the
-code exists to hold the diff engine honest. 
+**The committee-report machinery judges production results; it does not produce them.**
+It is not part of the production comparison path, and it supplies no evidence to
+matching, classification, or extraction — an oracle that fed the engine it grades would
+recreate the circularity this record exists to remove. DeltaTrack has no
+externally-facing use case for committee reports; the code exists to hold the diff
+engine honest.
 
 This independent check is the top layer of a suite, not a replacement for it. We rely
 on hand-written tests too — "frozen" expectations that lock in known-good behavior on
@@ -84,20 +95,15 @@ Alternatives:
   harness. It should not be deleted as an unused feature.
 - Reproducibility depends on the report sources being vendored and CI-gated, so the
   check runs the same for everyone and does not silently skip.
-- Coverage is bounded by what the reports provide, and its depth varies on purpose.
-  The eleven committee-report subcommittees are checked at amount-recall depth (the
-  right amount under the right agency) on a single Senate-reported bill each; only
-  Legislative Branch is checked structurally and on the House side. Some sources are
-  also awkward (House committee reports print their account tables as images, and one
-  subcommittee's bill was never reported in the target year, forcing an earlier-year
-  substitute), so gaps are driven by source availability and are documented in the doc
-  rather than hidden.
+- Coverage is bounded by what the reports provide, and its depth varies on purpose. A
+  committee-report jurisdiction is checked at amount-recall depth on a single
+  Senate-reported bill; Legislative Branch additionally carries the spreadsheet
+  structural check. Some sources are awkward — House committee reports print their
+  account tables as images, and a subcommittee's bill may not have been reported in the
+  target year, forcing an earlier-year substitute — so gaps are driven by source
+  availability, and are documented in the generated report rather than hidden.
 - The remainder list is reviewed by hand and will shift as new bills and years are
   added; a new legitimate report/bill discrepancy is expected, not a regression.
-- Extending Legislative Branch to *also* rest on a committee report — so all twelve
-  subcommittees are validated against reports uniformly, with the spreadsheet kept as
-  an additional structural cross-check on Leg Branch — is planned but not yet built
-  (tracked in [DeltaTrack#99](https://github.com/AgoraDMV/DeltaTrack/issues/99)).
 - This pairs with the deterministic-engine decision ([0008](0008-deterministic-engine.md)):
   a fixed input has exactly one correct output, which is what makes validating it
   against an external source meaningful in the first place.

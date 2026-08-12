@@ -1,0 +1,338 @@
+{
+ "population": "SYNTHETIC + DEVELOPMENT (hybrid only) -- no holdout opened",
+ "neutral_glyph_id": "(document_sha256, page_number, source_char_index)",
+ "eligibility": "valid finite positive-area ink box AND upright AND gid is not None",
+ "projection": "set membership on gids; Model G source-glyph partition",
+ "model_comparison": [
+  {
+   "case": "merge 3/1",
+   "plurality": [
+    "FH!P",
+    "ABSENT"
+   ],
+   "partition": [
+    "FH!",
+    "P"
+   ],
+   "preferred": "G",
+   "why": "P attributes line 1's glyph to line 0 AND blanks line 1: one glyph is double-counted and one physical line vanishes"
+  },
+  {
+   "case": "merge 50/50",
+   "plurality": "tie-break decides which line is blanked",
+   "partition": [
+    "A",
+    "D"
+   ],
+   "preferred": "G",
+   "why": "G needs no tie-break; P needs an arbitrary one"
+  },
+  {
+   "case": "split 1->2",
+   "plurality": "both emitted lines -> same slot; second is lost or overwrites",
+   "partition": "rejoined in source order",
+   "preferred": "G",
+   "why": "P has no defined aggregation for two emitted lines on one slot"
+  }
+ ],
+ "tests": [
+  {
+   "test": "OLD project_by_glyphs forces a y=-5000 glyph onto a line",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": "nearest-baseline inference with no maximum distance -- not membership"
+  },
+  {
+   "test": "NEW membership: a foreign gid contributes nothing",
+   "expected": "",
+   "observed": "",
+   "pass": true,
+   "implication": "set membership cannot invent ownership"
+  },
+  {
+   "test": "1 neutral -> 1 emitted line",
+   "expected": "ABC",
+   "observed": "ABC",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "1 neutral -> 2 emitted lines: the SPLIT is preserved as a line break",
+   "expected": "A\nBC",
+   "observed": "A\nBC",
+   "pass": true,
+   "implication": "joining by '' would assert an adjacency the architecture never emitted"
+  },
+  {
+   "test": "1 neutral -> 3 emitted lines",
+   "expected": "A\nB\nC",
+   "observed": "A\nB\nC",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "emitted-line order REVERSED gives the same contribution",
+   "expected": "A\nB\nC",
+   "observed": "A\nB\nC",
+   "pass": true,
+   "implication": "ordering is a function of source identity, not of emission order"
+  },
+  {
+   "test": "many neutral -> 1 merged line: line 0 keeps only its own glyphs",
+   "expected": "ABC",
+   "observed": "ABC",
+   "pass": true,
+   "implication": "MODEL G -- a merge no longer blanks the other line"
+  },
+  {
+   "test": "many neutral -> 1 merged line: line 1 keeps its own glyphs",
+   "expected": "DEF",
+   "observed": "DEF",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "exact 50/50 merge splits by ownership, not by plurality",
+   "expected": [
+    "A",
+    "D"
+   ],
+   "observed": [
+    "A",
+    "D"
+   ],
+   "pass": true,
+   "implication": "no tie-break is needed at all"
+  },
+  {
+   "test": "duplicate gid is retained in the contribution",
+   "expected": "AAB",
+   "observed": "AAB",
+   "pass": true,
+   "implication": "duplication is visible, then flagged as a diagnostic"
+  },
+  {
+   "test": "unowned glyph contributes nothing",
+   "expected": "AB",
+   "observed": "AB",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "lost glyph simply does not appear",
+   "expected": "AC",
+   "observed": "AC",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "MODEL P double-counts a merged glyph",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "whole merged text lands on line 0 while line 1 is blanked"
+  },
+  {
+   "test": "MODEL G conserves every glyph exactly once",
+   "expected": [
+    "!",
+    "F",
+    "H",
+    "P"
+   ],
+   "observed": [
+    "!",
+    "F",
+    "H",
+    "P"
+   ],
+   "pass": true,
+   "implication": "partition is lossless; plurality is not"
+  },
+  {
+   "test": "same gids, H welds -> no space",
+   "expected": "FH",
+   "observed": "FH",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "same gids, X inserts a space -> space preserved",
+   "expected": "F H",
+   "observed": "F H",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the weld/space difference is TEXT_DIFFERS",
+   "expected": "TEXT_DIFFERS",
+   "observed": "TEXT_DIFFERS",
+   "pass": true,
+   "implication": "the seam difference survives projection -- it is not normalised away"
+  },
+  {
+   "test": "R E P vs REP is TEXT_DIFFERS",
+   "expected": "TEXT_DIFFERS",
+   "observed": "TEXT_DIFFERS",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "a dropped glyph is TEXT_DIFFERS",
+   "expected": "TEXT_DIFFERS",
+   "observed": "TEXT_DIFFERS",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...and is recorded as X source-glyph loss",
+   "expected": [
+    1
+   ],
+   "observed": [
+    1
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "a duplicated glyph is flagged",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "D-frame membership is invariant under swapping H and X",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "D(H,X) == D(X,H) for every cardinality case"
+  },
+  {
+   "test": "...and each case has the EXPECTED membership, so symmetry is not vacuous",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "False == False no longer passes for a case that must be True"
+  },
+  {
+   "test": "the asymmetric states are explicit mirrors",
+   "expected": [
+    "X_ABSENT",
+    "H_ABSENT"
+   ],
+   "observed": [
+    "X_ABSENT",
+    "H_ABSENT"
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "generated space (gid None) is ineligible",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "missing box is ineligible",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "zero-area box is ineligible",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "zero-width box is ineligible",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "non-upright glyph is ineligible",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "a real ink mark is eligible",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "None coordinate is ineligible",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "A24.2: a content-stream U+0020 with a positive-area box is INELIGIBLE",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "implication": "the box PDFium reports for a real space is 3.6 x 0.014 pt and clears 'positive area'; geometry alone cannot express the ink/non-ink distinction"
+  },
+  {
+   "test": "...while the same geometry with an ink codepoint stays eligible",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "the exclusion is exactly U+0020, not a size threshold"
+  },
+  {
+   "test": "adversarial geometry matrix matches the frozen invariant exactly",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...and the predicate returns BOTH answers across it",
+   "expected": [
+    false,
+    true
+   ],
+   "observed": [
+    false,
+    true
+   ],
+   "pass": true,
+   "implication": "a matrix that only ever returns False would pass while proving nothing"
+  }
+ ],
+ "failures": [],
+ "development": [
+  {
+   "document": "114-hr-2029/4",
+   "pages": 12,
+   "chars": 15453,
+   "generated": 2461,
+   "geometrically_eligible": 12691,
+   "excluded": 2762,
+   "excluded_ONLY_by_a_codepoint_rule": 301
+  },
+  {
+   "document": "118-s-4795/1",
+   "pages": 12,
+   "chars": 16276,
+   "generated": 788,
+   "geometrically_eligible": 13317,
+   "excluded": 2959,
+   "excluded_ONLY_by_a_codepoint_rule": 2171
+  }
+ ]
+}

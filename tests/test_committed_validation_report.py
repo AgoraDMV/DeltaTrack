@@ -18,7 +18,6 @@ CI and rebuild the fail-open gap they exist to close (see `test_committed_exampl
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import scripts.generate_validation_report as report
@@ -97,19 +96,28 @@ def test_validation_report_fixtures_are_committed():
     assert not missing, f"fixtures generate_validation_report.py needs are missing: {missing}"
 
 
-def test_committed_validation_report_matches_a_fresh_regeneration(tmp_path, monkeypatch):
+def test_committed_validation_report_matches_a_fresh_regeneration(tmp_path):
     """The committed `docs/parser-validation.md` is what the generator emits today."""
-    # main() parses sys.argv (pytest's own argv would fail its parser) and writes to
-    # report.OUTPUT — redirect both, or the test would overwrite the committed file it
-    # is supposed to be checking.
-    monkeypatch.setattr(sys, "argv", ["generate_validation_report.py"])
+    # The generator writes only where an explicit `output` argument points, so this
+    # test names a fresh path rather than monkeypatching a module constant (#445).
     fresh = tmp_path / "parser-validation.md"
-    monkeypatch.setattr(report, "OUTPUT", fresh)
-    report.main()
+    report.main([], output=fresh)
 
     assert fresh.exists(), "generate_validation_report.main() wrote nothing; the comparison below would vacuously pass"
     diff = _mismatch(COMMITTED.read_bytes(), fresh.read_bytes())
     assert diff is None, f"docs/parser-validation.md is stale. {REGENERATE}\n{diff}"
+
+
+def test_committed_output_is_project_root_derived():
+    """The intentional regeneration destination is absolute, never CWD-relative (#445).
+
+    The old `OUTPUT = Path("docs/parser-validation.md")` resolved against the caller's
+    current directory, so running from anywhere but the repo root wrote a stray report
+    where the caller happened to be.
+    """
+    assert report.COMMITTED_OUTPUT.is_absolute()
+    assert report.COMMITTED_OUTPUT.is_relative_to(ROOT)
+    assert report.COMMITTED_OUTPUT == ROOT / "docs" / "parser-validation.md"
 
 
 def test_validation_report_gate_can_fire():

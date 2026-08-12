@@ -15,10 +15,14 @@ import json
 from pathlib import Path
 
 from deltatrack.bill_tree import BillNode, BillTree, normalize_bill, normalize_header
-from deltatrack.diff_bill import _normalize_text, _text_similarity
+from deltatrack.diff_bill import _normalize_text
+from deltatrack.similarity import text_similarity
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
-BILLS = REPO / "bills"
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+BILLS = merged_root()
 FIXTURE = REPO / "tests" / "data" / "similarity_labels.json"
 
 _tree_cache: dict[str, BillTree] = {}
@@ -41,7 +45,7 @@ def find_node(tree: BillTree, target_text: str) -> BillNode | None:
     # fallback: best word-similarity (in case of minor normalization drift)
     best, best_sim = None, 0.0
     for n in tree.nodes:
-        sim = _text_similarity(_normalize_text(n.body_text), tgt)
+        sim = text_similarity(_normalize_text(n.body_text), tgt)
         if sim > best_sim:
             best, best_sim = n, sim
     return best if best_sim > 0.95 else None
@@ -52,7 +56,7 @@ def header_sim(a: str, b: str) -> float:
         return 1.0
     if not a or not b:
         return 0.0
-    return _text_similarity(normalize_header(a), normalize_header(b))
+    return text_similarity(normalize_header(a), normalize_header(b))
 
 
 pairs = json.loads(FIXTURE.read_text())["pairs"]
@@ -69,7 +73,7 @@ for p in pairs:
         "label": p["label"],
         "decision": p["decision"],
         "xfail": p["expected_misclassified"],
-        "body_sim": round(_text_similarity(_normalize_text(p["text_old"]), _normalize_text(p["text_new"])), 3),
+        "body_sim": round(text_similarity(_normalize_text(p["text_old"]), _normalize_text(p["text_new"])), 3),
     }
     if no is None or nn is None:
         row["FOUND"] = f"old={no is not None} new={nn is not None}"

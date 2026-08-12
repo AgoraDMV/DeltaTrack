@@ -22,10 +22,14 @@ from collections import Counter
 from pathlib import Path
 
 from deltatrack.bill_tree import normalize_bill
-from deltatrack.diff_bill import _normalize_text, _text_similarity
+from deltatrack.diff_bill import _normalize_text
+from deltatrack.similarity import text_similarity
 
-REPO = Path("/Users/williamhea/Documents/Code/civictech/appropriations_bills")
-BILLS = REPO / "bills"
+REPO = Path(__file__).resolve().parents[4]
+from corpus_roots import merged_root  # noqa: E402
+import sys  # noqa: E402
+sys.path.insert(0, str(Path(__file__).parent))
+BILLS = merged_root()
 FIXTURE = REPO / "tests" / "data" / "similarity_labels.json"
 
 _word = re.compile(r"[a-z0-9]+")
@@ -93,7 +97,7 @@ def score(t_old: str, t_new: str) -> dict:
     o, n = _normalize_text(t_old), _normalize_text(t_new)
     va, vb = tfidf_vec(o), tfidf_vec(n)
     return {
-        "word_ratio": round(_text_similarity(o, n), 3),
+        "word_ratio": round(text_similarity(o, n), 3),
         "tfidf_cosine": round(cosine(va, vb), 3),
         "tfidf_contain": round(containment(va, vb), 3),
     }

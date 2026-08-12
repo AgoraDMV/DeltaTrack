@@ -36,7 +36,7 @@ bill XML; we check that our parser reads it correctly, by comparing the parser's
 ## Two independent ground-truth sources
 
 - **Legislative Branch** — 414 line items across 7 enrolled bills (113-hr-3547, 113-hr-83, 114-hr-2029, 115-hr-1625, 115-hr-244, 115-hr-5895, 116-hr-1865), chambers: house, senate. Source: an independently maintained appropriations spreadsheet. Validated *structurally* (`TestLegBranchValidation`): each curated account names a `match_path`, and the parser must produce a node there with the expected amount.
-- **12 other jurisdictions** — committee-recommended amounts parsed from the
+- **13 committee-report jurisdictions** — committee-recommended amounts parsed from the
   Senate Appropriations **committee reports** (govinfo `CRPT-…`), compared to what the parser
   extracts from each reported bill. The report is written by committee staff for a different
   purpose than the bill, so it is genuinely independent. (Committee reports, not CRS reports.)
@@ -68,8 +68,9 @@ offsetting collections) are excluded — they are not leaf appropriation account
 | Energy-Water | `118-s-4927` | 67 | 61 | 91% |
 | Commerce-Justice-Science (FY2024) | `118-s-2321` | 75 | 73 | 97% |
 | Homeland Security (FY2024) | `118-s-2625` | 35 | 30 | 86% |
+| Legislative Branch | `118-s-4678` | 31 | 29 | 94% |
 
-**Overall: 774 / 822 accounts recalled (94.2%).**
+**Overall: 803 / 853 accounts recalled (94.1%).**
 
 ## Why the remainder is not a parser problem
 
@@ -149,6 +150,9 @@ The full current remainder:
   - DEPARTMENTAL MANAGEMENT, OPERATIONS, INTELLIGENCE, AND OVERSIGHT / OPERATIONS AND SUPPORT — $237,000,000
   - SECURITY, ENFORCEMENT, AND INVESTIGATIONS / HEALTH CARE FUND CONTRIBUTION — $277,000,000
   - RESEARCH, DEVELOPMENT, TRAINING, AND SERVICES / OPERATIONS AND SUPPORT — $455,661,000
+**Legislative Branch** (2)
+  - LEGISLATIVE BRANCH APPROPRIATIONS / CAPITOL POLICE — $832,556,000
+  - LEGISLATIVE BRANCH APPROPRIATIONS / SALARIES AND EXPENSES — $60,238,000
 
 ## Guarding against overfitting
 

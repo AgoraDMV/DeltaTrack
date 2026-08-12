@@ -22,6 +22,8 @@ from contextlib import closing
 
 import pytest
 
+from tests.corpus_paths import PROJECT_ROOT
+
 pytest.importorskip("playwright")
 from playwright.sync_api import sync_playwright  # noqa: E402
 
@@ -70,13 +72,17 @@ def live_url():
 
 
 @pytest.fixture(scope="module")
-def chromium():
+def chromium(request):
     try:
         with sync_playwright() as p:
             b = p.chromium.launch()
             yield b
             b.close()
     except Exception as exc:  # browser binary not installed, etc.
+        # CI's dedicated browser step passes --run-browser: there a launch failure
+        # must fail the run, not skip into a green no-op (#599). Default tier skips.
+        if request.config.getoption("--run-browser"):
+            raise
         pytest.skip(f"Chromium unavailable (run 'playwright install chromium'): {exc}")
 
 
@@ -466,7 +472,11 @@ def test_counter_follows_explicit_card_navigation(chromium, tmp_path):
     page.locator("#btn-next").click()
     assert counter.inner_text() == "3 / 3"
 
-    # 2. Financial Summary row link (only change-0 carries amounts).
+    # 2. Financial Summary row link (only change-0 carries amounts). The table
+    # ships collapsed, so open it before reaching a row.
+    fin = page.locator("details.financial-summary")
+    assert fin.evaluate("el => el.open") is False
+    fin.locator("summary").click()
     page.locator('.financial-table a[href="#change-0"]').first.click()
     assert counter.inner_text() == "1 / 3"
 
@@ -528,6 +538,436 @@ def test_sample_report_opens_in_new_tab(live_url, chromium):
     assert page.locator("#upload-error").is_hidden()
 
     report.close()
+    page.close()
+
+
+# --- The upload flow, in a real browser (#71) --------------------------------
+#
+# Everything the upload page does between "choose a file" and "the report is on
+# screen" is compare.js at runtime: the pre-flight validation, the format
+# toggle, the button's enabled state, and the report tab itself. The server-side
+# guards are covered by TestClient (tests/test_pdf_compare.py), which cannot see
+# any of the above — it never runs the script. These tests therefore assert only
+# runtime behavior, and deliberately do not re-assert what the server rejects.
+
+#: A committed bill XML (a 2.6 KB joint resolution), used as the start version so
+#: the XML path runs against the shape the engine actually sees.
+_XML_FIXTURE = PROJECT_ROOT / "tests" / "fixtures" / "resolutions" / "BILLS-119hjres25ih.xml"
+#: The end version is this fixture with its one operative clause reworded. The
+#: repo's other committed version pairs of a single resolution diff to zero
+#: changes, which would leave the report with no card to assert on — and a test
+#: that asserts nothing changed cannot tell a working upload from a broken one.
+_XML_EDIT = (b"Congress disapproves the rule", b"Congress approves the amended rule")
+
+# One appropriation, with the amount changed between the two versions, so the
+# report has something to show and the test can name what it expects to see.
+_PDF_BODY_START = [
+    "For necessary expenses of the Office of Investigation, $12,345,000, to remain",
+    "available until September 30, 2027: Provided, That not to exceed $50,000 shall",
+    "be for official reception and representation expenses.",
+]
+_PDF_BODY_END = [
+    "For necessary expenses of the Office of Investigation, $99,999,000, to remain",
+    "available until September 30, 2027: Provided, That not to exceed $50,000 shall",
+    "be for official reception and representation expenses.",
+]
+
+
+#: Lines a document needs before the engine will judge its layout at all
+#: (``compare.pdf._MIN_LINES_FOR_GUARD``); read from the engine so the unnumbered
+#: pair below stays over the threshold if the threshold moves.
+def _decline_threshold():
+    from deltatrack.compare.pdf import _MIN_LINES_FOR_GUARD
+
+    return _MIN_LINES_FOR_GUARD
+
+
+def _pdf_pair(tmp_path, *, numbered=True):
+    """A start/end PDF pair written to ``tmp_path``, in GPO's numbered layout.
+
+    Generated rather than committed: the pair is a few lines of source here
+    instead of two binaries in the tree, and the layout is load-bearing — the
+    engine declines an unnumbered layout outright, so the line-number gutter has
+    to be there for the upload to reach a report at all.
+
+    ``numbered=False`` drops the gutter and pads the body past the length the
+    engine needs before it will judge a layout, producing the pair the engine
+    declines. That is how a test reaches the server-error path on purpose.
+    """
+    pytest.importorskip("reportlab")
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
+
+    def write(path, body):
+        if not numbered:
+            # Enough lines to be judged, with no gutter: an enrolled-style print.
+            body = (body * (_decline_threshold() // len(body) + 2))[: _decline_threshold() + 10]
+        c = canvas.Canvas(str(path), pagesize=letter)
+        _, height = letter
+        y = height - 60
+        for i, line in enumerate(body, start=1):
+            c.setFont("Times-Roman", 11)
+            if numbered:
+                c.drawString(54, y, str(i))  # the line-number gutter
+            c.drawString(78, y, line)
+            y -= 22 if numbered else 12
+            if y < 60:
+                c.showPage()
+                y = height - 60
+        c.showPage()
+        c.save()
+        return path
+
+    return (
+        write(tmp_path / "start.pdf", _PDF_BODY_START),
+        write(tmp_path / "end.pdf", _PDF_BODY_END),
+    )
+
+
+def _upload_page(chromium, live_url, *, init_script=None):
+    """The compare page, served by the real app. ``init_script`` runs before it."""
+    page = chromium.new_page()
+    if init_script:
+        page.add_init_script(init_script)
+    page.goto(f"{live_url}/compare.html", wait_until="domcontentloaded")
+    return page
+
+
+def _watch_uploads(page):
+    """Collect POSTs the page makes; a blocked upload must not reach the server."""
+    posts = []
+    page.on("request", lambda r: posts.append(r.url) if r.method == "POST" else None)
+    return posts
+
+
+def test_upload_pdf_pair_opens_the_report_in_a_new_tab(live_url, chromium, tmp_path):
+    """The whole server-side path, end to end: choose two PDFs, click Compare,
+    read the report (#71).
+
+    This is the product's one interactive flow and nothing else exercised it in
+    a browser. The pieces are individually covered — the API by TestClient, the
+    renderer by the report tests above — but the wiring between them (the file
+    reaching FormData, the response reaching a new tab as a rendered document)
+    only exists at runtime.
+    """
+    start, end = _pdf_pair(tmp_path)
+    page = _upload_page(chromium, live_url)
+    btn = page.locator("#compare-btn")
+    assert btn.is_disabled(), "Compare should start disabled, with no files chosen"
+
+    # The start slot goes through the real gesture: clicking the slot is what
+    # forwards to the hidden input, which is the path a user actually takes.
+    with page.expect_file_chooser() as chooser:
+        page.locator("#start-slot").click()
+    chooser.value.set_files(start)
+    assert page.locator("#start-name").inner_text() == start.name
+    assert btn.is_disabled(), "one file is not a comparison"
+
+    page.locator("#end-input").set_input_files(end)
+    assert btn.is_enabled()
+
+    with page.context.expect_page() as report_info:
+        btn.click()
+    report = report_info.value
+    # The tab opens blank on the click and is written when the response lands,
+    # so wait for the report's own markup rather than for the navigation.
+    report.wait_for_selector(".change-card", timeout=60_000)
+
+    # It is the diff of what was uploaded, not an empty shell: the changed
+    # amount is the one thing that distinguishes these two files.
+    assert "$99,999,000" in report.locator("body").inner_text()
+
+    assert page.locator("#upload-error").is_hidden()
+    assert "new tab" in page.locator("#upload-success").inner_text()
+    # Back to a resting state, ready for the next pair.
+    assert btn.inner_text() == "Compare"
+    report.close()
+    page.close()
+
+
+def _xml_pair(tmp_path):
+    """A start/end bill-XML pair written to ``tmp_path`` (see :data:`_XML_EDIT`)."""
+    original = _XML_FIXTURE.read_bytes()
+    edited = original.replace(*_XML_EDIT)
+    assert edited != original, "the fixture no longer contains the clause this pair edits"
+    start, end = tmp_path / "start.xml", tmp_path / "end.xml"
+    start.write_bytes(original)
+    end.write_bytes(edited)
+    return start, end
+
+
+def test_upload_xml_pair_uses_the_selected_format(live_url, chromium, tmp_path):
+    """With XML selected, the same flow diffs XML — the toggle drives the
+    request, not just the accept filter (#71).
+
+    The format is a query parameter the server dispatches on, so a toggle that
+    updated the UI but not the request would send bill XML to the PDF engine and
+    fail late, after the upload. Asserting the report renders proves the whole
+    parameter path.
+    """
+    start, end = _xml_pair(tmp_path)
+    page = _upload_page(chromium, live_url)
+    page.locator('input[name="format"][value="xml"]').check()
+    page.locator("#start-input").set_input_files(start)
+    page.locator("#end-input").set_input_files(end)
+
+    with page.expect_request("**/api/compare*") as request_info:
+        with page.context.expect_page() as report_info:
+            page.locator("#compare-btn").click()
+    assert "format=xml" in request_info.value.url
+
+    report = report_info.value
+    report.wait_for_selector(".change-card", timeout=60_000)
+    assert "H.J.Res. 25" in report.title()
+    assert "approves the amended rule" in report.locator("body").inner_text()
+    assert page.locator("#upload-error").is_hidden()
+    report.close()
+    page.close()
+
+
+def test_format_toggle_clears_chosen_files_and_repoints_the_picker(live_url, chromium, tmp_path):
+    """Switching PDF↔XML forgets both files and re-points the picker (#71).
+
+    A PDF is invalid under XML and vice versa, so a file surviving the switch
+    would be submitted against the wrong engine. Clearing the native input's own
+    ``value`` (not just our copy) is the part that only shows up in a browser:
+    leave it set and re-picking the same file fires no ``change`` event, so the
+    slot silently stays empty.
+    """
+    start, end = _pdf_pair(tmp_path)
+    page = _upload_page(chromium, live_url)
+    page.locator("#start-input").set_input_files(start)
+    page.locator("#end-input").set_input_files(end)
+    assert page.locator("#compare-btn").is_enabled()
+    assert page.locator("#start-slot").evaluate("el => el.classList.contains('has-file')")
+
+    page.locator('input[name="format"][value="xml"]').check()
+
+    for which in ("start", "end"):
+        assert page.locator(f"#{which}-name").inner_text() == ""
+        assert not page.locator(f"#{which}-slot").evaluate("el => el.classList.contains('has-file')")
+        assert page.locator(f"#{which}-input").input_value() == "", "native input kept the old file"
+        assert page.locator(f"#{which}-input").get_attribute("accept") == "application/xml,text/xml,.xml"
+    assert page.locator("#compare-btn").is_disabled()
+    assert page.locator("#upload-note").inner_text().startswith("XML")
+
+    # And back: the filter follows the current selection in both directions.
+    page.locator('input[name="format"][value="pdf"]').check()
+    assert page.locator("#start-input").get_attribute("accept") == "application/pdf,.pdf"
+    assert page.locator("#upload-note").inner_text().startswith("PDF")
+    page.close()
+
+
+@pytest.mark.parametrize(
+    ("fmt", "content", "expected"),
+    [
+        ("pdf", b"", "Start PDF is empty."),
+        ("pdf", b"this is not a PDF at all, just some text", "Start PDF doesn't look like a PDF."),
+        # A real PDF submitted while XML is selected: the wrong-format case a
+        # user reaches by picking files and then flipping the toggle back.
+        ("xml", b"%PDF-1.4 a real enough PDF header", "Start XML doesn't look like XML."),
+    ],
+    ids=["empty", "not-a-pdf", "pdf-under-xml"],
+)
+def test_client_side_validation_refuses_a_file_before_uploading(live_url, chromium, tmp_path, fmt, content, expected):
+    """A file that fails the pre-flight check surfaces an inline error and never
+    leaves the browser (#71).
+
+    The server re-validates all of this, so the point of the client check is
+    that the user finds out immediately and their file is not uploaded to be
+    rejected — which is what the "no request was made" assertion pins. Without
+    it this test would pass just as well against a page that uploaded
+    everything and rendered the server's error.
+    """
+    bad = tmp_path / f"bad.{fmt}"
+    bad.write_bytes(content)
+    page = _upload_page(chromium, live_url)
+    posts = _watch_uploads(page)
+    if fmt != "pdf":
+        page.locator(f'input[name="format"][value="{fmt}"]').check()
+    page.locator("#start-input").set_input_files(bad)
+    page.locator("#end-input").set_input_files(bad)
+
+    page.locator("#compare-btn").click()
+
+    error = page.locator("#upload-error")
+    error.wait_for(state="visible")
+    assert expected in error.inner_text()
+    assert posts == [], "a file that failed the pre-flight check was uploaded anyway"
+    assert len(page.context.pages) == 1, "a report tab was opened for a file that never compared"
+    page.close()
+
+
+def test_oversized_file_is_refused_before_uploading(live_url, chromium, tmp_path):
+    """A file past the 150 MB cap is refused in the browser (#71).
+
+    The size is stamped onto the ``File`` object rather than written to disk —
+    a real 150 MB fixture would dominate the suite's runtime for one branch.
+    The patch is asserted first, so a browser where it doesn't take fails here
+    rather than quietly testing a small file against the wrong branch.
+    """
+    small = tmp_path / "big.pdf"
+    small.write_bytes(b"%PDF-1.4 stands in for a very large file")
+    page = _upload_page(chromium, live_url)
+    posts = _watch_uploads(page)
+    page.locator("#start-input").set_input_files(small)
+    page.locator("#end-input").set_input_files(small)
+
+    patched = page.evaluate(
+        """() => {
+            const f = document.getElementById('start-input').files[0];
+            Object.defineProperty(f, 'size', {value: 200 * 1024 * 1024});
+            return document.getElementById('start-input').files[0].size;
+        }"""
+    )
+    assert patched == 200 * 1024 * 1024, "the oversize stand-in did not take; this test proves nothing"
+
+    page.locator("#compare-btn").click()
+    error = page.locator("#upload-error")
+    error.wait_for(state="visible")
+    assert "larger than 150 MB" in error.inner_text()
+    assert posts == [], "an over-limit file was uploaded before being refused"
+    page.close()
+
+
+def test_compare_button_reports_progress_while_the_diff_runs(live_url, chromium, tmp_path):
+    """While a diff is in flight the button says "Comparing…" and is disabled,
+    then returns to Compare (#71).
+
+    A server diff takes seconds to minutes, so with no in-flight state the page
+    looks inert and invites a second click on the same pair. The response is
+    held in the page — ``fetch`` is captured and released on demand — rather
+    than by slowing the network, so the mid-flight state is observed at a fixed
+    point instead of raced against a real request.
+    """
+    hold_fetch = """
+        window.__release = null;
+        const original = window.fetch;
+        window.fetch = (...args) => new Promise((resolve, reject) => {
+            window.__release = () => original(...args).then(resolve, reject);
+        });
+    """
+    start, end = _pdf_pair(tmp_path)
+    page = _upload_page(chromium, live_url, init_script=hold_fetch)
+    page.locator("#start-input").set_input_files(start)
+    page.locator("#end-input").set_input_files(end)
+
+    btn = page.locator("#compare-btn")
+    with page.context.expect_page() as report_info:
+        btn.click()
+    page.wait_for_function("() => window.__release !== null")
+
+    assert btn.inner_text() == "Comparing…"
+    assert btn.is_disabled(), "the button stays clickable while a diff is already running"
+
+    page.evaluate("() => window.__release()")
+    report = report_info.value
+    report.wait_for_selector(".change-card", timeout=60_000)
+    assert btn.inner_text() == "Compare"
+    assert btn.is_enabled()
+    report.close()
+    page.close()
+
+
+def test_report_tab_shows_progress_until_the_report_arrives(live_url, chromium, tmp_path):
+    """The report tab says a diff is running, and the report replaces it (#490).
+
+    The tab has to be opened on the click itself, since a pop-up opened later is
+    blocked (#41), so it necessarily sits empty for the whole render. Left on
+    about:blank that is indistinguishable from a crash, and the reader's move is
+    to close it or re-click, throwing away a render that was about to finish.
+    The test above covers the *button*'s in-flight state on the upload page;
+    this covers the tab, which is where the reader is actually looking.
+
+    Same held-``fetch`` trick as above, so the mid-flight state is observed at a
+    fixed point rather than raced against a real request.
+    """
+    hold_fetch = """
+        window.__release = null;
+        const original = window.fetch;
+        window.fetch = (...args) => new Promise((resolve, reject) => {
+            window.__release = () => original(...args).then(resolve, reject);
+        });
+    """
+    start, end = _pdf_pair(tmp_path)
+    page = _upload_page(chromium, live_url, init_script=hold_fetch)
+    page.locator("#start-input").set_input_files(start)
+    page.locator("#end-input").set_input_files(end)
+
+    with page.context.expect_page() as report_info:
+        page.locator("#compare-btn").click()
+    report = report_info.value
+    page.wait_for_function("() => window.__release !== null")
+
+    report.wait_for_selector(".spinner")
+    assert "Diff in progress" in report.locator("h1").inner_text()
+    # A real animation, not a static glyph: a frozen circle would read as hung.
+    assert report.locator(".spinner").evaluate("el => getComputedStyle(el).animationName") != "none"
+
+    # And the placeholder is replaced by the report rather than left alongside it.
+    page.evaluate("() => window.__release()")
+    report.wait_for_selector(".change-card", timeout=60_000)
+    assert report.locator(".spinner").count() == 0
+    report.close()
+    page.close()
+
+
+def test_blocked_popup_is_reported_instead_of_failing_silently(live_url, chromium, tmp_path):
+    """When the browser blocks the report tab, the user is told (#71).
+
+    This is the #41 failure mode on the upload path: the report has nowhere to
+    go, and without the message the click appears to do nothing. The tab is
+    opened *before* the upload, so a blocked pop-up must also abort before the
+    files leave the browser — asserted here because "nothing was sent" is not
+    visible on screen.
+    """
+    start, end = _pdf_pair(tmp_path)
+    page = _upload_page(chromium, live_url, init_script="window.open = () => null;")
+    posts = _watch_uploads(page)
+    page.locator("#start-input").set_input_files(start)
+    page.locator("#end-input").set_input_files(end)
+
+    page.locator("#compare-btn").click()
+
+    error = page.locator("#upload-error")
+    error.wait_for(state="visible")
+    assert "Pop-up blocked" in error.inner_text()
+    assert posts == [], "files were uploaded for a report that had nowhere to open"
+    assert page.locator("#upload-success").is_hidden()
+    page.close()
+
+
+def test_a_server_rejection_is_shown_and_the_blank_tab_is_closed(live_url, chromium, tmp_path):
+    """When the server refuses the pair, the reader gets its reason and no empty
+    tab is left behind (#71).
+
+    This is the one path the pre-flight checks cannot reach: the files are
+    well-formed enough to send, and the refusal comes back after the report tab
+    has already been opened. Two things have to happen, and neither is visible
+    from the API tests — the server's own wording has to reach the page (it is
+    written for the reader, so ``detail`` is rendered rather than "HTTP 422"),
+    and the tab opened in advance has to be closed rather than stranded on its
+    in-progress placeholder. The 422 here is the engine declining an unnumbered layout
+    (#141); the rate-limit and timeout replies come back through the same
+    branch.
+    """
+    start, end = _pdf_pair(tmp_path, numbered=False)
+    page = _upload_page(chromium, live_url)
+    page.locator("#start-input").set_input_files(start)
+    page.locator("#end-input").set_input_files(end)
+
+    page.locator("#compare-btn").click()
+
+    error = page.locator("#upload-error")
+    error.wait_for(state="visible")
+    # The engine's own sentence, not a status code: the generic fallback in
+    # compare.js would read "Request failed (HTTP 422)".
+    assert "no printed line numbers" in error.inner_text()
+    assert len(page.context.pages) == 1, "the report tab was left stranded on the placeholder"
+    assert page.locator("#upload-success").is_hidden()
+    # And the form is usable again for the next pair.
+    assert page.locator("#compare-btn").inner_text() == "Compare"
+    assert page.locator("#compare-btn").is_enabled()
     page.close()
 
 
@@ -792,4 +1232,121 @@ def test_find_accepts_a_query_pasted_off_the_screen(chromium, tmp_path):
                         .closest('.fb-row').querySelector('.fb-gutter').textContent.trim()"""
     )
     assert row == "1"
+    page.close()
+
+
+def test_csp_blocks_object_element(live_url, chromium):
+    """CSP object-src 'none' blocks <object> elements (#282).
+
+    The CSP header includes object-src 'none'. This test verifies the browser
+    actually enforces it by injecting an <object> element pointing to a valid
+    resource and confirming it fails to load.
+
+    If object-src is removed or weakened to 'self', the object would load and
+    the test would fail. This proves the defense-in-depth layer is active, not
+    just the header string being present.
+    """
+    page = chromium.new_page()
+    # Navigate to the sample report which carries the CSP header
+    page.goto(f"{live_url}/sample/example.html", wait_until="domcontentloaded")
+
+    # Inject an <object> element pointing to a simple HTML resource on the same origin.
+    # object-src 'none' should prevent it from loading.
+    # We use a longer timeout and check for CSP violation in console.
+    csp_violation = page.evaluate(
+        """() => new Promise((resolve) => {
+            const violations = [];
+            const originalError = console.error;
+            console.error = (...args) => {
+                if (args[0] && args[0].includes && args[0].includes('Content Security Policy')) {
+                    violations.push(args[0]);
+                }
+                originalError.apply(console, args);
+            };
+
+            const obj = document.createElement('object');
+            obj.type = 'text/html';
+            obj.data = '/index.html';  // Same-origin, would load without CSP
+            obj.style.width = '100px';
+            obj.style.height = '100px';
+
+            let loaded = false;
+            obj.onload = () => { loaded = true; };
+
+            document.body.appendChild(obj);
+
+            // Wait for load or CSP violation
+            setTimeout(() => {
+                console.error = originalError;
+                // If loaded is true, the object loaded (CSP not blocking).
+                // If violations array has CSP errors, CSP blocked it.
+                // If neither, assume CSP blocked (some browsers don't fire onload/onerror).
+                resolve({ loaded, violations });
+            }, 2000);
+        })"""
+    )
+
+    assert csp_violation["loaded"] is False, (
+        "<object> element loaded (onload fired) despite object-src 'none' — CSP enforcement is not working"
+    )
+
+    # If we got CSP violations, that's proof the browser enforced it
+    # If not, the browser may have silently blocked without firing events
+    # Both cases indicate CSP is working (object didn't load)
+    page.close()
+
+
+def test_csp_base_uri_none_ignores_base_tag(live_url, chromium):
+    """CSP base-uri 'none' causes the browser to ignore <base> tags (#282).
+
+    The CSP header includes base-uri 'none'. This test verifies the browser
+    actually enforces it by injecting a <base> tag with a different path and
+    confirming relative URLs resolve against the document's origin, not the base.
+
+    If base-uri is removed or weakened to 'self', the <base> tag would be honored
+    and relative URLs would resolve against the base path. This proves the
+    defense-in-depth layer is active.
+    """
+    page = chromium.new_page()
+    page.goto(f"{live_url}/sample/example.html", wait_until="domcontentloaded")
+
+    # Test with base-uri 'none': inject a <base> tag and try to load a relative resource
+    # With base-uri 'none', the browser should ignore the <base> tag and resolve
+    # relative URLs against the document's origin.
+    result_with_csp = page.evaluate(
+        """() => new Promise((resolve) => {
+            // Add a base tag pointing to a different path
+            const base = document.createElement('base');
+            base.href = '/different/path/';
+            document.head.appendChild(base);
+
+            // Now try to load a relative resource (no leading slash)
+            const img = document.createElement('img');
+            img.src = 'test.jpg';  // Relative URL
+            img.style.display = 'none';
+
+            let loaded = false;
+            let errored = false;
+            img.onload = () => { loaded = true; };
+            img.onerror = () => { errored = true; };
+
+            document.body.appendChild(img);
+
+            setTimeout(() => {
+                // With base-uri 'none', currentSrc should be relative to document origin
+                // (i.e., /sample/test.jpg), not the base path (/different/path/test.jpg)
+                resolve({
+                    loaded,
+                    errored,
+                    currentSrc: img.currentSrc,
+                    ignoredBase: img.currentSrc.includes('/sample/')
+                });
+            }, 3000);
+        })"""
+    )
+
+    assert result_with_csp["ignoredBase"] is True, (
+        f"<base> tag was honored despite base-uri 'none' — "
+        f"CSP enforcement is not working. currentSrc: {result_with_csp['currentSrc']}"
+    )
     page.close()

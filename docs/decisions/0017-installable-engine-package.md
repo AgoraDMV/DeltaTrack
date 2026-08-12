@@ -13,28 +13,19 @@ already been narrowed to `pypdfium2` alone so that installing the engine would n
 a web server — a claim about a config file that nothing could check, because nothing could
 install.
 
-Two shapes were open, and the difference between them is only about where a broken
-package shows up.
+Two shapes were open, and the difference between them is where `deltatrack` resolves from.
 
 A root `deltatrack/` package is importable from the working directory whether or not it is
-installed. That is convenient and it is also the failure mode: a module left out of the
-wheel, or a packaging config that drifts from the tree, passes the whole suite locally
-because the suite was reading source off disk the entire time. It surfaces on the first
-machine that installs rather than clones.
+installed. A `src/deltatrack/` package cannot be found from the repository root, so the only
+way to import it is to install it — and every consumer then reaches the engine by the same
+one route.
 
-A `src/deltatrack/` package cannot be found from the repository root, so the only way to
-import it is to install it. The suite then exercises the distribution, and a packaging
-defect fails in CI.
-
-*Corrected by [#438](https://github.com/AgoraDMV/DeltaTrack/issues/438): the last sentence
-overstates what the layout buys, and the contrast drawn with the root package does not hold.
-`uv sync` installs the engine EDITABLE, a `.pth` pointing straight at `src/`, so an ordinary
-run resolves the working tree and a module left out of the wheel passes the suite under
-either layout. Packaging fidelity is covered only by `tests/test_engine_installs.py`, as the
-Consequences below already say. What excluding `src` from `pythonpath` does preserve is ONE
-import-resolution story shared by pytest, the root command wrappers and the tools, which is
-the reason now recorded in `pyproject.toml` and AGENTS.md. The decision stands; this part of
-the reasoning recorded for it does not.*
+That guarantee is about import resolution, not packaging. `uv sync` installs the engine
+*editable*, a `.pth` pointing straight at `src/`, so an ordinary run resolves the working
+tree under either layout: a module left out of the wheel, or a packaging config that drifts
+from the tree, passes the suite either way. Packaging fidelity is bought by
+`tests/test_engine_installs.py`, which builds a real wheel into a throwaway environment, and
+by nothing else.
 
 Three things were measured on the branch rather than assumed, because each would have
 changed the decision:
@@ -68,11 +59,17 @@ files) is shared. It was rejected anyway: the guarantee is worth having at the p
 project becomes installable, and taking it later means paying the review cost of a second
 layout change to buy something available now.
 
-**`pytest`'s `pythonpath` keeps `.` and does not gain `src`.** Omitting `src` is what makes
-the suite resolve `deltatrack` through the installed distribution. Keeping `.` costs
-nothing and was verified: `deltatrack` is not at the repository root to be found, so no
-amount of `.` makes an uninstalled engine importable. It exposes only the four dev-only
-root modules the tests import.
+**`pytest`'s `pythonpath` does not gain `src`.** Omitting it is what makes the suite resolve
+`deltatrack` through the installed distribution, the same way the root wrappers and the
+tools do. Add `src` and pytest alone resolves the engine off disk, which makes the suite the
+only consumer with its own rules: in a worktree with no environment the tests would quietly
+pass against that worktree while `./diff_bill.py` beside them imports another checkout. That
+split brain is rejected outright in `tests/conftest.py`
+([#435](https://github.com/AgoraDMV/DeltaTrack/issues/435)) rather than papered over. The
+roots that stay are `.`, which resolves `tests.*` and `scripts.*` as namespace packages and
+cannot make an uninstalled engine importable because `deltatrack` is not at the root to be
+found, and `tools`, whose scripts are run directly and so must resolve each other by bare
+name.
 
 **The CLIs become thin wrappers at the root, not console scripts.** `./diff_bill.py` and
 `./diff_pdf.py` survive as five-line modules that import from the package and re-export
@@ -88,17 +85,12 @@ on top of the standing cycle until #62 removes the cycle itself: while the cycle
 mistake in an eager public-API surface fails at import time for every consumer rather than
 at the one call site that made it.
 
-**The four dev-only root modules stay put.** `corpus_paths.py`, `render_examples.py`,
-`validation_check.py` and `validation_sources.py` are not imported by any product module,
-so they do not block this. Moving them is a separate question about import roots — `scripts/`
-is not a package and reaches the root through `sys.path.insert` — and folding it in would
-double a diff whose purpose is legibility. Tracked as
-[#401](https://github.com/AgoraDMV/DeltaTrack/issues/401).
-
-*Superseded by #401*, which moved all four: the fixture-path resolver and the validation
-pair into `tests/`, the example renderer into `scripts/`. No import root was added — both
-directories resolve as namespace packages under the `.` already on `pythonpath`, which is
-how `tests/` and several `scripts/` modules were already imported.
+**The repository root holds only the command wrappers and configuration.** The four dev-only
+modules that once sat there live beside what they serve
+([#401](https://github.com/AgoraDMV/DeltaTrack/issues/401)): the fixture-path resolver and
+the validation pair in `tests/`, the example renderer in `scripts/`. Neither directory is an
+import root of its own — both resolve as namespace packages under the `.` already on
+`pythonpath`.
 
 ## Consequences
 
@@ -122,10 +114,6 @@ how `tests/` and several `scripts/` modules were already imported.
 - **Research probes were repathed.** The frozen probes under `docs/research/**/probes` are
   excluded from lint, but their imports were rewritten so they still resolve; leaving them
   importing bare `bill_tree` would have made reproducibility artifacts that cannot run.
-- **Earlier records keep their original paths.** ADRs are append-only, so records up to
-  [0016](0016-product-tooling-surface-split.md) name `bill_tree.py`, `parsers/`, `formatters/`,
-  `compare/` and `structure_tree.py` at the repository root. They now live under
-  `src/deltatrack/`.
 - **Console scripts remain open**, and are the natural follow-up once install is the normal
   way people get the tool.
 

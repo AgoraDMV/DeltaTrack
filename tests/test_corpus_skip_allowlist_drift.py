@@ -228,16 +228,37 @@ def test_allowlist_fixture_id_extracts_extensionless_stage_refs() -> None:
 def test_guard_flags_a_stale_extensionless_stage_entry() -> None:
     """#331's missing case, proven to fire: inject an entry keyed on the extensionless
     ``<bill>/<stage>`` form whose stage is NOT manifested in every format the case
-    reads. 113-hr-3547 v1 is manifested pdf-only, and the amount-recall gate reads
+    reads. 114-hr-2029 v4 is manifested pdf-only, and the amount-recall gate reads
     the xml AND the pdf of a stage, so CI can never collect that case — the entry is
     stale and must be named. (A naive second ``stale_allowlist_entries`` call without
     per-format resolution validated 0 of the allowlist's 4 entries and read
-    permanently green — the vacuous decoration this guard exists to prevent.)"""
-    nodeid = "tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf[113-hr-3547/1_introduced-in-house]"
+    permanently green — the vacuous decoration this guard exists to prevent.)
+
+    The example used to be 113-hr-3547 v1, which gained its xml when the corpus moved to
+    per-version format parity. Then 114-hr-2029 v4, whose xml was withheld while #434 (the
+    multi-<legis-body> text drop) was open. #434 landed and that xml is now committed, so
+    the corpus holds no single-format stage at all — per-version parity means it may never
+    hold one again. Taking the prior note's own instruction, the manifest id set is now
+    SYNTHETIC rather than a real stage hunted for: the pdf of a stage is declared and its
+    xml is not, which is the condition under test.
+
+    Only the id set is synthetic. ``stale_allowlist_entries`` and its per-format
+    resolution are the real ones, so what this proves is unchanged — and it no longer
+    depends on the corpus permanently keeping a fixture in one format, which is what made
+    the previous two examples expire."""
+    stage = "114-hr-2029/4_reported-in-senate"
+    nodeid = f"tests/test_pdf_xml_amount_recall.py::test_xml_amounts_appear_in_pdf[{stage}]"
     allowlist = dict(conftest.ALLOWED_CI_SLOW_SKIPS)
     allowlist[nodeid] = "injected stale entry"
-    stale = stale_allowlist_entries(allowlist, manifest_fixture_ids())
-    assert stale == {nodeid: "113-hr-3547/1_introduced-in-house"}
+    # The real manifest with this stage's xml withdrawn, so every OTHER allowlist entry
+    # still resolves and only the injected one is stale. Built by subtraction rather than
+    # from scratch: a hand-built id set would make every other entry look stale too, and
+    # the assertion would then pass on a set that proves nothing about per-format
+    # resolution.
+    pdf_only_manifest = manifest_fixture_ids() - {f"{stage}.xml"}
+    assert f"{stage}.pdf" in pdf_only_manifest, "the pdf must remain declared for this to be a per-FORMAT case"
+    stale = stale_allowlist_entries(allowlist, pdf_only_manifest)
+    assert stale == {nodeid: stage}
 
 
 def test_guard_passes_a_live_extensionless_stage_entry() -> None:

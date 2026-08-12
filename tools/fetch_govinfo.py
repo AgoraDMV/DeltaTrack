@@ -78,7 +78,7 @@ CONTENT_BASE = "https://www.govinfo.gov/content/pkg"
 # on-disk corpus files (ih, rfs, rds, rh, rs, pcs, eh, eah, eas, enr) have load-bearing
 # tiers; the rest never appear in an appropriations bill, so their tiers are best-effort
 # stage placements (the admin/procedural codes -- ash, sas, sc, pav, pp, oph/ops, hdh/
-# hds, rhuc -- do not map cleanly to the 5 stages; see PR for the full mapping review).
+# hds, rhuc -- do not map cleanly to the 5 stages; #238 carries the full mapping review).
 VERSION_CODES: dict[str, tuple[str, int]] = {
     # -- tier 1: introduced (+ sponsorship admin, near introduction) --
     "ih": ("Introduced in House", 1),

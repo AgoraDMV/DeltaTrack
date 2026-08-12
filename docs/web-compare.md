@@ -84,7 +84,7 @@ XML and PDF paths can disagree on section boundaries and change counts for the s
 Browser (web/webapp/compare.html)
   │  POST /api/compare?output=html  (multipart: start_pdf, end_pdf)
   ▼
-web/app.py                    ← FastAPI: upload guards, concurrency, timeout
+web/app.py                    ← FastAPI: per-IP rate limit, upload guards, concurrency, timeout
   ▼
 src/deltatrack/compare/pdf.py ← thin wrapper (bytes in → HTML out)
   │  extract_clean_pages()       src/deltatrack/parsers/pdf_text.py
@@ -138,6 +138,11 @@ Production ops (hosting, limits, systemd) live in gitignored `docs-for-ai/deploy
 
 - Keep **150 MB** cap aligned in three places: Apache `LimitRequestBody`, `MAX_UPLOAD_BYTES` in `app.py`, `MAX_BYTES` in `compare.js`
 - Keep `MAX_CONCURRENT_DIFFS` and `DIFF_TIMEOUT_S` in mind on the 8 GB host
+- `COMPARE_RATE_LIMIT_PER_MINUTE` caps one client at **10 requests/minute** (429 + `Retry-After: 60` past that). It lives only in `app.py` — nothing else to keep aligned. It is a slowapi *default* limit on ASGI middleware, not a per-route decorator, so a new API route inherits the same budget unless it opts out with `@limiter.exempt`.
+
+  **The rate-limit counters are process-local (#395).** Production currently runs one Uvicorn worker, so the 10 requests/minute budget is shared by all requests handled by that process. Do not increase the worker/process count without moving the limiter to shared storage: with N independent workers, each keeps its own counter for a client IP, so one client can receive up to roughly `10 × N` requests/minute before any 429s appear. The limiter's in-memory storage is intentional while the deploy is single-worker (see the comment at `Limiter(...)` in `web/app.py`).
+
+  **Adding a CDN in front of Apache breaks the rate-limit key — change the key first.** `_rate_limit_key` reads the *last entry of the last* `X-Forwarded-For` header: that entry is the address the outermost proxy accepted the connection from, and everything to its left is client-supplied and spoofable. It is the real client only while Apache *is* the outermost proxy. Behind a CDN the rightmost entry becomes the CDN edge address, collapsing every user behind that edge into one shared bucket. Pick the new key as part of the CDN change rather than discovering the problem from other people's 429s. Either candidate works — the CDN's own client-IP header, or the *n*th-from-right `X-Forwarded-For` entry for a validated, fixed chain depth — but only once the origin makes that value unspoofable: Apache has to accept the header solely from the CDN, or overwrite any copy an untrusted client sends. A key a direct caller can set for itself is worse than the shared bucket, since it removes the limit rather than over-applying it.
 
 **Upload page copy or UX** — `web/webapp/compare.html`, `web/webapp/js/compare.js`, `web/webapp/css/styles.css`
 

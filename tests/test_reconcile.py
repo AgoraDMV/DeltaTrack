@@ -1,10 +1,67 @@
-"""Tests for section renumbering reconciliation."""
+"""Tests for section renumbering reconciliation.
+
+**Re-aimed for ADR 0020 slice 2, meanings unchanged.** These pinned the move pass when it was
+``reconcile_moves``, a single function taking classified ``NodeDiff`` records. That pass is now
+the round-2 retrieval, evidence and assignment stages, running *before* classification over
+unmatched observations, so the tests drive it through :func:`reconciled` below.
+
+What each test asserts is unchanged: which texts pair and which do not, what the resulting record
+looks like, and what the greedy claim leaves behind. Those are input-to-output facts derived from
+the texts, not transcriptions of the implementation, so the oracle survives the harness change --
+and their meanings staying identical is itself evidence the policy did not move.
+"""
 
 import pytest
-from conftest import make_node_diff as _node
 
-from deltatrack.diff_bill import reconcile_moves
+from deltatrack.bill_tree import BillNode
+from deltatrack.diff_bill import (
+    NodeDiff,
+    ObservationRegistry,
+    assign_moves,
+    classify,
+    move_correspondence_evidence,
+    retrieve_move_candidates,
+    settle_correspondences,
+    unmatched_population,
+)
+from deltatrack.similarity import MOVE_THRESHOLD
 from tests.corpus_paths import fixture_path
+
+
+def _node(element_id: str, display_path: tuple[str, ...], body_text: str) -> BillNode:
+    """One parsed section. ``match_path`` is per-node so nothing collides by accident."""
+    return BillNode(
+        match_path=(element_id,),
+        display_path=display_path,
+        tag="section",
+        element_id=element_id,
+        header_text="",
+        body_text=body_text,
+        section_number="",
+        division_label="",
+    )
+
+
+def reconciled(old_nodes: list[BillNode], new_nodes: list[BillNode]) -> list[NodeDiff]:
+    """The migrated round-2 stages over observations no round-1 pairing claimed.
+
+    The pairing stream is every unmatched old observation followed by every unmatched new one,
+    which is the shape the pre-slice tests built directly as a list of ``removed`` records
+    followed by ``added`` ones.
+    """
+    pairs: list[tuple[BillNode | None, BillNode | None]] = [(node, None) for node in old_nodes]
+    pairs += [(None, node) for node in new_nodes]
+
+    registry = ObservationRegistry(old_nodes, new_nodes)
+    population = unmatched_population(pairs, registry)
+    evidence = move_correspondence_evidence(retrieve_move_candidates(population, bound=MOVE_THRESHOLD))
+    moves = assign_moves(population, evidence, threshold=MOVE_THRESHOLD)
+    # `round1_evidence=()` is deliberate rather than a stub: this stream is every unmatched old
+    # observation followed by every unmatched new one, so it holds no 1:1 pairing for the
+    # similarity rule to have decided and there is no round-1 evidence to carry. Settlement
+    # raises if a surviving 1:1 ever appears here without its evidence, which is what makes
+    # passing `()` safe to state rather than something to check by hand.
+    return classify(settle_correspondences(pairs, registry, moves, round1_evidence=()), registry)
 
 
 class TestReconcileMoves:
@@ -12,14 +69,10 @@ class TestReconcileMoves:
         text_a = "For acquisition and construction, $2,022,775,000, to remain available."
         text_b = "None of the funds shall be used for lobbying activities."
 
-        changes = [
-            _node("removed", old_path=("sec. 2",), old_text=text_a),
-            _node("removed", old_path=("sec. 3",), old_text=text_b),
-            _node("added", new_path=("title ii", "sec. 3"), new_text=text_a),
-            _node("added", new_path=("title ii", "sec. 4"), new_text=text_b),
-        ]
-
-        result = reconcile_moves(changes)
+        result = reconciled(
+            [_node("o1", ("sec. 2",), text_a), _node("o2", ("sec. 3",), text_b)],
+            [_node("n1", ("title ii", "sec. 3"), text_a), _node("n2", ("title ii", "sec. 4"), text_b)],
+        )
 
         moved = [c for c in result if c.change_type == "moved"]
         removed = [c for c in result if c.change_type == "removed"]
@@ -37,16 +90,10 @@ class TestReconcileMoves:
         assert m.text_diff is None  # identical text
 
     def test_below_threshold_unchanged(self):
-        changes = [
-            _node("removed", old_path=("sec. 1",), old_text="Short title of the act."),
-            _node(
-                "added",
-                new_path=("sec. 1",),
-                new_text="Completely different content about sanctions and enforcement.",
-            ),
-        ]
-
-        result = reconcile_moves(changes)
+        result = reconciled(
+            [_node("o1", ("sec. 1",), "Short title of the act.")],
+            [_node("n1", ("sec. 1",), "Completely different content about sanctions and enforcement.")],
+        )
 
         assert len(result) == 2
         assert result[0].change_type == "removed"
@@ -66,12 +113,10 @@ class TestReconcileMoves:
             " $312,000,000, to remain available."
         )
 
-        changes = [
-            _node("removed", old_path=("maritime administration",), old_text=old_text),
-            _node("added", new_path=("maritime administration", "ship disposal"), new_text=new_text),
-        ]
-
-        result = reconcile_moves(changes)
+        result = reconciled(
+            [_node("o1", ("maritime administration",), old_text)],
+            [_node("n1", ("maritime administration", "ship disposal"), new_text)],
+        )
 
         moved = [c for c in result if c.change_type == "moved"]
         assert len(moved) == 1
@@ -79,20 +124,10 @@ class TestReconcileMoves:
 
     def test_low_similarity_stays_separate(self):
         """Pairs below the threshold should not be reconciled as moved."""
-        changes = [
-            _node(
-                "removed",
-                old_path=("sec. 501",),
-                old_text="Counting Veterans Cancer Act provisions for data collection.",
-            ),
-            _node(
-                "added",
-                new_path=("sec. 201",),
-                new_text="Amending Compacts of Free Association with Pacific Island nations.",
-            ),
-        ]
-
-        result = reconcile_moves(changes)
+        result = reconciled(
+            [_node("o1", ("sec. 501",), "Counting Veterans Cancer Act provisions for data collection.")],
+            [_node("n1", ("sec. 201",), "Amending Compacts of Free Association with Pacific Island nations.")],
+        )
 
         assert len(result) == 2
         assert result[0].change_type == "removed"
@@ -102,12 +137,10 @@ class TestReconcileMoves:
         old_text = "For acquisition and construction, $1,876,875,000, to remain available until September 30, 2025."
         new_text = "For acquisition and construction, $2,022,775,000, to remain available until expended."
 
-        changes = [
-            _node("removed", old_path=("sec. 5",), old_text=old_text),
-            _node("added", new_path=("title ii", "sec. 10"), new_text=new_text),
-        ]
-
-        result = reconcile_moves(changes)
+        result = reconciled(
+            [_node("o1", ("sec. 5",), old_text)],
+            [_node("n1", ("title ii", "sec. 10"), new_text)],
+        )
 
         assert len(result) == 1
         m = result[0]
@@ -125,14 +158,10 @@ class TestReconcileMoves:
         claim loop paired them by iteration order. The resulting record asserts a
         relationship between two sections whose only shared property is being empty.
         """
-        changes = [
-            _node("removed", old_path=("sec. 1",), old_text=""),
-            _node("removed", old_path=("sec. 2",), old_text=""),
-            _node("added", new_path=("title i", "sec. 101"), new_text=""),
-            _node("added", new_path=("title i", "sec. 102"), new_text=""),
-        ]
-
-        result = reconcile_moves(changes)
+        result = reconciled(
+            [_node("o1", ("sec. 1",), ""), _node("o2", ("sec. 2",), "")],
+            [_node("n1", ("title i", "sec. 101"), ""), _node("n2", ("title i", "sec. 102"), "")],
+        )
 
         assert [c.change_type for c in result] == ["removed", "removed", "added", "added"]
 
@@ -143,12 +172,10 @@ class TestReconcileMoves:
         texts rather than scoring them, and a future rewrite that reintroduces scoring
         should not be free to pair these.
         """
-        changes = [
-            _node("removed", old_path=("sec. 1",), old_text=""),
-            _node("added", new_path=("sec. 2",), new_text="For acquisition and construction, $2,022,775,000."),
-        ]
-
-        result = reconcile_moves(changes)
+        result = reconciled(
+            [_node("o1", ("sec. 1",), "")],
+            [_node("n1", ("sec. 2",), "For acquisition and construction, $2,022,775,000.")],
+        )
 
         assert [c.change_type for c in result] == ["removed", "added"]
 
@@ -158,15 +185,14 @@ class TestReconcileMoves:
         text_b = "For naval operations and maintenance, $5,531,369,000, to remain available."
         text_c = "Short title and enactment clause for this act."
 
-        changes = [
-            _node("removed", old_path=("sec. 1",), old_text=text_a),
-            _node("removed", old_path=("sec. 2",), old_text=text_b),
-            _node("removed", old_path=("sec. 3",), old_text=text_c),
-            _node("added", new_path=("title i", "sec. 101"), new_text=text_a),
-            _node("added", new_path=("title i", "sec. 102"), new_text=text_b),
-        ]
-
-        result = reconcile_moves(changes)
+        result = reconciled(
+            [
+                _node("o1", ("sec. 1",), text_a),
+                _node("o2", ("sec. 2",), text_b),
+                _node("o3", ("sec. 3",), text_c),
+            ],
+            [_node("n1", ("title i", "sec. 101"), text_a), _node("n2", ("title i", "sec. 102"), text_b)],
+        )
 
         moved = [c for c in result if c.change_type == "moved"]
         removed = [c for c in result if c.change_type == "removed"]

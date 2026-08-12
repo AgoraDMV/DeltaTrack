@@ -30,6 +30,24 @@ def _normalize(name: str | None) -> str:
     return re.sub(r"[^a-z0-9 ]", "", (name or "").lower()).strip()
 
 
+def _agency_keys(acc: dict) -> tuple[str, ...]:
+    """Normalized names to try against the bill's top-level agency index, for one account.
+
+    The report and the bill name the same agency differently, so we try both the report's
+    title level and the bureau below it. A committee report also heads its title
+    "<AGENCY> APPROPRIATIONS" where the bill's own title element carries the bare
+    "<AGENCY>"; the suffix-stripped variant closes that gap. Legislative Branch is where
+    it bites: every account sits under the bill's "Legislative Branch" title, so without
+    the strip there is no key to hit and the agency fallback silently never fires — the
+    accounts whose name the builder cannot map (`match_path` null) then have no channel
+    left at all and can never validate, whatever the parser does.
+    """
+    title = _normalize(acc["title"])
+    return tuple(
+        dict.fromkeys(k for k in (title, re.sub(r" appropriations$", "", title), _normalize(acc.get("bureau"))) if k)
+    )
+
+
 def _component_sum(amounts: set[int], target: int, max_k: int = 4) -> bool:
     """True if a subset (size <= max_k) of a node's amounts sums to target."""
     pool = sorted({a for a in amounts if 0 < a <= target}, reverse=True)[:16]
@@ -74,8 +92,8 @@ def validate_jurisdiction(jur: Jurisdiction) -> list[AccountResult]:
         # The bill's top-level agency may be named at the report's title level or a section
         # below it (e.g. Energy-Water nests "Corps of Engineers--Civil" under a department
         # title), so accept a match under either.
-        agency_names = (_normalize(acc["title"]), _normalize(acc.get("bureau")))
-        if any(amount in by_agency.get(name, set()) for name in agency_names if name):
+        agency_names = _agency_keys(acc)
+        if any(amount in by_agency.get(name, set()) for name in agency_names):
             method = "agency"
         elif acc["match_path"] is not None and _component_sum(by_path.get(tuple(acc["match_path"]), set()), amount):
             method = "component-sum"

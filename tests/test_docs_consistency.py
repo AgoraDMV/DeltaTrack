@@ -5,10 +5,16 @@ no markers and run in the default fast suite.
 """
 
 import argparse
+import ast
 import importlib
+import re
 import subprocess
 import sys
 from pathlib import Path
+
+import yaml
+
+from tests import test_ci_workflow as _ci_workflow
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -580,3 +586,416 @@ def test_the_retired_path_rule_can_fire():
 
     fenced = _code_spans("```bash\n$ rm -rf test_data/extract_cache\n```")
     assert fenced == ["rm -rf test_data/extract_cache"]
+
+
+# --- docs/release.md vs the machinery it describes (#547) ---------------------
+# `docs/release.md` is the develop-to-main promotion runbook. Its load-bearing
+# statements are claims about machinery: that the Pages workflow publishes committed
+# reports and never renders, which publishing actions it uses, which tests guard the
+# committed examples, and that the security workflow runs when a commit lands on `main`.
+# Each reads as established fact and none was checked, so the document drifted into
+# seven factual errors before it merged (#544). These are the same idea applied to the
+# release document: the four properties that are mechanically derivable from committed
+# files are pinned here, so a silent inversion (a render step reintroduced, an action
+# renamed, a test deleted, `main` dropped from a trigger) goes red instead of quietly
+# invalidating the runbook.
+
+_WORKFLOWS_DIR = ROOT / ".github" / "workflows"
+_UPDATE_EXAMPLES = _WORKFLOWS_DIR / "update-examples.yml"
+_RELEASE_DOC = ROOT / "docs" / "release.md"
+
+# Commands that, run from the Pages workflow, would make it a renderer. The first two
+# are what #42 removed (the job used to fetch a bill and run a comparison itself);
+# the third is the renderer the runbook says rendering now lives in, so an editor
+# reintroducing rendering through the current pipeline is caught too.
+_RENDERING_COMMANDS = ("fetch_bills", "diff_bill.py compare", "render_examples.py")
+
+
+def _workflow_run_commands(yml_path: Path) -> list[str]:
+    """Every executed `run:` block in a workflow's jobs, as its logical commands.
+
+    Parsing the YAML drops the file's YAML comments, so prose that merely *mentions*
+    a command (update-examples.yml explains at length that it used to render) can never
+    count. Within a block, shell comments are stripped and operators split it back into
+    the individual commands, so a commented-out render invocation is not mistaken for a
+    live one either. Each returned string is a command the runner actually executes.
+    """
+    workflow = yaml.safe_load(yml_path.read_text(encoding="utf-8")) or {}
+    commands: list[str] = []
+    for job in (workflow.get("jobs") or {}).values():
+        for step in (job or {}).get("steps") or []:
+            block = (step or {}).get("run")
+            if isinstance(block, str):
+                commands.extend(_ci_workflow._logical_commands(block))
+    return commands
+
+
+def _rendering_offenders(yml_path: Path) -> list[str]:
+    """Rendering invocations among a workflow's executable commands; empty if none.
+
+    Single verdict path for the publish-only contract: it is what the live guard below
+    asserts is empty for update-examples.yml, and what the negative control asserts
+    reports the render commands it is deliberately given, so a rewrite that stops
+    matching render commands (or starts reading nothing) flips both red rather than
+    passing the fixture while leaving the live guard vacuous.
+    """
+    commands = _workflow_run_commands(yml_path)
+    return [c for c in commands if any(rend in c for rend in _RENDERING_COMMANDS)]
+
+
+def test_update_examples_job_does_not_render():
+    """The Pages job publishes committed files; it must not become a renderer again.
+
+    The runbook's central claim about this workflow is that it "does not render
+    anything" and that rendering lives only in `scripts/render_examples.py` (#42). This
+    holds it to that contract: an executable step invoking `fetch_bills` or
+    `diff_bill.py compare` would silently invert the claim while every renderer's own
+    tests stayed green.
+    """
+    commands = _workflow_run_commands(_UPDATE_EXAMPLES)
+    # The runbook calls the job a pure copy; if it ever reads as something that renders,
+    # the parse is at fault, not the workflow -- a gate that matches nothing is watching
+    # nothing.
+    assert commands, f"parsed no executable commands from {_UPDATE_EXAMPLES.name}"
+
+    offenders = _rendering_offenders(_UPDATE_EXAMPLES)
+    assert not offenders, (
+        f"{_UPDATE_EXAMPLES.name} runs a rendering command, but docs/release.md says it "
+        "does not render (#547):\n" + "\n".join(offenders)
+    )
+
+
+def test_the_publish_only_gate_rejects_a_render_step(tmp_path):
+    """The verdict above must fire on a reintroduced render, not just describe it.
+
+    Runs the SAME validator the live guard uses, `_rendering_offenders`, against
+    deliberately rendering workflows and proves it reports them; also proves it stays
+    silent on a publish-only workflow. A gate that passes on first run proves nothing
+    about whether it can fail, so a future rewrite that stops matching render commands
+    goes red here alongside the live guard.
+    """
+    workflow = tmp_path / "update-examples.yml"
+    workflow.write_text(
+        "on: {push: {branches: [main]}}\n"
+        "jobs:\n"
+        "  publish:\n"
+        "    steps:\n"
+        "      - name: Compare locally\n"
+        "        run: |\n"
+        "          uv run python ./tools/fetch_bills.py download 119\n"
+        "          uv run python ./diff_bill.py compare --source xml 119-hr-8752\n",
+        encoding="utf-8",
+    )
+    offenders = _rendering_offenders(workflow)
+    assert any("fetch_bills" in c for c in offenders), "fetch_bills render step went undetected"
+    assert any("diff_bill.py compare" in c for c in offenders), "diff_bill.py compare step went undetected"
+
+    workflow.write_text(
+        "on: {push: {branches: [main]}}\n"
+        "jobs:\n"
+        "  publish:\n"
+        "    steps:\n"
+        "      - name: Render\n"
+        "        run: |\n"
+        "          uv run python scripts/render_examples.py --examples-dir examples\n",
+        encoding="utf-8",
+    )
+    offenders = _rendering_offenders(workflow)
+    assert any("render_examples.py" in c for c in offenders), "render_examples.py step went undetected"
+
+    workflow.write_text(
+        "on: {push: {branches: [main]}}\n"
+        "jobs:\n"
+        "  publish:\n"
+        "    steps:\n"
+        "      - name: Copy committed examples\n"
+        "        run: |\n"
+        "          mkdir -p _site\n"
+        "          cp -r examples/. _site/\n",
+        encoding="utf-8",
+    )
+    assert _rendering_offenders(workflow) == [], "a publish-only workflow was rejected"
+
+
+def test_publish_only_gate_ignores_prose_that_mentions_rendering(tmp_path):
+    """A YAML comment naming the render command must not count as an invocation.
+
+    update-examples.yml's header comment describes in prose the `diff_bill.py compare`
+    step it used to run (#42). Parsing the YAML drops that comment; this pins it, so the
+    removal of a step (and the resulting reliance on a comment) cannot turn the gate on.
+    """
+    workflow = tmp_path / "update-examples.yml"
+    workflow.write_text(
+        "# This job used to run `diff_bill.py compare` on a fetched bill (#42).   \n"
+        "# It no longer renders; it only copies committed examples/.\n"
+        "on: {push: {branches: [main]}}\n"
+        "jobs:\n"
+        "  publish:\n"
+        "    steps:\n"
+        "      - name: Stage\n"
+        "        run: |\n"
+        "          # uv run python ./diff_bill.py compare    (commented out)\n"
+        "          cp -r examples/. _site/\n",
+        encoding="utf-8",
+    )
+    assert _rendering_offenders(workflow) == [], "a YAML comment mentioning a render command counted as an invocation"
+
+
+# The publishing actions docs/release.md names by ROLE. The contract is that these roles
+# exist; the version is deliberately not pinned, so a dependency update that moves a pin
+# between promotions (the exact case the runbook's step 2 warns about) stays green.
+_REQUIRED_PUBLISHING_ROLES = (
+    "actions/checkout",
+    "actions/configure-pages",
+    "actions/upload-pages-artifact",
+    "actions/deploy-pages",
+)
+
+
+def _workflow_used_roles(yml_path: Path) -> set[str]:
+    """The `actions/<owner>/<name>` part of every `uses:` entry in a workflow.
+
+    Read from the parsed YAML, so a step that was renamed or a version bump neither
+    creates nor hides a role. The `@<version>` suffix is dropped: this checks roles.
+    """
+    workflow = yaml.safe_load(yml_path.read_text(encoding="utf-8")) or {}
+    roles: set[str] = set()
+    for job in (workflow.get("jobs") or {}).values():
+        for step in (job or {}).get("steps") or []:
+            uses = (step or {}).get("uses")
+            if isinstance(uses, str) and uses.startswith("actions/"):
+                roles.add(uses.split("@", 1)[0])
+    return roles
+
+
+def _missing_publishing_roles(yml_path: Path) -> list[str]:
+    """Required publishing roles that `yml_path` does not use, in declaration order.
+
+    Single verdict path for the publishing-roles contract: it is what the live guard
+    below asserts is empty for update-examples.yml, and what the negative control
+    asserts reports the role the workflow deliberately omits, so a rewrite that stops
+    comparing against `_REQUIRED_PUBLISHING_ROLES` flips both red rather than passing
+    the fixture while leaving the live guard vacuous.
+    """
+    roles = _workflow_used_roles(yml_path)
+    return [role for role in _REQUIRED_PUBLISHING_ROLES if role not in roles]
+
+
+def test_required_publishing_action_roles_still_exist():
+    """The four publishing actions the runbook relies on are still in the workflow.
+
+    docs/release.md asks a maintainer to diff the action versions and watch the deploy,
+    so a removed or renamed publishing step would invalidate that instruction. This
+    checks the roles survive (and are not broken by a version bump).
+    """
+    missing = _missing_publishing_roles(_UPDATE_EXAMPLES)
+    assert not missing, (
+        f"docs/release.md relies on publishing actions missing from {_UPDATE_EXAMPLES.name}: "
+        f"{missing}. Present roles: {sorted(_workflow_used_roles(_UPDATE_EXAMPLES))}"
+    )
+
+
+def test_the_action_role_gate_rejects_a_removed_step(tmp_path):
+    """Deleting one required publishing step must go red, so the gate can actually fire.
+
+    Runs the SAME validator the live guard uses, `_missing_publishing_roles`, against a
+    workflow that omits `actions/configure-pages`, and proves it reports exactly that
+    role. A rewrite that stops comparing against `_REQUIRED_PUBLISHING_ROLES` goes red
+    here alongside the live guard.
+    """
+    workflow = tmp_path / "update-examples.yml"
+    workflow.write_text(
+        "on: {push: {branches: [main]}}\n"
+        "jobs:\n"
+        "  publish:\n"
+        "    steps:\n"
+        "      - uses: actions/checkout@v7\n"
+        "      - uses: actions/upload-pages-artifact@v5\n"
+        "      - uses: actions/deploy-pages@v5\n",
+        encoding="utf-8",
+    )
+    missing = _missing_publishing_roles(workflow)
+    assert missing == ["actions/configure-pages"], f"removing configure-pages went undetected; got {missing!r}"
+
+
+def test_the_action_role_gate_tolerates_a_version_bump(tmp_path):
+    """Moving a pin must stay green: the contract is the role, not the version."""
+    workflow = tmp_path / "update-examples.yml"
+    workflow.write_text(
+        "on: {push: {branches: [main]}}\n"
+        "jobs:\n"
+        "  publish:\n"
+        "    steps:\n"
+        "      - uses: actions/checkout@v99\n"
+        "      - uses: actions/configure-pages@v99\n"
+        "      - uses: actions/upload-pages-artifact@v99\n"
+        "      - uses: actions/deploy-pages@v99\n",
+        encoding="utf-8",
+    )
+    missing = _missing_publishing_roles(workflow)
+    assert not missing, f"a version bump broke the role gate: missing {missing}"
+
+
+# Every test node `docs/release.md` cites by name must resolve to a real test. A renamed
+# or deleted test would otherwise leave the runbook pointing at nothing while CI stays
+# green. References are resolved to module-level test functions read from the AST, not
+# to the same string occurring elsewhere in the document.
+_TEST_MODULE_REF = re.compile(r"(?:^|[\s`])(tests/[A-Za-z0-9_]+\.py)(?:::(test_[A-Za-z0-9_]+))?(?=[\s`]|$)")
+
+#: A bare `test_*` citation with no `tests/x.py` prefix, e.g. the runbook's
+#: `test_no_committed_example_is_orphaned`. Resolved against whatever module defines
+#: the name, because the document does not name one. Distinct from `_TEST_MODULE_REF`:
+#: a module citation's own node suffix (and the `test_` inside a module filename) is
+#: stripped from the span before this runs, so neither is double-read.
+_BARE_TEST_NAME = re.compile(r"\btest_[A-Za-z0-9_]+\b")
+
+
+def _defined_test_names(module_path: Path) -> set[str]:
+    """Module-level and test-class test function names, found by AST, not by grep."""
+    tree = ast.parse(module_path.read_text(encoding="utf-8"))
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+            names.add(node.name)
+        elif isinstance(node, ast.ClassDef):
+            for member in node.body:
+                if isinstance(member, ast.FunctionDef) and member.name.startswith("test_"):
+                    names.add(member.name)
+    return names
+
+
+def _release_test_references() -> list[tuple[str | None, str | None]]:
+    """`(module_path_rel, node)` pairs and bare `test_*` citations in docs/release.md.
+
+    Read out of code spans only. A citation is either a `tests/x.py` reference with an
+    optional `::test_y` node suffix, or a bare `test_*` name with no module prefix
+    (the runbook cites `test_no_committed_example_is_orphaned` that way). A module
+    citation's own node suffix, and the `test_` buried in a module filename
+    (`tests/test_committed_examples.py`), are stripped from the span before the bare
+    pass, so neither is read twice.
+    """
+    text = _RELEASE_DOC.read_text(encoding="utf-8")
+    found: list[tuple[str | None, str | None]] = []
+    for span in _code_spans(text):
+        for match in _TEST_MODULE_REF.finditer(span):
+            found.append((match.group(1), match.group(2)))
+        remainder = _TEST_MODULE_REF.sub("", span)
+        found.extend((None, name) for name in _BARE_TEST_NAME.findall(remainder))
+    return found
+
+
+def _module_by_test_name() -> dict[str, list[Path]]:
+    """Module files defining each `test_*` name, across every test module."""
+    index: dict[str, list[Path]] = {}
+    for path in sorted(Path(__file__).parent.glob("test_*.py")):
+        for name in _defined_test_names(path):
+            index.setdefault(name, []).append(path)
+    return index
+
+
+def _reference_failures(references: list[tuple[str | None, str | None]], by_name: dict) -> list[str]:
+    """Human-readable failures for a list of `(module_rel, node)` or `(None, bare)` refs.
+
+    Extracted from the gate below so a negative control can feed it a doctored
+    reference list and prove the bare-name branch can fire. `by_name` is passed in
+    rather than recomputed so the faulty reference being tested is the only thing
+    under test.
+    """
+    failures = []
+    for module_rel, node in references:
+        if module_rel is None:
+            if node not in by_name:
+                failures.append(f"`{node}`: cited bare, defined in no test module")
+            continue
+        module_path = ROOT / module_rel
+        if not module_path.exists():
+            failures.append(f"{module_rel}: module missing")
+            continue
+        if node is not None and node not in _defined_test_names(module_path):
+            failures.append(f"{module_rel}::{node}: no such test")
+    return failures
+
+
+def test_release_doc_test_references_resolve():
+    """Every test `docs/release.md` cites as `tests/x.py[::test_y]` or bare exists.
+
+    A resolved reference is a module path that exists plus, when it names a node, a
+    module-level test function of that name in that module (read from its AST), and a
+    bare name that some module actually defines. This validates the referenced test,
+    not merely that its spelling appears somewhere.
+    """
+    references = _release_test_references()
+    # Fails closed: a doc edit that dropped every reference would otherwise pass the
+    # loop below with nothing to check.
+    assert references, "no test references parsed from docs/release.md -- the gate is watching nothing"
+
+    failures = _reference_failures(references, _module_by_test_name())
+    assert not failures, "docs/release.md cites test(s) that no longer exist:\n" + "\n".join(failures)
+
+    # The references in the document the issue named must still be cited in SOME
+    # form (bare, or `module::node`), so a reformat that silently drops one from the
+    # gate is caught rather than just a renamed test. Keyed on the test name only, so
+    # the citation shape is irrelevant: what the floor needs is that the gate is still
+    # watching the names the issue singled out.
+    cited_names = {node for _, node in references if node is not None}
+    for bare in ("test_no_committed_example_is_orphaned",):
+        assert bare in cited_names, f"docs/release.md no longer cites `{bare}`"
+
+
+def test_the_reference_gate_rejects_a_missing_test():
+    """Pointing the document at a nonexistent test must be caught, so the gate can fire.
+
+    Both directions are pinned at the helper level, on each reference shape: a real
+    module+node resolves; a missing module, a missing node and a missing bare name all
+    fail. This is what distinguishes "recheck the string" from "resolve the referenced
+    test", and it proves the bare-name branch can fire rather than only the module
+    branch.
+    """
+    real_module = "tests/test_ci_workflow.py"
+    real_node = "test_ci_runs_on_pushes_to_develop"
+
+    missing_module = _reference_failures([("tests/test_never_existed.py", None)], {})
+    assert any("test_never_existed.py: module missing" in f for f in missing_module), (
+        f"missing module undetected: {missing_module}"
+    )
+
+    missing_node = _reference_failures([(real_module, "test_never_defined")], {})
+    assert any("test_never_defined" in f for f in missing_node), f"missing node undetected: {missing_node}"
+
+    ok = _reference_failures([(real_module, real_node)], {})
+    assert not ok, f"a real reference was rejected: {ok}"
+
+
+def test_the_reference_gate_rejects_a_missing_bare_name():
+    """A bare citation of a test no module defines must fail, not pass by absence.
+
+    The runbook cites `test_no_committed_example_is_orphaned` without a module prefix.
+    If that test were renamed, the document would point at nothing while this gate had
+    checked the other references only. The failure branch is pinned directly here so a
+    regression in the bare-name path goes red even while the live document happens to
+    resolve everywhere.
+    """
+    by_name = {"test_some_other_test": []}
+    failures = _reference_failures([(None, "test_no_committed_example_is_orphaned")], by_name)
+    assert any("test_no_committed_example_is_orphaned" in f for f in failures), (
+        f"a bare citation of an undefined test resolved: {failures}"
+    )
+    assert not _reference_failures([(None, "test_some_other_test")], by_name), (
+        "a bare citation of a defined test was rejected"
+    )
+
+
+def test_the_ast_test_index_is_not_empty():
+    """Completeness floor: the name-to-module index used by the gate reads real tests.
+
+    Every resolution step above is discovery, and discovery that quietly returns
+    nothing would make the gate pass green over tests it never looked at. The index
+    must be non-empty and must see the module the runbook cites, which proves the AST
+    walk is inspecting the suite, not just the helpers' own fixtures.
+    """
+    by_name = _module_by_test_name()
+    assert by_name, "no module-level test functions found by AST -- the parse is broken, not the tests"
+    assert by_name.get("test_no_committed_example_is_orphaned"), (
+        "the AST index does not see test_no_committed_example_is_orphaned, which "
+        "docs/release.md cites -- the index is reading the wrong tree"
+    )

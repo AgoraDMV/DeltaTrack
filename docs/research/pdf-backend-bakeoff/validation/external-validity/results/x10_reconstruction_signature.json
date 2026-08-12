@@ -1,0 +1,1652 @@
+{
+ "population": "SYNTHETIC only -- no holdout opened, no architecture run",
+ "supersedes": "A21's D-frame membership rule (any line not SAME); A22's gid-subset signature",
+ "defect": [
+  {
+   "scenario": "H merges N0+N1, X emits them separately",
+   "lines": [
+    {
+     "line": [
+      1,
+      0
+     ],
+     "state": "SAME",
+     "h_text": "ABC",
+     "x_text": "ABC",
+     "H_CROSS_LINE_MERGE": true,
+     "X_CROSS_LINE_MERGE": false,
+     "superseded_d_frame": false,
+     "new_d_frame": true
+    },
+    {
+     "line": [
+      1,
+      1
+     ],
+     "state": "SAME",
+     "h_text": "DEF",
+     "x_text": "DEF",
+     "H_CROSS_LINE_MERGE": true,
+     "X_CROSS_LINE_MERGE": false,
+     "superseded_d_frame": false,
+     "new_d_frame": true
+    }
+   ]
+  },
+  {
+   "scenario": "the inverse: H separate, X merges",
+   "lines": [
+    {
+     "line": [
+      1,
+      0
+     ],
+     "state": "SAME",
+     "h_text": "ABC",
+     "x_text": "ABC",
+     "H_CROSS_LINE_MERGE": false,
+     "X_CROSS_LINE_MERGE": true,
+     "superseded_d_frame": false,
+     "new_d_frame": true
+    },
+    {
+     "line": [
+      1,
+      1
+     ],
+     "state": "SAME",
+     "h_text": "DEF",
+     "x_text": "DEF",
+     "H_CROSS_LINE_MERGE": false,
+     "X_CROSS_LINE_MERGE": true,
+     "superseded_d_frame": false,
+     "new_d_frame": true
+    }
+   ]
+  },
+  {
+   "scenario": "pure within-line split of N0, rejoined in source order",
+   "lines": [
+    {
+     "line": [
+      1,
+      0
+     ],
+     "state": "TEXT_DIFFERS",
+     "h_text": "ABC",
+     "x_text": "A\nBC",
+     "H_CROSS_LINE_MERGE": false,
+     "X_CROSS_LINE_MERGE": false,
+     "superseded_d_frame": true,
+     "new_d_frame": true
+    },
+    {
+     "line": [
+      1,
+      1
+     ],
+     "state": "BOTH_ABSENT",
+     "h_text": "",
+     "x_text": "",
+     "H_CROSS_LINE_MERGE": false,
+     "X_CROSS_LINE_MERGE": false,
+     "superseded_d_frame": true,
+     "new_d_frame": false
+    }
+   ]
+  }
+ ],
+ "matrix": [
+  {
+   "case": "H merge / X split",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "ABC",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": true,
+   "observed_segmentation_discordance": true,
+   "in_d_frame": true,
+   "m3_reads_same": true
+  },
+  {
+   "case": "H merge / X split",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "DEF",
+   "x_text": "DEF",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": true,
+   "observed_segmentation_discordance": true,
+   "in_d_frame": true,
+   "m3_reads_same": true
+  },
+  {
+   "case": "H merge / X split",
+   "line": [
+    1,
+    2
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "H merge / X split",
+   "REGION_IN_D_FRAME": true
+  },
+  {
+   "case": "H split / X merge",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "ABC",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": true,
+   "observed_segmentation_discordance": true,
+   "in_d_frame": true,
+   "m3_reads_same": true
+  },
+  {
+   "case": "H split / X merge",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "DEF",
+   "x_text": "DEF",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": true,
+   "observed_segmentation_discordance": true,
+   "in_d_frame": true,
+   "m3_reads_same": true
+  },
+  {
+   "case": "H split / X merge",
+   "line": [
+    1,
+    2
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "H split / X merge",
+   "REGION_IN_D_FRAME": true
+  },
+  {
+   "case": "same merge on both arms",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "ABC",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "same merge on both arms",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "DEF",
+   "x_text": "DEF",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "same merge on both arms",
+   "line": [
+    1,
+    2
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "same merge on both arms",
+   "REGION_IN_D_FRAME": false
+  },
+  {
+   "case": "different merge spans (H: N0+N1, X: N1+N2)",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "ABC",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": true,
+   "observed_segmentation_discordance": true,
+   "in_d_frame": true,
+   "m3_reads_same": true
+  },
+  {
+   "case": "different merge spans (H: N0+N1, X: N1+N2)",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "DEF",
+   "x_text": "DEF",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": true,
+   "observed_segmentation_discordance": true,
+   "in_d_frame": true,
+   "m3_reads_same": true
+  },
+  {
+   "case": "different merge spans (H: N0+N1, X: N1+N2)",
+   "line": [
+    1,
+    2
+   ],
+   "h_text": "GHI",
+   "x_text": "GHI",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": true,
+   "observed_segmentation_discordance": true,
+   "in_d_frame": true,
+   "m3_reads_same": true
+  },
+  {
+   "case": "different merge spans (H: N0+N1, X: N1+N2)",
+   "REGION_IN_D_FRAME": true
+  },
+  {
+   "case": "same glyphs / different emitted-line cardinality",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "A\nBC",
+   "expected_text_discordance": true,
+   "observed_text_discordance": true,
+   "expected_segmentation_discordance": true,
+   "observed_segmentation_discordance": true,
+   "in_d_frame": true,
+   "m3_reads_same": false
+  },
+  {
+   "case": "same glyphs / different emitted-line cardinality",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "same glyphs / different emitted-line cardinality",
+   "line": [
+    1,
+    2
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "same glyphs / different emitted-line cardinality",
+   "REGION_IN_D_FRAME": true
+  },
+  {
+   "case": "different text / same cardinality",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "ABZ",
+   "expected_text_discordance": true,
+   "observed_text_discordance": true,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": true,
+   "m3_reads_same": false
+  },
+  {
+   "case": "different text / same cardinality",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "different text / same cardinality",
+   "line": [
+    1,
+    2
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "different text / same cardinality",
+   "REGION_IN_D_FRAME": true
+  },
+  {
+   "case": "same text / same cardinality",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "ABC",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "same text / same cardinality",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "same text / same cardinality",
+   "line": [
+    1,
+    2
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "same text / same cardinality",
+   "REGION_IN_D_FRAME": false
+  },
+  {
+   "case": "merge WITH a spacing difference",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "A BC",
+   "expected_text_discordance": true,
+   "observed_text_discordance": true,
+   "expected_segmentation_discordance": true,
+   "observed_segmentation_discordance": true,
+   "in_d_frame": true,
+   "m3_reads_same": false
+  },
+  {
+   "case": "merge WITH a spacing difference",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "DEF",
+   "x_text": "DEF",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": true,
+   "observed_segmentation_discordance": true,
+   "in_d_frame": true,
+   "m3_reads_same": true
+  },
+  {
+   "case": "merge WITH a spacing difference",
+   "line": [
+    1,
+    2
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "merge WITH a spacing difference",
+   "REGION_IN_D_FRAME": true
+  },
+  {
+   "case": "split WITHOUT a spacing difference",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "AB\nC",
+   "expected_text_discordance": true,
+   "observed_text_discordance": true,
+   "expected_segmentation_discordance": true,
+   "observed_segmentation_discordance": true,
+   "in_d_frame": true,
+   "m3_reads_same": false
+  },
+  {
+   "case": "split WITHOUT a spacing difference",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "split WITHOUT a spacing difference",
+   "line": [
+    1,
+    2
+   ],
+   "h_text": "",
+   "x_text": "",
+   "expected_text_discordance": false,
+   "observed_text_discordance": false,
+   "expected_segmentation_discordance": false,
+   "observed_segmentation_discordance": false,
+   "in_d_frame": false,
+   "m3_reads_same": true
+  },
+  {
+   "case": "split WITHOUT a spacing difference",
+   "REGION_IN_D_FRAME": true
+  }
+ ],
+ "coverage_vs_grouping": [
+  {
+   "case": "same one-line grouping, X drops a glyph",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "AC",
+   "common_gids": [
+    0,
+    2
+   ],
+   "expected": {
+    "text": true,
+    "segmentation": false,
+    "diagnostic": "X_LOSS"
+   },
+   "observed": {
+    "text": true,
+    "segmentation": false,
+    "diagnostic": "X_LOSS"
+   },
+   "in_d_frame": true
+  },
+  {
+   "case": "same one-line grouping, X duplicates a glyph",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "ABBC",
+   "common_gids": [
+    0,
+    1,
+    2
+   ],
+   "expected": {
+    "text": true,
+    "segmentation": false,
+    "diagnostic": "X_DUP"
+   },
+   "observed": {
+    "text": true,
+    "segmentation": false,
+    "diagnostic": "X_DUP"
+   },
+   "in_d_frame": true
+  },
+  {
+   "case": "same glyphs, 1 emitted line vs 2",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "A\nBC",
+   "common_gids": [
+    0,
+    1,
+    2
+   ],
+   "expected": {
+    "text": true,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "observed": {
+    "text": true,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "in_d_frame": true
+  },
+  {
+   "case": "H merges N0+N1, X emits separately",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "ABC",
+   "common_gids": [
+    0,
+    1,
+    2
+   ],
+   "expected": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "observed": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "in_d_frame": true
+  },
+  {
+   "case": "H merges N0+N1, X emits separately",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "DEF",
+   "x_text": "DEF",
+   "common_gids": [
+    3,
+    4,
+    5
+   ],
+   "expected": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "observed": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "in_d_frame": true
+  },
+  {
+   "case": "H merges N0+N1 AND loses gid 5, X emits separately",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "ABC",
+   "common_gids": [
+    0,
+    1,
+    2
+   ],
+   "expected": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "observed": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "in_d_frame": true
+  },
+  {
+   "case": "H merges N0+N1 AND loses gid 5, X emits separately",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "DE",
+   "x_text": "DEF",
+   "common_gids": [
+    3,
+    4
+   ],
+   "expected": {
+    "text": true,
+    "segmentation": true,
+    "diagnostic": "H_LOSS"
+   },
+   "observed": {
+    "text": true,
+    "segmentation": true,
+    "diagnostic": "H_LOSS"
+   },
+   "in_d_frame": true
+  },
+  {
+   "case": "both arms lose the same glyph, grouping identical",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "AC",
+   "x_text": "AC",
+   "common_gids": [
+    0,
+    2
+   ],
+   "expected": {
+    "text": false,
+    "segmentation": false,
+    "diagnostic": "SHARED_LOSS"
+   },
+   "observed": {
+    "text": false,
+    "segmentation": false,
+    "diagnostic": "SHARED_LOSS"
+   },
+   "in_d_frame": false
+  },
+  {
+   "case": "both arms merge N0+N1 identically",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "ABC",
+   "common_gids": [
+    0,
+    1,
+    2
+   ],
+   "expected": {
+    "text": false,
+    "segmentation": false,
+    "diagnostic": null
+   },
+   "observed": {
+    "text": false,
+    "segmentation": false,
+    "diagnostic": null
+   },
+   "in_d_frame": false
+  },
+  {
+   "case": "both arms merge N0+N1 identically",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "DEF",
+   "x_text": "DEF",
+   "common_gids": [
+    3,
+    4,
+    5
+   ],
+   "expected": {
+    "text": false,
+    "segmentation": false,
+    "diagnostic": null
+   },
+   "observed": {
+    "text": false,
+    "segmentation": false,
+    "diagnostic": null
+   },
+   "in_d_frame": false
+  },
+  {
+   "case": "different merge spans (H: N0+N1, X: N1+N2)",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "ABC",
+   "common_gids": [
+    0,
+    1,
+    2
+   ],
+   "expected": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "observed": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "in_d_frame": true
+  },
+  {
+   "case": "different merge spans (H: N0+N1, X: N1+N2)",
+   "line": [
+    1,
+    1
+   ],
+   "h_text": "DEF",
+   "x_text": "DEF",
+   "common_gids": [
+    3,
+    4,
+    5
+   ],
+   "expected": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "observed": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "in_d_frame": true
+  },
+  {
+   "case": "different merge spans (H: N0+N1, X: N1+N2)",
+   "line": [
+    1,
+    2
+   ],
+   "h_text": "GHI",
+   "x_text": "GHI",
+   "common_gids": [
+    6,
+    7,
+    8
+   ],
+   "expected": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "observed": {
+    "text": false,
+    "segmentation": true,
+    "diagnostic": null
+   },
+   "in_d_frame": true
+  },
+  {
+   "case": "spacing-only difference",
+   "line": [
+    1,
+    0
+   ],
+   "h_text": "ABC",
+   "x_text": "A BC",
+   "common_gids": [
+    0,
+    1,
+    2
+   ],
+   "expected": {
+    "text": true,
+    "segmentation": false,
+    "diagnostic": null
+   },
+   "observed": {
+    "text": true,
+    "segmentation": false,
+    "diagnostic": null
+   },
+   "in_d_frame": true
+  }
+ ],
+ "denominator": {
+  "population": "1 discordant + 1 agreeing + 3 jointly absent",
+  "all_lines_denominator": 5,
+  "risk_set_denominator": 2,
+  "M0_any_rate_risk_set": 0.5,
+  "M0_any_rate_all_lines_superseded": 0.2
+ },
+ "frame_conditioning": {
+  "fine_frame": {
+   "lines": 3,
+   "M0_any": 2,
+   "rate": 0.666667
+  },
+  "coarse_frame": {
+   "lines": 2,
+   "M0_any": 1,
+   "rate": 0.5
+  }
+ },
+ "provenance_vs_identity": [
+  {
+   "case": "content-stream space between ink of one neutral line",
+   "expected": "A B",
+   "observed": "A B"
+  },
+  {
+   "case": "generated space between ink of one neutral line",
+   "expected": "A B",
+   "observed": "A B"
+  },
+  {
+   "case": "X-inserted space between ink of one neutral line",
+   "expected": "A B",
+   "observed": "A B"
+  },
+  {
+   "case": "space across two neutral lines, seen from N0",
+   "expected": "A",
+   "observed": "A"
+  },
+  {
+   "case": "space across two neutral lines, seen from N1",
+   "expected": "D",
+   "observed": "D"
+  },
+  {
+   "case": "leading space before the first ink glyph",
+   "expected": "A",
+   "observed": "A"
+  },
+  {
+   "case": "trailing space after the last ink glyph",
+   "expected": "A",
+   "observed": "A"
+  },
+  {
+   "case": "consecutive spaces between owned ink",
+   "expected": "A  B",
+   "observed": "A  B"
+  },
+  {
+   "case": "space between owned ink and a foreign glyph",
+   "expected": "A",
+   "observed": "A"
+  }
+ ],
+ "hr_fixture": {
+  "h_text": "H. R. 2029",
+  "x_text": "H.R.2029",
+  "text_discordance": true,
+  "segmentation_discordance": false,
+  "m3_outcome": "HeadingOutcome.X_REGRESSES",
+  "m3_x_weld": 2,
+  "m3_x_split": 0
+ },
+ "m0": {
+  "neutral_lines_in_scope": 5,
+  "risk_set": 4,
+  "M0a_text": 2,
+  "M0b_segmentation": 2,
+  "M0_any": 3,
+  "M0b_only_segmentation": 1,
+  "M0a_only_text": 1,
+  "both_absent": 1,
+  "M0b_defined": 4,
+  "M0a_text_rate": 0.5,
+  "M0b_segmentation_rate": 0.5,
+  "M0_any_rate": 0.75,
+  "M0b_rate_on_defined": 0.5,
+  "M0_any_rate_ALL_LINES_superseded": 0.6
+ },
+ "tests": [
+  {
+   "test": "REPRODUCED: a cross-line merge/split leaves both text states SAME",
+   "expected": [
+    "SAME",
+    "SAME"
+   ],
+   "observed": [
+    "SAME",
+    "SAME"
+   ],
+   "pass": true,
+   "implication": "partition hands each neutral line back its own glyphs, so the text cannot differ"
+  },
+  {
+   "test": "REPRODUCED: the superseded rule therefore drops it from the D-frame",
+   "expected": [
+    false,
+    false
+   ],
+   "observed": [
+    false,
+    false
+   ],
+   "pass": true,
+   "implication": "the merge/split disagreement A17.4 exists to observe was erased"
+  },
+  {
+   "test": "...while the merge WAS visible all along, as a diagnostic that entered nothing",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "CLOSED: the new rule puts both neutral lines in the D-frame",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "REPRODUCED: a line NEITHER arm emits was in the D-frame under the superseded rule",
+   "expected": [
+    true,
+    "BOTH_ABSENT"
+   ],
+   "observed": [
+    true,
+    "BOTH_ABSENT"
+   ],
+   "pass": true,
+   "implication": "every running head, page number and VerDate stamp both arms correctly drop as chrome entered a census frame as discordance"
+  },
+  {
+   "test": "CLOSED: a shared drop is not a comparative discordance",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "implication": "PRE-REGISTRATION 5.8: the D-frame 'cannot see a failure both architectures share. That is exactly why the C-frame exists'"
+  },
+  {
+   "test": "every adversarial case matches its expected text/segmentation verdict",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "the two predicates are independent and each fires only where it should"
+  },
+  {
+   "test": "region-level D-frame membership matches the frozen expectation",
+   "expected": [
+    true,
+    true,
+    false,
+    true,
+    true,
+    true,
+    false,
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true,
+    false,
+    true,
+    true,
+    true,
+    false,
+    true,
+    true
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "D(H,X) == D(X,H) on every adversarial case",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...and the membership is the EXPECTED one, so symmetry is not vacuous",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "the prior test passed on False == False while the disagreement was being erased"
+  },
+  {
+   "test": "merge/split: D(H,X) and D(X,H) are both TRUE, not merely equal",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "weld vs space is TEXT_DIFFERS",
+   "expected": "TEXT_DIFFERS",
+   "observed": "TEXT_DIFFERS",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...and carries NO segmentation discordance",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...and reaches M3 as X_CORRECTS",
+   "expected": "X_CORRECTS",
+   "observed": "X_CORRECTS",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...with H scoring exactly one weld",
+   "expected": [
+    1,
+    0
+   ],
+   "observed": [
+    1,
+    0
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...and X clean",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "a split heading IS a segmentation discordance",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...and enters the D-frame",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...but fabricates NO M3 word-boundary error",
+   "expected": [
+    "BOTH_CLEAN",
+    0,
+    0
+   ],
+   "observed": [
+    "BOTH_CLEAN",
+    0,
+    0
+   ],
+   "pass": true,
+   "implication": "the '\\n' join is read as a word boundary by m3_boundaries.decompose, so a split at a word boundary costs nothing -- joining by '' would have scored a false weld"
+  },
+  {
+   "test": "...and both arms stay clean against the oracle",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "a split MID-WORD still scores a real M3 split",
+   "expected": 1,
+   "observed": 1,
+   "pass": true,
+   "implication": "the arm genuinely broke FAMILY across two printed lines"
+  },
+  {
+   "test": "a dropped character is TEXT discordance with NO segmentation discordance",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "...and reaches M3 as a dirty X against a clean H",
+   "expected": [
+    "X_REGRESSES",
+    true,
+    false
+   ],
+   "observed": [
+    "X_REGRESSES",
+    true,
+    false
+   ],
+   "pass": true,
+   "implication": "M3 consumes text and oracle evidence, never an M0b label"
+  },
+  {
+   "test": "...scored as a text error, not a boundary error",
+   "expected": [
+    1,
+    0,
+    0
+   ],
+   "observed": [
+    1,
+    0,
+    0
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "a duplicated character is TEXT discordance with NO segmentation discordance",
+   "expected": [
+    true,
+    false
+   ],
+   "observed": [
+    true,
+    false
+   ],
+   "pass": true,
+   "implication": "EmittedLine.gids is a set, so a repeated gid cannot reach the signature"
+  },
+  {
+   "test": "...and reaches M3 as a dirty X",
+   "expected": [
+    "X_REGRESSES",
+    false
+   ],
+   "observed": [
+    "X_REGRESSES",
+    false
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "M0's components decompose the population exactly",
+   "expected": {
+    "in_scope": 5,
+    "risk_set": 4,
+    "M0a_text": 2,
+    "M0b_segmentation": 2,
+    "M0_any": 3,
+    "M0b_only": 1,
+    "M0a_only": 1,
+    "both_absent": 1
+   },
+   "observed": {
+    "in_scope": 5,
+    "risk_set": 4,
+    "M0a_text": 2,
+    "M0b_segmentation": 2,
+    "M0_any": 3,
+    "M0b_only": 1,
+    "M0a_only": 1,
+    "both_absent": 1
+   },
+   "pass": true,
+   "implication": "M0b_only is the count that was structurally unreachable under the superseded rule"
+  },
+  {
+   "test": "M0_any is the UNION, never a sum",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the risk set excludes BOTH_ABSENT and nothing else",
+   "expected": [
+    4,
+    1
+   ],
+   "observed": [
+    4,
+    1
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the denominator change RAISES the rate, so it cannot be motivated by the number",
+   "expected": [
+    0.75,
+    0.6
+   ],
+   "observed": [
+    0.75,
+    0.6
+   ],
+   "pass": true,
+   "implication": "RQ1 seeks an equivalence statement, so a higher discordance rate makes the study's own claim harder to support, not easier"
+  },
+  {
+   "test": "TEXT_DISCORDANCE returns both True and False on the matrix",
+   "expected": [
+    false,
+    true
+   ],
+   "observed": [
+    false,
+    true
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "SEGMENTATION_DISCORDANCE returns both True and False",
+   "expected": [
+    false,
+    true
+   ],
+   "observed": [
+    false,
+    true
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "line D-frame membership returns both True and False",
+   "expected": [
+    false,
+    true
+   ],
+   "observed": [
+    false,
+    true
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "ANCHOR_DISCORDANCE returns both",
+   "expected": [
+    false,
+    true
+   ],
+   "observed": [
+    false,
+    true
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the signature separates merge, plain and split",
+   "expected": 3,
+   "observed": 3,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the signature is INSENSITIVE to an inserted space",
+   "expected": [
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     []
+    ]
+   ],
+   "observed": [
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     []
+    ]
+   ],
+   "pass": true,
+   "implication": "a word-space decision must never register as a segmentation difference, or M3 would see a boundary error that does not exist"
+  },
+  {
+   "test": "the signature names the merge SPAN, so different spans are distinguishable",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "the signature is INSENSITIVE to a repeated gid",
+   "expected": [
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     []
+    ]
+   ],
+   "observed": [
+    [
+     [
+      0,
+      1,
+      2
+     ],
+     []
+    ]
+   ],
+   "pass": true,
+   "implication": "EmittedLine.gids is a set, so duplication could never move the signature -- measured, not assumed: duplication was already classified correctly before the common-domain repair, and only LOSS was mis-classified"
+  },
+  {
+   "test": "coverage defects and grouping defects are classified independently",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": "loss and duplication must never move the segmentation metric; a merge must still be detected when the merging arm ALSO loses a glyph"
+  },
+  {
+   "test": "the two denominators give materially different rates on the same population",
+   "expected": [
+    0.5,
+    0.2
+   ],
+   "observed": [
+    0.5,
+    0.2
+   ],
+   "pass": true,
+   "implication": "3 of 5 lines are page furniture neither arm emitted; counting them as agreements makes the reported rate a function of how much chrome the document carries"
+  },
+  {
+   "test": "jointly absent lines are retained as a raw count, not discarded",
+   "expected": 3,
+   "observed": 3,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "identical architecture output scores a DIFFERENT M0 under a different frame",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": "so RQ1's reported numbers are conditional on the PDFium frame, and a failed cross-engine control must qualify RQ1 as well as RQ2"
+  },
+  {
+   "test": "...while the per-line comparative verdict itself survived both frames",
+   "expected": [
+    true,
+    true
+   ],
+   "observed": [
+    true,
+    true
+   ],
+   "pass": true,
+   "implication": "the conditioning is on denominators and populations, NOT on verdict direction -- stated precisely rather than overclaimed"
+  },
+  {
+   "test": "Model G attachment holds for every space provenance and position",
+   "expected": [],
+   "observed": [],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "a content-stream space contributes TEXT but never IDENTITY",
+   "expected": [
+    [
+     0,
+     1
+    ],
+    "A B"
+   ],
+   "observed": [
+    [
+     0,
+     1
+    ],
+    "A B"
+   ],
+   "pass": true,
+   "implication": "gids carries neutral ink only; the space is visible in text and absent from identity"
+  },
+  {
+   "test": "provenance survives on the cell even with no neutral identity",
+   "expected": [
+    null,
+    1,
+    false
+   ],
+   "observed": [
+    null,
+    1,
+    false
+   ],
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "no space provenance can move the reconstruction signature",
+   "expected": [
+    [
+     [
+      [
+       0,
+       1
+      ],
+      []
+     ]
+    ],
+    [
+     [
+      [
+       0,
+       1
+      ],
+      []
+     ]
+    ],
+    [
+     [
+      [
+       0,
+       1
+      ],
+      []
+     ]
+    ]
+   ],
+   "observed": [
+    [
+     [
+      [
+       0,
+       1
+      ],
+      []
+     ]
+    ],
+    [
+     [
+      [
+       0,
+       1
+      ],
+      []
+     ]
+    ],
+    [
+     [
+      [
+       0,
+       1
+      ],
+      []
+     ]
+    ]
+   ],
+   "pass": true,
+   "implication": "segmentation must respond to grouping, never to spacing"
+  },
+  {
+   "test": "H.R. fixture: H projects the content-stream spaces",
+   "expected": "H. R. 2029",
+   "observed": "H. R. 2029",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "H.R. fixture: X projects no space it did not derive",
+   "expected": "H.R.2029",
+   "observed": "H.R.2029",
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "H.R. fixture: this is TEXT discordance",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "H.R. fixture: and NOT segmentation discordance",
+   "expected": false,
+   "observed": false,
+   "pass": true,
+   "implication": "the arms grouped the same ink identically; only the spacing differs"
+  },
+  {
+   "test": "H.R. fixture: it enters the D-frame",
+   "expected": true,
+   "observed": true,
+   "pass": true,
+   "implication": ""
+  },
+  {
+   "test": "H.R. fixture: it stays scorable by M3 rather than being filtered by the contract",
+   "expected": [
+    "X_REGRESSES",
+    true,
+    false
+   ],
+   "observed": [
+    "X_REGRESSES",
+    true,
+    false
+   ],
+   "pass": true,
+   "implication": "the eligibility gate does not decide correctness -- the oracle does"
+  }
+ ],
+ "failures": []
+}
