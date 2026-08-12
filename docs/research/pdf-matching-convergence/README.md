@@ -24,13 +24,14 @@ uv run python docs/research/pdf-matching-convergence/probes/pdf_tiebreak_equival
 | # | Question | Ruling |
 |---|---|---|
 | 1 | Begin PDF stage extraction now | **STOP — no preservation oracle exists.** A ±0.05 change to either PDF matching cutoff passes the entire test suite. Measured, §6. |
-| 2 | Can `_Block` become an ADR 0019 observation | **CHANGE.** Yes in substance, no as emitted: the sequence is filtered (190 blocks dropped) and the block former lives inside the differ, so "parser revision" would include the matcher. §4 |
+| 2 | Can `_Block` become an ADR 0019 observation | **CHANGE.** Yes in substance. The blocker is that the block former lives inside the differ, so "parser revision" would include the matcher. The emission rule itself is fine — the 190 dropped blocks are correctly dropped (§4.2a, corrected against an earlier draft); what is missing is any statement or test of the rule. §4 |
 | 3 | Is PDF emission deterministic (ADR 0019 open question 2) | **APPROVE.** 53/53 documents re-emit identical line, anchor and block sequences. §4.1 |
 | 4 | Share `ObservationRef` / `Candidate` / `CandidateSet` / `CorrespondenceEvidence` / `Correspondence` | **APPROVE**, conditional on ruling 2. §5 |
 | 5 | Share the assignment *implementation* | **RESEARCH FIRST.** The two greedy loops are provably the same shape (§5.3), but sharing means reshaping the XML side, which this thread must not do. |
 | 6 | Share the classification implementation | **CHANGE — do not.** `moved` does not mean the same thing on the two pipelines, and three different PDF sites produce it. §3.4 |
 | 7 | Adopt XML's `match_path` / `division_key` / node granularity for PDF | **STOP — source conflict.** §7.1, §7.2 |
-| 8 | Is PDF's convergence point after Observation production | **CHANGE.** Mostly yes, with one genuine conflict: PDF's first retrieval round is a *sequence alignment*, which has no XML counterpart and cannot be expressed as a candidate set without also deciding what to do about its 525 duplicate keys. §9 |
+| 8 | Is PDF's convergence point after Observation production | **APPROVE.** Yes. An earlier draft claimed round-1 sequence alignment could not become a `CandidateSet` behaviour-preservingly; that was wrong — candidate recall is measured against adjudicated correspondences, not the retriever's own output. Corrected in §9. |
+| 9 | Blockers, restated after two corrections | The blocking finding is **only** ruling 1. Slices 1–5 and 7 are behaviour-preserving wraps; slice 6 stays research-gated on what PDF `moved` means. |
 
 ---
 
@@ -137,8 +138,8 @@ record puts it.
 | 5 | `_strip_heading_lines` | what a block's *text* is | extraction | **observation production** — legitimately, but it defines every similarity number downstream |
 | 6 | `_block_key` | the unit two sides are aligned on | fused | **RETRIEVAL** — this key is what can ever be compared |
 | 7 | `SequenceMatcher.get_opcodes` | which blocks are considered counterparts | fused | **RETRIEVAL** |
-| 8 | `replace` positional `zip` by index `k` | which block pairs with which inside a replace run | fused | **ASSIGNMENT** — competition resolved by position, consulting no evidence |
-| 9 | `replace` surplus → added/removed | 1:0 / 0:1 | fused | **ASSIGNMENT** |
+| 8 | `replace` positional `zip` by index `k` | which block pairs with which inside a replace run | fused | **RETRIEVAL** — it decides what is *considered*; `_emit_pair` can still refuse the correspondence (corrected, §9) |
+| 9 | `replace` surplus → added/removed | 1:0 / 0:1 | fused | retrieval emits no candidate; **ASSIGNMENT** settles them unmatched |
 | 10 | `_emit_pair` identical texts → emit nothing | suppress unchanged | fused | **CLASSIFICATION** + an output policy XML does not share (§7.3) |
 | 11 | `_emit_pair` identical texts + anchors differ → `moved(sim=1.0)` | moved | fused | **CLASSIFICATION** — and the `1.0` is synthesised, not measured |
 | 12 | `_emit_pair` `sim < SIMILARITY_THRESHOLD` → split | revokes a correspondence | fused | **ASSIGNMENT** |
@@ -272,19 +273,47 @@ into a stored artifact needs the cross-process check first.
 output consumes (page/line range), and already survives to the report. Nothing else in the
 PDF path is a provision. Four things stop it being an ADR 0019 observation as emitted.
 
-**(a) The sequence is filtered.** `_group_into_blocks` drops empty blocks — **190
-corpus-wide**, up to 58 in one document. ADR 0019 invariant 2 is exact about this: "An
-ordinal always addresses that complete sequence, never a filtered or re-sorted view",
-and its consequences section calls indexing a filtered view "a genuine new hazard".
-Indexing today's output would be that hazard.
+**(a) The sequence is filtered — but the filter is correct, and an earlier draft of this
+section was wrong about it.** `_group_into_blocks` drops empty blocks: **190 corpus-wide**,
+up to 58 in one document. The census confirms the code's own account of why they are empty —
+`blocks_dropped_empty` equals `anchor_coord_collisions` exactly, document for document, so
+every dropped block is the SEC-inline run-in subsection collision (DeltaTrack#96 Seam #2),
+where a section anchor and a subsection anchor share one `(page, line)` and the subsection
+owns the whole line.
 
-The census confirms the code's own account of *why* they are empty: `blocks_dropped_empty`
-equals `anchor_coord_collisions` exactly, document for document — every dropped block is the
-SEC-inline run-in subsection collision (DeltaTrack#96 Seam #2), where a section anchor and a
-subsection anchor share one `(page, line)`. So the drop is not arbitrary, and it converts
-cleanly: **an empty block is a retrieval bound, not an absent observation.** Emitting it and
-letting the retriever decline it makes the ordinal complete *and* moves an unrecorded filter
-into the stage ADR 0020 says may bound consideration.
+This record previously concluded that "an empty block is a retrieval bound, not an absent
+observation", and that the fix was to emit it and let retrieval decline it. **A second review
+rejected that, and the rejection is right.** ADR 0019 says the ordinal indexes the parser's
+*complete emitted sequence*. It does not say every intermediate object constructed while
+deriving that sequence must itself become an observation. Which objects the parser emits is
+the question, and the earlier draft assumed the pre-filter list was the answer — begging it.
+
+The falsification question the review posed is the right one: *what stored judgment or
+matcher-relevant legislative unit becomes impossible to address if the zero-content artifact
+is not emitted?* Measured over all 53 committed PDFs
+(`probes/pdf_dropped_block_addressability.py`), for all **190** dropped blocks:
+
+| | |
+|---|---|
+| anchor kind | `section`, 190 of 190 |
+| still present in the anchor stream `PdfDiff` carries | **190 / 190** |
+| still a node in the canonical structure tree (`build_pdf_tree`) | **190 / 190** |
+| still resolves a breadcrumb naming itself | **190 / 190** |
+
+Nothing becomes unaddressable. The colliding section survives as an anchor, as a tree node,
+and as a breadcrumb; `canonical._pdf_tree_payload` already gives it a zero-length own-span so
+its money cannot double-count. Emitting it *again* as an empty observation would duplicate a
+representation that already exists and would make parser identity reflect implementation
+scaffolding rather than parsed legislative units.
+
+**Conclusion, corrected: the complete emitted sequence is the post-filter block sequence.**
+The filter is part of deciding what the parser emits, not a retrieval bound smuggled into
+extraction. Slice 2 changes accordingly (§8) — it must *pin* the emission rule and prove the
+ordinal indexes it, not lift the filter out.
+
+The ADR 0019 hazard is therefore narrower than claimed, and still real: whatever the emission
+rule is, the ordinal must index **that** sequence, and today nothing states or tests the rule
+at all. Gate 5 (§6.4) is what closes it.
 
 **(b) There is no identity to record.** A block's identity today is its position in the
 post-filter list. `Anchor` carries `(page, line, kind, text, division)` but no id, and ADR
@@ -645,12 +674,12 @@ gate can be shown to fire before it lands. Slice 0 is not optional — §6.2 is 
 |---|---|---|
 | **0** | **Build gates 1–4 (§6.3).** No production change. | Each gate is shown to redden under the §6.2 perturbations. **Nothing after this proceeds until slice 0's gates have each produced a real failure.** |
 | **1** | Move `_flatten`, `_rejoin_cross_page_hyphens`, `_group_into_blocks`, `_strip_heading_lines` from `diff_pdf` to `parsers/pdf_blocks.py`, unchanged. `diff_pdf` imports them. | Gate 1 byte-identical. Makes a parser revision derivable without hashing the matcher (§4.2c). Also relieves part of #62. |
-| **2** | Emit the **complete** block sequence with the empty-block filter lifted into the caller. | Gate 1 byte-identical. The filter becomes an explicit, recorded retrieval bound; the ordinal becomes ADR-0019-legal. |
+| **2** | **State and pin the emission rule** — the post-filter block sequence is what the parser emits — and assert the ordinal indexes it. Do **not** lift the filter into retrieval (§4.2a, corrected). | Gate 1 byte-identical; gate 5 red under "assign ordinals after filtering". |
 | **3** | Introduce `PdfObservation` + a `PdfObservationRegistry` mirroring `diff_bill.ObservationRegistry`. Nothing consumes it yet beyond address resolution. | Gate 1 byte-identical; totality and injectivity asserted, as the XML registry does. |
 | **4** | Extract **round 2** only: `pdf_unmatched_population` → `retrieve_pdf_move_candidates` → `pdf_move_evidence` → `assign_pdf_moves`, and move it **before** classification. This is the PDF #591. | Gate 1 byte-identical; gate 2 (transcribed oracle) agrees. Sequencing is load-bearing — check the XML equivalent's finding that round 2 depends on round-1 revocation output. |
 | **5** | Extract the `_emit_pair` split rule as `pdf_pairing_survives_similarity_rule` + `apply_pdf_similarity_revocation`, mirroring `diff_bill`. | Gate 1 byte-identical; gate 4's split case exercises it. |
 | **6** | Move the moved-vs-modified decision out of classification. Because 20 of 165 PDF moves are *not* round-2 provenance (§3.4), this needs assignment to record *why* a pair corresponds, not a classification threshold. **Design work, not extraction.** | Requires §10 Q2 answered first. |
-| **7** | Only then: name round-1 retrieval (`_block_key` + `SequenceMatcher`) as a retriever emitting a `CandidateSet`, and the positional `replace` zip as assignment. | See §9 — this is the slice with a real open design question. |
+| **7** | Wrap round-1 (`_block_key` + `SequenceMatcher` + the positional `replace` zip) as a source-specific **retriever** emitting a `CandidateSet`, preserving its exact candidate population. No longer architecture-blocked (§9, corrected). | Gate 1 byte-identical; gate 6's crossing fixture red under global best-similarity assignment. |
 
 Slices 1–5 are wrap-and-extract with a byte-identical gate. Slice 6 changes semantics and
 owes precision/recall evidence under ADR 0020's second implementation rule. Slice 7 is
@@ -658,37 +687,56 @@ blocked on §9.
 
 ---
 
-## 9. Source conflict with "PDF converges after Observation production"
+## 9. Round-1 retrieval: a limitation, not a blocker
 
-The assumption mostly holds: slices 1–5 all sit at or after observation production and reuse
-common contracts. One part does not.
+**This section previously claimed a source conflict. A second review falsified that claim,
+and the correction is adopted.** What was argued: that PDF round-1 retrieval could not
+become a `CandidateSet` behaviour-preservingly, because emitting only the aligned pairs
+would make candidate recall "1.0 by construction". That reasoning is wrong, and the error is
+worth naming because it is the kind that survives review by sounding rigorous.
 
-**PDF round-1 retrieval is a sequence alignment, not a candidate generator.** XML retrieval
-is set-shaped: group by key, and every pair within a group is a candidate. PDF retrieval is
-`difflib.SequenceMatcher` over two key sequences, which returns a *monotonic, non-crossing*
-alignment. Its output is not "these pairs are worth evaluating" — it is one specific
-matching, already chosen, with order as an implicit constraint no `CandidateSet` records.
+**Candidate recall is measured against adjudicated true correspondences, not against the
+retriever's own output.** ADR 0020 is explicit that the denominator is the population the
+retriever *never formed* — "pairs the path grouping never forms produce no event to trace,
+and those are the population candidate recall is about". So a true counterpart that
+`SequenceMatcher` passed over, because a duplicate `_block_key` (§7.2) drew the alignment
+elsewhere, is a candidate-recall **miss** and is measurable as one. Recall is not 1.0 by
+construction; it is exactly the quantity materialising the candidate set exists to expose.
 
-Expressing it as a `CandidateSet` forces a choice that is a policy decision either way:
+So the behaviour-preserving representation does exist:
 
-- Emit only the aligned pairs as candidates. Then the "retriever" has already assigned, and
-  the candidate set has recall 1.0 by construction, which is exactly the unmeasurable shape
-  ADR 0020 built the boundary to prevent.
-- Emit a wider set (say, every pair sharing a `_block_key`, or a window around the aligned
-  position) and let assignment choose. That is honest retrieval — and it changes behaviour,
-  because the 525 duplicate keys (§7.2) mean the wider set contains pairs the alignment
-  currently never forms.
+```text
+PDF observations
+      ↓
+alignment retriever  (_block_key + SequenceMatcher)
+      ↓  proposals carry: alignment op, sequence position, key provenance
+CandidateSet
+      ↓
+correspondence evidence  (word_overlap, anchor_text_equal)
+      ↓
+assignment  (the existing revocation rule, unchanged)
+```
 
-There is no behaviour-preserving third option, which is why slice 7 is last and why this is
-the one place the "converge after observations" framing does not simply apply. It is a
-genuine design question about what PDF retrieval *should* be, and it should be answered with
-candidate-recall measurement rather than by analogy to XML.
+**The positional `replace` zip is retrieval, not assignment**, and §2 row 8 is corrected
+accordingly. It decides which pair is *considered*; `_emit_pair`'s similarity rule can still
+refuse the correspondence afterwards. That is precisely ADR 0020's line — retrieval controls
+consideration, assignment controls correspondence — so the legacy round-1 rule reads as "an
+aligned or positionally-proposed candidate survives unless the similarity revocation rejects
+it". Behaviour-preserving, and it names each half correctly.
 
-The `replace` opcode makes the same point concretely. 420 pairings are formed by positional
-`zip` inside a replace run, with 115 old-side and 3,618 new-side surplus becoming removals
-and additions. That positional choice consults no evidence at all — it is assignment
-performed by `difflib`'s block structure. Naming it as assignment is right; giving it an
-evidence-based rule instead is a behaviour change.
+**What genuinely survives is a limitation, and it is worth stating.** The round-1 candidate
+set is **exclusive by construction**: the aligner emits at most one candidate per
+observation, so assignment has nothing to choose *between* and its only power is revocation.
+The extraction therefore buys observability of round-1 recall, but not of round-1
+competition, because there is none to observe. That is a real bound on what slice 7 delivers
+— not a reason to defer it. Widening retrieval over the 525 duplicate keys, so that
+assignment has a genuine choice, is a **matching-policy experiment for later**, owing
+precision and recall evidence under ADR 0020's second implementation rule. It is not a
+prerequisite for the architectural extraction.
+
+Slice 7 is therefore unblocked and can run as a behaviour-preserving wrap, with gate 6's
+crossing fixture (§6.4) pinning the positional rule against exactly the substitution a future
+shared assignment implementation might make.
 
 ---
 
@@ -696,11 +744,27 @@ evidence-based rule instead is a behaviour change.
 
 **Blockers — implementation cannot start**
 
-1. **No PDF preservation oracle** (§6.2). Slice 0. Everything depends on it.
+1. **No PDF preservation oracle** (§6.2). Slice 0. Everything depends on it, and after two
+   corrections below it is the *only* hard blocker.
 2. **Block formation lives in `diff_pdf`** (§4.2c), so no ADR 0019 parser revision is
    derivable for PDF. Slice 1.
-3. **The emitted block sequence is filtered** (§4.2a), so no ordinal is ADR-0019-legal.
-   Slice 2.
+3. **The emission rule is nowhere stated or tested** (§4.2a). Narrower than an earlier draft
+   claimed: the 190 dropped blocks are correctly dropped, so the sequence is not wrongly
+   filtered. What is missing is any assertion that the ordinal indexes the sequence the
+   parser actually emits. Slice 2 + gate 5.
+
+**Retired by measurement or correction, recorded so they are not re-raised**
+
+- *PDF emission determinism as a hard blocker* — 53/53 in-process (§4.1). Only the
+  cross-process/platform half survives, as Q3.
+- *Empty blocks must become observations* — falsified: 190/190 stay addressable three ways
+  (§4.2a).
+- *Round-1 alignment cannot become a `CandidateSet` behaviour-preservingly* — false; it can,
+  and slice 7 is unblocked (§9).
+- *Does `_group_into_blocks` filter for matching reasons?* — answered: it drops 190 blocks,
+  all the DeltaTrack#96 coordinate collision, and correctly.
+- *Is PDF's legacy positional tiebreak policy, as XML's is?* — answered: no, and structurally
+  so (§5.3).
 
 **Research questions — answer before the slice that depends on them**
 
