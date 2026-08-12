@@ -138,7 +138,7 @@ record puts it.
 | 7 | `SequenceMatcher.get_opcodes` | which blocks are considered counterparts | fused | **RETRIEVAL** |
 | 8 | `replace` positional `zip` by index `k` | which block pairs with which inside a replace run | fused | **ASSIGNMENT** — competition resolved by position, consulting no evidence |
 | 9 | `replace` surplus → added/removed | 1:0 / 0:1 | fused | **ASSIGNMENT** |
-| 10 | `_emit_pair` identical texts → emit nothing | suppress unchanged | fused | **CLASSIFICATION** + an output policy XML does not share (§7.4) |
+| 10 | `_emit_pair` identical texts → emit nothing | suppress unchanged | fused | **CLASSIFICATION** + an output policy XML does not share (§7.3) |
 | 11 | `_emit_pair` identical texts + anchors differ → `moved(sim=1.0)` | moved | fused | **CLASSIFICATION** — and the `1.0` is synthesised, not measured |
 | 12 | `_emit_pair` `sim < SIMILARITY_THRESHOLD` → split | revokes a correspondence | fused | **ASSIGNMENT** |
 | 13 | `_hunk_for_paired_blocks` `sim ≥ MOVE_THRESHOLD` → moved | moved vs modified | fused | **classification applying a threshold to a correspondence score — the violation ADR 0020 names by name** |
@@ -582,7 +582,7 @@ gate can be shown to fire before it lands. Slice 0 is not optional — §6.2 is 
 | **3** | Introduce `PdfObservation` + a `PdfObservationRegistry` mirroring `diff_bill.ObservationRegistry`. Nothing consumes it yet beyond address resolution. | Gate 1 byte-identical; totality and injectivity asserted, as the XML registry does. |
 | **4** | Extract **round 2** only: `pdf_unmatched_population` → `retrieve_pdf_move_candidates` → `pdf_move_evidence` → `assign_pdf_moves`, and move it **before** classification. This is the PDF #591. | Gate 1 byte-identical; gate 2 (transcribed oracle) agrees. Sequencing is load-bearing — check the XML equivalent's finding that round 2 depends on round-1 revocation output. |
 | **5** | Extract the `_emit_pair` split rule as `pdf_pairing_survives_similarity_rule` + `apply_pdf_similarity_revocation`, mirroring `diff_bill`. | Gate 1 byte-identical; gate 4's split case exercises it. |
-| **6** | Move the moved-vs-modified decision out of classification. Because 20 of 165 PDF moves are *not* round-2 provenance (§3.4), this needs assignment to record *why* a pair corresponds, not a classification threshold. **Design work, not extraction.** | Requires §11 Q2 answered first. |
+| **6** | Move the moved-vs-modified decision out of classification. Because 20 of 165 PDF moves are *not* round-2 provenance (§3.4), this needs assignment to record *why* a pair corresponds, not a classification threshold. **Design work, not extraction.** | Requires §10 Q2 answered first. |
 | **7** | Only then: name round-1 retrieval (`_block_key` + `SequenceMatcher`) as a retriever emitting a `CandidateSet`, and the positional `replace` zip as assignment. | See §9 — this is the slice with a real open design question. |
 
 Slices 1–5 are wrap-and-extract with a byte-identical gate. Slice 6 changes semantics and
