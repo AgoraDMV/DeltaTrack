@@ -45,6 +45,10 @@ VOCABULARY_ALLOWED = {
     # The financial primitive itself. `AMENDMENT_RE` was extracted from the allowlisted
     # `diff_bill.py` (ADR 0020 slice 1a) so a parser could depend on amount extraction
     # without depending on a differ; the exemption follows the code it was granted for.
+    #
+    # NOT a blanket exemption. `amounts.py` is the only allowlisted module a STRUCTURAL
+    # parser consumes result-bearingly, so it gets a narrower guard of its own below --
+    # see `test_the_amount_primitive_reads_only_the_amendment_vocabulary`.
     "amounts.py": "financial layer — the (increased|reduced|decreased) by $X primitive",
     # Parses the comparative-statement TABLE in a committee report, a different
     # document used as independent ground truth (ADR 0009), not bill structure.
@@ -143,6 +147,76 @@ def test_structural_module_reads_no_appropriations_vocabulary(module: Path):
         "vocabulary — see docs/decisions/0018-text-triggers-are-financial-only.md. If this "
         "module legitimately interprets dollar amounts, add it to VOCABULARY_ALLOWED with "
         "a reason."
+    )
+
+
+# --- The narrow guard on the one exempted module a structural parser consumes ----------
+#
+# `parsers/pdf_blocks._is_strippable_heading_line` calls `amounts.extract_amounts`, and that
+# call is RESULT-BEARING: an uppercase heading with no recognised amount may be stripped from
+# a block body, one carrying an amount must be retained. So `amounts.py` sits inside PDF
+# observation production while being wholly exempt from the scan above, and this sequence
+# would pass the gate today:
+#
+#     amounts.py learns "necessary expenses"
+#       -> extract_amounts() keys on appropriations English
+#       -> _is_strippable_heading_line() changes what it strips
+#       -> the emitted PDF observation sequence becomes genre-trigger-dependent
+#       -> this gate stays green, because amounts.py is allowlisted whole
+#
+# ADR 0019's parser revision would move, which records the change without objecting to it;
+# ADR 0018's prohibition would have been violated silently. The exemption is therefore
+# narrowed to the amendment vocabulary it was actually granted for.
+
+#: The only appropriations phrases `amounts.py` may carry — the floor amendment annotation
+#: `(increased|reduced|decreased) by $X`, which is the financial-layer reading ADR 0018
+#: sanctions. Anything else in APPROPRIATIONS_VOCABULARY is a genre trigger.
+AMENDMENT_VOCABULARY = frozenset({"increased by", "reduced by", "decreased by"})
+
+
+def unsanctioned_vocabulary(source: str) -> list[str]:
+    """Appropriations phrases in `source` beyond the sanctioned amendment annotation.
+
+    Takes source text rather than reading the file, so the falsification below can run the
+    real rule against a mutated string without writing into the checkout.
+    """
+    return sorted({phrase for phrase, _ in find_appropriations_vocabulary(source)} - AMENDMENT_VOCABULARY)
+
+
+def test_the_amount_primitive_reads_only_the_amendment_vocabulary():
+    """`amounts.py` is exempt from the scan above, not from ADR 0018."""
+    unsanctioned = unsanctioned_vocabulary((SRC / "amounts.py").read_text())
+    assert unsanctioned == [], (
+        f"amounts.py reads appropriations English beyond the amendment annotation: {unsanctioned}. "
+        "It is consumed by parsers/pdf_blocks in a result-bearing way, so a genre trigger here "
+        "makes the emitted PDF observation sequence depend on appropriations vocabulary — what "
+        "docs/decisions/0018-text-triggers-are-financial-only.md forbids. The whole-module entry "
+        "in VOCABULARY_ALLOWED covers the (increased|reduced|decreased) by $X annotation only."
+    )
+
+
+def test_the_amount_primitive_guard_fires_on_a_genre_trigger():
+    """MUTATION: the real rule, run against `amounts.py` plus one genre trigger.
+
+    Proves the guard above is not an absence assertion that nothing can violate. Deliberately
+    built from the module's real source, so it also proves the sanctioned amendment phrases
+    already present do not mask a new one.
+    """
+    source = (SRC / "amounts.py").read_text()
+    assert unsanctioned_vocabulary(source) == [], "precondition: the module must start clean"
+
+    mutated = source + '\n_GENRE = re.compile(r"^For necessary expenses of")\n'
+    assert unsanctioned_vocabulary(mutated) == ["necessary expenses"], (
+        "adding a genre trigger to amounts.py did not trip the narrow guard"
+    )
+
+    # The green above must come from the subtraction, not from a detector that has stopped
+    # seeing this module at all. `AMENDMENT_RE` spells its three phrases as one alternation,
+    # which normalises to a single reported hit, so this checks membership rather than the set.
+    raw = {phrase for phrase, _ in find_appropriations_vocabulary(source)}
+    assert raw and raw <= AMENDMENT_VOCABULARY, (
+        f"the detector reports {sorted(raw)} for amounts.py. It must report the sanctioned "
+        "amendment vocabulary and nothing else, or the guard above is green for the wrong reason."
     )
 
 
