@@ -886,7 +886,7 @@ gate can be shown to fire before it lands. Slice 0 is not optional — §6.2 is 
 | **1a** | **DONE** (`d6d515b`). Dependency repair the slice 1 review exposed: move `DOLLAR_RE`, `AMENDMENT_RE`, `extract_amounts` to the source-neutral `deltatrack/amounts.py`, so observation production no longer reaches a differ (§4.2c). | Gate 1 byte-identical; closure measured 8 modules -> 4; new conservation invariant red under a broken money detector (`a54bf61`). |
 | **2** | **ALREADY DONE by slice 0's gate 5.** `tests/test_pdf_observation_emission.py` states the emission rule (the post-filter block sequence) and pins completeness, order, non-overlap, stability and the ordinal hazard. No further production work; slice 2 is a plan-state closure, not an implementation slice. | Gate 5 red under "assign ordinals after filtering"; and, since 1a, red under a broken money detector. |
 | **3** | **DONE** (`142f7cd`). `PdfObservation` + `PdfObservationRegistry` + `pdf_parser_revision()` in `deltatrack/pdf_observations.py`. Nothing consumes them; no stored artifact records a PDF ordinal. | Gate 1 byte-identical (356 passed / 1 skipped, unchanged). Revision moves on any of the four parser modules and on the engine version, and does not move on `diff_pdf` / `similarity` / `matching` / `diff_bill`; the exclusion is proved non-vacuous by injecting a matcher import into `pdf_blocks` (§8.1). Registry totality, contiguity and round-trip over 23 corpus pairs, red under both a filtered and a re-sorted sequence. |
-| **4** | Extract **round 2** only: `pdf_unmatched_population` → `retrieve_pdf_move_candidates` → `pdf_move_evidence` → `assign_pdf_moves`, and move it **before** classification. This is the PDF #591. | Gate 1 byte-identical; gate 2 (transcribed oracle) agrees. Sequencing is load-bearing — check the XML equivalent's finding that round 2 depends on round-1 revocation output. |
+| **4** | **DONE** (`5dac421`). `pdf_unmatched_population` → `retrieve_pdf_move_candidates` → `pdf_move_evidence` → `assign_pdf_moves`, plus `settle_pdf_correspondences` and `classify_pdf`, with round 2 moved **before** classification. `_emit_pair` now appends provisional pairings instead of classified hunks. This is the PDF #591. | Gate 1 byte-identical; a whole-output comparison against an independently transcribed pre-slice-4 pipeline agrees on all 23 adjacent pairs, including the six the baseline cannot cover. Four fault injections, two of which were informative no-ops (§8.3). |
 | **5** | Extract the `_emit_pair` split rule as `pdf_pairing_survives_similarity_rule` + `apply_pdf_similarity_revocation`, mirroring `diff_bill`. | Gate 1 byte-identical; gate 4's split case exercises it. |
 | **6** | Move the moved-vs-modified decision out of classification. Because 20 of 165 PDF moves are *not* round-2 provenance (§3.4), this needs assignment to record *why* a pair corresponds, not a classification threshold. **Design work, not extraction.** | Requires §10 Q2 answered first. |
 | **7** | Wrap round-1 (`_block_key` + `SequenceMatcher` + the positional `replace` zip) as a source-specific **retriever** emitting a `CandidateSet`, preserving its exact candidate population. No longer architecture-blocked (§9, corrected). | Gate 1 byte-identical; gate 6's crossing fixture red under global best-similarity assignment. |
@@ -895,7 +895,7 @@ Slices 1–5 are wrap-and-extract with a byte-identical gate. Slice 6 changes se
 owes precision/recall evidence under ADR 0020's second implementation rule. Slice 7 is
 bounded by §9's limitation rather than blocked by it.
 
-**State: slices 0, 1, 1a, 2 and 3 complete. Slice 4 is next.**
+**State: slices 0, 1, 1a, 2, 3 and 4 complete. Slice 5 is next.**
 
 ### 8.1 Slice 3's controls, and the faults that proved each one fires
 
@@ -948,6 +948,37 @@ without objecting to it. The exemption is now narrowed to the
 `(increased|reduced|decreased) by $X` amendment annotation it was granted for, with the
 remainder required to be empty and the guard falsified by running the real rule over the real
 source plus `necessary expenses`.
+
+### 8.3 Slice 4's controls, and two faults that turned out to be no-ops
+
+| fault injected | what should go red | result |
+|---|---|---|
+| staged assigner sorts ascending instead of descending | move selection | red — 3 pairs in the new oracle, the same 3 in gate 1 |
+| population re-sorted by ordinal instead of stream order | the ``(ri, ai)`` order | **no-op** — see below |
+| population drops text-free unmatched blocks | population membership | **no-op** — no committed pair produces one |
+| population drops the first unmatched old block | population membership | red — 17 pairs in the projection test, 6 in the output oracle, and the round-2 floor (166 moves → 20) |
+
+**The two no-ops are findings, not failed controls.** Re-sorting by ordinal changes nothing
+because the population is *already* in ordinal order: `SequenceMatcher` yields opcodes in
+ascending `(i1, j1)`, and each opcode walks its blocks in ascending index, so the pairing
+stream visits each side's blocks in ordinal order and filtering preserves that. This
+structurally re-confirms §5.3's finding that PDF's legacy positional tiebreak is inert against
+block ordinals — the two orders cannot disagree, where XML's demonstrably can (#590 measured 3
+corpus pairs moving). The second no-op restates what `_reconcile_moves`' own docstring already
+said: `_strip_heading_lines` never empties a body, so no PDF pair reaches the text-free state
+#357 exists for on the XML side.
+
+**The last fault is what shows the two preservation tests fail apart**, which is why both
+exist: the projection test caught it on 17 pairs and the whole-output oracle on 6. An output
+comparison alone would have accepted a population derived differently whenever the selected
+links happened to coincide.
+
+One structural note for slice 5. `_reconcile_moves` is retained, unchanged and off the
+production path, as the preservation oracle; `test_pdf_matching_boundary` exercises round-2
+competition and its four named mutations *through it*. It must not be rewired to delegate to
+the new stages — that would turn the gate from an oracle into a helper, unable to detect the
+one failure the extraction can have. `test_the_production_path_does_not_run_the_legacy_reconciler`
+monkeypatches it to raise and runs a real comparison, so "off the path" stays executable.
 
 ---
 
