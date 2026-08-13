@@ -887,7 +887,7 @@ gate can be shown to fire before it lands. Slice 0 is not optional — §6.2 is 
 | **2** | **ALREADY DONE by slice 0's gate 5.** `tests/test_pdf_observation_emission.py` states the emission rule (the post-filter block sequence) and pins completeness, order, non-overlap, stability and the ordinal hazard. No further production work; slice 2 is a plan-state closure, not an implementation slice. | Gate 5 red under "assign ordinals after filtering"; and, since 1a, red under a broken money detector. |
 | **3** | **DONE** (`142f7cd`). `PdfObservation` + `PdfObservationRegistry` + `pdf_parser_revision()` in `deltatrack/pdf_observations.py`. Nothing consumes them; no stored artifact records a PDF ordinal. | Gate 1 byte-identical (356 passed / 1 skipped, unchanged). Revision moves on any of the four parser modules and on the engine version, and does not move on `diff_pdf` / `similarity` / `matching` / `diff_bill`; the exclusion is proved non-vacuous by injecting a matcher import into `pdf_blocks` (§8.1). Registry totality, contiguity and round-trip over 23 corpus pairs, red under both a filtered and a re-sorted sequence. |
 | **4** | **DONE** (`5dac421`). `pdf_unmatched_population` → `retrieve_pdf_move_candidates` → `pdf_move_evidence` → `assign_pdf_moves`, plus `settle_pdf_correspondences` and `classify_pdf`, with round 2 moved **before** classification. `_emit_pair` now appends provisional pairings instead of classified hunks. This is the PDF #591. | Gate 1 byte-identical; a whole-output comparison against an independently transcribed pre-slice-4 pipeline agrees on all 23 adjacent pairs, including the six the baseline cannot cover. Four fault injections, two of which were informative no-ops (§8.3). |
-| **5** | Extract the `_emit_pair` split rule as `pdf_pairing_survives_similarity_rule` + `apply_pdf_similarity_revocation`, mirroring `diff_bill`. | Gate 1 byte-identical; gate 4's split case exercises it. |
+| **5** | **DONE** (`5d83912`). `_pdf_similarity_signals` → `pdf_similarity_correspondence_evidence` → `pdf_pairing_survives_similarity_rule` → `apply_pdf_similarity_revocation`, mirroring `diff_bill`. `_align_blocks` is retrieval only; `_AlignedPairing` loses its similarity field. | Gate 1 byte-identical; gate 4 unchanged. New stage-level control moves the threshold and watches the corpus split population respond — 0 / 230 / 813 (§8.4). |
 | **6** | Move the moved-vs-modified decision out of classification. Because 20 of 165 PDF moves are *not* round-2 provenance (§3.4), this needs assignment to record *why* a pair corresponds, not a classification threshold. **Design work, not extraction.** | Requires §10 Q2 answered first. |
 | **7** | Wrap round-1 (`_block_key` + `SequenceMatcher` + the positional `replace` zip) as a source-specific **retriever** emitting a `CandidateSet`, preserving its exact candidate population. No longer architecture-blocked (§9, corrected). | Gate 1 byte-identical; gate 6's crossing fixture red under global best-similarity assignment. |
 
@@ -895,7 +895,7 @@ Slices 1–5 are wrap-and-extract with a byte-identical gate. Slice 6 changes se
 owes precision/recall evidence under ADR 0020's second implementation rule. Slice 7 is
 bounded by §9's limitation rather than blocked by it.
 
-**State: slices 0, 1, 1a, 2, 3 and 4 complete. Slice 5 is next.**
+**State: slices 0, 1, 1a, 2, 3, 4 and 5 complete. Slice 6 is next, and is design work.**
 
 ### 8.1 Slice 3's controls, and the faults that proved each one fires
 
@@ -979,6 +979,44 @@ competition and its four named mutations *through it*. It must not be rewired to
 the new stages — that would turn the gate from an oracle into a helper, unable to detect the
 one failure the extraction can have. `test_the_production_path_does_not_run_the_legacy_reconciler`
 monkeypatches it to raise and runs a real comparison, so "off the path" stays executable.
+
+### 8.4 Slice 5's control, and why gate 4 could not be it
+
+Gate 4 pins the split *rule* against an independently transcribed oracle, over the corpus and
+at two synthetic points either side of the cutoff. It establishes **what the rule is**. It
+cannot establish **which code applies it**, because it runs `diff_pdfs` end to end with the
+production constant — one number reaching one behaviour, with no way to separate a rule reading
+its parameter from a rule reading `SIMILARITY_THRESHOLD` directly.
+
+So slice 5 adds the control gate 4 structurally cannot give: move the threshold at the stage
+boundary and watch the split population respond, corpus-wide.
+
+| threshold | revoked pairings |
+|---|---|
+| 0.0 | 0 |
+| 0.4 (production) | 230 |
+| 0.99 | 813 |
+
+Aggregated over the corpus rather than one pair, deliberately: a single pair can have every
+non-identical pairing already below production's cutoff, in which case raising the threshold
+changes nothing there and the control reports a false alarm. That happened on the first draft.
+
+**The 230 does not reconcile with §3.2's 224, and that is left stated rather than explained.**
+This counts revocations over every adjacent committed pair including the six `compare.pdf`
+declines, which §3.2's population excludes; that is the likely account and it has not been
+verified, so it is recorded as a discrepancy rather than asserted as an equality.
+
+Three fault injections, each caught by a different control:
+
+| fault injected | what went red |
+|---|---|
+| the rule reads `SIMILARITY_THRESHOLD` instead of its parameter | the new threshold sweep **only** — baseline and gate 4 stayed green |
+| the identical-text short-circuit removed, ratio computed instead | the monkeypatched short-circuit test **only** — the verdict is unchanged, so no output gate can see it |
+| the two replacement records emitted addition-first | 11 baseline pairs, 14 oracle pairs, and the unit case |
+
+The first two are the argument for this module existing: both are invisible to every gate that
+compares output, because neither changes any output. The third confirms the "adjacent and in
+place" ordering is load-bearing rather than incidental.
 
 ---
 
