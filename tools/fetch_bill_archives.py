@@ -19,7 +19,7 @@ from typing import Any
 
 import httpx
 
-from bill_index import BillIndex, make_bill_id
+from shared.bill_index import BillIndex, make_bill_id
 from shared.bill_types import BILL_TYPES, resolve_bill_types
 from shared.http import download_archives as http_download_archives
 from shared.zip import extract_archive
