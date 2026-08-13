@@ -65,7 +65,8 @@ def iterate_archive(path: Path, pattern: str | re.Pattern[str] = "*") -> Iterato
 
     A string matching pattern uses a shell-style glob with simplified regex semantics.
     A pattern of type re.Pattern uses full regex matching.
-    For example, pattern = "*.xml" is equivalent to pattern = re.compile(r"\.xml") and pattern = re.compile(r"^.*\.xml$")
+    For example, pattern = "*.xml" is equivalent to pattern = re.compile(r"\.xml")
+    and pattern = re.compile(r"^.*\.xml$")
     """
     with zipfile.ZipFile(path) as zf:
 
@@ -96,8 +97,8 @@ def extract_archive(
         out_dir: Destination root for extracted files.
         files: Glob string or compiled regex selecting archive members.
         overwrite_existing: When false, skip members whose destination already exists.
-        file_handler: Maps archive member path to a path relative to ``out_dir`` to allow the file structure to be reordered.
-            Return ``None`` to skip the member (the member is not opened).
+        file_handler: Maps archive member path to a path relative to ``out_dir``
+            to allow the file structure to be reordered. Return ``None`` to skip members.
         file_content_handler: Transforms or analyzes file contents before writing.
 
     Returns:

@@ -15,7 +15,7 @@ import httpx
 import pytest
 import respx
 
-from tests.utils import assert_files, mock_http_requests
+from tests.utils import assert_files
 from tools.shared.http import download_zip as download_archive_zip
 
 ARCHIVE_URL = "https://www.govinfo.gov/bulkdata/BILLSTATUS/999/hr/BILLSTATUS-999-hr.zip"

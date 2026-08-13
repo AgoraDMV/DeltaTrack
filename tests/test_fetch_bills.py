@@ -2,10 +2,8 @@
 
 import argparse
 import json
-import re
 import time
 import zipfile
-from pathlib import Path
 
 import httpx
 import pytest
