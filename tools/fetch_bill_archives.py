@@ -30,14 +30,17 @@ DEFAULT_ZIP_DIR = PROJECT_DIR / "bills_bulk_status"
 BILLSTATUS_ZIP_FORMAT = "BILLSTATUS-{congress}-{bill_type}.zip"
 
 GOVINFO_BASE_URL = "https://www.govinfo.gov/bulkdata/"
-GOVINFO_BILLSTATUS_ZIP_URL_FORMAT = GOVINFO_BASE_URL + "BILLSTATUS/{congress}/{bill_type}/BILLSTATUS-{congress}-{bill_type}.zip"
+GOVINFO_BILLSTATUS_ZIP_URL_FORMAT = (
+    GOVINFO_BASE_URL + "BILLSTATUS/{congress}/{bill_type}/BILLSTATUS-{congress}-{bill_type}.zip"
+)
 GOVINFO_BILL_FILENAME_RE = re.compile(
     r"^BILLSTATUS-(\d+)([a-z]+)(\d+)\.xml$",
     re.IGNORECASE,
 )
 GOVINFO_BILLSTATUS_FILENAME_FORMAT = "BILLSTATUS-{congress}{bill_type}{number}.xml"
 
-def parse_billstatus_filename(filename: str) -> tuple[int, str, int]: # (congress, bill_type, number)
+
+def parse_billstatus_filename(filename: str) -> tuple[int, str, int]:  # (congress, bill_type, number)
     """``BILLSTATUS-119hr1.xml`` → ``(119, "hr", 1)``."""
     match = GOVINFO_BILL_FILENAME_RE.match(Path(filename).name)
     if not match:
@@ -45,21 +48,31 @@ def parse_billstatus_filename(filename: str) -> tuple[int, str, int]: # (congres
     congress, bill_type, number = match.groups()
     return int(congress), bill_type, int(number)
 
+
 def archive_destination(destination: Path, congress: int, bill_type: str) -> Path:
     """Return the local path for one BILLSTATUS archive."""
     return destination / BILLSTATUS_ZIP_FORMAT.format(congress=congress, bill_type=bill_type)
 
+
 def billstatus_zip_url(congress: int, bill_type: str) -> str:
     return GOVINFO_BILLSTATUS_ZIP_URL_FORMAT.format(congress=congress, bill_type=bill_type)
+
 
 def billstatus_zip_filename(congress: int, bill_type: str) -> str:
     return BILLSTATUS_ZIP_FORMAT.format(congress=congress, bill_type=bill_type)
 
+
 def billstatus_filename(congress: int, bill_type: str, number: int) -> str:
     return GOVINFO_BILLSTATUS_FILENAME_FORMAT.format(congress=congress, bill_type=bill_type, number=number)
 
+
 def enumerate_congresses(from_congress: int, to_congress: int) -> list[int]:
-    return list(range(from_congress, to_congress + 1) if from_congress <= to_congress else range(from_congress, to_congress - 1, -1))
+    return list(
+        range(from_congress, to_congress + 1)
+        if from_congress <= to_congress
+        else range(from_congress, to_congress - 1, -1)
+    )
+
 
 def enumerate_tasks(
     from_congress: int,
@@ -73,6 +86,7 @@ def enumerate_tasks(
         for congress in enumerate_congresses(from_congress, to_congress)
         for bill_type in resolve_bill_types(bill_types)
     ]
+
 
 def download_archives(
     from_congress: int,
@@ -93,6 +107,7 @@ def download_archives(
             url_to_path=lambda url, index: archive_destination(Path(), *tasks[index]),
             skip_existing=not overwrite_existing,
         )
+
 
 def extract_bill_metadata(xml_content: str | bytes, bill_id: str) -> dict[str, Any]:
     """Pull a short status summary from one BILLSTATUS XML. ``bill_id`` comes from the filename."""
@@ -178,6 +193,7 @@ def convert_archives(
     if bill_index is not None and records:
         bill_index.add_bills(records, mode="merge")
 
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--from-congress", type=int, default=118)
@@ -200,7 +216,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    args = build_parser().parse_args()    
+    args = build_parser().parse_args()
     download_archives(
         args.from_congress,
         args.to_congress,

@@ -11,8 +11,8 @@ import httpx
 import pytest
 import respx
 
-import fetch_govinfo as gi
 import fetch_bills as fb
+import fetch_govinfo as gi
 from fetch_bills import (
     api_get,
     build_parser,
@@ -38,11 +38,7 @@ TEST_API_KEY = "test-key"
 
 
 def fetch_index(args: list[str]) -> int:
-    return cmd_fetch_index(
-        client=None, 
-        args=build_parser().parse_args(["fetch-index"] + args), 
-        api_key=None
-    )
+    return cmd_fetch_index(client=None, args=build_parser().parse_args(["fetch-index"] + args), api_key=None)
 
 
 def _govinfo_billstatus(congress: int, btype: str, number: int, *codes: str) -> bytes:
@@ -987,7 +983,6 @@ class TestDownloadGuardIntegration:
 
 def _write_search_corpus(dirpath):
     """A minimal local BILLSTATUS ZIP with one approps + one non-approps bill."""
-    import zipfile
 
     def doc(number, title, code):
         return (
@@ -1051,7 +1046,6 @@ class TestSearchCommand:
         assert "118-hr-5" in out
 
     def test_congress_and_type_filters_narrow_the_index(self, tmp_path, capsys):
-        import zipfile
 
         def doc(congress, btype, number, title):
             return (
@@ -1176,7 +1170,7 @@ class TestFetchIndexCommand:
     def test_single_congress_and_bill_type_download(self, tmp_path):
         mock_http_requests(content=EMPTY_ZIP_BYTES)
         rc = fetch_index(["--congress", "118", "--type", "hr", "--billstatus-dir", str(tmp_path)])
-        assert rc == 0;  
+        assert rc == 0
         assert_files(tmp_path, {"BILLSTATUS-118-hr.zip"})
 
     def test_type_omitted_fetches_all_types_for_the_congress(self, tmp_path, monkeypatch):

@@ -16,30 +16,34 @@ marking its own debris: ``extract_archives`` rmtree's a partial folder, and
 
 from __future__ import annotations
 
-from pathlib import Path
-import pytest
-import respx
 import shlex
+from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+import respx
+
 import tools.shared.http as http
-from tests.utils import assert_files, mock_http_requests, archive_bytes
+from tests.utils import archive_bytes, assert_files, mock_http_requests
 from tools.fetch_bill_archives import (
     billstatus_filename,
     billstatus_zip_filename,
-    billstatus_zip_url as archive_url,
     main,
 )
+from tools.fetch_bill_archives import (
+    billstatus_zip_url as archive_url,
+)
+
 
 def fetch_bill_archives(args: str) -> None:
     argv = ["fetch_bill_archives", *shlex.split(args)]
     with patch("sys.argv", argv):
         return main()
 
+
 def single_member_archive_bytes(congress: int, bill_type: str) -> bytes:
-    return archive_bytes(
-        {billstatus_filename(congress, bill_type, 1): b"<billStatus/>"}
-    )
+    return archive_bytes({billstatus_filename(congress, bill_type, 1): b"<billStatus/>"})
+
 
 def write_single_member_archive(source: Path, congress: int, bill_type: str) -> Path:
     path = source / billstatus_zip_filename(congress, bill_type)
@@ -62,7 +66,9 @@ class TestDownloadArchivesCacheCoherence:
         write_single_member_archive(tmp_path, 119, "hr")
         route = mock_http_requests(archive_url(119, "hr"), content=b"new content")
 
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}")
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}"
+        )
 
         assert not route.called
 
@@ -71,7 +77,9 @@ class TestDownloadArchivesCacheCoherence:
         body = single_member_archive_bytes(119, "hr")
         mock_http_requests(archive_url(119, "hr"), content=body)
 
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}")
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}"
+        )
 
         assert_files(tmp_path, ["BILLSTATUS-119-hr.zip", "119-hr-1"])
         assert_files(tmp_path / "119-hr-1", ["119-hr-1_status.xml"])
@@ -93,10 +101,12 @@ class TestDownloadArchivesCacheCoherence:
         # anything reading markers to decide what is missing would be wrong forever.
         error_path = tmp_path / "BILLSTATUS-119-hr.zip.error"
         error_path.write_text("earlier failure", encoding="utf-8")
-        mock_http_requests(archive_url(119, "hr"), content=single_member_archive_bytes(119, 'hr'))
-        assert_files(tmp_path, ['BILLSTATUS-119-hr.zip.error'])
+        mock_http_requests(archive_url(119, "hr"), content=single_member_archive_bytes(119, "hr"))
+        assert_files(tmp_path, ["BILLSTATUS-119-hr.zip.error"])
 
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}")
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}"
+        )
 
         assert_files(tmp_path, ["BILLSTATUS-119-hr.zip", "119-hr-1"])
         assert_files(tmp_path / "119-hr-1", ["119-hr-1_status.xml"])
@@ -104,7 +114,7 @@ class TestDownloadArchivesCacheCoherence:
     @respx.mock
     def test_a_failing_archive_does_not_abort_the_batch(self, tmp_path):
         mock_http_requests(archive_url(117, "hr"), status_code=500)
-        mock_http_requests(archive_url(118, "hr"), content=single_member_archive_bytes(118, 'hr'))
+        mock_http_requests(archive_url(118, "hr"), content=single_member_archive_bytes(118, "hr"))
         mock_http_requests(archive_url(119, "hr"), status_code=500)
 
         fetch_bill_archives(
@@ -128,13 +138,15 @@ class TestDownloadArchivesCacheCoherence:
         # attempted; only a present .zip suppresses the request. Pinning this keeps a
         # future "skip anything with an .error marker" optimization from silently
         # making transient failures permanent.
-        target_archive: Path = tmp_path / 'BILLSTATUS-119-hr.zip'
-        error_path = http.path_for_error(target_archive)        
+        target_archive: Path = tmp_path / "BILLSTATUS-119-hr.zip"
+        error_path = http.path_for_error(target_archive)
         error_path.write_text("earlier failure", encoding="utf-8")
-        assert_files(tmp_path, ['BILLSTATUS-119-hr.zip.error'])
+        assert_files(tmp_path, ["BILLSTATUS-119-hr.zip.error"])
 
-        route = mock_http_requests(archive_url(119, "hr"), content=single_member_archive_bytes(119, 'hr'))
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}")
+        route = mock_http_requests(archive_url(119, "hr"), content=single_member_archive_bytes(119, "hr"))
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}"
+        )
 
         assert route.called
         assert_files(tmp_path, ["BILLSTATUS-119-hr.zip", "119-hr-1"])
@@ -152,7 +164,9 @@ class TestDownloadArchivesCacheCoherence:
         error_path = tmp_path / "BILLSTATUS-119-hr.zip.error"
         error_path.write_text("earlier failure", encoding="utf-8")
 
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}")
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}"
+        )
 
         assert_files(tmp_path, ["BILLSTATUS-119-hr.zip", "119-hr-1"])
         assert_files(tmp_path / "119-hr-1", ["119-hr-1_status.xml"])
@@ -169,7 +183,6 @@ class TestExtractArchive:
 
         assert_files(dest, ["119-hr-1"])
         assert_files(dest / "119-hr-1", ["119-hr-1_status.xml"])
-
 
     @pytest.mark.parametrize(
         "member",
@@ -217,7 +230,9 @@ class TestExtractArchive:
         archive = tmp_path / "BILLSTATUS-119-hr.zip"
         archive.write_bytes(b"not a zip")
 
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}")
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}"
+        )
 
         assert_files(tmp_path, ["BILLSTATUS-119-hr.zip"])
 
@@ -231,7 +246,9 @@ class TestExtractArchivesCacheCoherence:
         write_single_member_archive(tmp_path, 119, "hr")
         out_dir = tmp_path / "out"
 
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types hr s --out-dir {out_dir} --zip-dir {tmp_path}")
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr s --out-dir {out_dir} --zip-dir {tmp_path}"
+        )
 
         assert_files(out_dir, ["119-hr-1", "119-s-1"])
 
@@ -245,7 +262,9 @@ class TestExtractArchivesCacheCoherence:
         stale_dir.mkdir()
         (stale_dir / "119-hr-1_status.xml").write_bytes(b"<stale/>")
 
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}")
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}"
+        )
 
         assert_files(tmp_path, ["BILLSTATUS-119-hr.zip", "119-hr-1"])
         assert_files(stale_dir, ["119-hr-1_status.xml"])
@@ -259,7 +278,9 @@ class TestExtractArchivesCacheCoherence:
         corrupt = tmp_path / "BILLSTATUS-119-hr.zip"
         corrupt.write_bytes(b"not a zip")
 
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}")
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}"
+        )
 
         assert_files(tmp_path, ["BILLSTATUS-119-hr.zip"])
 
@@ -270,15 +291,11 @@ class TestExtractArchivesCacheCoherence:
         (tmp_path / "BILLSTATUS-119-aaa.zip").write_bytes(b"not a zip")
         write_single_member_archive(tmp_path, 119, "zzz")
 
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types aaa zzz --out-dir {tmp_path} --zip-dir {tmp_path}")
-
-        assert_files(
-            tmp_path, [
-                "BILLSTATUS-119-aaa.zip",
-                "BILLSTATUS-119-zzz.zip",
-                "119-zzz-1"
-            ]
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types aaa zzz --out-dir {tmp_path} --zip-dir {tmp_path}"
         )
+
+        assert_files(tmp_path, ["BILLSTATUS-119-aaa.zip", "BILLSTATUS-119-zzz.zip", "119-zzz-1"])
         assert_files(tmp_path / "119-zzz-1", ["119-zzz-1_status.xml"])
 
     @respx.mock
@@ -293,18 +310,14 @@ class TestExtractArchivesCacheCoherence:
         (tmp_path / "bills.csv").write_text("id\n")
 
         mock_http_requests(archive_url(119, "hr"), content=single_member_archive_bytes(119, "hr"))
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}")
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}"
+        )
         err = capsys.readouterr().err
         assert "notes.txt" not in err
         assert "bills.csv" not in err
 
-
-        assert_files(tmp_path, [
-            "BILLSTATUS-119-hr.zip",
-            "119-hr-1",
-            "notes.txt",
-            "bills.csv"
-        ])
+        assert_files(tmp_path, ["BILLSTATUS-119-hr.zip", "119-hr-1", "notes.txt", "bills.csv"])
 
     @respx.mock
     def test_zero_member_archive_writes_no_bill_folder(self, tmp_path):
@@ -313,7 +326,9 @@ class TestExtractArchivesCacheCoherence:
         # an empty zip has no bill id to name a folder after -- extraction is a no-op.
         (tmp_path / billstatus_zip_filename(119, "hr")).write_bytes(archive_bytes({}))
 
-        fetch_bill_archives(f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}")
+        fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr --out-dir {tmp_path} --zip-dir {tmp_path}"
+        )
         assert_files(tmp_path, ["BILLSTATUS-119-hr.zip"])
 
     @respx.mock

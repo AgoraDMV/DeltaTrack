@@ -54,7 +54,7 @@ class TestDownloadArchiveZip:
             with pytest.raises(httpx.HTTPError):
                 download_archive_zip(client, ARCHIVE_URL, dest)
 
-        assert_files(tmp_path, ['999-hr.zip.error'])
+        assert_files(tmp_path, ["999-hr.zip.error"])
 
     @respx.mock
     def test_healthy_body_without_content_length_is_committed(self, tmp_path):

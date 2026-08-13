@@ -12,6 +12,7 @@ from typing import Iterator, NamedTuple
 
 import httpx
 
+
 @dataclass
 class ArchiveFile:
     zip_path: str | Path
@@ -59,20 +60,20 @@ def verify_archive_complete(path: Path) -> None:
         raise httpx.HTTPError(f"Incomplete download: {path.name} is not a readable ZIP archive ({exc})") from exc
 
 
-def iterate_archive(
-    path: Path, pattern: str | re.Pattern[str] = "*"
-) -> Iterator[tuple[str, zipfile.ZipFile]]:
-    """Yield ``(path, zip_handle)`` for each archive file or directory matching  ``pattern``.
+def iterate_archive(path: Path, pattern: str | re.Pattern[str] = "*") -> Iterator[tuple[str, zipfile.ZipFile]]:
+    r"""Yield ``(path, zip_handle)`` for each archive file or directory matching  ``pattern``.
 
-    A string matching pattern uses a shell-style glob with simplified regex semantics. 
+    A string matching pattern uses a shell-style glob with simplified regex semantics.
     A pattern of type re.Pattern uses full regex matching.
     For example, pattern = "*.xml" is equivalent to pattern = re.compile(r"\.xml") and pattern = re.compile(r"^.*\.xml$")
     """
     with zipfile.ZipFile(path) as zf:
+
         def _matches(name: str) -> bool:
             if isinstance(pattern, re.Pattern):
                 return pattern.match(Path(name).name) is not None
             return fnmatch.fnmatch(name, pattern)
+
         files = [name for name in zf.namelist() if _matches(name)]
         yield from [(name, zf) for name in files]
 
@@ -81,10 +82,12 @@ def extract_archive(
     archive_path: Path | str,
     *,
     out_dir: Path | str,
-    files: str | re.Pattern[str] = '*',
+    files: str | re.Pattern[str] = "*",
     overwrite_existing: bool = False,
     file_handler: Callable[[str, int, zipfile.ZipFile], str | Path | None] = lambda filename, index, zf: filename,
-    file_content_handler: Callable[[bytes, str, int, zipfile.ZipFile], bytes | None] = lambda data, filename, index, zf: data,
+    file_content_handler: Callable[
+        [bytes, str, int, zipfile.ZipFile], bytes | None
+    ] = lambda data, filename, index, zf: data,
 ) -> tuple[int, ExtractArchiveDetails]:
     """Extract matching ZIP members into ``out_dir``.
 
@@ -135,6 +138,4 @@ def extract_archive(
         except Exception as exc:
             errors[member_path] = exc
 
-    return len(files_extracted), ExtractArchiveDetails(
-        files_extracted, files_skipped, errors
-    )
+    return len(files_extracted), ExtractArchiveDetails(files_extracted, files_skipped, errors)
