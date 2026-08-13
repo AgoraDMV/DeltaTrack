@@ -31,8 +31,8 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
+from deltatrack.amounts import extract_amounts
 from deltatrack.bill_tree import BillNode, BillTree, amount_text
-from deltatrack.diff_bill import extract_amounts
 from deltatrack.parsers.pdf_anchors import Anchor, breadcrumb_for
 
 # Leaf level from the XML tag — typed and reliable (docs/bill-structure.md glossary).

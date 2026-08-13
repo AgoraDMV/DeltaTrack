@@ -10,12 +10,12 @@ documented invocation and wraps this module.
 import argparse
 import difflib
 import json
-import re
 import sys
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
+from deltatrack.amounts import AMENDMENT_RE, DOLLAR_RE, extract_amounts
 from deltatrack.bill_tree import BillNode, BillTree, amount_text, normalize_bill
 from deltatrack.matching import (
     NEW,
@@ -41,30 +41,15 @@ from deltatrack.version_stems import (
 )
 
 # --- Financial amount extraction ---
-
-# A comma-grouped amount must use groups of exactly three digits, so a trailing
-# run of digits (e.g. a percentage abutting with no space: "$17,40022%") falls
-# outside the match instead of merging into it (#34). The no-comma alternative
-# preserves amounts written without thousands separators ("$5000000").
-_DOLLAR_RE = re.compile(r"\$\d{1,3}(?:,\d{3})+|\$\d+")
-_AMENDMENT_RE = re.compile(r"\((?:increased|reduced|decreased) by\s+\$[\d,]+\)")
-
-
-def extract_amounts(text: str) -> tuple[int, ...]:
-    """Find all dollar amounts in text.
-
-    Returns tuple of integer values in document order. $0 is kept: it is real
-    budget data (e.g. a rescinded or zeroed line), and an unchanged $0 produces
-    no diff noise (multiset equality), so keeping it only surfaces $0 when it
-    actually changes (#60). Strips floor amendment annotations like
-    (increased by $X) before scanning.
-    """
-    text = _AMENDMENT_RE.sub("", text)
-    results = []
-    for match in _DOLLAR_RE.finditer(text):
-        value = int(match.group().replace("$", "").replace(",", ""))
-        results.append(value)
-    return tuple(results)
+#
+# The extraction primitive itself lives in `deltatrack.amounts`, which is source-neutral.
+# It moved there because `parsers.pdf_blocks` calls `extract_amounts` to decide whether an
+# uppercase heading may be stripped from a block body, so the regexes below are capable of
+# changing the emitted PDF observation sequence; leaving them here put a differ module
+# inside the PDF parser-revision closure (ADR 0019). `extract_amounts` is re-exported for
+# this module's own use and for its existing importers.
+#
+# The word-level pairing below stays here: it is diff machinery, not extraction.
 
 
 def _extract_word_amounts(words: list[str]) -> list[tuple[int, int]]:
@@ -74,7 +59,7 @@ def _extract_word_amounts(words: list[str]) -> list[tuple[int, int]]:
     """
     results = []
     for i, word in enumerate(words):
-        m = _DOLLAR_RE.search(word)
+        m = DOLLAR_RE.search(word)
         if m:
             value = int(m.group().replace("$", "").replace(",", ""))
             results.append((i, value))
@@ -95,8 +80,8 @@ def match_amounts(
     Uses SequenceMatcher to align old/new words, then traces dollar amounts
     through the diff opcodes to determine pairing.
     """
-    old_clean = _AMENDMENT_RE.sub("", old_text) if old_text else ""
-    new_clean = _AMENDMENT_RE.sub("", new_text) if new_text else ""
+    old_clean = AMENDMENT_RE.sub("", old_text) if old_text else ""
+    new_clean = AMENDMENT_RE.sub("", new_text) if new_text else ""
     old_words = old_clean.split()
     new_words = new_clean.split()
 
@@ -168,9 +153,7 @@ def compute_financial_change(
 
     Returns None if no amounts on either side (non-financial section).
     """
-    has_annotations = bool(
-        (old_text and _AMENDMENT_RE.search(old_text)) or (new_text and _AMENDMENT_RE.search(new_text))
-    )
+    has_annotations = bool((old_text and AMENDMENT_RE.search(old_text)) or (new_text and AMENDMENT_RE.search(new_text)))
 
     old_amounts = extract_amounts(old_text) if old_text else ()
     new_amounts = extract_amounts(new_text) if new_text else ()
