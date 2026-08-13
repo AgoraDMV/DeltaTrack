@@ -42,6 +42,10 @@ VOCABULARY_ALLOWED = {
     # use (ADR 0018 "Decision"; the future semantics layer is #115).
     "diff_bill.py": "financial layer — reads (increased|reduced|decreased) by $X",
     "diff_pdf.py": "financial layer — amount-change annotations",
+    # The financial primitive itself. `AMENDMENT_RE` was extracted from the allowlisted
+    # `diff_bill.py` (ADR 0020 slice 1a) so a parser could depend on amount extraction
+    # without depending on a differ; the exemption follows the code it was granted for.
+    "amounts.py": "financial layer — the (increased|reduced|decreased) by $X primitive",
     # Parses the comparative-statement TABLE in a committee report, a different
     # document used as independent ground truth (ADR 0009), not bill structure.
     "parsers/committee_report.py": "committee-report table parser (ADR 0009 carve-out)",
