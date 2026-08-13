@@ -19,7 +19,7 @@ import httpx
 from dotenv import load_dotenv
 
 import fetch_govinfo as gi
-from bill_index import BillIdentifier, BillIndex, parse_bill_id
+from shared.bill_index import BillIdentifier, BillIndex, parse_bill_id
 from fetch_bill_archives import archive_destination, download_archives, enumerate_tasks
 from shared.bill_types import BILL_TYPES
 from shared.http import api_get, request_with_retry
