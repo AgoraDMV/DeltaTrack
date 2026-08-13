@@ -44,10 +44,12 @@ from deltatrack.diff_pdf import (
     _hunk_for_paired_blocks,
     _hunk_for_removed,
     _reconcile_moves,
+    apply_pdf_similarity_revocation,
     assign_pdf_moves,
     classify_pdf,
     diff_pdfs,
     pdf_move_evidence,
+    pdf_similarity_correspondence_evidence,
     pdf_unmatched_population,
     retrieve_pdf_move_candidates,
     settle_pdf_correspondences,
@@ -122,6 +124,21 @@ def blocks_for(pdf: Path) -> list[_Block]:
     return _group_into_blocks(_flatten(pages), extract_anchors(pages))
 
 
+def round1_stream(old_blocks: list[_Block], new_blocks: list[_Block], registry: PdfObservationRegistry):
+    """Production's post-revocation round-1 pairing stream, and the evidence behind it.
+
+    The production side of every comparison below. Slice 5 split what used to be one call into
+    align -> evidence -> revoke, so this runs the three in order rather than each test
+    re-spelling them. It is **not** an oracle and must never become one: the thing being
+    compared against is ``legacy_hunks_before_round2``, which is transcribed independently and
+    calls none of this.
+    """
+    provisional = _align_blocks(old_blocks, new_blocks)
+    evidence = pdf_similarity_correspondence_evidence(provisional, registry)
+    pairings = apply_pdf_similarity_revocation(provisional, evidence, registry, threshold=SIMILARITY_THRESHOLD)
+    return pairings, evidence
+
+
 def legacy_hunks(old_pdf: Path, new_pdf: Path) -> list[PdfHunk]:
     """The pre-slice-4 pipeline end to end: classify, then reconcile moves on the records."""
     hunks = legacy_hunks_before_round2(blocks_for(old_pdf), blocks_for(new_pdf))
@@ -170,7 +187,7 @@ def test_the_population_projection_matches_the_legacy_filtered_hunk_lists(
     legacy_added = [h.v2_text for h in legacy if h.change_type == "added"]
 
     registry = PdfObservationRegistry(old_blocks, new_blocks)
-    population = pdf_unmatched_population(_align_blocks(old_blocks, new_blocks), registry)
+    population = pdf_unmatched_population(round1_stream(old_blocks, new_blocks, registry)[0], registry)
 
     assert [o.block.text for o in population.old] == legacy_removed
     assert [o.block.text for o in population.new] == legacy_added
@@ -187,7 +204,7 @@ def test_round_2_addresses_the_complete_parser_sequence(bill: str, old_pdf: Path
     """
     old_blocks, new_blocks = blocks_for(old_pdf), blocks_for(new_pdf)
     registry = PdfObservationRegistry(old_blocks, new_blocks)
-    population = pdf_unmatched_population(_align_blocks(old_blocks, new_blocks), registry)
+    population = pdf_unmatched_population(round1_stream(old_blocks, new_blocks, registry)[0], registry)
 
     for side, observations, blocks in ((OLD, population.old, old_blocks), (NEW, population.new, new_blocks)):
         for observation in observations:
@@ -212,9 +229,8 @@ def test_the_corpus_actually_exercises_round_2() -> None:
         hunks = diff_pdfs(cached_pages(old_pdf), cached_pages(new_pdf)).hunks
         moved += sum(1 for h in hunks if h.change_type == "moved")
         old_blocks, new_blocks = blocks_for(old_pdf), blocks_for(new_pdf)
-        population = pdf_unmatched_population(
-            _align_blocks(old_blocks, new_blocks), PdfObservationRegistry(old_blocks, new_blocks)
-        )
+        registry = PdfObservationRegistry(old_blocks, new_blocks)
+        population = pdf_unmatched_population(round1_stream(old_blocks, new_blocks, registry)[0], registry)
         possible += min(len(population.old), len(population.new))
     assert moved >= 120, f"only {moved} moved hunks corpus-wide; the preservation sweeps assert little"
     assert possible >= 250, f"round 2 could make only {possible} moves corpus-wide; retrieval is barely exercised"
@@ -341,6 +357,6 @@ def test_a_settled_move_carries_the_evidence_that_selected_it() -> None:
     assert len(move.evidence) == 1
     assert isinstance(move.evidence[0].get("word_overlap"), float)
 
-    settled = settle_pdf_correspondences(pairings, registry, moves)
+    settled = settle_pdf_correspondences(pairings, registry, moves, round1_evidence=())
     assert [item.round for item in settled] == [2]
     assert [h.change_type for h in classify_pdf(settled, registry)] == ["moved"]

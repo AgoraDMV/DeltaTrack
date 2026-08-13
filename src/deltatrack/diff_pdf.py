@@ -48,6 +48,7 @@ from deltatrack.matching import (
     Correspondence,
     CorrespondenceEvidence,
     CorrespondenceSet,
+    ObservationRef,
     RetrieverInvocation,
 )
 from deltatrack.parsers.pdf_anchors import Anchor, extract_anchors
@@ -129,23 +130,28 @@ MOVE_ROUND = 2
 #: evidence there. One name for one measure, as in ``diff_bill``.
 WORD_OVERLAP = "word_overlap"
 
+#: Whether two aligned blocks carry byte-identical bodies. The PDF analogue of ``diff_bill``'s
+#: ``body_unchanged``, and deliberately not that name: XML asks whether the word-level diff of
+#: two *normalized* bodies is empty, this asks whether two block texts are equal. Same role in
+#: the rule, different measure, so a different name (ADR 0021 §3).
+TEXT_IDENTICAL = "text_identical"
+
 
 @dataclass(frozen=True)
 class _AlignedPairing:
-    """One round-1 outcome, before anything is settled.
+    """One round-1 outcome: an aligned pair, or one unmatched side.
 
-    A surviving 1:1 carries both blocks and the word overlap the split rule read; an
-    unmatched side carries one block and no overlap. A split emits two of these, the removal
-    first, which is the order the legacy hunk stream produced and what makes the round-2
-    population projection below positionally identical to it.
+    Provisional throughout. An ``(old, None)`` here is an *unmatched* observation, not a
+    settled removal — the similarity rule may not have run yet, and round 2 may still claim it.
 
-    Provisional throughout: an ``(old, None)`` here is an *unmatched* observation, not a
-    settled removal, because round 2 may still claim it.
+    Carries no similarity. Slice 4 hung the word overlap on this record because ``_emit_pair``
+    computed it while deciding the split; slice 5 makes the evidence a stage of its own, so the
+    measurement travels as :class:`~deltatrack.matching.CorrespondenceEvidence` addressed by
+    ADR 0019 refs rather than as a field on the pairing that produced it.
     """
 
     old: _Block | None
     new: _Block | None
-    word_overlap: float | None = None
 
 
 @dataclass(frozen=True)
@@ -389,59 +395,186 @@ def _reconcile_moves(hunks: list[PdfHunk], threshold: float = MOVE_THRESHOLD) ->
 # ---- Public entry point ------------------------------------------------------
 
 
-def _emit_pair(v1_b: _Block, v2_b: _Block, sink: list[_AlignedPairing]) -> None:
-    """Record an aligned pair as a surviving 1:1, or split it into a removal + an addition.
+def _pdf_similarity_signals(v1_block: _Block, v2_block: _Block) -> dict[str, bool | float]:
+    """The two signals the PDF similarity rule reads. Describes; decides nothing.
 
-    When v1/v2 block texts are very dissimilar, treat the pair as an unrelated removal and
-    addition that happen to share alignment — emit two pairings so round 2 can later pair
-    each with its right counterpart.
+    **The legacy short-circuit is preserved exactly, and that is the point of the shape.**
+    ``_emit_pair`` compared the two block texts first and called
+    :func:`~deltatrack.similarity.text_similarity_at_least` only when they differed. Computing
+    the ratio unconditionally would be tidier and would be a behaviour change dressed as a
+    refactor: the set of similarity calls the engine makes would differ from the set it makes
+    today, and that call is itself gated (it returns ``0.0`` rather than the true ratio when the
+    cheap upper bounds fall short).
 
-    **The rule is unchanged from the pre-slice-4 version; only what it appends changed.** It
-    used to append classified ``PdfHunk``s directly, which is what forced round 2 to run on
-    classification output. It now appends provisional pairings, so round 2 has a population
-    that exists before anything is classified. The comparisons, the constants and the order
-    of the two split records are identical, and slice 5 is what extracts this rule into
-    ``pdf_pairing_survives_similarity_rule`` + ``apply_pdf_similarity_revocation``.
+    **``word_overlap`` is present even when the texts are identical**, which is where this
+    diverges from ``diff_bill``'s equivalent, and the divergence is forced rather than chosen:
+    PDF classification reads this signal to make the moved-vs-modified call, so a renamed anchor
+    over an identical body needs the value. ``1.0`` is transcribed from the literal
+    ``_emit_pair`` passed, not measured — identical texts do score 1.0, but production never
+    computed it and this must not start.
 
-    The surviving-pair word overlap is carried rather than recomputed later: classification
-    needs it for the moved-vs-modified call, and recomputing would be a second measurement
-    free to disagree with the one that decided the pairing.
+    Registry-free on purpose: turning signals into addressed evidence is
+    :func:`pdf_similarity_correspondence_evidence`'s job.
     """
-    if v1_b.text == v2_b.text:
-        # Stripping headings from the body (#56) can equalize two blocks that
-        # differ only by a renamed anchor (an account renamed with otherwise
-        # identical prose). With the heading gone from the body, that rename
-        # would vanish; surface it as a moved/renamed hunk instead.
-        #
-        # Both cases are one 1:1 correspondence: the blocks are claimed and neither may reach
-        # round 2. What differs is only whether classification emits a record — a renamed
-        # anchor becomes a `moved` hunk, an identical one becomes nothing at all (research
-        # record §7.3: `unchanged` is not a PDF record). That is classification's call, made
-        # from the anchors it can already see, so nothing distinguishes them here.
-        #
-        # 1.0 is transcribed from the legacy call, not derived. `text_similarity` of two
-        # identical texts is also 1.0, but production passed the literal, so the literal is
-        # what travels; deriving it here would be a new measurement wearing the old value.
-        sink.append(_AlignedPairing(v1_b, v2_b, word_overlap=1.0))
-        return
-    # Gate at the lower (split) threshold: at or above it the exact ratio is
-    # needed downstream for the MOVE_THRESHOLD moved/modified split in _hunk_for_paired_blocks.
-    sim = text_similarity_at_least(v1_b.text, v2_b.text, SIMILARITY_THRESHOLD)
-    if sim < SIMILARITY_THRESHOLD:
-        sink.append(_AlignedPairing(v1_b, None))
-        sink.append(_AlignedPairing(None, v2_b))
-    else:
-        sink.append(_AlignedPairing(v1_b, v2_b, word_overlap=sim))
+    if v1_block.text == v2_block.text:
+        return {TEXT_IDENTICAL: True, WORD_OVERLAP: 1.0}
+    # Gate at the lower (split) threshold: at or above it the exact ratio is needed downstream
+    # for the MOVE_THRESHOLD moved/modified call in `_hunk_for_paired_blocks`.
+    return {
+        TEXT_IDENTICAL: False,
+        WORD_OVERLAP: text_similarity_at_least(v1_block.text, v2_block.text, SIMILARITY_THRESHOLD),
+    }
+
+
+def pdf_similarity_correspondence_evidence(
+    pairings: list[_AlignedPairing],
+    registry: PdfObservationRegistry,
+) -> tuple[CorrespondenceEvidence, ...]:
+    """CORRESPONDENCE EVIDENCE for the similarity rule: one record per aligned 1:1.
+
+    Named for the one rule these signals feed, not for round 1. ``_align_blocks`` also decides
+    correspondence — the ``_block_key`` alignment and the positional ``replace`` zip both settle
+    which pair is even considered — and neither produces evidence here.
+
+    **Every 1:1 pairing gets a record, including the ones the rule will revoke** (ADR 0020
+    invariant 8: evidence for candidates reaching assignment stays retained and inspectable). A
+    revoked pairing's record attaches to no ``Correspondence`` but stays in this tuple for the
+    life of the comparison, exactly as round 2's rejected candidates stay in
+    :func:`pdf_move_evidence`'s output. Retained and unattached, never discarded.
+
+    An unmatched pairing carries no record: it names no pair, so there is nothing to describe.
+    """
+    evidence: list[CorrespondenceEvidence] = []
+    for pairing in pairings:
+        if pairing.old is None or pairing.new is None:
+            continue
+        evidence.append(
+            CorrespondenceEvidence.of(
+                registry.ref(OLD, pairing.old),
+                registry.ref(NEW, pairing.new),
+                **_pdf_similarity_signals(pairing.old, pairing.new),
+            )
+        )
+    return tuple(evidence)
+
+
+def _pdf_evidence_by_link(
+    evidence: tuple[CorrespondenceEvidence, ...],
+) -> dict[tuple[ObservationRef, ObservationRef], CorrespondenceEvidence]:
+    """Evidence addressed by ADR 0019 observation pair, refusing a duplicated link.
+
+    Keyed by ``(old_ref, new_ref)`` and never by position: this tuple is shorter than the
+    pairing stream, so a positional read would misalign rather than fail. A repeated link is
+    refused rather than resolved — two records for one pair leave no answer to "which one
+    selected it".
+    """
+    by_link: dict[tuple[ObservationRef, ObservationRef], CorrespondenceEvidence] = {}
+    for item in evidence:
+        if item.link in by_link:
+            raise ValueError(
+                f"two evidence records for the pairing {item.old}->{item.new}; the evidence that "
+                "selected a link is singular"
+            )
+        by_link[item.link] = item
+    return by_link
+
+
+def pdf_pairing_survives_similarity_rule(evidence: CorrespondenceEvidence, threshold: float) -> bool:
+    """ASSIGNMENT: whether the similarity rule keeps this aligned pairing. Owns the threshold.
+
+    Reads only the evidence. The transcribed rule, in the positive:
+
+        if v1.text == v2.text:                       -> kept   (text_identical)
+        elif text_similarity_at_least(...) < CUTOFF: -> revoked
+        else:                                        -> kept
+
+    **Malformed evidence raises; it never silently revokes.** A missing or wrongly typed signal
+    means the evidence stage and this rule disagree about the vocabulary, and the safe-looking
+    reading of that — treat it as "not similar enough" — would split a provision on the strength
+    of a bug and report it as a removal plus an addition. ``bool`` is checked before ``float``
+    because ``isinstance(True, int)`` is true in Python and a bool must not be read as a score.
+    """
+    if TEXT_IDENTICAL not in evidence.names:
+        raise ValueError(f"evidence for {evidence.old}->{evidence.new} carries no {TEXT_IDENTICAL} signal")
+    text_identical = evidence.get(TEXT_IDENTICAL)
+    if not isinstance(text_identical, bool):
+        raise ValueError(
+            f"evidence for {evidence.old}->{evidence.new} carries a non-bool {TEXT_IDENTICAL}: {text_identical!r}"
+        )
+    if text_identical:
+        return True
+    if WORD_OVERLAP not in evidence.names:
+        raise ValueError(
+            f"evidence for {evidence.old}->{evidence.new} has {TEXT_IDENTICAL}=False and no "
+            f"{WORD_OVERLAP} signal; the rule cannot decide and must not guess"
+        )
+    word_overlap = evidence.get(WORD_OVERLAP)
+    if not isinstance(word_overlap, float):
+        raise ValueError(
+            f"evidence for {evidence.old}->{evidence.new} carries a non-float {WORD_OVERLAP}: {word_overlap!r}"
+        )
+    return word_overlap >= threshold
+
+
+def apply_pdf_similarity_revocation(
+    pairings: list[_AlignedPairing],
+    evidence: tuple[CorrespondenceEvidence, ...],
+    registry: PdfObservationRegistry,
+    *,
+    threshold: float,
+) -> list[_AlignedPairing]:
+    """Replace each revoked pairing with the two unmatched observations it becomes.
+
+    Named for the one rule it applies. It is **not** the whole of round-1 assignment:
+    ``_align_blocks`` still selects the aligned pair and the positional ``replace`` partner, and
+    neither is touched here.
+
+    Two blocks aligned by ``_block_key`` but carrying very dissimilar bodies are not the same
+    provision — they are an unrelated removal and addition that happen to share an anchor — so
+    the pairing is revoked and each side goes on to round 2 to find its real counterpart.
+
+    **The two replacements are adjacent and in place**, and that is load-bearing rather than
+    incidental. Round 2's population is the filtered pairing stream, so emitting the removal and
+    the addition at the position the pairing occupied is what keeps the ``(ri, ai)`` positions,
+    the candidate population, the selections and every canonical identifier where they were.
+    Reversing the two, or appending them elsewhere, moves canonical output while leaving every
+    change *count* untouched.
+
+    ``threshold`` is a parameter rather than a read of ``SIMILARITY_THRESHOLD``, so a test can
+    move it and watch this stage alone respond. A 1:1 pairing with no evidence raises: it means
+    the evidence stage and this one disagree about the population, and revoking on that basis
+    would be guessing.
+    """
+    by_link = _pdf_evidence_by_link(evidence)
+    decided: list[_AlignedPairing] = []
+    for pairing in pairings:
+        if pairing.old is None or pairing.new is None:
+            decided.append(pairing)
+            continue
+        link = (registry.ref(OLD, pairing.old), registry.ref(NEW, pairing.new))
+        item = by_link.get(link)
+        if item is None:
+            raise ValueError(f"no correspondence evidence for the 1:1 pairing {link[0]}->{link[1]}")
+        if pdf_pairing_survives_similarity_rule(item, threshold):
+            decided.append(pairing)
+        else:
+            decided.append(_AlignedPairing(pairing.old, None))
+            decided.append(_AlignedPairing(None, pairing.new))
+    return decided
 
 
 def _align_blocks(v1_blocks: list[_Block], v2_blocks: list[_Block]) -> list[_AlignedPairing]:
     """ROUND 1, retrieval and assignment still fused: which blocks are provisionally paired.
 
     Unchanged from the pre-slice-4 opcode walk except that it produces pairings rather than
-    classified hunks. `_block_key` + `SequenceMatcher` decide what is *considered*; the
-    positional zip inside a ``replace`` is retrieval too (research record §9), and
-    :func:`_emit_pair`'s similarity rule is the one assignment act that can revoke a pairing.
-    Slice 5 is what separates those.
+    classified hunks. `_block_key` + `SequenceMatcher` decide what is *considered*, and the
+    positional zip inside a ``replace`` is retrieval too (research record §9).
+
+    **Retrieval only, since slice 5.** Every aligned pair leaves here as a provisional 1:1; the
+    one round-1 act that can revoke a pairing now lives in
+    :func:`apply_pdf_similarity_revocation`, reading named evidence and owning its threshold.
+    What stays fused is the retrieval policy itself — the key, the aligner, and the positional
+    partner choice — which is slice 7's work.
     """
     matcher = difflib.SequenceMatcher(
         a=[_block_key(b) for b in v1_blocks],
@@ -455,7 +588,7 @@ def _align_blocks(v1_blocks: list[_Block], v2_blocks: list[_Block]) -> list[_Ali
             # Block keys match. Bodies might still differ (e.g. amendment
             # annotations appearing past the 80-char preview).
             for v1_b, v2_b in zip(v1_blocks[i1:i2], v2_blocks[j1:j2]):
-                _emit_pair(v1_b, v2_b, pairings)
+                pairings.append(_AlignedPairing(v1_b, v2_b))
         elif op == "delete":
             for v1_b in v1_blocks[i1:i2]:
                 pairings.append(_AlignedPairing(v1_b, None))
@@ -470,7 +603,7 @@ def _align_blocks(v1_blocks: list[_Block], v2_blocks: list[_Block]) -> list[_Ali
                 v1_b = v1_slice[k] if k < len(v1_slice) else None
                 v2_b = v2_slice[k] if k < len(v2_slice) else None
                 if v1_b is not None and v2_b is not None:
-                    _emit_pair(v1_b, v2_b, pairings)
+                    pairings.append(_AlignedPairing(v1_b, v2_b))
                 elif v1_b is not None:
                     pairings.append(_AlignedPairing(v1_b, None))
                 else:
@@ -636,6 +769,8 @@ def settle_pdf_correspondences(
     pairings: list[_AlignedPairing],
     registry: PdfObservationRegistry,
     moves: tuple[Correspondence, ...],
+    *,
+    round1_evidence: tuple[CorrespondenceEvidence, ...],
 ) -> tuple[PdfSettledCorrespondence, ...]:
     """Every correspondence settled for one comparison, with its round and its output slot.
 
@@ -649,10 +784,15 @@ def settle_pdf_correspondences(
     and skipped the consumed added one. Carrying the slot rather than sorting by round is the
     difference from ``diff_bill``, whose legacy output appends moves instead.
 
-    A surviving 1:1 carries its round-1 word overlap as the evidence that selected it, so
-    classification can make the moved-vs-modified call from evidence rather than by
-    recomputing a second measurement free to disagree with the first.
+    ``round1_evidence`` is keyword-only and required: it is the whole collection from
+    :func:`pdf_similarity_correspondence_evidence`, revoked pairings included. This attaches the
+    subset that selected a surviving 1:1 and leaves the rest retained but unattached, so
+    classification makes the moved-vs-modified call from the evidence that decided the pairing
+    rather than from a second measurement free to disagree with it. A surviving 1:1 with no
+    record raises rather than falling back to an empty one — the empty record is what this slice
+    removes, and a silent fallback would reinstate it wherever the wiring is wrong.
     """
+    by_link = _pdf_evidence_by_link(round1_evidence)
     claimed = {ref for move in moves for ref in (*move.old, *move.new)}
     move_by_old = {move.old[0]: move for move in moves}
 
@@ -661,9 +801,12 @@ def settle_pdf_correspondences(
         if pairing.old is not None and pairing.new is not None:
             old_ref = registry.ref(OLD, pairing.old)
             new_ref = registry.ref(NEW, pairing.new)
-            if pairing.word_overlap is None:
-                raise ValueError(f"the surviving 1:1 pairing {old_ref}->{new_ref} carries no word overlap")
-            item = CorrespondenceEvidence.of(old_ref, new_ref, **{WORD_OVERLAP: pairing.word_overlap})
+            item = by_link.get((old_ref, new_ref))
+            if item is None:
+                raise ValueError(
+                    f"the surviving 1:1 pairing {old_ref}->{new_ref} carries no correspondence evidence; "
+                    "the evidence that selected a link must travel with it"
+                )
             settled.append(
                 PdfSettledCorrespondence(
                     Correspondence(old=(old_ref,), new=(new_ref,), evidence=(item,)),
@@ -753,11 +896,15 @@ def diff_pdfs(v1_pages: list[Page], v2_pages: list[Page]) -> PdfDiff:
     classified hunk stream, so a change to what ``_hunk_for_removed`` emitted could silently
     change which pairs were even considered for a move.
 
-    Round 2 stays after the round-1 split rule, and that ordering is load-bearing rather than
-    incidental: a split is what puts most of round 2's population on the table at all.
+    Round 2 stays after the similarity revocation, and that ordering is load-bearing rather
+    than incidental: a revoked pairing is what puts most of round 2's population on the table
+    at all.
 
-    What remains fused: round-1 retrieval and the split rule inside :func:`_align_blocks`
-    (slice 5), and the moved-vs-modified call inside classification (slice 6).
+    What remains fused, said plainly: **round-1 retrieval.** ``_align_blocks`` still decides
+    what may be compared — the ``_block_key`` alignment and the positional ``replace`` partner
+    choice are both retrieval policy, and slice 7 is where they become a named retriever. The
+    moved-vs-modified call also still sits inside classification, which is slice 6 and is design
+    work rather than extraction.
     """
     v1_indexed = _flatten(v1_pages)
     v2_indexed = _flatten(v2_pages)
@@ -773,12 +920,14 @@ def diff_pdfs(v1_pages: list[Page], v2_pages: list[Page]) -> PdfDiff:
     v2_anchors = _with_front_matter(v2_blocks, v2_anchors)
 
     registry = PdfObservationRegistry(v1_blocks, v2_blocks)
-    pairings = _align_blocks(v1_blocks, v2_blocks)
+    provisional = _align_blocks(v1_blocks, v2_blocks)
+    round1_evidence = pdf_similarity_correspondence_evidence(provisional, registry)
+    pairings = apply_pdf_similarity_revocation(provisional, round1_evidence, registry, threshold=SIMILARITY_THRESHOLD)
     population = pdf_unmatched_population(pairings, registry)
     candidates = retrieve_pdf_move_candidates(population, bound=MOVE_THRESHOLD)
     evidence = pdf_move_evidence(candidates)
     moves = assign_pdf_moves(population, evidence, threshold=MOVE_THRESHOLD)
-    settled = settle_pdf_correspondences(pairings, registry, moves)
+    settled = settle_pdf_correspondences(pairings, registry, moves, round1_evidence=round1_evidence)
     hunks = classify_pdf(settled, registry)
 
     return PdfDiff(
