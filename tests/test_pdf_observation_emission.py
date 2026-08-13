@@ -35,9 +35,13 @@ to be measured against.
 
 from __future__ import annotations
 
+import re
+from collections import Counter
+
 import pytest
 
-from deltatrack.parsers.pdf_anchors import breadcrumb_for, extract_anchors
+from deltatrack.amounts import extract_amounts
+from deltatrack.parsers.pdf_anchors import _is_uppercase_heading, breadcrumb_for, extract_anchors
 from deltatrack.parsers.pdf_blocks import _Block, _flatten, _group_into_blocks
 from deltatrack.structure_tree import TreeNode, build_pdf_tree
 from tests.corpus_paths import FIXTURES_DIR
@@ -47,6 +51,20 @@ pytestmark = pytest.mark.slow
 
 _PDFS = sorted(FIXTURES_DIR.glob("*/*.pdf"))
 _IDS = [f"{p.parent.name}/{p.stem}" for p in _PDFS]
+
+#: A FROZEN copy of the money pattern, used only to audit the conservation invariant below.
+#:
+#: Deliberately not ``deltatrack.amounts.DOLLAR_RE``. The invariant guards against a change
+#: to that detector silently dropping an amount out of an emitted observation, so auditing
+#: with the detector under test would break the auditor in the same edit and the check would
+#: pass vacuously — a gate structurally incapable of failing, which is the shape this study
+#: exists to refuse. Keeping a second copy is normally the defect; here the independence is
+#: the point, and this copy is never used for extraction.
+_AUDIT_DOLLAR_RE = re.compile(r"\$\d{1,3}(?:,\d{3})+|\$\d+")
+
+
+def _audit_amounts(text: str) -> Counter:
+    return Counter(int(m.group().replace("$", "").replace(",", "")) for m in _AUDIT_DOLLAR_RE.finditer(text))
 
 
 def stream_and_observations(pdf):
@@ -115,6 +133,72 @@ def test_emission_is_stable_across_re_derivation(pdf) -> None:
     ordinal yet.
     """
     assert emitted_observations(pdf) == emitted_observations(pdf)
+
+
+@pytest.mark.parametrize("pdf", _PDFS, ids=_IDS)
+def test_stripping_never_drops_a_dollar_amount(pdf) -> None:
+    """Heading-chrome stripping must not remove a dollar amount from an observation.
+
+    ``_strip_heading_lines`` trims uppercase heading lines from a block's edges, and
+    ``_is_strippable_heading_line`` exempts any that carries an amount — so an all-caps
+    recap line survives and a money change is never silently dropped. That exemption calls
+    :func:`deltatrack.amounts.extract_amounts`, which makes the money detector part of PDF
+    observation production: break it, and these lines are stripped out of the emitted
+    observation.
+
+    Stated as conservation over the whole document rather than as a re-implementation of the
+    strip rule: every amount present in the flattened line stream must still be present in
+    the emitted blocks. An oracle that asked the strip rule what it strips could not detect
+    the rule changing.
+
+    Measured: 0 of 53 committed documents lose an amount here; under a detector that stops
+    recognising comma-grouped money, 5 do — 118-hr-2882, 118-hr-4366 (both sides),
+    118-hr-4820 and 118-s-4690 each lose exactly one, from lines like
+    ``'(29 U.S.C. 792), $9,955,000.'`` which read as uppercase headings.
+    """
+    pages = cached_pages(pdf)
+    stream = _flatten(pages)
+    blocks = _group_into_blocks(stream, extract_anchors(pages))
+
+    in_stream: Counter = Counter()
+    for line in stream:
+        in_stream += _audit_amounts(line.text)
+    emitted: Counter = Counter()
+    for block in blocks:
+        emitted += _audit_amounts(block.text)
+
+    lost = in_stream - emitted
+    assert not lost, (
+        f"heading stripping dropped {sum(lost.values())} dollar amount(s) from the emitted "
+        f"observations: {dict(sorted(lost.items()))}. The amount guard in "
+        "_is_strippable_heading_line exists to prevent exactly this."
+    )
+
+
+def test_the_amount_guard_is_actually_exercised() -> None:
+    """Floor for the conservation sweep, which is an absence assertion over 53 documents.
+
+    Without this the sweep could be 53 vacuous passes: if no block edge were ever an
+    uppercase heading carrying an amount, nothing would be at risk of being stripped and the
+    invariant would hold for reasons unrelated to the guard. Counts the lines the guard
+    actively retains — an uppercase heading, at a block edge, carrying an amount.
+
+    Measured at 5 lines across 5 documents. Asserted as a floor rather than the exact count,
+    so a corpus addition does not force a fixture edit.
+    """
+    retained = 0
+    for pdf in _PDFS:
+        pages = cached_pages(pdf)
+        for block in _group_into_blocks(_flatten(pages), extract_anchors(pages)):
+            if not block.indexed_lines:
+                continue
+            for edge in {block.indexed_lines[0], block.indexed_lines[-1]}:
+                if _is_uppercase_heading(edge.text) and extract_amounts(edge.text):
+                    retained += 1
+    assert retained >= 4, (
+        f"only {retained} block-edge lines are retained by the amount guard; the conservation "
+        "sweep above would be close to asserting nothing"
+    )
 
 
 def _sourced_nodes(nodes: list[TreeNode], seen: set[int]) -> set[int]:
