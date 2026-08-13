@@ -321,15 +321,40 @@ post-filter list. `Anchor` carries `(page, line, kind, text, division)` but no i
 unique — the 190 collisions above are the exception — so it is traceability metadata, not a
 key.
 
-**(c) The parser revision would have to hash the differ.** ADR 0019 requires a revision
-"derived from the parser implementation, [changing] whenever code capable of changing the
-emitted observations changes". For PDF that is `pdf_text.py` + `pdf_anchors.py` + the
-pypdfium2 build **+ `diff_pdf.py`**, because `_group_into_blocks` and `_strip_heading_lines`
-live there. Under that definition, editing the matcher changes observation identity, and
-every stored artifact would quarantine on a matching change that touched no observation.
-The repository already has the working half of this mechanism —
+**(c) The parser revision would have to hash the differ. — RESOLVED, in two steps.** ADR
+0019 requires a revision "derived from the parser implementation, [changing] whenever code
+capable of changing the emitted observations changes". When this was written that meant
+`pdf_text.py` + `pdf_anchors.py` + the pypdfium2 build **+ `diff_pdf.py`**, because
+`_group_into_blocks` and `_strip_heading_lines` lived there — so editing the matcher would
+change observation identity and quarantine every stored artifact on a matching change that
+touched no observation.
+
+Slice 1 moved block formation to `parsers/pdf_blocks.py`, which removed `diff_pdf` from the
+closure. It did **not** finish the job: `_is_strippable_heading_line` called
+`extract_amounts` from `diff_bill`, and that call is result-bearing — an uppercase heading
+with no recognised amount may be stripped, one carrying an amount must be retained. So a
+change to the money regexes could still alter emitted observations without touching any file
+the declared revision covered. The dependency-repair commit moved that primitive to the
+source-neutral `deltatrack/amounts.py`.
+
+**The dependency closure is now measured, not asserted.** Walking module-level imports from
+`parsers.pdf_blocks`:
+
+| | modules in the observation-production closure |
+|---|---|
+| before the repair | `bill_tree`, **`diff_bill`**, **`matching`**, `parsers.pdf_anchors`, `parsers.pdf_blocks`, `parsers.pdf_text`, **`similarity`**, `version_stems` |
+| after | `amounts`, `parsers.pdf_anchors`, `parsers.pdf_blocks`, `parsers.pdf_text` |
+
+`similarity` and `matching` — which carry the matching thresholds — were inside PDF
+observation production and are now out.
+
+**A future PDF parser revision must therefore hash:** `parsers/pdf_text.py` +
+`parsers/pdf_anchors.py` + `parsers/pdf_blocks.py` + `deltatrack/amounts.py` + the pypdfium2
+distribution version. The repository already has the working half of the mechanism —
 `tests/pdf_corpus._extractor_fingerprint` hashes `pdf_text.py` plus the pypdfium2 version —
-which is why the fix is a move, not an invention.
+so what remains is widening it, not inventing it. Note that fingerprint does **not** yet
+cover `pdf_anchors`, `pdf_blocks` or `amounts`; widening it belongs with slice 3, where a
+stored ordinal first depends on it.
 
 **(d) The observation's text is already a transformation.** `_Block.text` is
 post-`_strip_heading_lines`, so it is not the printed text and `page_range` bounds the
@@ -817,8 +842,9 @@ gate can be shown to fire before it lands. Slice 0 is not optional — §6.2 is 
 | slice | change | acceptance |
 |---|---|---|
 | **0** | **DONE.** Gates 1–7 built (§6.3, §6.4); no production change. | Falsified against the four production mutations — §6.5. |
-| **1** | Move `_flatten`, `_rejoin_cross_page_hyphens`, `_group_into_blocks`, `_strip_heading_lines` from `diff_pdf` to `parsers/pdf_blocks.py`, unchanged. `diff_pdf` imports them. | Gate 1 byte-identical. Makes a parser revision derivable without hashing the matcher (§4.2c). Also relieves part of #62. |
-| **2** | **State and pin the emission rule** — the post-filter block sequence is what the parser emits — and assert the ordinal indexes it. Do **not** lift the filter into retrieval (§4.2a, corrected). | Gate 1 byte-identical; gate 5 red under "assign ordinals after filtering". |
+| **1** | **DONE** (`63d569e`). Moved `_flatten`, `_rejoin_cross_page_hyphens`, `_group_into_blocks`, `_strip_heading_lines` and their types from `diff_pdf` to `parsers/pdf_blocks.py`, unchanged. | Gate 1 byte-identical; 9/9 moved definitions byte-identical to source; no `parsers/* -> diff_pdf`. |
+| **1a** | **DONE** (`d6d515b`). Dependency repair the slice 1 review exposed: move `DOLLAR_RE`, `AMENDMENT_RE`, `extract_amounts` to the source-neutral `deltatrack/amounts.py`, so observation production no longer reaches a differ (§4.2c). | Gate 1 byte-identical; closure measured 8 modules -> 4; new conservation invariant red under a broken money detector (`a54bf61`). |
+| **2** | **ALREADY DONE by slice 0's gate 5.** `tests/test_pdf_observation_emission.py` states the emission rule (the post-filter block sequence) and pins completeness, order, non-overlap, stability and the ordinal hazard. No further production work; slice 2 is a plan-state closure, not an implementation slice. | Gate 5 red under "assign ordinals after filtering"; and, since 1a, red under a broken money detector. |
 | **3** | Introduce `PdfObservation` + a `PdfObservationRegistry` mirroring `diff_bill.ObservationRegistry`. Nothing consumes it yet beyond address resolution. | Gate 1 byte-identical; totality and injectivity asserted, as the XML registry does. |
 | **4** | Extract **round 2** only: `pdf_unmatched_population` → `retrieve_pdf_move_candidates` → `pdf_move_evidence` → `assign_pdf_moves`, and move it **before** classification. This is the PDF #591. | Gate 1 byte-identical; gate 2 (transcribed oracle) agrees. Sequencing is load-bearing — check the XML equivalent's finding that round 2 depends on round-1 revocation output. |
 | **5** | Extract the `_emit_pair` split rule as `pdf_pairing_survives_similarity_rule` + `apply_pdf_similarity_revocation`, mirroring `diff_bill`. | Gate 1 byte-identical; gate 4's split case exercises it. |
@@ -827,7 +853,9 @@ gate can be shown to fire before it lands. Slice 0 is not optional — §6.2 is 
 
 Slices 1–5 are wrap-and-extract with a byte-identical gate. Slice 6 changes semantics and
 owes precision/recall evidence under ADR 0020's second implementation rule. Slice 7 is
-blocked on §9.
+bounded by §9's limitation rather than blocked by it.
+
+**State: slices 0, 1, 1a complete; slice 2 complete by gate 5. Slice 3 is next.**
 
 ---
 
@@ -891,12 +919,16 @@ shared assignment implementation might make.
 1. ~~**No PDF preservation oracle** (§6.2).~~ **RETIRED — slice 0 is built and falsified**
    (§6.3, §6.5). This was the only hard blocker after the two corrections below, so with it
    closed, slice 1 may begin.
-2. **Block formation lives in `diff_pdf`** (§4.2c), so no ADR 0019 parser revision is
-   derivable for PDF. Slice 1.
-3. **The emission rule is nowhere stated or tested** (§4.2a). Narrower than an earlier draft
-   claimed: the 190 dropped blocks are correctly dropped, so the sequence is not wrongly
-   filtered. What is missing is any assertion that the ordinal indexes the sequence the
-   parser actually emits. Slice 2 + gate 5.
+2. ~~**Block formation lives in `diff_pdf`** (§4.2c), so no ADR 0019 parser revision is
+   derivable for PDF.~~ **RETIRED — slice 1 (`63d569e`) moved it, and the dependency repair
+   (`d6d515b`) finished the job** by moving the amount primitive out of `diff_bill` too. The
+   closure is now measured at four modules, differ-free (§4.2c).
+3. ~~**The emission rule is nowhere stated or tested** (§4.2a).~~ **RETIRED — gate 5 owns
+   it.** `tests/test_pdf_observation_emission.py` states the rule and pins completeness,
+   order, non-overlap, stability and the ordinal hazard, so slice 2 needs no production work.
+   The 190 dropped blocks are correctly dropped; the sequence was never wrongly filtered.
+
+**No hard blocker remains. Slice 3 is next.**
 
 **Retired by measurement or correction, recorded so they are not re-raised**
 
