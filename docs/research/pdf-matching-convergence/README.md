@@ -921,6 +921,34 @@ it — a stored PDF ordinal — is not introduced here. The *revision* is cross-
 tested under two hash seeds, because a stored artifact will record it and a per-process value
 would be unverifiable by construction.
 
+### 8.2 Two guard defects the slice 3 review found, and how they were closed
+
+Both were in the *guards*, not in the production implementation, which the review approved
+unchanged. Recorded because each is a defect class that recurs.
+
+**The revision controls mutated the checkout.** The four faults above were run by hand against
+production and restored, which is fine for a one-off. The committed tests did the same thing,
+and the suite runs `-n auto`: two workers interleaving save/write/restore on one file can leave
+a worker asserting against another's mutation, restore over one, or leave the tree dirty. The
+green full run reported at handoff did not retire that — worker scheduling decides. Each
+mutating test now copies `src/deltatrack` into its own `tmp_path` and monkeypatches
+`pdf_observations._PACKAGE_ROOT` at the copy, so the **real** closure walk and digest run
+against a tree the test owns. Because that is a copy of the thing under test, it proves it is
+still the same thing before use: byte-identical tree, closure resolving only inside the copy,
+and the copy's revision equal to the checkout's. An autouse fixture digests the real package
+before and after every test in the module and fails the test that wrote into it; demonstrated
+to fire by a throwaway test that appended to `amounts.py` without restoring.
+
+**The `amounts.py` vocabulary exemption was too wide.** Allowlisting the module whole exempted
+it from the ADR 0018 structural-vocabulary scan, and `amounts.py` is the one allowlisted module
+a structural parser consumes result-bearingly (`_is_strippable_heading_line`). So a genre
+trigger added there would make the emitted observation sequence depend on appropriations
+English while the gate stayed green — ADR 0019's revision would move, recording the change
+without objecting to it. The exemption is now narrowed to the
+`(increased|reduced|decreased) by $X` amendment annotation it was granted for, with the
+remainder required to be empty and the guard falsified by running the real rule over the real
+source plus `necessary expenses`.
+
 ---
 
 ## 9. Round-1 retrieval: a limitation, not a blocker
