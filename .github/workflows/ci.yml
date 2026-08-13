@@ -185,6 +185,7 @@ jobs:
           tests/test_pdf_canonical_baseline.py
           tests/test_pdf_matching_boundary.py
           tests/test_pdf_observation_emission.py
+          tests/test_pdf_observation_identity.py
           tests/test_matching_contracts.py
           tests/test_assignment_classification_boundary.py
           tests/test_round1_preservation.py
