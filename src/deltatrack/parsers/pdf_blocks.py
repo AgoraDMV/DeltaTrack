@@ -30,25 +30,32 @@ addressable through the anchor stream, the structure tree and a breadcrumb. See
 merely described.
 
 **Dependency direction.** This module must never import matching or classification policy
-from ``diff_pdf``; the arrow runs
+from a differ; the arrow runs
 
+    amounts ─┐
+             ↓
     pdf_text -> pdf_anchors -> pdf_blocks -> diff_pdf
 
-One import here runs against the grain and is recorded rather than hidden:
-``extract_amounts`` comes from ``deltatrack.diff_bill``, so this is the first module under
-``parsers/`` to depend on a differ. It is acyclic today and behaviour-preserving, and the
-alternative — parameterising the strip rule so it could stay in ``diff_pdf`` — would have put
-block-formation policy back in the matcher, defeating the slice. ``extract_amounts`` is a
-pure text→amounts utility whose home in ``diff_bill`` is historical
-([#62](https://github.com/AgoraDMV/DeltaTrack/issues/62)); promoting it to a neutral module
-is the clean fix and belongs in its own change, not in a relocation slice.
+:func:`~deltatrack.amounts.extract_amounts` is consumed by
+:func:`_is_strippable_heading_line`, and that call is **result-bearing**: an uppercase
+heading with no recognised amount may be stripped from a block body, while one carrying an
+amount must be retained. It therefore belongs to this module's parser-revision closure. It
+previously came from ``deltatrack.diff_bill``, which meant a change to the money regexes
+could alter the emitted PDF observation sequence without touching any file that closure
+covered — the exact failure ADR 0019 identity exists to prevent. ``deltatrack.amounts`` is
+source-neutral and imports nothing from ``deltatrack``, so depending on it adds no differ to
+observation identity.
+
+**Parser-revision closure for PDF observations:** ``parsers/pdf_text.py`` +
+``parsers/pdf_anchors.py`` + this module + ``deltatrack/amounts.py`` + the pypdfium2
+distribution version.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from deltatrack.diff_bill import extract_amounts
+from deltatrack.amounts import extract_amounts
 from deltatrack.parsers.pdf_anchors import Anchor, _is_uppercase_heading
 from deltatrack.parsers.pdf_text import Page
 

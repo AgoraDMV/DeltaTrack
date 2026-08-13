@@ -22,7 +22,7 @@ from __future__ import annotations
 from bisect import bisect_right
 from html import escape
 
-from deltatrack.diff_bill import extract_amounts
+from deltatrack.amounts import extract_amounts
 from deltatrack.diff_pdf import PdfDiff, PdfHunk
 from deltatrack.formatters.view_model import ChangeView, DiffView
 from deltatrack.parsers.pdf_anchors import Anchor, breadcrumb_for
