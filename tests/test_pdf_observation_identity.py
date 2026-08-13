@@ -27,7 +27,9 @@ of the representation itself, which is the only thing slice 3 adds.
 from __future__ import annotations
 
 import dataclasses
+import hashlib
 import os
+import shutil
 import subprocess
 import sys
 from contextlib import contextmanager
@@ -72,30 +74,96 @@ MATCHING_ONLY = (
 )
 
 
-def _module_file(module: str) -> Path:
-    return _PACKAGE_ROOT.joinpath(*module.split(".")[1:]).with_suffix(".py")
+def _tree_digest(root: Path) -> str:
+    """A digest over every ``.py`` under ``root``, path and content, in sorted order."""
+    digest = hashlib.sha256()
+    for path in sorted(p for p in root.rglob("*.py") if "__pycache__" not in p.parts):
+        digest.update(str(path.relative_to(root)).encode())
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
+
+
+@pytest.fixture(autouse=True)
+def real_source_is_never_mutated():
+    """Standing guard: no test in this module may write into the checkout's own source.
+
+    The mutation controls below need a parser tree they can edit, and the obvious way to get
+    one — edit ``src/deltatrack`` and restore it afterwards — is unsafe here. The suite runs
+    under ``-n auto``, so two workers interleaving save/write/restore on one file can leave a
+    worker asserting against another's mutation, or restore over it, or leave the checkout
+    dirty. Worker scheduling decides, so a single green full run would not retire the risk.
+
+    They therefore mutate a per-test copy (:func:`package_copy`). This fixture is what keeps
+    that true: it fails the test that broke the rule, rather than leaving a dirty tree for
+    someone to find later.
+    """
+    before = _tree_digest(_PACKAGE_ROOT)
+    yield
+    assert _tree_digest(_PACKAGE_ROOT) == before, (
+        f"a test in this module wrote into the real package tree at {_PACKAGE_ROOT}. Source "
+        "mutations must target the per-test copy from the `package_copy` fixture; editing the "
+        "checkout races other xdist workers and can leave the tree dirty."
+    )
+
+
+@pytest.fixture
+def package_copy(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A private copy of ``deltatrack``'s source, with the revision walk pointed at it.
+
+    ``pdf_parser_revision`` resolves module names through ``_PACKAGE_ROOT``, so redirecting
+    that one name is enough to run the **real** closure walk and the **real** digest against a
+    tree a test may edit freely. Nothing here re-implements either: a test-only replica of the
+    algorithm would prove the replica correct and say nothing about production.
+
+    The copy is proved faithful before any test uses it —
+    :func:`test_the_package_copy_reproduces_the_real_revision_exactly` asserts the revision
+    over the copy equals the revision over the checkout. Without that, a mutation control could
+    be measuring a different parser and reporting agreement.
+    """
+    root = tmp_path / "deltatrack"
+    shutil.copytree(_PACKAGE_ROOT, root, ignore=shutil.ignore_patterns("__pycache__"))
+    monkeypatch.setattr("deltatrack.pdf_observations._PACKAGE_ROOT", root)
+    return root
 
 
 @contextmanager
-def appended_to_source(module: str, text: str):
-    """Temporarily append ``text`` to a module's source file, restoring the bytes after.
+def appended_to_source(root: Path, module: str, text: str):
+    """Temporarily append ``text`` to a module's source **within a copied tree**.
 
-    The appended text is always *valid, inert* Python — a comment, or an import that is never
-    used. The suite runs under xdist by default, so a worker importing this module for the
-    first time inside the window must not see broken or behaviourally different code; a
-    syntax-breaking mutation would turn a control into a flake generator.
-
-    Restoring writes the original bytes back rather than running ``git checkout``, so an
-    uncommitted edit in the working tree survives the test (AGENTS.md: a restore from the
-    commit wipes work the author has not committed yet).
+    ``root`` is always a :func:`package_copy`, never the checkout. The restore is still done,
+    rather than relying on the copy being discarded, because ADR 0019 invariant 6 is two
+    claims — the revision changes on an edit *and returns when the code is restored* — and the
+    second needs the file put back inside the test.
     """
-    path = _module_file(module)
+    path = root.joinpath(*module.split(".")[1:]).with_suffix(".py")
     original = path.read_bytes()
     try:
         path.write_bytes(original + text.encode())
         yield
     finally:
         path.write_bytes(original)
+
+
+def test_the_no_mutation_guard_can_detect_a_write(tmp_path: Path) -> None:
+    """The autouse guard rests on ``_tree_digest`` noticing a changed file. Proved directly.
+
+    A guard that could not see a write would report a clean tree forever, which is exactly the
+    "compliant" reading a broken absence check gives. Exercised on a scratch tree rather than by
+    writing into the checkout, since doing that is the thing being prevented.
+    """
+    tree = tmp_path / "pkg"
+    (tree / "sub").mkdir(parents=True)
+    (tree / "sub" / "mod.py").write_text("x = 1\n")
+    before = _tree_digest(tree)
+
+    (tree / "sub" / "mod.py").write_text("x = 1\n# appended\n")
+    assert _tree_digest(tree) != before, "the digest is blind to a content change"
+
+    (tree / "sub" / "mod.py").write_text("x = 1\n")
+    assert _tree_digest(tree) == before, "the digest does not return when the content does"
+
+    (tree / "sub" / "other.py").write_text("y = 2\n")
+    assert _tree_digest(tree) != before, "the digest is blind to a new file"
 
 
 # --- The parser revision: what it must notice -------------------------------------------
@@ -147,8 +215,33 @@ def test_the_closure_excludes_the_matcher_and_the_thresholds() -> None:
     )
 
 
+def test_the_package_copy_reproduces_the_real_revision_exactly(
+    package_copy: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The mutation controls measure the same parser production does. Checked, not assumed.
+
+    Every case below reads its baseline from the copy, so a copy that dropped a file, or that
+    the walk resolved differently, would produce a self-consistent set of green results about
+    a parser that does not exist. Comparing the copy's revision against the checkout's before
+    any mutation is what rules that out.
+    """
+    over_the_copy = pdf_parser_revision()
+    closure = observation_closure()
+    assert closure, "the walk resolved nothing against the copy"
+    assert all(package_copy in path.parents for path in closure.values()), (
+        f"the closure still resolves files outside the copy: {sorted(closure.values())}"
+    )
+    assert _tree_digest(package_copy) == _tree_digest(_PACKAGE_ROOT), "the copy is not byte-identical to the checkout"
+
+    monkeypatch.setattr("deltatrack.pdf_observations._PACKAGE_ROOT", _PACKAGE_ROOT)
+    assert pdf_parser_revision() == over_the_copy, (
+        "the revision over the copy differs from the revision over the checkout; every mutation "
+        "control below would be measuring a parser that does not exist"
+    )
+
+
 @pytest.mark.parametrize("module", RESULT_BEARING)
-def test_editing_a_parser_module_changes_the_revision_and_restoring_it_returns(module: str) -> None:
+def test_editing_a_parser_module_changes_the_revision_and_restoring_it_returns(module: str, package_copy: Path) -> None:
     """ADR 0019 invariant 6, both halves: it changes on an edit, and returns on a restore.
 
     The mutation is a comment, which the revision must notice: the hash is deliberately blunt,
@@ -162,7 +255,7 @@ def test_editing_a_parser_module_changes_the_revision_and_restoring_it_returns(m
     red on 5 documents under a broken money detector.
     """
     before = pdf_parser_revision()
-    with appended_to_source(module, f"\n# revision probe: {module}\n"):
+    with appended_to_source(package_copy, module, f"\n# revision probe: {module}\n"):
         assert pdf_parser_revision() != before, (
             f"editing {module} left the PDF parser revision unchanged; a stored artifact would "
             "claim to describe a parse that no longer exists"
@@ -171,7 +264,7 @@ def test_editing_a_parser_module_changes_the_revision_and_restoring_it_returns(m
 
 
 @pytest.mark.parametrize("module", MATCHING_ONLY)
-def test_editing_the_matcher_or_a_threshold_leaves_the_revision_identical(module: str) -> None:
+def test_editing_the_matcher_or_a_threshold_leaves_the_revision_identical(module: str, package_copy: Path) -> None:
     """The exclusion, demonstrated rather than read off a list of filenames.
 
     This is the property slice 1 was for. Without it, retuning ``SIMILARITY_THRESHOLD`` — a
@@ -180,14 +273,14 @@ def test_editing_the_matcher_or_a_threshold_leaves_the_revision_identical(module
     indistinguishable from it.
     """
     before = pdf_parser_revision()
-    with appended_to_source(module, f"\n# revision probe: {module}\n"):
+    with appended_to_source(package_copy, module, f"\n# revision probe: {module}\n"):
         assert pdf_parser_revision() == before, (
             f"editing {module} moved the PDF parser revision. Matching policy is not observation "
             "production; identity must not follow it."
         )
 
 
-def test_an_import_of_the_matcher_would_pull_it_into_the_closure() -> None:
+def test_an_import_of_the_matcher_would_pull_it_into_the_closure(package_copy: Path) -> None:
     """MUTATION: the exclusion is the import graph's doing, not a broken walker's.
 
     Injects a real import of the threshold module into ``parsers/pdf_blocks`` and shows both
@@ -199,7 +292,8 @@ def test_an_import_of_the_matcher_would_pull_it_into_the_closure() -> None:
     before = pdf_parser_revision()
     assert "deltatrack.similarity" not in observation_closure(), "precondition: the closure must start clean"
 
-    with appended_to_source(OBSERVATION_ENTRY_MODULE, "\nfrom deltatrack.similarity import MOVE_THRESHOLD  # noqa\n"):
+    injected = "\nfrom deltatrack.similarity import MOVE_THRESHOLD  # noqa\n"
+    with appended_to_source(package_copy, OBSERVATION_ENTRY_MODULE, injected):
         closure = observation_closure()
         assert "deltatrack.similarity" in closure, (
             "an import of the matcher's thresholds from the parser did NOT reach the closure; "
