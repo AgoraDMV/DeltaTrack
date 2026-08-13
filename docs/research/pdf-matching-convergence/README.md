@@ -348,20 +348,37 @@ source-neutral `deltatrack/amounts.py`.
 `similarity` and `matching` — which carry the matching thresholds — were inside PDF
 observation production and are now out.
 
-**A future PDF parser revision must therefore hash:** `parsers/pdf_text.py` +
+**A PDF parser revision must therefore hash:** `parsers/pdf_text.py` +
 `parsers/pdf_anchors.py` + `parsers/pdf_blocks.py` + `deltatrack/amounts.py` + the pypdfium2
-distribution version. The repository already has the working half of the mechanism —
-`tests/pdf_corpus._extractor_fingerprint` hashes `pdf_text.py` plus the pypdfium2 version —
-so what remains is widening it, not inventing it. Note that fingerprint does **not** yet
-cover `pdf_anchors`, `pdf_blocks` or `amounts`; widening it belongs with slice 3, where a
-stored ordinal first depends on it.
+distribution version. **Slice 3 implements it** as `pdf_observations.pdf_parser_revision()`,
+deriving that closure by walking imports from `parsers.pdf_blocks` rather than listing
+filenames, so a new parser dependency joins it without an edit.
+
+**This is a second identity, not a widening of the first — an earlier draft of this section
+had that wrong.** It claimed `tests/pdf_corpus._extractor_fingerprint` was "the working half
+of the mechanism" and that slice 3 should widen it to cover `pdf_anchors`, `pdf_blocks` and
+`amounts`. That conflates two questions with different subjects:
+
+| | `_extractor_fingerprint` | `pdf_parser_revision()` |
+|---|---|---|
+| answers | may this cached `Page` list be served? | which parse was this stored judgment about? |
+| subject | the payload `cached_pages()` stores | the emitted observation sequence |
+| closure | `pdf_text` + pypdfium2 | `pdf_text` + `pdf_anchors` + `pdf_blocks` + `amounts` + pypdfium2 |
+
+A cached `Page` is produced by `pdf_text` alone, so no edit to `pdf_anchors`, `pdf_blocks` or
+`amounts` can make one stale. Widening the cache key to cover them would buy nothing and cost
+a full corpus re-extraction on every downstream parser edit. The fingerprint is therefore left
+exactly as it is, and the flagged gap is closed by adding the second identity rather than by
+enlarging the first.
 
 **(d) The observation's text is already a transformation.** `_Block.text` is
 post-`_strip_heading_lines`, so it is not the printed text and `page_range` bounds the
 stripped body. Legitimate — a parser transforms — but it means an observation must carry
 both, or provenance into the full-bill view degrades.
 
-### 4.3 Proposed model
+### 4.3 The model — proposed, then built
+
+The sketch this section originally carried listed six fields:
 
 ```python
 @dataclass(frozen=True)
@@ -374,20 +391,43 @@ class PdfObservation:
     printed_lines: tuple[_IndexedLine, ...]   # pre-strip, for provenance
 ```
 
+**Slice 3 built two**, and the difference is worth recording because a sketch is a hypothesis:
+
+```python
+@dataclass(frozen=True)
+class PdfObservation:
+    ref:   ObservationRef   # (side, ordinal) over the complete emitted block sequence
+    block: _Block           # the parsed thing it addresses
+```
+
+- `anchor`, `text` and `page_range` are already `_Block` members. Restating them on the
+  observation would create a second representation free to drift from the first, and buys
+  nothing that `observation.block.text` does not.
+- `line_span` and `printed_lines` are **not** projections of a `_Block`: `_group_into_blocks`
+  retains neither the flattened-stream position nor the pre-strip lines. Producing them is a
+  change to what the parser derives, which a behaviour-preserving slice may not make, and
+  neither has a consumer. They stay available to a later slice that has one. Nothing is lost
+  meanwhile — `page_range` and the anchor's `(page, line)` already resolve an observation back
+  into the printed bill.
+
+That leaves the same two fields `diff_bill.Observation` carries, which is the intended
+convergence: an address plus the parsed thing, with the source-specific half being the only
+difference between the two pipelines.
+
 Mapped onto the ask's checklist:
 
 | ADR 0019 / ask field | PDF answer |
 |---|---|
 | source identity | SHA-256 of the PDF bytes. Constant per side within one comparison, so — exactly as `matching.ObservationRef` argues for XML — it is a property of the comparison, not of each reference. |
-| parser/extractor revision | content hash over `parsers/pdf_text.py` + `parsers/pdf_anchors.py` + the future `parsers/pdf_blocks.py` + the pypdfium2 distribution version. **Precondition: block formation must first leave `diff_pdf`.** |
-| complete-sequence ordinal | index into `_group_into_blocks`' output **with the empty-block filter removed** (§4.2a). Anchors that resolve to no surviving line stay skipped — that is genuine extraction, and those anchors address nothing. |
-| text / body | `_Block.text` |
+| parser/extractor revision | `pdf_observations.pdf_parser_revision()`: SHA-256 over the transitive `deltatrack` import closure of `parsers.pdf_blocks` — `pdf_text`, `pdf_anchors`, `pdf_blocks`, `amounts`, plus the package initializers that run during those imports — and the pypdfium2 distribution version. Its precondition, that block formation leave `diff_pdf`, was met by slices 1 and 1a. |
+| complete-sequence ordinal | index into `_group_into_blocks`' output, **post-filter** (§4.2a, corrected). Anchors that resolve to no surviving line stay skipped — that is genuine extraction, and those anchors address nothing. |
+| text / body | `_Block.text`, via `observation.block` |
 | structural path or inferred hierarchy | `breadcrumb_for(anchor, all_anchors)`. Detection-path dependent by design: a low-coverage bill has no account level, so the chain is shallower. **Not currently used in matching at all.** |
 | anchor / heading information | `Anchor.kind` + `Anchor.text` |
-| page/range provenance | `page_range`, plus `line_span` into the flattened stream |
+| page/range provenance | `_Block.page_range`, plus the anchor's own `(page, line)` |
 | other source-specific metadata | `Anchor.division` (display-only, §7.2); glyph size and `LineGeom`, which are consumed by anchor detection and never reach matching |
 
-**The complete emitted sequence is the unfiltered block sequence.** Not the anchor stream
+**The complete emitted sequence is the post-filter block sequence.** Not the anchor stream
 (anchors that resolve to no line address nothing; a front-matter anchor is synthesised
 during blocking), and not the line stream (a line is not a provision, and there are ~100k
 of them).
@@ -845,7 +885,7 @@ gate can be shown to fire before it lands. Slice 0 is not optional — §6.2 is 
 | **1** | **DONE** (`63d569e`). Moved `_flatten`, `_rejoin_cross_page_hyphens`, `_group_into_blocks`, `_strip_heading_lines` and their types from `diff_pdf` to `parsers/pdf_blocks.py`, unchanged. | Gate 1 byte-identical; 9/9 moved definitions byte-identical to source; no `parsers/* -> diff_pdf`. |
 | **1a** | **DONE** (`d6d515b`). Dependency repair the slice 1 review exposed: move `DOLLAR_RE`, `AMENDMENT_RE`, `extract_amounts` to the source-neutral `deltatrack/amounts.py`, so observation production no longer reaches a differ (§4.2c). | Gate 1 byte-identical; closure measured 8 modules -> 4; new conservation invariant red under a broken money detector (`a54bf61`). |
 | **2** | **ALREADY DONE by slice 0's gate 5.** `tests/test_pdf_observation_emission.py` states the emission rule (the post-filter block sequence) and pins completeness, order, non-overlap, stability and the ordinal hazard. No further production work; slice 2 is a plan-state closure, not an implementation slice. | Gate 5 red under "assign ordinals after filtering"; and, since 1a, red under a broken money detector. |
-| **3** | Introduce `PdfObservation` + a `PdfObservationRegistry` mirroring `diff_bill.ObservationRegistry`. Nothing consumes it yet beyond address resolution. | Gate 1 byte-identical; totality and injectivity asserted, as the XML registry does. |
+| **3** | **DONE** (`142f7cd`). `PdfObservation` + `PdfObservationRegistry` + `pdf_parser_revision()` in `deltatrack/pdf_observations.py`. Nothing consumes them; no stored artifact records a PDF ordinal. | Gate 1 byte-identical (356 passed / 1 skipped, unchanged). Revision moves on any of the four parser modules and on the engine version, and does not move on `diff_pdf` / `similarity` / `matching` / `diff_bill`; the exclusion is proved non-vacuous by injecting a matcher import into `pdf_blocks` (§8.1). Registry totality, contiguity and round-trip over 23 corpus pairs, red under both a filtered and a re-sorted sequence. |
 | **4** | Extract **round 2** only: `pdf_unmatched_population` → `retrieve_pdf_move_candidates` → `pdf_move_evidence` → `assign_pdf_moves`, and move it **before** classification. This is the PDF #591. | Gate 1 byte-identical; gate 2 (transcribed oracle) agrees. Sequencing is load-bearing — check the XML equivalent's finding that round 2 depends on round-1 revocation output. |
 | **5** | Extract the `_emit_pair` split rule as `pdf_pairing_survives_similarity_rule` + `apply_pdf_similarity_revocation`, mirroring `diff_bill`. | Gate 1 byte-identical; gate 4's split case exercises it. |
 | **6** | Move the moved-vs-modified decision out of classification. Because 20 of 165 PDF moves are *not* round-2 provenance (§3.4), this needs assignment to record *why* a pair corresponds, not a classification threshold. **Design work, not extraction.** | Requires §10 Q2 answered first. |
@@ -855,7 +895,31 @@ Slices 1–5 are wrap-and-extract with a byte-identical gate. Slice 6 changes se
 owes precision/recall evidence under ADR 0020's second implementation rule. Slice 7 is
 bounded by §9's limitation rather than blocked by it.
 
-**State: slices 0, 1, 1a complete; slice 2 complete by gate 5. Slice 3 is next.**
+**State: slices 0, 1, 1a, 2 and 3 complete. Slice 4 is next.**
+
+### 8.1 Slice 3's controls, and the faults that proved each one fires
+
+A revision mechanism is two claims in opposite directions, and the exclusion half is an
+absence assertion — the shape that passes vacuously. Each control below was therefore run
+against a deliberately broken implementation, restoring the source afterwards.
+
+| fault injected | what should go red | result |
+|---|---|---|
+| registry numbers only anchored blocks (a filtered view) | totality | red — `new: registry holds 0 of 1 blocks` |
+| registry reverses each side (a re-sorted view) | address round-trip | red on 6/6 selected pairs — `block 0 addressed as ordinal 195`. Contiguity still passed, which is the point: only the round-trip assertion separates the two. |
+| closure walk stops at the entry module | inclusion, and the exclusion's own control | red ×5 — the closure floor, the three transitive members (`amounts`, `pdf_anchors`, `pdf_text`), and the matcher-import control |
+| closure walked from `diff_pdf` instead of `pdf_blocks` | exclusion | red ×6 — the exclusion list and all four matching-only mutation cases |
+
+The third and fourth are the pair that matters. Without the third, every "X is not in the
+closure" assertion would be satisfied perfectly by a walker that finds nothing; without the
+fourth, the exclusion would never have been shown capable of failing at all.
+
+Two things slice 3 deliberately did **not** do, recorded so they are not read as oversights.
+`tests/pdf_corpus._extractor_fingerprint` is untouched (§4.2c: it identifies a different
+payload). And no cross-process determinism study was launched: the property that would need
+it — a stored PDF ordinal — is not introduced here. The *revision* is cross-process stable and
+tested under two hash seeds, because a stored artifact will record it and a per-process value
+would be unverifiable by construction.
 
 ---
 
@@ -928,7 +992,7 @@ shared assignment implementation might make.
    order, non-overlap, stability and the ordinal hazard, so slice 2 needs no production work.
    The 190 dropped blocks are correctly dropped; the sequence was never wrongly filtered.
 
-**No hard blocker remains. Slice 3 is next.**
+**No hard blocker remains. Slice 4 is next.**
 
 **Retired by measurement or correction, recorded so they are not re-raised**
 
@@ -954,7 +1018,10 @@ shared assignment implementation might make.
 - **Q3.** Is PDF emission deterministic **across processes and platforms**? §4.1 establishes
   in-process only; the glyph-size sidecar reads FFI floats. → before any stored PDF ordinal.
   This is the surviving half of what a second review called its only hard ADR-level blocker;
-  the in-process half is measured and closed.
+  the in-process half is measured and closed. **Slice 3 does not trigger it**: the registry is
+  run-local and writes nothing, so no artifact yet depends on reproducing an ordinal in another
+  process. The revision half *is* cross-process tested (§8.1) — the question that survives is
+  about the ordinal, not the digest.
 - **Q4.** Are any of the 23 both-sided-money splits wrong? Unadjudicated, like XML's 27. This
   is the ground-truth work, not the refactor's. → informs whether slice 5 should be followed
   by a policy change.
