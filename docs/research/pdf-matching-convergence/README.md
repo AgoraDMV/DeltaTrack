@@ -887,7 +887,7 @@ gate can be shown to fire before it lands. Slice 0 is not optional — §6.2 is 
 | **2** | **ALREADY DONE by slice 0's gate 5.** `tests/test_pdf_observation_emission.py` states the emission rule (the post-filter block sequence) and pins completeness, order, non-overlap, stability and the ordinal hazard. No further production work; slice 2 is a plan-state closure, not an implementation slice. | Gate 5 red under "assign ordinals after filtering"; and, since 1a, red under a broken money detector. |
 | **3** | **DONE** (`142f7cd`). `PdfObservation` + `PdfObservationRegistry` + `pdf_parser_revision()` in `deltatrack/pdf_observations.py`. Nothing consumes them; no stored artifact records a PDF ordinal. | Gate 1 byte-identical (356 passed / 1 skipped, unchanged). Revision moves on any of the four parser modules and on the engine version, and does not move on `diff_pdf` / `similarity` / `matching` / `diff_bill`; the exclusion is proved non-vacuous by injecting a matcher import into `pdf_blocks` (§8.1). Registry totality, contiguity and round-trip over 23 corpus pairs, red under both a filtered and a re-sorted sequence. |
 | **4** | **DONE** (`5dac421`). `pdf_unmatched_population` → `retrieve_pdf_move_candidates` → `pdf_move_evidence` → `assign_pdf_moves`, plus `settle_pdf_correspondences` and `classify_pdf`, with round 2 moved **before** classification. `_emit_pair` now appends provisional pairings instead of classified hunks. This is the PDF #591. | Gate 1 byte-identical; a whole-output comparison against an independently transcribed pre-slice-4 pipeline agrees on all 23 adjacent pairs, including the six the baseline cannot cover. Four fault injections, two of which were informative no-ops (§8.3). |
-| **5** | **DONE** (`5d83912`). `_pdf_similarity_signals` → `pdf_similarity_correspondence_evidence` → `pdf_pairing_survives_similarity_rule` → `apply_pdf_similarity_revocation`, mirroring `diff_bill`. `_align_blocks` is retrieval only; `_AlignedPairing` loses its similarity field. | Gate 1 byte-identical; gate 4 unchanged. New stage-level control moves the threshold and watches the corpus split population respond — 0 / 230 / 813 (§8.4). |
+| **5** | **DONE** (`9eebcc5`, evidence-floor repair `61cc3fa`). `_pdf_similarity_signals` → `pdf_similarity_correspondence_evidence` → `pdf_pairing_survives_similarity_rule` → `apply_pdf_similarity_revocation`, mirroring `diff_bill`. `_align_blocks` is retrieval only; `_AlignedPairing` loses its similarity field. | Gate 1 byte-identical; gate 4 unchanged. Threshold sweep at 0.2/0.3/0.4/0.6/0.9 → 192/214/230/257/402, plus a corpus-wide exact-overlap invariant (§8.4, §8.5). The first version shipped a censored evidence floor that the original 0.0/0.4/0.99 sweep could not see — §8.5. |
 | **6** | Move the moved-vs-modified decision out of classification. Because 20 of 165 PDF moves are *not* round-2 provenance (§3.4), this needs assignment to record *why* a pair corresponds, not a classification threshold. **Design work, not extraction.** | Requires §10 Q2 answered first. |
 | **7** | Wrap round-1 (`_block_key` + `SequenceMatcher` + the positional `replace` zip) as a source-specific **retriever** emitting a `CandidateSet`, preserving its exact candidate population. No longer architecture-blocked (§9, corrected). | Gate 1 byte-identical; gate 6's crossing fixture red under global best-similarity assignment. |
 
@@ -895,7 +895,13 @@ Slices 1–5 are wrap-and-extract with a byte-identical gate. Slice 6 changes se
 owes precision/recall evidence under ADR 0020's second implementation rule. Slice 7 is
 bounded by §9's limitation rather than blocked by it.
 
-**State: slices 0, 1, 1a, 2, 3, 4 and 5 complete. Slice 6 is next, and is design work.**
+**State: slices 0, 1, 1a, 2, 3, 4 and 5 complete. Slice 7 is next.**
+
+Slice 7 before slice 6, on the reviewer's recommendation: slice 7 is still behaviour-preserving
+extraction, slice 6 is the semantic moved-vs-modified decision, and completing round-1
+`CandidateSet` retrieval first removes that unfinished variable before the policy call. Slice 7
+must use develop's *current* B2 staging as its reference — `CandidateSet` admission is now
+load-bearing before evidence there.
 
 ### 8.1 Slice 3's controls, and the faults that proved each one fires
 
@@ -1001,22 +1007,79 @@ Aggregated over the corpus rather than one pair, deliberately: a single pair can
 non-identical pairing already below production's cutoff, in which case raising the threshold
 changes nothing there and the control reports a false alarm. That happened on the first draft.
 
-**The 230 does not reconcile with §3.2's 224, and that is left stated rather than explained.**
-This counts revocations over every adjacent committed pair including the six `compare.pdf`
-declines, which §3.2's population excludes; that is the likely account and it has not been
-verified, so it is recorded as a discrepancy rather than asserted as an equality.
-
 Three fault injections, each caught by a different control:
 
 | fault injected | what went red |
 |---|---|
-| the rule reads `SIMILARITY_THRESHOLD` instead of its parameter | the new threshold sweep **only** — baseline and gate 4 stayed green |
+| the rule reads `SIMILARITY_THRESHOLD` instead of its parameter | the threshold sweep **only** — baseline and gate 4 stayed green |
 | the identical-text short-circuit removed, ratio computed instead | the monkeypatched short-circuit test **only** — the verdict is unchanged, so no output gate can see it |
 | the two replacement records emitted addition-first | 11 baseline pairs, 14 oracle pairs, and the unit case |
 
 The first two are the argument for this module existing: both are invisible to every gate that
 compares output, because neither changes any output. The third confirms the "adjacent and in
 place" ordering is load-bearing rather than incidental.
+
+### 8.5 The hidden evidence floor, and the sweep that could not see it
+
+**The first version of slice 5 shipped a false green, and the sweep above was part of why.**
+`_pdf_similarity_signals` computed non-identical evidence with
+`text_similarity_at_least(..., SIMILARITY_THRESHOLD)`, which returns `0.0` rather than the true
+ratio below its bound. That put a correspondence cutoff inside the *evidence*, so the
+assignment threshold was not the sole authority ADR 0020 requires it to be:
+
+| | |
+|---|---|
+| true overlap | 0.30 |
+| recorded `word_overlap` | **0.0** |
+| revocation at threshold 0.20 | **revoked** — but 0.30 ≥ 0.20 says keep |
+
+The original sweep ran 0.0 / 0.4 / 0.99 and passed throughout, because **a censored `0.0`
+fails a `>= 0.0` test exactly as a true `0.0` does**. Using 0.0 as the only sub-production
+point made that endpoint accidentally compatible with the very floor it should have exposed.
+
+**The gate was removed rather than made honest-but-censored, and the cost was measured before
+the choice rather than after.** Exact similarity for every non-identical aligned pair costs
+**+0.9%** on a full-corpus `diff_pdfs` sweep (5.552s → 5.600s over 23 pairs), inside the 3.2%
+run-to-run spread, with byte-identical output. The gate saved little because the identical-text
+short-circuit already removes the large majority of pairs before it — that is the population
+XML's equivalent gate is actually paying for. Corroborated independently and long before this
+slice: gate 4's transcribed oracle has always used exact `text_similarity` and has always
+agreed with production at 0.4.
+
+The alternative the review left open — keep the gate, record the censored fact honestly, and
+have assignment fail closed below the floor — was rejected as more machinery for a 0.9% saving:
+a third signal, a floor parameter and an undecidable branch, to preserve an optimization that
+measurement says is not there.
+
+`SIMILARITY_THRESHOLD` now has exactly one executable use in `diff_pdf`: the
+`apply_pdf_similarity_revocation` call in `diff_pdfs`.
+
+The revised controls catch both failure modes, proved by reintroducing the censoring:
+
+| control | caught the censoring |
+|---|---|
+| sweep at 0.2 / 0.3 / 0.4 / 0.6 / 0.9, all-distinct and increasing | yes — 0.2, 0.3 and 0.4 all collapse to 230 under the floor |
+| the 0.30 fixture, asserting the recorded value *and* both verdicts | yes |
+| corpus-wide `word_overlap == text_similarity` for every non-identical pair | yes |
+| PDF canonical baseline | **no** — the defect changes no output |
+
+Measured sweep: 0.2 → 192, 0.3 → 214, 0.4 → 230, 0.6 → 257, 0.9 → 402.
+
+### 8.6 230 versus §3.2's 224, reconciled
+
+Partitioned by the committed canonical baseline's `declined` flag, which is where production's
+admissibility verdict is already recorded:
+
+| population | pairs | revocations at 0.4 |
+|---|---|---|
+| production-accepted | 17 | **224** |
+| production-declined | 6 | 6 |
+| total | 23 | **230** |
+
+The 224 lands exactly on §3.2's figure, so the two numbers describe the same rule over
+different populations and nothing further is outstanding. Pinned by
+`test_the_revocation_population_splits_as_224_accepted_plus_6_declined` rather than left as a
+plausible account.
 
 ---
 
