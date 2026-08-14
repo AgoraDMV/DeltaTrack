@@ -20,6 +20,7 @@ of its parameter, passes every existing gate and fails here.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -39,7 +40,8 @@ from deltatrack.matching import NEW, OLD, CorrespondenceEvidence, ObservationRef
 from deltatrack.parsers.pdf_anchors import extract_anchors
 from deltatrack.parsers.pdf_blocks import _Block, _flatten, _group_into_blocks, _IndexedLine
 from deltatrack.pdf_observations import PdfObservationRegistry
-from deltatrack.similarity import SIMILARITY_THRESHOLD
+from deltatrack.similarity import SIMILARITY_THRESHOLD, text_similarity
+from tests.corpus_paths import DATA_DIR
 from tests.pdf_corpus import adjacent_pdf_pairs, cached_pages
 
 _PAIRS = adjacent_pdf_pairs()
@@ -52,6 +54,16 @@ def _blocks(pdf: Path) -> list[_Block]:
 
 def _unmatched(pairings: list[_AlignedPairing]) -> int:
     return sum(1 for p in pairings if p.old is None or p.new is None)
+
+
+def _revocations_for(old_pdf: Path, new_pdf: Path, threshold: float) -> int:
+    """How many aligned pairings the rule revokes on one pair, at ``threshold``."""
+    old_blocks, new_blocks = _blocks(old_pdf), _blocks(new_pdf)
+    registry = PdfObservationRegistry(old_blocks, new_blocks)
+    provisional = _align_blocks(old_blocks, new_blocks)
+    evidence = pdf_similarity_correspondence_evidence(provisional, registry)
+    decided = apply_pdf_similarity_revocation(provisional, evidence, registry, threshold=threshold)
+    return (_unmatched(decided) - _unmatched(provisional)) // 2
 
 
 def _revocations_by_threshold(thresholds: tuple[float, ...]) -> dict[float, int]:
@@ -80,36 +92,106 @@ def _revocations_by_threshold(thresholds: tuple[float, ...]) -> dict[float, int]
 
 @pytest.mark.slow
 def test_moving_the_threshold_moves_the_split_population() -> None:
-    """THE slice 5 negative control: the stage's own parameter decides the splits.
+    """THE slice 5 negative control, and it must catch two different defects.
 
-    Corpus-wide at three thresholds. At 0.0 nothing can be revoked; at production's cutoff the
-    count is production's split population; at 0.99 every aligned pair whose bodies differ and
-    do not nearly match is revoked as well. A rule still wired to the module constant, or left
-    behind inside ``_align_blocks``, returns the same number three times.
+    1. **The rule ignoring its threshold parameter** — a rule wired to
+       ``SIMILARITY_THRESHOLD`` returns the same number at every point.
+    2. **The evidence producer censoring at the production cutoff** — the defect the slice 5
+       review found. ``text_similarity_at_least(..., SIMILARITY_THRESHOLD)`` returns ``0.0``
+       below its bound, so a pair whose real overlap was 0.30 was recorded as ``0.0`` and
+       revoked at a threshold of 0.20 that should have kept it.
 
-    Aggregated over the corpus rather than one pair, deliberately: a single pair can have every
-    non-identical pairing already below production's cutoff, in which case raising the threshold
-    changes nothing there and the control would report a false alarm.
+    **0.0 is deliberately not one of the points.** A censored ``0.0`` score fails a ``>= 0.0``
+    test the same way a true ``0.0`` does, so that endpoint is accidentally compatible with the
+    hidden floor and the original sweep passed while defect 2 was live. The points below
+    production's cutoff are 0.2 and 0.3, which straddle the censoring boundary: under a floor of
+    0.4 they collapse onto each other, and under honest evidence they do not.
 
-    Measured: 0 / 230 / 813.
+    Aggregated over the corpus rather than one pair: a single pair can have every non-identical
+    pairing already below production's cutoff, in which case raising the threshold changes
+    nothing there and the control reports a false alarm. The first draft did exactly that.
 
-    The middle figure is close to but not identical with the 224 splits the research record's
-    §3.2 reports, and the difference is not reconciled here. This counts revocations over
-    **every** adjacent committed pair, including the six ``compare.pdf`` declines that §3.2's
-    population excludes; that is the likely account, and it is left as a stated discrepancy
-    rather than an assumed one, because asserting equality on an unverified explanation is how
-    a wrong number gets a citation.
+    Measured: 0.2 → 192, 0.3 → 214, 0.4 → 230, 0.6 → 257, 0.9 → 402. Under the censored
+    evidence this slice shipped with, 0.2 and 0.3 both returned 230 — the two sub-production
+    points collapsing onto the cutoff is precisely the signature this control now detects.
     """
-    counts = _revocations_by_threshold((0.0, SIMILARITY_THRESHOLD, 0.99))
+    points = (0.2, 0.3, SIMILARITY_THRESHOLD, 0.6, 0.9)
+    counts = _revocations_by_threshold(points)
 
-    assert counts[0.0] == 0, f"a 0.0 threshold revoked {counts[0.0]} pairings; nothing can score below it"
     assert counts[SIMILARITY_THRESHOLD] >= 150, (
-        f"only {counts[SIMILARITY_THRESHOLD]} revoked pairings corpus-wide; the split population is "
-        "barely exercised and the comparison below would rest on nothing"
+        f"only {counts[SIMILARITY_THRESHOLD]} revoked pairings at production's cutoff; the split "
+        "population is barely exercised and the comparisons below would rest on nothing"
     )
-    assert counts[0.0] < counts[SIMILARITY_THRESHOLD] < counts[0.99], (
-        f"the split population did not respond to the threshold: {counts}. The revocation rule is "
-        "reading something other than the parameter it was handed."
+    ordered = [counts[point] for point in points]
+    assert ordered == sorted(ordered) and len(set(ordered)) == len(points), (
+        f"the split population did not respond at every threshold: {counts}. Either the rule is "
+        "reading something other than the parameter it was handed, or the evidence stage is "
+        "censoring scores at a floor of its own."
+    )
+
+
+@pytest.mark.slow
+def test_evidence_reports_the_true_overlap_for_every_aligned_pair() -> None:
+    """The anti-censoring invariant, stated where it cannot be satisfied by coincidence.
+
+    The sweep above detects censoring at the production cutoff. This forbids censoring at *any*
+    floor: for every non-identical aligned pair in the corpus, the recorded signal must equal
+    the exact word-level ratio. Evidence describes the fact; a value clipped to make the next
+    stage's arithmetic come out right is not the fact.
+
+    Compared against ``similarity.text_similarity`` — the same function
+    ``test_pdf_matching_boundary``'s transcribed oracle has always used, and which has always
+    agreed with production at the 0.4 boundary.
+    """
+    checked = 0
+    for _bill, old_pdf, new_pdf in _PAIRS:
+        old_blocks, new_blocks = _blocks(old_pdf), _blocks(new_pdf)
+        registry = PdfObservationRegistry(old_blocks, new_blocks)
+        provisional = _align_blocks(old_blocks, new_blocks)
+        evidence = pdf_similarity_correspondence_evidence(provisional, registry)
+        by_link = {item.link: item for item in evidence}
+        for pairing in provisional:
+            if pairing.old is None or pairing.new is None:
+                continue
+            item = by_link[(registry.ref(OLD, pairing.old), registry.ref(NEW, pairing.new))]
+            if item.get(TEXT_IDENTICAL):
+                continue
+            expected = text_similarity(pairing.old.text, pairing.new.text)
+            assert item.get(WORD_OVERLAP) == expected, (
+                f"recorded {item.get(WORD_OVERLAP)} where the true overlap is {expected}; the "
+                "evidence stage is censoring a measurement it should be reporting"
+            )
+            checked += 1
+    assert checked >= 500, f"only {checked} non-identical aligned pairs checked; the sweep asserts little"
+
+
+@pytest.mark.slow
+def test_the_revocation_population_splits_as_224_accepted_plus_6_declined() -> None:
+    """Reconciles this module's 230 with the research record's §3.2 figure of 224.
+
+    §3.2 counted the split population over the pairs a user can actually reach; this module
+    sweeps every adjacent committed pair, including the six ``compare.pdf`` declines. The
+    partition is taken from the committed canonical baseline, which records ``declined`` per
+    pair, rather than from ``compare.pdf._is_unnumbered_layout`` — the same choice
+    ``test_pdf_canonical_baseline`` makes, and it keeps this off a private cross-module import.
+
+    Measured and pinned rather than left as a plausible explanation: 224 + 6 = 230, with the
+    224 landing exactly on §3.2's number.
+    """
+    baseline = json.loads((DATA_DIR / "pdf_canonical_baseline.json").read_text())
+    accepted = declined = 0
+    for bill, old_pdf, new_pdf in _PAIRS:
+        record = baseline[f"{bill}/{old_pdf.stem}->{new_pdf.stem}"]
+        revoked = _revocations_for(old_pdf, new_pdf, SIMILARITY_THRESHOLD)
+        if record["declined"]:
+            declined += revoked
+        else:
+            accepted += revoked
+
+    assert (accepted, declined) == (224, 6), (
+        f"the split population partitions as {accepted} accepted + {declined} declined, not "
+        "224 + 6. §3.2's figure and this module's now describe different populations for a "
+        "reason that is no longer the admissibility split."
     )
 
 
@@ -180,9 +262,47 @@ def test_the_short_circuit_never_measures_identical_texts(monkeypatch: pytest.Mo
     def _refuse(*_args, **_kwargs):
         raise AssertionError("identical block texts must not be measured")
 
-    monkeypatch.setattr(diff_pdf, "text_similarity_at_least", _refuse)
+    monkeypatch.setattr(diff_pdf, "text_similarity", _refuse)
     signals = _pdf_similarity_signals(_block("same body", 1), _block("same body", 2))
     assert signals == {TEXT_IDENTICAL: True, WORD_OVERLAP: 1.0}
+
+
+#: A pair whose true word-level overlap is exactly 0.30 — strictly between a sub-production
+#: threshold of 0.20 and the 0.40 cutoff the evidence stage used to censor at. Three of ten
+#: words shared, so ``SequenceMatcher.ratio()`` is 0.3 by construction rather than by search.
+_FLOOR_OLD = "alpha beta gamma delta epsilon zeta eta theta iota kappa"
+_FLOOR_NEW = "alpha beta gamma x0 x1 x2 x3 x4 x5 x6"
+
+
+def test_evidence_does_not_censor_a_score_below_the_production_cutoff() -> None:
+    """The slice 5 review's defect, pinned as a permanent control.
+
+    ``_pdf_similarity_signals`` used to call
+    ``text_similarity_at_least(..., SIMILARITY_THRESHOLD)``, which returns ``0.0`` rather than
+    the true ratio below its bound. That put a correspondence cutoff inside the evidence: this
+    pair's real overlap is 0.30, it was recorded as ``0.0``, and assignment handed a threshold
+    of 0.20 revoked a pairing that 0.30 >= 0.20 says it should keep.
+
+    Both halves are asserted, because they fail apart. A repair that reported the true score
+    but left the rule wrong would pass the first; one that fixed the rule while still censoring
+    would pass the second.
+    """
+    old_blocks, new_blocks = [_block(_FLOOR_OLD, 1)], [_block(_FLOOR_NEW, 2)]
+    registry = PdfObservationRegistry(old_blocks, new_blocks)
+    provisional = [_AlignedPairing(old_blocks[0], new_blocks[0])]
+    evidence = pdf_similarity_correspondence_evidence(provisional, registry)
+
+    assert text_similarity(_FLOOR_OLD, _FLOOR_NEW) == 0.3, "the fixture must sit between 0.2 and 0.4"
+    assert evidence[0].get(WORD_OVERLAP) == 0.3, (
+        f"evidence recorded {evidence[0].get(WORD_OVERLAP)} for a pair whose true overlap is 0.3; "
+        "a censored score claims a fact the measurement never established"
+    )
+
+    kept = apply_pdf_similarity_revocation(provisional, evidence, registry, threshold=0.2)
+    assert len(kept) == 1, "0.3 >= 0.2, so assignment must keep this pairing"
+
+    revoked = apply_pdf_similarity_revocation(provisional, evidence, registry, threshold=0.4)
+    assert len(revoked) == 2, "0.3 < 0.4, so production's cutoff must still revoke it"
 
 
 def test_evidence_is_retained_for_a_revoked_pairing() -> None:

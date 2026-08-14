@@ -65,7 +65,7 @@ from deltatrack.similarity import (
     MOVE_THRESHOLD,
     SIMILARITY_THRESHOLD,
     move_candidates,
-    text_similarity_at_least,
+    text_similarity,
 )
 from deltatrack.version_stems import label_from_stem
 
@@ -398,31 +398,41 @@ def _reconcile_moves(hunks: list[PdfHunk], threshold: float = MOVE_THRESHOLD) ->
 def _pdf_similarity_signals(v1_block: _Block, v2_block: _Block) -> dict[str, bool | float]:
     """The two signals the PDF similarity rule reads. Describes; decides nothing.
 
-    **The legacy short-circuit is preserved exactly, and that is the point of the shape.**
-    ``_emit_pair`` compared the two block texts first and called
-    :func:`~deltatrack.similarity.text_similarity_at_least` only when they differed. Computing
-    the ratio unconditionally would be tidier and would be a behaviour change dressed as a
-    refactor: the set of similarity calls the engine makes would differ from the set it makes
-    today, and that call is itself gated (it returns ``0.0`` rather than the true ratio when the
-    cheap upper bounds fall short).
+    **The identical-text short-circuit is preserved**: two equal bodies return without any
+    measurement, exactly as ``_emit_pair`` did. ``1.0`` is transcribed from the literal it
+    passed, not computed — identical texts do score 1.0, but production never measured it.
+
+    **The ratio is exact, and deliberately no longer gated.** ``_emit_pair`` called
+    ``text_similarity_at_least(..., SIMILARITY_THRESHOLD)``, which returns ``0.0`` rather than
+    the true ratio below its bound. That put a correspondence cutoff inside the *evidence*: a
+    pair whose real overlap was 0.30 was recorded as ``0.0``, so assignment handed a threshold
+    of 0.20 revoked a pairing it should have kept, and the threshold parameter was not the sole
+    authority ADR 0020 requires it to be. Evidence describes; it must not censor at the number
+    the next stage is supposed to own.
+
+    The optimization was measured before being dropped rather than after: exact similarity for
+    every non-identical aligned pair costs **+0.9%** on a full-corpus ``diff_pdfs`` sweep
+    (5.552s → 5.600s over 23 pairs), which is inside the 3.2% run-to-run spread, and produces
+    byte-identical output. The gate saved little because the identical-text short-circuit above
+    already removes the large majority of pairs before it, which is the population XML's
+    equivalent gate is actually paying for. ``test_pdf_matching_boundary``'s transcribed oracle
+    has always used exact ``text_similarity`` and has always agreed with production, which is
+    the same fact measured independently and committed long before this slice.
 
     **``word_overlap`` is present even when the texts are identical**, which is where this
     diverges from ``diff_bill``'s equivalent, and the divergence is forced rather than chosen:
     PDF classification reads this signal to make the moved-vs-modified call, so a renamed anchor
-    over an identical body needs the value. ``1.0`` is transcribed from the literal
-    ``_emit_pair`` passed, not measured — identical texts do score 1.0, but production never
-    computed it and this must not start.
+    over an identical body needs the value.
 
-    Registry-free on purpose: turning signals into addressed evidence is
-    :func:`pdf_similarity_correspondence_evidence`'s job.
+    Registry-free on purpose, and now threshold-free too: no correspondence cutoff appears in
+    this function at all, which is what makes ``apply_pdf_similarity_revocation``'s parameter
+    the only one that decides.
     """
     if v1_block.text == v2_block.text:
         return {TEXT_IDENTICAL: True, WORD_OVERLAP: 1.0}
-    # Gate at the lower (split) threshold: at or above it the exact ratio is needed downstream
-    # for the MOVE_THRESHOLD moved/modified call in `_hunk_for_paired_blocks`.
     return {
         TEXT_IDENTICAL: False,
-        WORD_OVERLAP: text_similarity_at_least(v1_block.text, v2_block.text, SIMILARITY_THRESHOLD),
+        WORD_OVERLAP: text_similarity(v1_block.text, v2_block.text),
     }
 
 
@@ -432,9 +442,10 @@ def pdf_similarity_correspondence_evidence(
 ) -> tuple[CorrespondenceEvidence, ...]:
     """CORRESPONDENCE EVIDENCE for the similarity rule: one record per aligned 1:1.
 
-    Named for the one rule these signals feed, not for round 1. ``_align_blocks`` also decides
-    correspondence — the ``_block_key`` alignment and the positional ``replace`` zip both settle
-    which pair is even considered — and neither produces evidence here.
+    Named for the one rule these signals feed, not for round 1. ``_align_blocks`` controls
+    **consideration**, not correspondence: since slice 5 it selects a provisional partner —
+    by ``_block_key`` alignment, or by position inside a ``replace`` — and declares nothing.
+    Whether an aligned pair corresponds is decided downstream, by the rule these signals feed.
 
     **Every 1:1 pairing gets a record, including the ones the rule will revoke** (ADR 0020
     invariant 8: evidence for candidates reaching assignment stays retained and inspectable). A
