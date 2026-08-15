@@ -24,7 +24,8 @@ def resolve_bill_types(bill_types: list[str] | None) -> list[BillType]:
         return list(BILL_TYPES)
     for bill_type in normalized:
         if bill_type not in BILL_TYPES:
+            valid_types = ", ".join(list(BILL_TYPES.keys()) + ['all'])
             raise ValueError(
-                f"Unknown bill type '{bill_type}'. Bill type must be one of: {list(BILL_TYPES)}"
+                f"Unknown bill type '{bill_type}'. Bill type must be one of: {valid_types}"
             )
     return normalized
