@@ -8,7 +8,7 @@ cannot fire and the archive's own structure is the only completeness signal.
 
 from __future__ import annotations
 
-import io
+import shlex
 import zipfile
 from pathlib import Path
 
@@ -17,19 +17,25 @@ import pytest
 import respx
 
 from fetch_bill_text_archives import download_zip
+from fetch_bill_text_archives import main as fetch_bill_text_archives_main
+from fetch_govinfo import sessions_for_congress
+from shared.bill_types import BILL_TYPES
+from tests.utils import (
+    EMPTY_ZIP_BYTES,
+    archive_bytes,
+    assert_files,
+    assert_message_contains_strings,
+    mock_http_requests,
+)
 
 ARCHIVE_URL = "https://www.govinfo.gov/bulkdata/BILLS/999/1/hr/BILLS-999-1-hr.zip"
 
 
 def _bills_zip_bytes() -> bytes:
     """One well-formed BILLS archive ZIP, as govinfo serves it."""
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w") as zf:
-        zf.writestr(
-            "BILLS-999hr1ih.xml",
-            b"<bill><congress>999</congress><type>HR</type><number>1</number></bill>",
-        )
-    return buf.getvalue()
+    return archive_bytes(
+        {"BILLS-999hr1ih.xml": b"<bill><congress>999</congress><type>HR</type><number>1</number></bill>"}
+    )
 
 
 def _chunked(body: bytes) -> httpx.Response:
@@ -40,6 +46,11 @@ def _chunked(body: bytes) -> httpx.Response:
 def _temp_path(dest: Path) -> Path:
     """The in-progress download path, as download_zip derives it inline."""
     return dest.with_suffix(dest.suffix + ".part")
+
+
+def run_fetch_bill_text_archives(command: str) -> None:
+    args = shlex.split(command)
+    fetch_bill_text_archives_main(args)
 
 
 class TestDownloadZip:
@@ -119,3 +130,49 @@ class TestDownloadZip:
             assert download_zip(client, ARCHIVE_URL, dest) is True
 
         assert dest.read_bytes() == full
+
+
+class TestBillTypes:
+    @respx.mock
+    def test_happy_path_downloads_for_case_insensitive_bill_type(self, tmp_path):
+        mock_http_requests(content=EMPTY_ZIP_BYTES)
+        run_fetch_bill_text_archives(
+            f"--from-congress 119 --to-congress 119 --types HR --zip-dir {tmp_path} --download-only"
+        )
+        assert_files(tmp_path, {"BILLS-119-1-hr.zip", "BILLS-119-2-hr.zip"})
+
+    def test_error_path_reports_invalid_bill_type(self, tmp_path):
+        with pytest.raises(ValueError) as excinfo:
+            run_fetch_bill_text_archives(
+                f"--from-congress 119 --to-congress 119 --types not-a-type --zip-dir {tmp_path} --download-only"
+            )
+        assert_message_contains_strings(str(excinfo.value), ["Unknown bill type", "not-a-type"])
+        assert_files(tmp_path, [])
+
+    @respx.mock
+    def test_no_types_argument_defaults_to_all(self, tmp_path):
+        mock_http_requests(content=EMPTY_ZIP_BYTES)
+        run_fetch_bill_text_archives(f"--from-congress 119 --to-congress 119 --zip-dir {tmp_path} --download-only")
+        assert_files(
+            tmp_path,
+            {
+                f"BILLS-119-{session}-{bill_type}.zip"
+                for session in sessions_for_congress(119)
+                for bill_type in BILL_TYPES
+            },
+        )
+
+    @respx.mock
+    def test_types_containing_all_fetches_all_types(self, tmp_path):
+        mock_http_requests(content=EMPTY_ZIP_BYTES)
+        run_fetch_bill_text_archives(
+            f"--from-congress 119 --to-congress 119 --types hr all --zip-dir {tmp_path} --download-only"
+        )
+        assert_files(
+            tmp_path,
+            {
+                f"BILLS-119-{session}-{bill_type}.zip"
+                for session in sessions_for_congress(119)
+                for bill_type in BILL_TYPES
+            },
+        )
