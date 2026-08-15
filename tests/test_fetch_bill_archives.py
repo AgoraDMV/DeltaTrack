@@ -18,7 +18,13 @@ import respx
 from fetch_bill_archives import archive_temp_path, download_archive_zip
 from fetch_bill_archives import main as fetch_bill_archives_main
 from shared.bill_types import BILL_TYPES
-from tests.utils import EMPTY_ZIP_BYTES, archive_bytes, assert_files, assert_message_contains_strings, mock_http_requests
+from tests.utils import (
+    EMPTY_ZIP_BYTES,
+    archive_bytes,
+    assert_files,
+    assert_message_contains_strings,
+    mock_http_requests,
+)
 
 ARCHIVE_URL = "https://www.govinfo.gov/bulkdata/BILLSTATUS/999/hr/BILLSTATUS-999-hr.zip"
 
@@ -29,7 +35,9 @@ def run_fetch_bill_archives(command: str) -> None:
 def _billstatus_zip_bytes() -> bytes:
     """One well-formed BILLSTATUS archive ZIP, as govinfo serves it."""
     return archive_bytes({
-        "BILLSTATUS-999hr1.xml": b"<billStatus><bill><congress>999</congress><type>HR</type><number>1</number></bill></billStatus>"
+        "BILLSTATUS-999hr1.xml": b"""
+        <billStatus><bill><congress>999</congress><type>HR</type><number>1</number></bill></billStatus>
+        """
     })
 
 

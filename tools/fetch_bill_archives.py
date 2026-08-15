@@ -599,6 +599,6 @@ def main(argv: list[str] | None = None) -> None:
         index=args.bill_index_file,
         download_only=args.download_only,
     )
-    
+
 if __name__ == "__main__":
     main()
