@@ -11,6 +11,7 @@ used for data analysis and testing.
 
 from __future__ import annotations
 
+import argparse
 import re
 import shutil
 import sys
@@ -23,8 +24,8 @@ from typing import Any, Iterator
 
 import httpx
 
-from bill_index import BillIndex, InsertMode, make_bill_id
-from shared.bill_types import BILL_TYPES
+from bill_index import BillIndex, make_bill_id
+from shared.bill_types import resolve_bill_types
 
 BillMetadata = dict[str, Any]
 
@@ -157,10 +158,9 @@ def enumerate_tasks(
     *,
     bill_types: list[str] | None = None,
 ) -> list[tuple[int, str]]:
-    """Return newest-first (congress, bill_type) tasks for a validated selection."""
-    selected_types = _validate_archive_params(from_congress, to_congress, bill_types)
     congresses = reversed(range(from_congress, to_congress + 1))
-    return [(congress, bill_type) for congress in congresses for bill_type in selected_types]
+    bill_types = resolve_bill_types(bill_types)
+    return [(congress, bill_type) for congress in congresses for bill_type in bill_types]
 
 
 # STEP 1: Download archives
@@ -457,36 +457,20 @@ def extract_bill_metadata_from_archive_xml(source: Path | str) -> BillMetadata:
     }
 
 
-def _validate_archive_params(
-    from_congress: int,
-    to_congress: int,
-    bill_types: list[str] | None,
-) -> list[str]:
-    """Validate congress range and bill types; return selected type slugs."""
-    if from_congress > to_congress:
-        raise ValueError(f"from_congress ({from_congress}) must be <= to_congress ({to_congress})")
-
-    selected_types = bill_types or list(BILL_TYPES)
-    unknown = [bill_type for bill_type in selected_types if bill_type not in BILL_TYPES]
-    if unknown:
-        raise ValueError(f"Unknown bill types: {unknown}")
-    return selected_types
-
-
 def parse_bill_archives(
     from_congress: int,
     to_congress: int,
     *,
     bill_types: list[str] | None = None,
     destination: Path | str | None = None,
-    index: BillIndex | None = None,
-    mode: InsertMode = "skip",
+    index: Path | None = None,
 ):
     """Parse BILLSTATUS XML for archive folders matching the congress/type selection."""
     destination = resolve_destination(destination)
     tasks = enumerate_tasks(from_congress, to_congress, bill_types=bill_types)
     task_count = len(tasks)
-    index = index or BillIndex(DEFAULT_BILLS_DIR / "bills.csv")
+    index_path = destination / (index or "bills.csv")
+    index = BillIndex(index_path)
     index.rename_columns(_LEGACY_COLUMN_RENAMES)
     for task_index, (congress, bill_type) in enumerate(tasks, start=1):
         prefix = _progress_prefix(task_index, task_count)
@@ -497,7 +481,7 @@ def parse_bill_archives(
         bill_ids = [_bill_id_from_xml_path(xml_path) for xml_path in bill_xml_paths]
         bill_paths_by_id = {bill_id: xml_path for xml_path, bill_id in zip(bill_xml_paths, bill_ids)}
         new_bill_ids, existing_bill_ids = index.find_new_and_existing_bill_ids(bill_ids)
-        parse_bill_ids = new_bill_ids if mode == "skip" else bill_ids
+        parse_bill_ids = bill_ids
         parse_bill_paths = [bill_paths_by_id[bill_id] for bill_id in parse_bill_ids]
 
         extract_start = perf_counter()
@@ -505,7 +489,7 @@ def parse_bill_archives(
         extract_secs = perf_counter() - extract_start
 
         merge_start = perf_counter()
-        index.add_bills(records, mode=mode)
+        index.add_bills(records)
         merge_secs = perf_counter() - merge_start
 
         status_parts = []
@@ -513,7 +497,7 @@ def parse_bill_archives(
             status_parts.append(f"found {len(existing_bill_ids)} existing bills")
         if new_bill_ids:
             status_parts.append(f"added {len(new_bill_ids)} new bills")
-        updated_count = len(existing_bill_ids) if mode != "skip" else 0
+        updated_count = len(existing_bill_ids)
         if updated_count:
             status_parts.append(f"updated {updated_count} bills")
 
@@ -546,8 +530,8 @@ def fetch_bill_archives(
     *,
     bill_types: list[str] | None = None,
     destination: Path | str | None = None,
-    index: BillIndex | None = None,
-    mode: InsertMode = "merge",
+    index: Path | None = None,
+    download_only: bool = False,
 ) -> list[BillMetadata]:
     """Download, extract, and index GovInfo BILLSTATUS bulk archives.
 
@@ -563,6 +547,8 @@ def fetch_bill_archives(
         bill_types=bill_types,
         destination=destination,
     )
+    if download_only:
+        return []
 
     print("Phase 2/3: Extract archives", file=sys.stderr)
     extract_archives(destination)
@@ -574,9 +560,45 @@ def fetch_bill_archives(
         bill_types=bill_types,
         destination=destination,
         index=index,
-        mode=mode,
     )
 
 
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--from-congress", type=int, default=112)
+    p.add_argument("--to-congress", type=int, default=119)
+    p.add_argument(
+        "--types",
+        nargs="+",
+        default=["all"],
+        help="Bill types to fetch (default: all)",
+    )
+    p.add_argument(
+        "--destination",
+        type=Path,
+        default=DEFAULT_BILLS_DIR,
+        help="Directory for BILLSTATUS archives and extracted files (default: bills/)",
+    )
+    p.add_argument(
+        "--bill-index-file",
+        type=Path,
+        default=DEFAULT_BILLS_DIR / "bills.csv",
+        help="CSV path for the bill index (default: bills/bills.csv)",
+    )
+    p.add_argument("--download-only", action="store_true", help="Download ZIPs, skip extraction and parsing")
+    return p
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = build_parser().parse_args(argv)
+    fetch_bill_archives(
+        args.from_congress,
+        args.to_congress,
+        bill_types=args.types,
+        destination=args.destination,
+        index=args.bill_index_file,
+        download_only=args.download_only,
+    )
+    
 if __name__ == "__main__":
-    fetch_bill_archives(112, 119, index=BillIndex(DEFAULT_BILLS_DIR / "bills.csv"))
+    main()

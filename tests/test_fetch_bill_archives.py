@@ -8,7 +8,7 @@ cannot fire and the archive's own structure is the only completeness signal.
 
 from __future__ import annotations
 
-import io
+import shlex
 import zipfile
 
 import httpx
@@ -16,25 +16,26 @@ import pytest
 import respx
 
 from fetch_bill_archives import archive_temp_path, download_archive_zip
+from fetch_bill_archives import main as fetch_bill_archives_main
+from shared.bill_types import BILL_TYPES
+from tests.utils import EMPTY_ZIP_BYTES, archive_bytes, assert_files, assert_message_contains_strings, mock_http_requests
 
 ARCHIVE_URL = "https://www.govinfo.gov/bulkdata/BILLSTATUS/999/hr/BILLSTATUS-999-hr.zip"
 
+def run_fetch_bill_archives(command: str) -> None:
+    args = shlex.split(command)
+    return fetch_bill_archives_main(args)
 
 def _billstatus_zip_bytes() -> bytes:
     """One well-formed BILLSTATUS archive ZIP, as govinfo serves it."""
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w") as zf:
-        zf.writestr(
-            "BILLSTATUS-999hr1.xml",
-            b"<billStatus><bill><congress>999</congress><type>HR</type><number>1</number></bill></billStatus>",
-        )
-    return buf.getvalue()
+    return archive_bytes({
+        "BILLSTATUS-999hr1.xml": b"<billStatus><bill><congress>999</congress><type>HR</type><number>1</number></bill></billStatus>"
+    })
 
 
 def _chunked(body: bytes) -> httpx.Response:
     """Response with an iterator body: transfer-encoding chunked, no content-length."""
     return httpx.Response(200, content=iter([body]))
-
 
 class TestDownloadArchiveZip:
     @respx.mock
@@ -113,3 +114,33 @@ class TestDownloadArchiveZip:
             download_archive_zip(client, ARCHIVE_URL, dest)
 
         assert dest.read_bytes() == full
+
+
+class TestBillTypes:
+    @respx.mock
+    def test_happy_path_downloads_for_case_insensitive_bill_type(self, tmp_path):
+        mock_http_requests(content=EMPTY_ZIP_BYTES)
+        run_fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types HR Hjres --destination {tmp_path} --download-only"
+        )
+        assert_files(tmp_path, {"119-hr.zip", "119-hjres.zip"})
+
+    def test_error_path_reports_invalid_bill_type(self, tmp_path):
+        with pytest.raises(ValueError) as excinfo:
+            run_fetch_bill_archives(f"--types not-a-type --destination {tmp_path}")
+        assert_message_contains_strings(str(excinfo.value), ["Unknown bill type", "not-a-type"])
+        assert_files(tmp_path, [])
+
+    @respx.mock
+    def test_no_types_argument_defaults_to_all(self, tmp_path):
+        mock_http_requests(content=EMPTY_ZIP_BYTES)
+        run_fetch_bill_archives(f"--from-congress 119 --to-congress 119 --destination {tmp_path} --download-only")
+        assert_files(tmp_path, {f"119-{bill_type}.zip" for bill_type in BILL_TYPES})
+
+    @respx.mock
+    def test_types_containing_all_fetches_all_types(self, tmp_path):
+        mock_http_requests(content=EMPTY_ZIP_BYTES)
+        run_fetch_bill_archives(
+            f"--from-congress 119 --to-congress 119 --types hr all --destination {tmp_path} --download-only"
+        )
+        assert_files(tmp_path, {f"119-{bill_type}.zip" for bill_type in BILL_TYPES})
