@@ -35,7 +35,7 @@ from pathlib import Path
 import httpx
 
 import fetch_govinfo as gi
-from shared.bill_types import resolve_bill_types
+from shared.bill_types import BILL_TYPES, resolve_bill_types
 
 # The REPOSITORY root, not this script's directory — see the same constant in
 # fetch_bill_archives.py: the working directories are gitignored at the root, so
@@ -292,7 +292,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--from-congress", type=int, default=118)
     p.add_argument("--to-congress", type=int, default=119)
-    p.add_argument("--types", nargs="+", default=["all"])
+    p.add_argument("--types", nargs="+", type=str.lower, choices=["all", *BILL_TYPES.keys()], default=["all"])
     p.add_argument("--zip-dir", type=Path, default=PROJECT_DIR / "bills_bulk_text")
     p.add_argument("--out-dir", type=Path, default=DEFAULT_BILLS_DIR)
     p.add_argument(

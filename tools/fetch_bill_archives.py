@@ -25,7 +25,7 @@ from typing import Any, Iterator
 import httpx
 
 from bill_index import BillIndex, make_bill_id
-from shared.bill_types import resolve_bill_types
+from shared.bill_types import BILL_TYPES, resolve_bill_types
 
 BillMetadata = dict[str, Any]
 
@@ -570,6 +570,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--types",
         nargs="+",
+        type=str.lower,
+        choices=["all", *BILL_TYPES.keys()],
         default=["all"],
         help="Bill types to fetch (default: all)",
     )
