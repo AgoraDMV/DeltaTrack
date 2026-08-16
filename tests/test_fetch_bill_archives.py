@@ -8,6 +8,7 @@ cannot fire and the archive's own structure is the only completeness signal.
 
 from __future__ import annotations
 
+import re
 import shlex
 import zipfile
 
@@ -138,11 +139,12 @@ class TestBillTypes:
             run_fetch_bill_archives(f"--types not-a-type --destination {tmp_path}")
         assert excinfo.value.code == 2
         out, err = capsys.readouterr()
+        err = re.sub("[.,'\[\]{}]", "", err)
         assert_message_contains_strings(
             err,
             [
-                "argument --types: invalid choice: 'not-a-type'",
-                "choose from all, hr, s, hjres, sjres, hres, sres, hconres, sconres",
+                "argument --types: invalid choice: not-a-type",
+                "choose from all hr s hjres sjres hres sres hconres sconres",
             ],
         )
         assert_files(tmp_path, [])

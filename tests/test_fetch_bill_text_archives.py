@@ -188,11 +188,12 @@ class TestBillTypes:
             run_fetch_bill_text_archives(f"--types not-a-type --zip-dir {tmp_path}")
         assert excinfo.value.code == 2
         out, err = capsys.readouterr()
+        err = re.sub("[.,'\[\]{}]", "", err)
         assert_message_contains_strings(
             err, 
             [
-                "argument --types: invalid choice: 'not-a-type'",
-                "choose from all, hr, s, hjres, sjres, hres, sres, hconres, sconres",
+                "argument --types: invalid choice: not-a-type",
+                "choose from all hr s hjres sjres hres sres hconres sconres",
             ]
         )
         assert_files(tmp_path, [])
