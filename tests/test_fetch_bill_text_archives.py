@@ -9,12 +9,14 @@ cannot fire and the archive's own structure is the only completeness signal.
 from __future__ import annotations
 
 import shlex
+import subprocess
 import zipfile
 from pathlib import Path
 
 import httpx
 import pytest
 import respx
+import re
 
 from fetch_bill_text_archives import download_zip
 from fetch_bill_text_archives import main as fetch_bill_text_archives_main
@@ -50,7 +52,7 @@ def _temp_path(dest: Path) -> Path:
 
 def run_fetch_bill_text_archives(command: str) -> None:
     args = shlex.split(command)
-    fetch_bill_text_archives_main(args)
+    return fetch_bill_text_archives_main(args)
 
 
 class TestDownloadZip:
@@ -131,22 +133,68 @@ class TestDownloadZip:
 
         assert dest.read_bytes() == full
 
+    @respx.mock
+    def test_download_archives_logs_saved_archives(self, tmp_path, capsys):
+        """Each successful download produces a saved line in the stderr log."""
+        mock_http_requests(content=EMPTY_ZIP_BYTES)
+
+        run_fetch_bill_text_archives(f"--from-congress 119 --to-congress 119 --types hr --zip-dir {tmp_path} --download-only")
+        out, err = capsys.readouterr()
+
+        assert_message_contains_strings(err,[
+            "BILLS-119-1-hr.zip",
+            "BILLS-119-2-hr.zip",
+        ])
+
+    @respx.mock
+    def test_download_archives_error_path_logs_failed(self, tmp_path, capsys):
+        """A server error during download produces a FAILED line and no file on disk."""
+        mock_http_requests(status_code=500)
+
+        run_fetch_bill_text_archives(f"--from-congress 119 --to-congress 119 --types hr --zip-dir {tmp_path} --download-only")
+        out, err = capsys.readouterr()
+
+        # Sample output from a real run with network disconnected:
+        # 1/2: BILLS-119-1-hr.zip
+        #   https://www.govinfo.gov/bulkdata/BILLS/119/1/hr/BILLS-119-1-hr.zip
+        # 1/2: FAILED BILLS-119-1-hr.zip: [Errno 8] nodename nor servname provided, or not known
+        # 2/2: BILLS-119-2-hr.zip
+        #   https://www.govinfo.gov/bulkdata/BILLS/119/2/hr/BILLS-119-2-hr.zip
+        # 2/2: FAILED BILLS-119-2-hr.zip: [Errno 8] nodename nor servname provided, or not known
+        #   version-count histogram (versions -> #bills): {}
+        # convert stats: {'bills_seen': 0}
+        assert_message_contains_strings(err, [
+            "FAILED BILLS-119-1-hr.zip",
+            "FAILED BILLS-119-2-hr.zip",
+        ])
+
+    
+
 
 class TestBillTypes:
     @respx.mock
     def test_happy_path_downloads_for_case_insensitive_bill_type(self, tmp_path):
         mock_http_requests(content=EMPTY_ZIP_BYTES)
         run_fetch_bill_text_archives(
-            f"--from-congress 119 --to-congress 119 --types HR --zip-dir {tmp_path} --download-only"
+            f"--from-congress 119 --to-congress 119 --types HR HRes --zip-dir {tmp_path} --download-only"
         )
-        assert_files(tmp_path, {"BILLS-119-1-hr.zip", "BILLS-119-2-hr.zip"})
+        assert_files(tmp_path, {
+            "BILLS-119-1-hr.zip", "BILLS-119-2-hr.zip", 
+            "BILLS-119-1-hres.zip", "BILLS-119-2-hres.zip",
+        })
 
-    def test_error_path_reports_invalid_bill_type(self, tmp_path):
-        with pytest.raises(ValueError) as excinfo:
-            run_fetch_bill_text_archives(
-                f"--from-congress 119 --to-congress 119 --types not-a-type --zip-dir {tmp_path} --download-only"
-            )
-        assert_message_contains_strings(str(excinfo.value), ["Unknown bill type", "not-a-type"])
+    def test_reports_invalid_bill_type(self, tmp_path, capsys):
+        with pytest.raises(SystemExit) as excinfo:
+            run_fetch_bill_text_archives(f"--types not-a-type --zip-dir {tmp_path}")
+        assert excinfo.value.code == 2
+        out, err = capsys.readouterr()
+        assert_message_contains_strings(
+            err, 
+            [
+                "argument --types: invalid choice: 'not-a-type'",
+                "choose from all, hr, s, hjres, sjres, hres, sres, hconres, sconres",
+            ]
+        )
         assert_files(tmp_path, [])
 
     @respx.mock

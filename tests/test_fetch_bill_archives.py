@@ -22,8 +22,8 @@ from tests.utils import (
     EMPTY_ZIP_BYTES,
     archive_bytes,
     assert_files,
-    assert_message_contains_strings,
     mock_http_requests,
+    assert_message_contains_strings,
 )
 
 ARCHIVE_URL = "https://www.govinfo.gov/bulkdata/BILLSTATUS/999/hr/BILLSTATUS-999-hr.zip"
@@ -133,10 +133,18 @@ class TestBillTypes:
         )
         assert_files(tmp_path, {"119-hr.zip", "119-hjres.zip"})
 
-    def test_error_path_reports_invalid_bill_type(self, tmp_path):
-        with pytest.raises(ValueError) as excinfo:
+    def test_error_path_reports_invalid_bill_type(self, tmp_path, capsys):
+        with pytest.raises(SystemExit) as excinfo:
             run_fetch_bill_archives(f"--types not-a-type --destination {tmp_path}")
-        assert_message_contains_strings(str(excinfo.value), ["Unknown bill type", "not-a-type"])
+        assert excinfo.value.code == 2
+        out, err = capsys.readouterr()
+        assert_message_contains_strings(
+            err,
+            [
+                "argument --types: invalid choice: 'not-a-type'",
+                "choose from all, hr, s, hjres, sjres, hres, sres, hconres, sconres",
+            ],
+        )
         assert_files(tmp_path, [])
 
     @respx.mock
