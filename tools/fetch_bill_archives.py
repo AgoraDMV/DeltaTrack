@@ -602,5 +602,6 @@ def main(argv: list[str] | None = None) -> None:
         download_only=args.download_only,
     )
 
+
 if __name__ == "__main__":
     main()

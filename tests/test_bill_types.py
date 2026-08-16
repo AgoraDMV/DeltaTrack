@@ -25,9 +25,4 @@ def test_invalid_bill_type_raises_error() -> None:
     # Example error message:
     # Unknown bill type 'not-a-type'. Bill type must be one of: 'hr', 's', 'hjres', 'sjres', ...
     message = str(excinfo.value)
-    assert_message_contains_strings(message, [
-        "Unknown bill type",
-        "not-a-type",
-        *BILL_TYPES.keys(),
-        "all"
-    ])
+    assert_message_contains_strings(message, ["Unknown bill type", "not-a-type", *BILL_TYPES.keys(), "all"])

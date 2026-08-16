@@ -146,10 +146,13 @@ class TestDownloadZip:
         )
         out, err = capsys.readouterr()
 
-        assert_message_contains_strings(err,[
-            "BILLS-119-1-hr.zip",
-            "BILLS-119-2-hr.zip",
-        ])
+        assert_message_contains_strings(
+            err,
+            [
+                "BILLS-119-1-hr.zip",
+                "BILLS-119-2-hr.zip",
+            ],
+        )
 
     @respx.mock
     def test_download_archives_error_path_logs_failed(self, tmp_path, capsys):
@@ -171,12 +174,13 @@ class TestDownloadZip:
         # 2/2: FAILED BILLS-119-2-hr.zip: [Errno 8] nodename nor servname provided, or not known
         #   version-count histogram (versions -> #bills): {}
         # convert stats: {'bills_seen': 0}
-        assert_message_contains_strings(err, [
-            "FAILED BILLS-119-1-hr.zip",
-            "FAILED BILLS-119-2-hr.zip",
-        ])
-
-
+        assert_message_contains_strings(
+            err,
+            [
+                "FAILED BILLS-119-1-hr.zip",
+                "FAILED BILLS-119-2-hr.zip",
+            ],
+        )
 
 
 class TestBillTypes:
@@ -187,10 +191,15 @@ class TestBillTypes:
             "--from-congress 119 --to-congress 119 --types HR HRes --download-only",
             tmp_path,
         )
-        assert_files(tmp_path, {
-            "BILLS-119-1-hr.zip", "BILLS-119-2-hr.zip",
-            "BILLS-119-1-hres.zip", "BILLS-119-2-hres.zip",
-        })
+        assert_files(
+            tmp_path,
+            {
+                "BILLS-119-1-hr.zip",
+                "BILLS-119-2-hr.zip",
+                "BILLS-119-1-hres.zip",
+                "BILLS-119-2-hres.zip",
+            },
+        )
 
     def test_reports_invalid_bill_type(self, tmp_path, capsys):
         with pytest.raises(SystemExit) as excinfo:
@@ -206,7 +215,7 @@ class TestBillTypes:
             [
                 "argument --types: invalid choice: not-a-type",
                 "choose from all hr s hjres sjres hres sres hconres sconres",
-            ]
+            ],
         )
         assert_files(tmp_path, [])
 

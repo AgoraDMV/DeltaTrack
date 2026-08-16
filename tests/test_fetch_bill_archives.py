@@ -29,22 +29,27 @@ from tests.utils import (
 
 ARCHIVE_URL = "https://www.govinfo.gov/bulkdata/BILLSTATUS/999/hr/BILLSTATUS-999-hr.zip"
 
+
 def run_fetch_bill_archives(command: str) -> None:
     args = shlex.split(command)
     return fetch_bill_archives_main(args)
 
+
 def _billstatus_zip_bytes() -> bytes:
     """One well-formed BILLSTATUS archive ZIP, as govinfo serves it."""
-    return archive_bytes({
-        "BILLSTATUS-999hr1.xml": b"""
+    return archive_bytes(
+        {
+            "BILLSTATUS-999hr1.xml": b"""
         <billStatus><bill><congress>999</congress><type>HR</type><number>1</number></bill></billStatus>
         """
-    })
+        }
+    )
 
 
 def _chunked(body: bytes) -> httpx.Response:
     """Response with an iterator body: transfer-encoding chunked, no content-length."""
     return httpx.Response(200, content=iter([body]))
+
 
 class TestDownloadArchiveZip:
     @respx.mock
