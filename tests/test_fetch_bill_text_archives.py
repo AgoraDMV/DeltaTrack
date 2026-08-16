@@ -8,15 +8,14 @@ cannot fire and the archive's own structure is the only completeness signal.
 
 from __future__ import annotations
 
+import re
 import shlex
-import subprocess
 import zipfile
 from pathlib import Path
 
 import httpx
 import pytest
 import respx
-import re
 
 from fetch_bill_text_archives import download_zip
 from fetch_bill_text_archives import main as fetch_bill_text_archives_main
@@ -50,8 +49,11 @@ def _temp_path(dest: Path) -> Path:
     return dest.with_suffix(dest.suffix + ".part")
 
 
-def run_fetch_bill_text_archives(command: str) -> None:
+def run_fetch_bill_text_archives(command: str, tmp_path: Path) -> None:
+    """Run the CLI command string and ensure --zip-dir and --out-dir point at tmp_path."""
     args = shlex.split(command)
+    # Add explicit zip and out dirs so tests remain hermetic and predictable.
+    args += ["--zip-dir", str(tmp_path), "--out-dir", str(tmp_path)]
     return fetch_bill_text_archives_main(args)
 
 
@@ -138,7 +140,10 @@ class TestDownloadZip:
         """Each successful download produces a saved line in the stderr log."""
         mock_http_requests(content=EMPTY_ZIP_BYTES)
 
-        run_fetch_bill_text_archives(f"--from-congress 119 --to-congress 119 --types hr --zip-dir {tmp_path} --download-only")
+        run_fetch_bill_text_archives(
+            "--from-congress 119 --to-congress 119 --types hr --download-only",
+            tmp_path,
+        )
         out, err = capsys.readouterr()
 
         assert_message_contains_strings(err,[
@@ -151,7 +156,10 @@ class TestDownloadZip:
         """A server error during download produces a FAILED line and no file on disk."""
         mock_http_requests(status_code=500)
 
-        run_fetch_bill_text_archives(f"--from-congress 119 --to-congress 119 --types hr --zip-dir {tmp_path} --download-only")
+        run_fetch_bill_text_archives(
+            "--from-congress 119 --to-congress 119 --types hr --download-only",
+            tmp_path,
+        )
         out, err = capsys.readouterr()
 
         # Sample output from a real run with network disconnected:
@@ -168,7 +176,7 @@ class TestDownloadZip:
             "FAILED BILLS-119-2-hr.zip",
         ])
 
-    
+
 
 
 class TestBillTypes:
@@ -176,21 +184,25 @@ class TestBillTypes:
     def test_happy_path_downloads_for_case_insensitive_bill_type(self, tmp_path):
         mock_http_requests(content=EMPTY_ZIP_BYTES)
         run_fetch_bill_text_archives(
-            f"--from-congress 119 --to-congress 119 --types HR HRes --zip-dir {tmp_path} --download-only"
+            "--from-congress 119 --to-congress 119 --types HR HRes --download-only",
+            tmp_path,
         )
         assert_files(tmp_path, {
-            "BILLS-119-1-hr.zip", "BILLS-119-2-hr.zip", 
+            "BILLS-119-1-hr.zip", "BILLS-119-2-hr.zip",
             "BILLS-119-1-hres.zip", "BILLS-119-2-hres.zip",
         })
 
     def test_reports_invalid_bill_type(self, tmp_path, capsys):
         with pytest.raises(SystemExit) as excinfo:
-            run_fetch_bill_text_archives(f"--types not-a-type --zip-dir {tmp_path}")
+            run_fetch_bill_text_archives(
+                "--types not-a-type",
+                tmp_path,
+            )
         assert excinfo.value.code == 2
         out, err = capsys.readouterr()
-        err = re.sub("[.,'\[\]{}]", "", err)
+        err = re.sub(r"[.,'\[\]{}]", "", err)
         assert_message_contains_strings(
-            err, 
+            err,
             [
                 "argument --types: invalid choice: not-a-type",
                 "choose from all hr s hjres sjres hres sres hconres sconres",
@@ -201,7 +213,10 @@ class TestBillTypes:
     @respx.mock
     def test_no_types_argument_defaults_to_all(self, tmp_path):
         mock_http_requests(content=EMPTY_ZIP_BYTES)
-        run_fetch_bill_text_archives(f"--from-congress 119 --to-congress 119 --zip-dir {tmp_path} --download-only")
+        run_fetch_bill_text_archives(
+            "--from-congress 119 --to-congress 119 --download-only",
+            tmp_path,
+        )
         assert_files(
             tmp_path,
             {
@@ -215,7 +230,8 @@ class TestBillTypes:
     def test_types_containing_all_fetches_all_types(self, tmp_path):
         mock_http_requests(content=EMPTY_ZIP_BYTES)
         run_fetch_bill_text_archives(
-            f"--from-congress 119 --to-congress 119 --types hr all --zip-dir {tmp_path} --download-only"
+            "--from-congress 119 --to-congress 119 --types hr all --download-only",
+            tmp_path,
         )
         assert_files(
             tmp_path,

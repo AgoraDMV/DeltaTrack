@@ -23,8 +23,8 @@ from tests.utils import (
     EMPTY_ZIP_BYTES,
     archive_bytes,
     assert_files,
-    mock_http_requests,
     assert_message_contains_strings,
+    mock_http_requests,
 )
 
 ARCHIVE_URL = "https://www.govinfo.gov/bulkdata/BILLSTATUS/999/hr/BILLSTATUS-999-hr.zip"
@@ -139,7 +139,7 @@ class TestBillTypes:
             run_fetch_bill_archives(f"--types not-a-type --destination {tmp_path}")
         assert excinfo.value.code == 2
         out, err = capsys.readouterr()
-        err = re.sub("[.,'\[\]{}]", "", err)
+        err = re.sub(r"[.,'\[\]{}]", "", err)
         assert_message_contains_strings(
             err,
             [
