@@ -1,0 +1,965 @@
+{
+  "seed": 20260820,
+  "per_congress": 3,
+  "max_versions": 3,
+  "frozen_candidate4_sha256": "c604261062ae7fc9db367e52024c45450b2200d7eede4f597b526ccf08a090b5",
+  "draw_sha256": "b163cd8e3337b517b25f11f20e74ca9f77e5e84a016ecd77a622af2a03d31bf5",
+  "excluded_spent_from_draw1": [
+    "113-hr-11",
+    "113-hr-15",
+    "113-hr-1860",
+    "113-hr-1890",
+    "113-hr-2",
+    "113-hr-2217",
+    "113-hr-2278",
+    "113-hr-2300",
+    "113-hr-2810",
+    "113-hr-2855",
+    "113-hr-3121",
+    "113-hr-3304",
+    "113-hr-3622",
+    "113-hr-4",
+    "113-hr-4015",
+    "113-hr-4209",
+    "113-hr-5352",
+    "113-hr-803",
+    "113-s-10",
+    "113-s-1101",
+    "113-s-1197",
+    "113-s-1217",
+    "113-s-123",
+    "113-s-1356",
+    "113-s-1371",
+    "113-s-2109",
+    "113-s-2110",
+    "113-s-2289",
+    "113-s-2413",
+    "113-s-2444",
+    "113-s-601",
+    "113-s-744",
+    "113-s-959",
+    "114-hr-1898",
+    "114-hr-1907",
+    "114-hr-2578",
+    "114-hr-4909",
+    "114-hr-5003",
+    "114-hr-5926",
+    "114-hr-5983",
+    "114-hr-6381",
+    "114-s-1015",
+    "114-s-1269",
+    "114-s-1356",
+    "114-s-1640",
+    "114-s-1647",
+    "114-s-1695",
+    "114-s-227",
+    "114-s-2533",
+    "114-s-2814",
+    "114-s-2848",
+    "114-s-3136",
+    "115-hr-2",
+    "115-hr-2431",
+    "115-hr-277",
+    "115-hr-2810",
+    "115-hr-4318",
+    "115-hr-5785",
+    "115-hr-6157",
+    "115-hr-6746",
+    "115-hr-7328",
+    "115-hr-88",
+    "115-s-1405",
+    "115-s-1757",
+    "115-s-1880",
+    "115-s-2098",
+    "115-s-2192",
+    "115-s-3107",
+    "116-hr-2740",
+    "116-hr-6415",
+    "116-hr-925",
+    "116-s-2302",
+    "116-s-2543",
+    "116-s-2843",
+    "116-s-4775",
+    "116-s-4819",
+    "117-hr-1512",
+    "117-hr-3524",
+    "117-hr-3684",
+    "117-hr-3764",
+    "117-hr-3975",
+    "117-hr-4372",
+    "117-hr-4521",
+    "117-hr-6637",
+    "117-hr-8254",
+    "117-hr-9624",
+    "117-hr-9685",
+    "117-s-1605",
+    "117-s-1927",
+    "117-s-1953",
+    "117-s-2747",
+    "117-s-2921",
+    "117-s-4486",
+    "117-s-4808",
+    "118-hr-10009",
+    "118-hr-10493",
+    "118-hr-10500",
+    "118-hr-2811",
+    "118-hr-4349",
+    "118-hr-815",
+    "118-hr-8771",
+    "118-hr-9029",
+    "118-hr-9228",
+    "118-s-2824",
+    "118-s-3393",
+    "118-s-4226",
+    "118-s-5636",
+    "119-hr-3227",
+    "119-hr-3944",
+    "119-hr-4779",
+    "119-hr-5442",
+    "119-hr-6938",
+    "119-hr-8840",
+    "119-s-1071",
+    "119-s-1541",
+    "119-s-4668",
+    "119-s-4744"
+  ],
+  "destination": "bills/_holdout524b",
+  "selected": [
+    {
+      "bill": "114-hr-5912",
+      "congress": 114,
+      "versions": [
+        {
+          "version": "rh",
+          "package": "BILLS-114hr5912rh",
+          "xml_sha256": "ab74966772889ceed803f043d7eb7878beee48e22e8a08272a7c27c4a21acb08",
+          "pdf_sha256": "61f27d697ecbb25048442c8f24cb8009a6ce7064d10187850e42c42da3fe91f7",
+          "xml_bytes": 520601,
+          "pdf_bytes": 671587
+        }
+      ]
+    },
+    {
+      "bill": "115-s-3108",
+      "congress": 115,
+      "versions": [
+        {
+          "version": "pcs",
+          "package": "BILLS-115s3108pcs",
+          "xml_sha256": "acc08dab39bc471bdf6dac3493594c959512552b7c96d167a8bbefebb6661249",
+          "pdf_sha256": "16834e568eed41b5df2a9bdb3e8297594cfc5d35ca225b1c9af892264b166f5f",
+          "xml_bytes": 612420,
+          "pdf_bytes": 600399
+        }
+      ]
+    },
+    {
+      "bill": "114-s-3040",
+      "congress": 114,
+      "versions": [
+        {
+          "version": "pcs",
+          "package": "BILLS-114s3040pcs",
+          "xml_sha256": "38631eb1994cd7d4318d6b3505f6b07358676e355394bc0c060b9bfdcb9ceba4",
+          "pdf_sha256": "60e4abc840988a221c65b41ef3e4104b077e22108f93dd058b7c90fb76863dc5",
+          "xml_bytes": 301556,
+          "pdf_bytes": 352714
+        }
+      ]
+    },
+    {
+      "bill": "115-hr-4667",
+      "congress": 115,
+      "versions": [
+        {
+          "version": "ih",
+          "package": "BILLS-115hr4667ih",
+          "xml_sha256": "da4f229b9fc5cc0fb67466e5658a0d29d55c3600ab0312a6341e782875c96464",
+          "pdf_sha256": "84221a0d275a4d5d5bf36c0dec874c9c67bf48ab13f10fbf396202227c639a80",
+          "xml_bytes": 296116,
+          "pdf_bytes": 330888
+        },
+        {
+          "version": "rds",
+          "package": "BILLS-115hr4667rds",
+          "xml_sha256": "1b17cd3a1701dce01407c347d4a04bb99e10a6c5db301986531847187d172591",
+          "pdf_sha256": "051b6659860cc3dd5b29de201eab080c5b25888728c8fca8e50103763fb90ceb",
+          "xml_bytes": 335831,
+          "pdf_bytes": 361677
+        },
+        {
+          "version": "pcs",
+          "package": "BILLS-115hr4667pcs",
+          "xml_sha256": "f4578c1c6b5574dface3a73ce6e7fdda6653354e0ba198391b9f15522d5c3b34",
+          "pdf_sha256": "699540fd583c9fc5a7db5d3529accb8b65d430fa56ec10e01906013318d42780",
+          "xml_bytes": 336322,
+          "pdf_bytes": 489188
+        }
+      ]
+    },
+    {
+      "bill": "113-s-2438",
+      "congress": 113,
+      "versions": [
+        {
+          "version": "pcs",
+          "package": "BILLS-113s2438pcs",
+          "xml_sha256": "6be2bc2fa371c582c0d323ead3a89d057e7c12980300d3f88246f12fa1137597",
+          "pdf_sha256": "7fc5fd3a5e50363f46b4990286a3480b1ff7741a4e4c324ec6c07037b0460cd8",
+          "xml_bytes": 394002,
+          "pdf_bytes": 394582
+        }
+      ]
+    },
+    {
+      "bill": "119-hr-8495",
+      "congress": 119,
+      "versions": [
+        {
+          "version": "rh",
+          "package": "BILLS-119hr8495rh",
+          "xml_sha256": "9db79f0636529f520cd74fbbbae6a92c250fd96b44763c2512721d1577145118",
+          "pdf_sha256": "49388228fefa88ccfafd7e4a41bb3917893d0ea5152dfd53151ac85d26e8e8e4",
+          "xml_bytes": 353212,
+          "pdf_bytes": 547679
+        }
+      ]
+    },
+    {
+      "bill": "114-hr-5325",
+      "congress": 114,
+      "versions": [
+        {
+          "version": "pcs",
+          "package": "BILLS-114hr5325pcs",
+          "xml_sha256": "23019828ee039816164f3d9c20a63f052b06d4ba835af4c2198b05b885e55777",
+          "pdf_sha256": "622a11f1a36eb216893c9d4a4a655eaa36904517668b79406b24d31020815893",
+          "xml_bytes": 82192,
+          "pdf_bytes": 265829
+        },
+        {
+          "version": "pp",
+          "package": "BILLS-114hr5325pp",
+          "xml_sha256": "3b8a2baf9166d936f0ba741a24547ed3374a90a01c23a56e349369be78b0d36c",
+          "pdf_sha256": "37eca9fef59e3fab8a51660f20b7390e9b9f3883e03f20d15e58c153682dd54f",
+          "xml_bytes": 388634,
+          "pdf_bytes": 649884
+        },
+        {
+          "version": "rh",
+          "package": "BILLS-114hr5325rh",
+          "xml_sha256": "b6fc92734bd567113fedbe52df06148f8d84f8cac69cd6f24edd9019459ce959",
+          "pdf_sha256": "2d1952d2a41a43109e9316feab53f3ad61436a3a03ab056b715a842c567dfb6a",
+          "xml_bytes": 79595,
+          "pdf_bytes": 282699
+        }
+      ]
+    },
+    {
+      "bill": "115-hr-3362",
+      "congress": 115,
+      "versions": [
+        {
+          "version": "rh",
+          "package": "BILLS-115hr3362rh",
+          "xml_sha256": "903bcea200eb2e1f53b284aa3ae6bd22c8cccd7e6394f1274dc24a94e0dd49b4",
+          "pdf_sha256": "551145dea1b68d2181d4f262300bfe1fb826bc335f94f494ae28e00aeaa96455",
+          "xml_bytes": 534660,
+          "pdf_bytes": 687071
+        }
+      ]
+    },
+    {
+      "bill": "116-hr-748",
+      "congress": 116,
+      "versions": [
+        {
+          "version": "ih",
+          "package": "BILLS-116hr748ih",
+          "xml_sha256": "673270f8374bf3d233942187c7e0d3fbe2e9ac20a4120a3f14fec7557b7c9481",
+          "pdf_sha256": "b8a5d8738e475b453e81c9dbfdb8f2da554c0467ceee3f42a9ad4e617e92521c",
+          "xml_bytes": 7874,
+          "pdf_bytes": 111717
+        },
+        {
+          "version": "pcs",
+          "package": "BILLS-116hr748pcs",
+          "xml_sha256": "8daa033067fe82fa8d10cdfb43eb9e9b316bcfbeb27d8efd392837592b793da4",
+          "pdf_sha256": "525cdc775f5af4dc9929fc615664ae0f499c5d0e4419e7127d83f475a010cbe7",
+          "xml_bytes": 7606,
+          "pdf_bytes": 199260
+        },
+        {
+          "version": "eas",
+          "package": "BILLS-116hr748eas",
+          "xml_sha256": "757d0c99acd0479da67752840806a01498ab0bc4c655b7f39acada6eb15f844e",
+          "pdf_sha256": "2fff633c873c145c939c7c95f2adb14b0acfceffb88b437bcde5b52127e82efb",
+          "xml_bytes": 1592472,
+          "pdf_bytes": 1134037
+        }
+      ]
+    },
+    {
+      "bill": "117-hr-2617",
+      "congress": 117,
+      "versions": [
+        {
+          "version": "ih",
+          "package": "BILLS-117hr2617ih",
+          "xml_sha256": "8607ec90376c96ab183d46f0212ef0ed345e507b3cb99c121aab44da2223bb8e",
+          "pdf_sha256": "5e7429574c2a42d7e0b7496abe415574c891e34c2689c0c70aaf0e3bf1e77418",
+          "xml_bytes": 5186,
+          "pdf_bytes": 230627
+        },
+        {
+          "version": "rfs",
+          "package": "BILLS-117hr2617rfs",
+          "xml_sha256": "da93cbfdd4cc773d4f18db2e50ba0ebf7cabce5b6ff8811ee01c9f5276515ea6",
+          "pdf_sha256": "30821d11270bc1d3597431ba38dbd256b9936c1a20d4074bcd133744fe14c89f",
+          "xml_bytes": 5973,
+          "pdf_bytes": 196372
+        },
+        {
+          "version": "rs",
+          "package": "BILLS-117hr2617rs",
+          "xml_sha256": "c5bef52e84362ec0e3d6a7c75f6af51a643ff68dc2747aab90978ad78bfa6e0c",
+          "pdf_sha256": "b780df4a3716d5a1d7c08c0462921c8b0a2634580f3b73cc043590f78e439d41",
+          "xml_bytes": 6860,
+          "pdf_bytes": 216958
+        }
+      ]
+    },
+    {
+      "bill": "116-s-2583",
+      "congress": 116,
+      "versions": [
+        {
+          "version": "rs",
+          "package": "BILLS-116s2583rs",
+          "xml_sha256": "5188128007c69065485062794a94515fb5578f95ed531ecdf77493da610aa684",
+          "pdf_sha256": "6255c11879e421cbee2a443d35d37d78d27cecbcfcefa391dbe6a881ddd96feb",
+          "xml_bytes": 518685,
+          "pdf_bytes": 539066
+        }
+      ]
+    },
+    {
+      "bill": "113-hr-2397",
+      "congress": 113,
+      "versions": [
+        {
+          "version": "rfs",
+          "package": "BILLS-113hr2397rfs",
+          "xml_sha256": "01c107a853e2564d18422dd2c4d2c8eb0733c3a3ac8545ab8688b898a0420ebb",
+          "pdf_sha256": "61c8512840d6c0a422dcaa7de10cf165cedf2c613b4435047ac978a295196746",
+          "xml_bytes": 301639,
+          "pdf_bytes": 460730
+        },
+        {
+          "version": "rh",
+          "package": "BILLS-113hr2397rh",
+          "xml_sha256": "f2bea9ed857cfc15f1297975d4e8d3d57f0a2ea50f2525e8392a708bfe630898",
+          "pdf_sha256": "6945938e26b16c2032bfa4a056fd709f6efffe789c8697d40257d2cb1af752e2",
+          "xml_bytes": 274845,
+          "pdf_bytes": 467435
+        },
+        {
+          "version": "eh",
+          "package": "BILLS-113hr2397eh",
+          "xml_sha256": "8c8cf1d9141b28a9d914dca7a10ca15a8eb8fe11505e09a7014484c76dfd4ed3",
+          "pdf_sha256": "93d39387c089e25ef824816eea2e73af5d5eb2070c58bfe0632306aab34f7e9e",
+          "xml_bytes": 294533,
+          "pdf_bytes": 299528
+        }
+      ]
+    },
+    {
+      "bill": "119-s-2587",
+      "congress": 119,
+      "versions": [
+        {
+          "version": "rs",
+          "package": "BILLS-119s2587rs",
+          "xml_sha256": "cb60d3baa4a073783771093d43cae7d1ccf06c4a49758c9979ecf42ab74d72f2",
+          "pdf_sha256": "a716956d23eb40b6d631d1027c6c26895f6c48a8dc0ee20c9d6d6f0497864ad0",
+          "xml_bytes": 357728,
+          "pdf_bytes": 378366
+        }
+      ]
+    },
+    {
+      "bill": "119-hr-5371",
+      "congress": 119,
+      "versions": [
+        {
+          "version": "ih",
+          "package": "BILLS-119hr5371ih",
+          "xml_sha256": "e005605756d62cc57e67a7d45017eb63cf4fc4928e03c003de903f1936bf8d06",
+          "pdf_sha256": "3e6635f653ec613ddc2a171b3425c31c03834e45485595f2ba386e2d50ba7d63",
+          "xml_bytes": 182787,
+          "pdf_bytes": 379598
+        },
+        {
+          "version": "pcs",
+          "package": "BILLS-119hr5371pcs",
+          "xml_sha256": "94bfa840ecc5da60b0f0f7fcae6ae3b7734390ab4c318ef0c8393286f250174b",
+          "pdf_sha256": "08d771683dda2e2215f3a6cfed413a0873790bcbfa747f5e358cee347e2cc8c3",
+          "xml_bytes": 181240,
+          "pdf_bytes": 341351
+        },
+        {
+          "version": "eas",
+          "package": "BILLS-119hr5371eas",
+          "xml_sha256": "71dfa524bb7ef21aed18b00cedfa9b188af74fe05d486f4c64ce257cbfcd46cc",
+          "pdf_sha256": "9475b79bd31b75e24843348346e63fa2839a3fba11d1e48de58e2d16db2c16bd",
+          "xml_bytes": 749413,
+          "pdf_bytes": 891533
+        }
+      ]
+    },
+    {
+      "bill": "113-hr-5464",
+      "congress": 113,
+      "versions": [
+        {
+          "version": "ih",
+          "package": "BILLS-113hr5464ih",
+          "xml_sha256": "cc5697ae42c568af04d1193ba6dac35581641a817a7d4840864eecd122b61009",
+          "pdf_sha256": "0ed857c0a1e544785ec15941ec2714cf786187c7c772339f31cb25a13d024bae",
+          "xml_bytes": 306773,
+          "pdf_bytes": 493427
+        }
+      ]
+    },
+    {
+      "bill": "116-hr-8352",
+      "congress": 116,
+      "versions": [
+        {
+          "version": "ih",
+          "package": "BILLS-116hr8352ih",
+          "xml_sha256": "cd6d4d81b3984f5e7e9863256072949c789d3d77f53941a6d5901610ad3d2859",
+          "pdf_sha256": "fc5e853dad685c7537af508bdf96bf2ac3257c1e1b30fac9c9a61be7786b2868",
+          "xml_bytes": 8111670,
+          "pdf_bytes": 7334768
+        }
+      ]
+    },
+    {
+      "bill": "118-s-2624",
+      "congress": 118,
+      "versions": [
+        {
+          "version": "rs",
+          "package": "BILLS-118s2624rs",
+          "xml_sha256": "b0fb3664bd41be8d2291dc9bac005dadd1e1ad4b6650431a8a39969fc456cbda",
+          "pdf_sha256": "2ac025c1ed7041c877e6b9106974c575e3d2986088cdc6c3a505294755dc0382",
+          "xml_bytes": 339726,
+          "pdf_bytes": 407987
+        }
+      ]
+    },
+    {
+      "bill": "118-hr-8998",
+      "congress": 118,
+      "versions": [
+        {
+          "version": "pcs",
+          "package": "BILLS-118hr8998pcs",
+          "xml_sha256": "fa111f51aae58bd82596daaece4b2f046fd9ac345fdc05aae75ae23c17cb3dff",
+          "pdf_sha256": "10c93c6609508206d5652bc31b5251f73d8372ca28b63a7ae1622ec0e0e588fe",
+          "xml_bytes": 433850,
+          "pdf_bytes": 577714
+        },
+        {
+          "version": "rh",
+          "package": "BILLS-118hr8998rh",
+          "xml_sha256": "21953a9297f2d4a06639685da95ab51846cd62a42d4ab5c72d1733aa4eb62c8c",
+          "pdf_sha256": "7730c63b1fdfab40e2d660e8213958e87a9a9e8bb4e27f7cbc64ff4c94e89541",
+          "xml_bytes": 416650,
+          "pdf_bytes": 584708
+        },
+        {
+          "version": "eh",
+          "package": "BILLS-118hr8998eh",
+          "xml_sha256": "d51972eadd9aa1d29f992c6e5a6ae436a62629ed7a7d21607c36b6e9637d1a76",
+          "pdf_sha256": "e026faef4cabc45a72317e7a91b1431bb1fece8ec1c83466d8b2888cc9bf15c0",
+          "xml_bytes": 434102,
+          "pdf_bytes": 473636
+        }
+      ]
+    },
+    {
+      "bill": "117-hr-8262",
+      "congress": 117,
+      "versions": [
+        {
+          "version": "rh",
+          "package": "BILLS-117hr8262rh",
+          "xml_sha256": "ada8f6bded9f29aceeea473696879fee467cce34ea065f5ed26b234ef1ea786f",
+          "pdf_sha256": "2e08140e3aeba4cc0be0aab18c073f80113aa39e7b092b011e86b2996972fc71",
+          "xml_bytes": 321266,
+          "pdf_bytes": 506313
+        }
+      ]
+    },
+    {
+      "bill": "118-hr-10445",
+      "congress": 118,
+      "versions": [
+        {
+          "version": "ih",
+          "package": "BILLS-118hr10445ih",
+          "xml_sha256": "8a32d9afb6c800114240a724df0215203370a3ee80377a80d6f52cdd2210af7c",
+          "pdf_sha256": "e173b5ee04c5272e163a73561fbee010290d800e0988c64e091a5f077c1b63a3",
+          "xml_bytes": 2885036,
+          "pdf_bytes": 2621697
+        }
+      ]
+    },
+    {
+      "bill": "117-s-5299",
+      "congress": 117,
+      "versions": [
+        {
+          "version": "is",
+          "package": "BILLS-117s5299is",
+          "xml_sha256": "d16296b858e51960917d320b5f8a1b3de557c10923c6b25564e8a66490648773",
+          "pdf_sha256": "e131fce55b4bf925761468f538a827d3a0d3205e4a482185afd24dafca48f483",
+          "xml_bytes": 453252,
+          "pdf_bytes": 602147
+        }
+      ]
+    }
+  ],
+  "rejected": [
+    {
+      "bill": "113-hr-1960",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "114-hr-4441",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "115-hr-3537",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-hr-3621",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-3266",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-s-5131",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-hr-9222",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-hr-3895",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-hr-2546",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-2209",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-s-4902",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-hr-3633",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-s-1782",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "115-hr-4508",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-hr-6637",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-hr-8862",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-s-2840",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-hr-8541",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-hr-4159",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "114-s-3151",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "115-s-32",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-s-4796",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-954",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-s-4393",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-hr-4393",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-hr-2498",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "114-hr-3064",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-hr-2",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-hr-5243",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-hr-5048",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-hr-8870",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "114-hr-22",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "115-hr-2825",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-s-482",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-2792",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-hr-8502",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-hr-3163",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "115-s-2629",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-hr-9029",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-3373",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-s-3891",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-hr-8800",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-s-1784",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "115-hr-1",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-hr-7856",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-346",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-s-873",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-hr-9497",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-hr-1",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-3219",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-hr-4763",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-s-5283",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-hr-2821",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-s-4537",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-hr-7585",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-hr-3599",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-s-4784",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-s-1871",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-hr-1585",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-hr-10034",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-hr-4275",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-hr-5",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-hr-2148",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-hr-7309",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-s-1482",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-s-206",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-hr-1793",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-2016",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-hr-6655",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-s-5238",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-hr-4366",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-hr-7248",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-hr-1603",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-s-2281",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-s-1462",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-s-2920",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-5315",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-hr-7994",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "119-s-4773",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-hr-2642",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-hr-8902",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-3799",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-hr-5009",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-hr-2767",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-s-245",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-hr-8588",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-hr-8038",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "113-s-1086",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "116-s-5065",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-3128",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-hr-8070",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-589",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-s-5491",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-4653",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-hr-7776",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-s-3127",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-2297",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "118-hr-2369",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-hr-8788",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-2902",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-hr-2153",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-hr-803",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-2377",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-2118",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-1931",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-4136",
+      "reason": "no_appropriations_markup"
+    },
+    {
+      "bill": "117-s-2820",
+      "reason": "no_appropriations_markup"
+    }
+  ]
+}

@@ -76,20 +76,20 @@ def profiles_for(pdf_path: Path) -> dict:
     return out
 
 
-def candidate3_extract_anchors(pages, profiles):
+def candidate3_extract_anchors(pages, profiles, tracking=None, conservative=False):
     """`extract_anchors` with the account/agency boundary decided by Candidate 3."""
     anchors = []
     for page in pages:
         anchors.extend(PA._anchors_from_page(page))
     bands = PA.derive_size_bands(pages)
     if bands is not None and PA._coverage(pages) >= PA._COVERAGE_MIN:
-        anchors.extend(_c3_account_anchors(pages, bands, profiles))
+        anchors.extend(_c3_account_anchors(pages, bands, profiles, tracking, conservative))
         anchors.extend(PA._major_anchors_by_size(pages, bands))
     anchors.sort(key=lambda a: (a.page_number, a.line_number))
     return PA._assign_divisions(anchors, PA._flatten(pages))
 
 
-def _c3_account_anchors(pages, bands, profiles):
+def _c3_account_anchors(pages, bands, profiles, tracking=None, conservative=False):
     flat = PA._flatten(pages)
     n = len(flat)
 
@@ -162,7 +162,15 @@ def _c3_account_anchors(pages, bands, profiles):
             else {"left": ln.geom.content_left, "right": ln.geom.content_right, "fwr": ln.geom.first_word_right}
             for _p, ln in seq
         ]
+        import statistics as _st
+        med = None
+        if tracking:
+            vals = [v for v in tracking.values() if v is not None]
+            med = _st.median(vals) if vals else None
         shim = {
+            "conservative": conservative,
+            "track_median": med,
+            "track": (lambda k, _seq=seq: (tracking or {}).get((_seq[k][0], _seq[k][1].line_number))),
             "texts": texts, "geoms": geoms, "column_width": column_width,
             "bill": "", "version": "", "pages": [p for p, _l in seq],
             "lines": [ln.line_number for _p, ln in seq],
@@ -185,6 +193,14 @@ def _c3_account_anchors(pages, bands, profiles):
     return out
 
 
+#: Conservative discriminator, as measured: a near-full upper line that was CONDENSED
+#: relative to its own document was squeezed to fit, so the fit was manufactured and the
+#: absence of margin proves nothing. Decline to join.
+CONSERVATIVE_FILL = 0.97
+CONSERVATIVE_TRACK_RATIO = 0.31
+_DOC_TRACK_MEDIAN: dict = {}
+
+
 def _c3_decide(shim, i, prof):
     texts = shim["texts"]
     if texts[i].rstrip().endswith(FC.WRAP_HYPHENS):
@@ -196,7 +212,17 @@ def _c3_decide(shim, i, prof):
     sl = FC.slack(shim["geoms"][i], shim["geoms"][i + 1], shim["column_width"])
     if sl is None:
         return FC.SPLIT, "C3_no_geometry"
-    return (FC.SPLIT, "C4_fullness_split") if sl >= 0.0 else (FC.JOIN, "C5_fullness_join")
+    if sl >= 0.0:
+        return FC.SPLIT, "C4_fullness_split"
+    if shim.get("conservative"):
+        gu = shim["geoms"][i]
+        med = shim.get("track_median")
+        tk = shim.get("track", lambda _k: None)(i)
+        if gu and shim["column_width"] and med and med > 0 and tk is not None:
+            fill = (gu["right"] - gu["left"]) / shim["column_width"]
+            if fill >= CONSERVATIVE_FILL and (tk / med) <= CONSERVATIVE_TRACK_RATIO:
+                return FC.SPLIT, "D_condensed_nearfull"
+    return FC.JOIN, "C5_fullness_join"
 
 
 def digest(v):

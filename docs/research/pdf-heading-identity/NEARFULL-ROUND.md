@@ -1,11 +1,17 @@
-# #501 near-full container at the account boundary — NOT JOINTLY RESOLVABLE
+# #501 near-full container at the account boundary — NO SEPARATING SIGNAL FOUND
+
+> **Superseded in part.** This round's search conclusion stands: no signal tested here
+> separates the class. Its *ruling* does not: it framed the result as "#501 and #524
+> cannot be jointly resolved" and omitted the conservative candidate this round's own
+> measurements produced. Declining to join the ambiguous case is a third option, and it
+> validated. See [`CANDIDATE-4.md`](CANDIDATE-4.md).
 
 Narrow round under `#501`/`#551`, on Candidate 3's one blocking failure: a genuine
 container whose printed line leaves no early break, so line fullness cannot see it.
 
-**Result: no source-neutral evidence in the current observation surface distinguishes the
-class without damaging genuine wraps — and the damage lands on `#524`'s own named
-headings.** `#501` and `#524` cannot both be satisfied here.
+**Result: no source-neutral PDF evidence TESTED IN THIS STUDY separates the class without
+collateral damage — and the damage lands on `#524`'s own named headings.** That is the
+claim the evidence establishes. It is not a proof that no such evidence exists.
 
 ## The population, fixed before any feature was tested
 
@@ -101,11 +107,15 @@ headings.**
 
 ## Ruling
 
-**`#501` and `#524` cannot be jointly resolved within the current observation surface.**
+**No signal tested in this study separates the class without collateral damage.**
 
-Candidate 3 stays blocked by the agreed invariant — no novel false join — and this round
-establishes that the blocker cannot be removed by any layout evidence the PDF carries.
-What would be needed is a signal separating "condensed because a container had to fit" from
+The consequence drawn here — that the two issues cannot both be satisfied — was too
+strong, and assumed the only responses were to catch the container or to join it. The
+third response, declining the ambiguous boundary, is the one the measurements supported
+all along and is now validated in [`CANDIDATE-4.md`](CANDIDATE-4.md).
+
+Candidate 3 stays blocked by the agreed invariant — no novel false join. What a
+*discriminating* fix would need is a signal separating "condensed because a container had to fit" from
 "condensed because more of a wrapped name had to fit". Nothing in the glyph layer, the
 geometry or the type carries that distinction; it is a fact about intent, and the only
 sources that record it are the XML twin (absent on draft PDFs, which is where `#524`
@@ -114,7 +124,7 @@ the candidate-2 round).
 
 No candidate is frozen and no holdout is drawn.
 
-### Consequences worth deciding outside this research scope
+### Options as recorded at the time (superseded by candidate 4)
 
 Stated as options, not as a proposed round, since further methodology work is not
 authorised and none of these is a research question:

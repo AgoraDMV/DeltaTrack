@@ -19,3 +19,6 @@ confounder/population.json
 
 # Regenerable by nearfull/population.py; the population is stated in NEARFULL-ROUND.md.
 nearfull/population.json
+
+# Second holdout: same policy as the first.
+holdout2/cache/
