@@ -92,11 +92,11 @@ shipped (cut before leaf)                        30            654
 line fullness alone                             175              3
 vocabulary + fullness                            70             10
 caps-per-word presence + vocabulary + fullness   12             92
-caps-per-WORD + vocabulary + fullness             1             15
+caps-per-WORD + vocabulary + fullness             1             27
 ```
 
 **The final rule is strictly better than the shipped one on both failure directions**:
-1 false join against 30, and 15 missed joins against 654. It is not a trade.
+1 false join against 30, and 27 missed joins against 654. It is not a trade.
 
 The vocabulary pass is document-internal and carries no appropriations English, so
 ADR 0018 holds: a run of one line is a complete heading by construction (body prose above
@@ -104,14 +104,23 @@ and below it), and a boundary with large positive slack was broken deliberately.
 confident cases define per-document account and container vocabularies that decide the
 ambiguous middle.
 
+### A correction to an earlier version of this table
+
+An earlier revision of this document headlined **1 false / 15 missed**. That is the
+count at **T=0.6**, while the same document recommended shipping **T=0.5**, whose count
+is **1 false / 27 missed**. Same 1528 runs, same 1698 boundaries, same scorer -- the
+12-miss delta is entirely the operating point. The number a record headlines has to be
+the one its design licenses, so the table above now carries the T=0.5 figure and 1/15
+appears only as the far end of the plateau below.
+
 ### The margin, not just the outcome
 
 `#501` option 1's lesson applied to this rule. The false-join count is **flat at 1 across
 T ∈ [0.40, 0.60]**, then steps to 14 at 0.62 and 36 at 0.68:
 
 ```
-T=0.50  false_joins=1   missed_joins=27
-T=0.60  false_joins=1   missed_joins=15      <- top of the plateau
+T=0.50  false_joins=1   missed_joins=27      <- the frozen operating point
+T=0.60  false_joins=1   missed_joins=15      <- top of the plateau; NOT the shipped point
 T=0.62  false_joins=14  missed_joins=12      <- cliff
 ```
 
@@ -119,12 +128,17 @@ So **T=0.5 is the value to ship, not 0.6**: same false-join count, 0.12 of headr
 instead of 0.02, at a cost of 12 additional missed joins which fail closed. A standing
 gate should measure the distance to the cliff, not merely that the corpus passes.
 
-### Against `#524`'s own gate, at T=0.6
+### Against `#524`'s own gate, at the frozen T=0.5
 
 All **14/14** named headings recovered as single account headings. Account-vocabulary
 recall and precision get **worse on zero documents**; **zero** breaches of the 0.70 floors
 in `tests/test_pdf_anchor_golden.py`. At the container level — the one the account floors
-structurally cannot see, and `#501`'s failure mode — **52 names gained, 5 lost**.
+structurally cannot see, and `#501`'s failure mode — **52 names gained, 5 lost**, with 4
+documents seeing container recall fall.
+
+(Re-derived at T=0.5 after the correction above. The gate outcome is insensitive to the
+operating point across the plateau: T=0.6 gives the same 0 breaches, same 0 documents
+worse on account, same 14/14, and 5 rather than 4 documents worse on container.)
 
 ## Negative controls
 
