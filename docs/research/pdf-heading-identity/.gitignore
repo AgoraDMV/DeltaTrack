@@ -16,3 +16,6 @@ holdout/pool.json
 
 # Regenerable by confounder/population.py; the population is stated in CONFOUNDER-ROUND.md.
 confounder/population.json
+
+# Regenerable by nearfull/population.py; the population is stated in NEARFULL-ROUND.md.
+nearfull/population.json
