@@ -6,3 +6,10 @@
 # add it with `git add -f`, and say here and in README.md why it is frozen. There is no
 # such exception today.
 results/
+
+# Holdout working material. The bulkdata listings and the 796-entry candidate pool are
+# regenerable from `select_holdout.py` and are large; the MANIFEST is not ignored,
+# because bill ids, stages, package ids and artifact hashes are the provenance that
+# makes the run reconstructible without committing a single source document.
+holdout/cache/
+holdout/pool.json

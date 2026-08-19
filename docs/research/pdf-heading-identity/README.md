@@ -199,6 +199,15 @@ Anchor.kind            unchanged
   distribution today, so `pdf_text` must stop discarding it. That is the smallest production
   edit here and the one every number above depends on.
 
+## External validity
+
+The result below is IN-SAMPLE. It was tested out-of-sample against 21 unseen bills and
+the ruling was **B, MIXED**: the segmentation generalises (zero fabricated structure on
+17 scored bills, a strict error-subset of shipped behaviour), but cross-version
+segmentation stability -- this design's own nominated falsifier -- fired at 2 of 932
+headings. See [`EXTERNAL-VALIDITY.md`](EXTERNAL-VALIDITY.md). The recommendation below
+is superseded by that document's ruling and its remaining blockers.
+
 ## Recommendation
 
 **One change, not two, and it is a strict improvement — but land the gate first.**
