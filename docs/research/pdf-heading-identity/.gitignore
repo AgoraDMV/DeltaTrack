@@ -13,3 +13,6 @@ results/
 # makes the run reconstructible without committing a single source document.
 holdout/cache/
 holdout/pool.json
+
+# Regenerable by confounder/population.py; the population is stated in CONFOUNDER-ROUND.md.
+confounder/population.json
