@@ -48,12 +48,18 @@ track_ratio = tracking(upper) / median(tracking over that DOCUMENT's lines with 
     C3  slack is None (geometry absent)                         -> SPLIT   fail closed
     C4  slack >= 0                                              -> SPLIT
     C5  fill >= FILL_MIN and track_ratio <= TRACK_RATIO_MAX     -> SPLIT   fit manufactured
-    C5b tracking or the document median is unavailable          -> SPLIT   fail closed
+    C5b tracking absent, or the document median absent or <= 0  -> SPLIT   fail closed
     C6  otherwise                                               -> JOIN
 
 C2 is skipped when either caps_per_word is None. When tracking for the upper line or the
 document median is unavailable, C5 cannot be evaluated and C5b declines rather than
 guessing -- the near-full guard is exactly the evidence that is missing.
+
+C5b also rejects a NON-POSITIVE median, not merely an absent one. The track ratio is
+monotone in "how condensed" only for a positive median; with both terms negative the
+ordering reverses, so a more condensed line scores a larger ratio, clears TRACK_RATIO_MAX
+and joins. Every scored document has a strictly positive median (98 measured, minimum
+0.0295), so this closes a branch nothing reaches.
 
 Rationale for C5, stated once. GPO condenses a line to make text fit. A near-full line
 that was *also* condensed relative to its own document proves only that a fit was
@@ -167,7 +173,8 @@ def decide(texts, geoms, column_width, profiles, tracking_upper, track_median, i
     if sl >= 0.0:
         return SPLIT, "C4_fullness_split"
     gu = geoms[i]
-    if gu is None or not column_width or tracking_upper is None or not track_median:
+    if (gu is None or not column_width or tracking_upper is None
+            or track_median is None or track_median <= 0):
         return SPLIT, "C5b_no_tracking"
     fill = (gu["right"] - gu["left"]) / column_width
     if fill >= FILL_MIN and (tracking_upper / track_median) <= TRACK_RATIO_MAX:

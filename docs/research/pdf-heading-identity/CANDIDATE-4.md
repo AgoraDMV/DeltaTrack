@@ -227,6 +227,51 @@ joins, and a false join is what the invariant forbids. `TestFailClosedOnMissingE
 is the control, and it includes the case where the document median cannot be computed at
 all.
 
+### The median guard is a sign test, not a truthiness test
+
+Implementation review found a second fail-open shape in the same clause. `C5b` was written
+as `not track_median`, which catches `None` and `0.0` but passes a NEGATIVE median through
+to `C5`. The ratio `tracking_upper / track_median` is monotone in "how condensed" only for
+a positive median; with both terms negative the ordering reverses, so a *more* condensed
+line scores a *larger* ratio, clears `TRACK_RATIO_MAX`, and falls through to `C6 -> JOIN`.
+That is a false join on exactly the near-full condensed shape `C5` exists to decline.
+
+It is now `track_median is None or track_median <= 0 -> SPLIT`.
+
+**Measured before changing anything, because "no new holdout" depends on the branch being
+unexercised.** Every document median in every validation population is strictly positive:
+
+| population | documents with a median | minimum |
+|---|---|---|
+| development corpus (`tracking.jsonl`) | 63 | 0.02949 |
+| holdout 2 (`holdout2-tracking.jsonl`) | 35 | 0.03071 |
+| committed corpus, via the PRODUCTION function | 52 | 0.02924 |
+
+Holdout 1 stored no tracking at all, so its 31 documents took the `None` path already and
+the change cannot reach them. The production-side row is measured with
+`pdf_anchors._document_tracking_median` rather than the research probe's stored output, so
+the two are independent measurements of the same quantity; one committed document
+(`118-hr-9468/4_enrolled-bill`) yields `None` and fail-closes both before and after.
+
+The clause census settles it directly: over **2869 boundaries** in the development corpus
+and holdout 2, `C5b_no_tracking` fires **0 times** (`C2` 1591, `C6` 1222, `C4` 36, `C1` 11,
+`C5` 9). The branch is unreachable on all validated data, the change is monotonic toward
+the primary invariant, and no validated number moves.
+
+`test_a_negative_document_median_declines` is the negative control: a near-full even-small-caps
+boundary at upper tracking `-0.04` against a median of `-0.03`, which the previous form
+JOINs and the corrected form SPLITs. It was written first and confirmed red against the
+unfixed parser before the fix landed.
+
+**Production still reproduces the frozen rule.** Both the specification and the parser were
+corrected together and the digest re-frozen
+(`74813bc5f66e1787b4a3c0e5b1578f5f74dcefdf29264f52a2792904892083e1`). Driving
+`frozen_candidate4.decide()` and `pdf_anchors._account_boundary_splits()` from the same
+stored run/typography/tracking data gives **2869 boundaries, 0 disagreements**. That
+harness is itself controlled: flipping production's `C4` fullness comparison produces
+exactly 36 mismatches, matching `C4`'s census count, and restoring returns it to 0 — so a
+clean result is evidence rather than a harness that cannot fail.
+
 ### Production reproduces the frozen rule
 
 The check that matters, and the one an implementation can silently fail: for **89

@@ -188,6 +188,45 @@ class TestFailClosedOnMissingEvidence:
         lower = _line(2, "CONTINUATION", HEAD, width=100.0, first_word=70.0, histogram=[(11.2, 12)], tracking=0.001)
         assert _account_boundary_splits(upper, lower, COLUMN, track_median=None) is True
 
+    def test_a_negative_document_median_declines(self):
+        """A negative median reverses the ratio ordering, so it must never reach C5.
+
+        ``tracking / track_median`` is monotone in "how condensed" only while the median is
+        POSITIVE. With both terms negative the ordering flips: a MORE condensed upper line
+        yields a LARGER ratio. Upper ``-0.04`` against a median of ``-0.03`` gives 1.33,
+        which clears ``TRACK_RATIO_MAX`` and falls through to JOIN — a false join on exactly
+        the near-full condensed shape C5 exists to decline.
+
+        The branch is unexercised in every validation population: 98 documents (63 in the
+        development corpus, 35 in holdout 2) all have strictly positive medians, minimum
+        0.0295, and the production function reports the same over the committed corpus
+        (52 medians, minimum 0.0292). Holdout 1 stored no tracking at all, so its documents
+        took the ``None`` path. This is therefore a fail-closed guard on an unreachable
+        branch, not a change to any validated result.
+
+        Reddens if the guard is written as a truthiness test (``not track_median``), which
+        catches ``None`` and ``0.0`` but passes a negative median straight through.
+        """
+        upper = _line(
+            4,
+            "SOME NEAR FULL EVEN SMALL CAPS HEADING LINE",
+            HEAD,
+            width=326.0,
+            first_word=70.0,
+            histogram=[(11.2, 39)],
+            tracking=-0.04,
+        )
+        lower = _line(
+            5,
+            "CONTINUATION",
+            HEAD,
+            width=234.2,
+            first_word=70.0,
+            histogram=[(11.2, 31)],
+            tracking=-0.03,
+        )
+        assert _account_boundary_splits(upper, lower, COLUMN, track_median=-0.03) is True
+
     def test_no_typography_anywhere_yields_no_median(self):
         page = Page(1, (Line(1, "A LINE", HEAD), Line(2, "ANOTHER", HEAD)))
         assert _document_tracking_median([page]) is None

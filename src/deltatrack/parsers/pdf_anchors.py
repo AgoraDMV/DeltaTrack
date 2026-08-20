@@ -508,7 +508,7 @@ def _account_boundary_splits(prev, cur, column_width: float | None, track_median
         geometry absent                         -> split   (fail closed)
         the next word would have fitted         -> split   (the break was deliberate)
         near-full AND condensed for this print  -> split   (the fit was manufactured)
-        tracking absent                         -> split   (fail closed)
+        tracking or a positive median absent    -> split   (fail closed)
         otherwise                               -> continue
 
     **Deliberately not `_is_line_fullness_break`.** That function is the major band's rule
@@ -534,7 +534,13 @@ def _account_boundary_splits(prev, cur, column_width: float | None, track_median
     if column_width - (upper_width + _MAJOR_SPLIT_SPACE + first_word) >= 0.0:
         return True
     typography = getattr(prev, "typography", None)
-    if typography is None or typography.tracking is None or not track_median:
+    # A NON-POSITIVE median is rejected, not merely a falsy one. The ratio below is monotone
+    # in "how condensed" only while the median is positive; with both terms negative the
+    # ordering reverses and a more condensed line scores a LARGER ratio, clearing the
+    # threshold and joining. No document in any validation population has one (98 measured,
+    # minimum 0.0295), so this declines on a branch nothing reaches rather than changing a
+    # validated result.
+    if typography is None or typography.tracking is None or track_median is None or track_median <= 0:
         return True
     if (
         upper_width / column_width >= _ACCOUNT_FILL_MIN
