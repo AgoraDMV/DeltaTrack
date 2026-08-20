@@ -115,7 +115,22 @@ src = ["src", ".", "tools"]
 # whitespace change there reads as tampering. Scoped to markdown deliberately: the probes
 # are excluded wholesale, but `validation/*.py` and any future maintained research module
 # stay linted.
-extend-exclude = ["docs/research/**/probes", "docs/research/**/*.md"]
+# A study's scripts do not all live in `probes/`: `pdf-heading-identity` grew a directory
+# per investigation round (`confounder/`, `nearfull/`, `holdout/`, `holdout2/`, `frozen/`),
+# and those are reproducibility artifacts by the same rule as `probes/`. `frozen/` is the
+# sharpest case: `frozen_candidate4.py` is hashed into `frozen/FROZEN4.sha256`, so
+# reformatting it breaks the freeze check that proves what shipped is what was validated.
+# Listed explicitly rather than as `docs/research/**/*.py`, which would also swallow
+# `validation/` and any future maintained research module the comment above keeps linted.
+extend-exclude = [
+    "docs/research/**/probes",
+    "docs/research/**/*.md",
+    "docs/research/pdf-heading-identity/confounder",
+    "docs/research/pdf-heading-identity/frozen",
+    "docs/research/pdf-heading-identity/holdout",
+    "docs/research/pdf-heading-identity/holdout2",
+    "docs/research/pdf-heading-identity/nearfull",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
