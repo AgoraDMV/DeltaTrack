@@ -209,6 +209,32 @@ def _catchline_shaped(line: str) -> bool:
 _MAJOR_SPLIT_SPACE = 6.0  # pt — one inter-word space at body size
 _MAJOR_SPLIT_SLACK = 4.0  # pt — guard band for per-line edge wobble
 
+# Account-heading segmentation (DeltaTrack#524). A GPO account heading wraps across as many
+# printed lines as it needs, so the run above a leaf is not always an agency: it can be the
+# rest of the account's own name. These four constants are the operating point validated in
+# `docs/research/pdf-heading-identity/` against an XML-derived oracle, on the committed
+# corpus and then on two independent bill-level holdouts. They are not tuning knobs; moving
+# one invalidates that validation.
+#
+# _ACCOUNT_CAPS_PER_WORD: GPO sets a CONTAINER heading caps-and-small-caps, which puts a
+#   large capital on every word; an account set in even small caps carries at most a
+#   sentence-initial one. The discriminator is large capitals PER WORD, not their presence —
+#   `SELF-HELP AND ASSISTED HOMEOWNERSHIP` has one large glyph and is a wrapped account,
+#   while `DEFENSE NUCLEAR FACILITIES SAFETY BOARD` has five and is a container.
+# _ACCOUNT_FILL_MIN / _ACCOUNT_TRACK_RATIO_MAX: a line that nearly fills the measure AND was
+#   set condensed relative to its own document was squeezed to manufacture a fit, so its
+#   lack of trailing room proves nothing about where the heading ended. Decline to join.
+#   This is the #501 near-full container arriving at the account band.
+# _TRACK_MIN_GAPS: lines too short to estimate tracking are excluded from the document
+#   median rather than allowed to drag it.
+_ACCOUNT_CAPS_PER_WORD = 0.5
+_ACCOUNT_FILL_MIN = 0.97
+_ACCOUNT_TRACK_RATIO_MAX = 0.31
+_TRACK_MIN_GAPS = 8
+# Word tokenizer for the caps-per-word measure. Source-neutral by construction: any maximal
+# alphanumeric run is a word, so it carries no appropriations vocabulary (ADR 0018).
+_WORD = re.compile(r"[^A-Za-z0-9]+")
+
 # Division banner (DeltaTrack#107): the all-caps "DIVISION A—<NAME>" heading that opens
 # each act in an omnibus/minibus. Case-SENSITIVE and em-dash-required so running prose
 # ("division C of this Act", "Division Engineers") is never mistaken for a banner — the
@@ -434,6 +460,104 @@ def _flatten(pages: list[Page]) -> list[tuple[int, "Line"]]:  # noqa: F821 - Lin
     return [(page.page_number, ln) for page in pages for ln in page.lines]
 
 
+def _caps_per_word(line) -> float | None:
+    """Large capitals divided by words, or None when the line carries no typography.
+
+    A "large capital" is a glyph at the LARGEST size present on that same printed line —
+    relative and per-line, never an absolute point size, because the band differs by
+    document and print class. A line with one distinct size returns 0.0: even small caps
+    carry no large capital at all, which is a measured value rather than a missing one.
+    """
+    typography = getattr(line, "typography", None)
+    if typography is None or not typography.size_histogram:
+        return None
+    if len(typography.size_histogram) < 2:
+        return 0.0
+    words = [w for w in _WORD.split(line.text) if w]
+    if not words:
+        return None
+    return typography.size_histogram[0][1] / len(words)
+
+
+def _document_tracking_median(pages: list[Page]) -> float | None:
+    """Median tracking over the document's lines long enough to estimate it, or None.
+
+    Tracking varies by print class, so a bare threshold would compare across incompatible
+    documents; the ratio against this median is what makes "condensed" mean condensed
+    *for this print*.
+    """
+    values = [
+        ln.typography.tracking
+        for page in pages
+        for ln in page.lines
+        if getattr(ln, "typography", None) is not None
+        and ln.typography.tracking is not None
+        and ln.typography.gap_count >= _TRACK_MIN_GAPS
+    ]
+    return statistics.median(values) if values else None
+
+
+def _account_boundary_splits(prev, cur, column_width: float | None, track_median: float | None) -> bool:
+    """True when `cur` starts a new heading rather than continuing `prev` (DeltaTrack#524).
+
+    The ordering is load-bearing and is the frozen specification in
+    `docs/research/pdf-heading-identity/frozen/frozen_candidate4.py`:
+
+        line broken mid-word by a hyphen        -> continue (a wrap by construction)
+        caps-and-small-caps over even-caps      -> split   (container above an account)
+        geometry absent                         -> split   (fail closed)
+        the next word would have fitted         -> split   (the break was deliberate)
+        near-full AND condensed for this print  -> split   (the fit was manufactured)
+        tracking absent                         -> split   (fail closed)
+        otherwise                               -> continue
+
+    **Deliberately not `_is_line_fullness_break`.** That function is the major band's rule
+    and carries a 4 pt slack guard plus a keep-joined default on missing geometry. Both are
+    wrong here: this band declines rather than joins when evidence is absent, and the
+    validated operating point is a bare `slack >= 0`. Sharing the helper would silently
+    change one band's behaviour whenever the other's was tuned.
+    """
+    if prev.text.rstrip().endswith(_WRAP_HYPHENS):
+        return False
+    upper_caps, lower_caps = _caps_per_word(prev), _caps_per_word(cur)
+    if (
+        upper_caps is not None
+        and lower_caps is not None
+        and upper_caps >= _ACCOUNT_CAPS_PER_WORD
+        and lower_caps < _ACCOUNT_CAPS_PER_WORD
+    ):
+        return True
+    if prev.geom is None or cur.geom is None or not column_width:
+        return True
+    upper_width = prev.geom.content_right - prev.geom.content_left
+    first_word = cur.geom.first_word_right - cur.geom.content_left
+    if column_width - (upper_width + _MAJOR_SPLIT_SPACE + first_word) >= 0.0:
+        return True
+    typography = getattr(prev, "typography", None)
+    if typography is None or typography.tracking is None or not track_median:
+        return True
+    if (
+        upper_width / column_width >= _ACCOUNT_FILL_MIN
+        and typography.tracking / track_median <= _ACCOUNT_TRACK_RATIO_MAX
+    ):
+        return True
+    return False
+
+
+def _account_segment_start(sequence, column_width: float | None, track_median: float | None) -> int:
+    """Index in `sequence` at which the leaf ACCOUNT's own name begins.
+
+    `sequence` is the contiguous heading run ending at the leaf. Everything before the
+    returned index is container text; everything from it onward is one account heading,
+    however many printed lines that took.
+    """
+    start = 0
+    for i in range(len(sequence) - 1):
+        if _account_boundary_splits(sequence[i][1], sequence[i + 1][1], column_width, track_median):
+            start = i + 1
+    return start
+
+
 def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor]:
     """Size-based account / grouping-header detection over the flattened line stream.
 
@@ -457,11 +581,13 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
     parenthetical qualifiers are never accounts. The account/grouping anchor keeps
     the heading's own page/line; the agency anchor takes the run's FIRST line.
 
-    The agency signal is bounded: a *leaf account* name that itself wraps across
-    heading lines is indistinguishable from an agency by size/position, so the join
-    can absorb a wrapped account fragment. The dangle guard (`_dangles`) rejects the
-    worst of these; the rest is the leveled-tree problem (#54/#108). Exact on the
-    clean bill (118-hr-8752), a tolerant floor on the hard one (118-s-4795).
+    Since #524 the leaf is the last SEGMENT of that run under `_account_segment_start`,
+    not its last printed LINE, so an account whose name wrapped is recovered whole
+    instead of being read as an agency plus a fragment. Size and position alone cannot
+    tell the two apart; the segmentation adds within-line typography and a
+    manufactured-fit test, both source-neutral (ADR 0018) and both validated against an
+    XML-derived oracle on two independent bill-level holdouts. The dangle guard still
+    drops a container that joins into a wrapped-name fragment.
 
     Body must be confirmed positively (at body size) rather than "anything that
     isn't a heading": a wrapped run-in header continuation can sit in the heading
@@ -527,19 +653,18 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
             return True
         return abs(line.glyph_size - bands.body) <= _SIZE_EPS
 
-    def agency_before_leaf(leaf_idx: int) -> Anchor | None:
-        """Join the contiguous heading-band run immediately preceding a leaf account
-        into one carry-over agency anchor, or None when there is no such run.
+    def run_before_leaf(leaf_idx: int) -> list[tuple[int, "Line"]]:  # noqa: F821 - Line via pdf_text
+        """The contiguous heading-band run immediately preceding a leaf, document order.
 
-        The run is the candidate lines directly above the leaf (blanks and
-        parentheticals skipped), stopping at the first body line, recognized
-        heading, or document edge. Catchline continuations are excluded so a wrapped
-        SEC. catchline never leaks into an agency name. Lines are joined in document
-        order; the anchor takes the run's first (topmost) line. The dangle guard
-        drops a run that joins into a wrapped-account fragment (ends on a
-        conjunction/preposition), which is not an agency.
+        The candidate lines directly above the leaf (blanks and parentheticals skipped),
+        stopping at the first body line, recognized heading, or document edge. Catchline
+        continuations are excluded so a wrapped SEC. catchline never leaks into a heading.
+
+        Returns the lines rather than an anchor: since #524 the run is not necessarily an
+        agency — its tail can be the rest of the leaf account's own wrapped name, and
+        deciding where that name starts needs the lines themselves.
         """
-        run: list[tuple[int, int, str]] = []  # (page, line_number, text), nearest first
+        run: list[tuple[int, "Line"]] = []  # noqa: F821 - nearest first
         j = leaf_idx - 1
         while j >= 0:
             page_no, prev = flat[j]
@@ -547,19 +672,15 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
                 j -= 1
                 continue
             if is_account_candidate(prev) and not continues_section_catchline(j):
-                run.append((page_no, prev.line_number, prev.text.strip()))
+                run.append((page_no, prev))
                 j -= 1
                 continue
             break
-        if not run:
-            return None
         run.reverse()  # document order
-        text = " ".join(t for _, _, t in run)
-        if _dangles(text):
-            return None
-        first_page, first_line, _ = run[0]
-        return Anchor(first_page, first_line, "agency", text)
+        return run
 
+    column_width = _body_column_width(pages)
+    track_median = _document_tracking_median(pages)
     anchors: list[Anchor] = []
     for idx in range(n):
         page_number, line = flat[idx]
@@ -578,10 +699,26 @@ def _account_anchors_by_size(pages: list[Page], bands: SizeBands) -> list[Anchor
         if nxt is not None and _SECTION_PATTERN.match(nxt.text.strip()):
             anchors.append(Anchor(page_number, line.line_number, "grouping", line.text.strip()))
         elif nxt is None or is_body(nxt):
-            anchors.append(Anchor(page_number, line.line_number, "account", line.text.strip()))
-            agency = agency_before_leaf(idx)
-            if agency is not None:
-                anchors.append(agency)
+            # The leaf's own heading may span several printed lines of the run above it
+            # (#524). Segment the run; the last segment is the account, anything before it
+            # is the carry-over agency. Before #524 the account was always the run's last
+            # LINE, which read a wrapped name as an agency plus a fragment.
+            sequence = [*run_before_leaf(idx), (page_number, line)]
+            start = _account_segment_start(sequence, column_width, track_median)
+            anchors.append(
+                Anchor(
+                    sequence[start][0],
+                    sequence[start][1].line_number,
+                    "account",
+                    _join_major_run(sequence[start:]),
+                )
+            )
+            if start > 0:
+                agency_text = _join_major_run(sequence[:start])
+                # The dangle guard still drops a run that joins into a phrase ending on a
+                # conjunction or preposition: that is a wrapped-name fragment, not an agency.
+                if not _dangles(agency_text):
+                    anchors.append(Anchor(sequence[0][0], sequence[0][1].line_number, "agency", agency_text))
         # else: candidate followed by another heading ⇒ part of a carry-over agency
         # run, emitted as one joined `agency` anchor at the leaf account above.
     return anchors

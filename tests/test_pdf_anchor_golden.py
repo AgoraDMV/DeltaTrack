@@ -52,12 +52,22 @@ def test_anchors_match_golden(name: str):
     assert _current_anchors(pdf_path) == golden
 
 
-# Kinds that existed before #104 added `agency`. The frozen `.pre-agency-anchors`
-# baseline (never regenerated) pins these so a FUTURE slice's golden regeneration
-# can't silently launder a change to an originally-detected anchor: the full
-# golden is self-referential after regeneration, and the agency floors filter to
-# kind=="agency", so without this guard a corrupted section/title/account on s-4795
-# would be invisible. Generalizes the `legacy-accounts.json` set-delta pattern.
+# Kinds that existed before #104 added `agency`. The `.pre-agency-anchors` baseline pins
+# these so a golden regeneration can't silently launder a change to an originally-detected
+# anchor: the full golden is self-referential after regeneration, and the agency floors
+# filter to kind=="agency", so without this guard a corrupted section/title/account on
+# s-4795 would be invisible. Generalizes the `legacy-accounts.json` set-delta pattern.
+#
+# RE-ANCHORED ONCE, at #524, for `118-s-4795` only. It did its job: the account-heading
+# segmentation changes account anchors, and this guard is what forced that delta to be
+# reviewed rather than absorbed by regenerating the full golden. The delta was 170 -> 170
+# anchors with ZERO title/section/grouping/preamble changes and seven accounts replaced
+# one for one — each a wrap fragment giving way to the complete heading the XML twin
+# carries (`SETTLEMENT COMMISSION` -> `SALARIES AND EXPENSES, FOREIGN CLAIMS SETTLEMENT
+# COMMISSION`, and six more; see docs/research/pdf-heading-identity/CANDIDATE-4.md §6).
+# The independence property is preserved going forward: it is frozen against every FUTURE
+# regeneration, which is what it is for. `118-hr-8752` and `118-hr-8282` were untouched by
+# #524 and their baselines are the originals.
 _PRE_AGENCY_KINDS = frozenset({"title", "section", "account", "grouping", "preamble"})
 
 

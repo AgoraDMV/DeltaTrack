@@ -256,9 +256,9 @@ class TestPageGlyphSizes:
         try:
             tp = pdf[2].get_textpage()  # page 3 (0-based): MANAGEMENT DIRECTORATE ... FPS
             try:
-                # _page_glyph_sizes now returns {line: (size, LineGeom)}; this class
-                # asserts on size only, so unwrap to {line: size}.
-                return {ln: size for ln, (size, _geom) in _page_glyph_sizes(tp, tp.get_text_range()).items()}
+                # _page_glyph_sizes returns {line: (size, LineGeom, LineTypography)};
+                # this class asserts on size only, so unwrap to {line: size}.
+                return {ln: entry[0] for ln, entry in _page_glyph_sizes(tp, tp.get_text_range()).items()}
             finally:
                 tp.close()
         finally:

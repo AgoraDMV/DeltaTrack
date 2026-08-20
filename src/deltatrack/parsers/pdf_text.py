@@ -22,6 +22,7 @@ import ctypes
 import math
 import re
 import statistics
+from collections import Counter
 from dataclasses import dataclass, replace
 from pathlib import Path
 
@@ -92,6 +93,34 @@ class LineGeom:
 
 
 @dataclass(frozen=True)
+class LineTypography:
+    """Within-line print evidence that the per-line median and the horizontal extent
+    both discard (DeltaTrack#524).
+
+    Recovered in the same char walk as `glyph_size` and `LineGeom`, so it costs no extra
+    PDFium calls. Two facts, both raw:
+
+    `size_histogram` is `(rounded size, count)` over the line's printed content glyphs,
+    largest size first. `glyph_size` collapses this to a median, which makes a
+    caps-and-small-caps line (a large capital per word) indistinguishable from an even
+    small-caps line downstream.
+
+    `tracking` is the mean intra-word inter-glyph gap divided by the glyph size, so it is
+    dimensionless and comparable across sizes. Negative means the line was set
+    CONDENSED — GPO squeezes a line to manufacture a fit, and `LineGeom`'s three
+    x-coordinates cannot show that it did. `gap_count` is how many gaps the mean is over,
+    so a consumer can ignore lines too short to estimate.
+
+    Print evidence only. No structural interpretation lives here; `pdf_anchors` decides
+    what it means.
+    """
+
+    size_histogram: tuple[tuple[float, int], ...]
+    tracking: float | None
+    gap_count: int
+
+
+@dataclass(frozen=True)
 class Line:
     line_number: int | None  # 1-based source PDF line number; None if unnumbered
     text: str  # cleaned line content (line-number prefix stripped)
@@ -104,6 +133,9 @@ class Line:
     # attached (same cases as glyph_size). Filled post-merge from the same sidecar;
     # used by the major detector's stacked-vs-wrapped line-fullness split.
     geom: "LineGeom | None" = None
+    # Within-line typography (#524), or None in the same cases as `geom`. Filled from the
+    # same sidecar; used by the account detector's wrapped-vs-stacked segmentation.
+    typography: "LineTypography | None" = None
 
 
 @dataclass(frozen=True)
@@ -387,8 +419,33 @@ def _first_word_right(content_glyphs: list[tuple[float, float, float, int, float
     return first_word_right
 
 
-def _page_glyph_sizes(textpage, page_text: str) -> dict[int, tuple[float, LineGeom]]:
-    """Map GPO margin line number → `(glyph size, horizontal extent)` for one page.
+def _line_typography(content_glyphs, printed) -> LineTypography:
+    """Size histogram and tracking for one line, from glyphs the caller already walked.
+
+    `printed` is the line's non-space content glyphs; `content_glyphs` includes the space
+    glyphs, which is what makes an INTRA-word gap distinguishable from a word space: the
+    mean is taken only over pairs with no space glyph between them, so it measures how
+    tightly the letters of a word are set rather than how wide the word gaps are.
+    """
+    histogram = Counter(round(c[4], 1) for c in printed)
+    gaps: list[float] = []
+    previous = None
+    for glyph in content_glyphs:
+        if glyph[3] == 32:  # a real space glyph ends the word
+            previous = None
+            continue
+        if previous is not None:
+            gaps.append((glyph[1] - previous[2]) / glyph[4])
+        previous = glyph
+    return LineTypography(
+        size_histogram=tuple(sorted(histogram.items(), reverse=True)),
+        tracking=round(statistics.mean(gaps), 5) if gaps else None,
+        gap_count=len(gaps),
+    )
+
+
+def _page_glyph_sizes(textpage, page_text: str) -> dict[int, tuple[float, LineGeom, LineTypography]]:
+    """Map GPO margin line number → `(glyph size, horizontal extent, typography)` for one page.
 
     Walks raw chars, clusters into visual lines by baseline, reconstructs each
     line's text, reads its margin number via `_NUMBERED_LINE`, and takes the median
@@ -396,6 +453,10 @@ def _page_glyph_sizes(textpage, page_text: str) -> dict[int, tuple[float, LineGe
     glyphs yield the `LineGeom` extent (left/right edge + first-word right edge, #130)
     at no extra PDFium cost. Returns {} for an empty/failed page. On an intra-page
     duplicate line number the entry is dropped (ambiguous), never overwritten.
+
+    The third element is the within-line typography (#524): the size histogram the
+    median collapses, and the tracking `LineGeom` cannot express. Both come from the same
+    glyphs already gathered here, so neither costs an extra PDFium call.
 
     `page_text` is the caller's `textpage.get_text_range()` result, passed in so the
     page text is extracted once and shared with the string pipeline rather than
@@ -450,7 +511,7 @@ def _page_glyph_sizes(textpage, page_text: str) -> dict[int, tuple[float, LineGe
         chars.append((bottom, left, right, cp, size))
     if not chars:
         return {}
-    sizes: dict[int, tuple[float, LineGeom]] = {}
+    sizes: dict[int, tuple[float, LineGeom, LineTypography]] = {}
     ambiguous: set[int] = set()
     for cluster in _cluster_baselines(chars):
         # Drop far-smaller outlier glyphs: a printed line is one uniform size, so a
@@ -491,20 +552,25 @@ def _page_glyph_sizes(textpage, page_text: str) -> dict[int, tuple[float, LineGe
             ambiguous.add(line_number)
             sizes.pop(line_number, None)
             continue
-        sizes[line_number] = (round(statistics.median(content_sizes), 1), geom)
+        sizes[line_number] = (
+            round(statistics.median(content_sizes), 1),
+            geom,
+            _line_typography(content_glyphs, printed),
+        )
     return sizes
 
 
-def _attach_geometry(ln: Line, line_sizes: dict[int, tuple[float, LineGeom]]) -> Line:
-    """Attach a merged line's `(glyph_size, geom)` sidecar entry, keyed by line number.
-    Unnumbered lines and numbers absent from the sidecar (ambiguous/failed) get None."""
+def _attach_geometry(ln: Line, line_sizes: dict[int, tuple[float, LineGeom, LineTypography]]) -> Line:
+    """Attach a merged line's `(glyph_size, geom, typography)` sidecar entry, keyed by
+    line number. Unnumbered lines and numbers absent from the sidecar (ambiguous/failed)
+    get None for all three, so a consumer cannot read one as present while another is not."""
     if ln.line_number is None:
         return ln
     hit = line_sizes.get(ln.line_number)
     if hit is None:
-        return replace(ln, glyph_size=None, geom=None)
-    size, geom = hit
-    return replace(ln, glyph_size=size, geom=geom)
+        return replace(ln, glyph_size=None, geom=None, typography=None)
+    size, geom, typography = hit
+    return replace(ln, glyph_size=size, geom=geom, typography=typography)
 
 
 def extract_clean_pages(pdf_path: Path) -> list[Page]:

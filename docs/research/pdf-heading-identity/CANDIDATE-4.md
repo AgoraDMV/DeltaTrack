@@ -4,7 +4,12 @@ The conservative option candidate 3's own measurements produced, and which the p
 round wrongly left out of the decision set: where the printed page cannot tell a genuine
 near-full container from a deliberately condensed wrapped account, **decline to join**.
 
-Frozen digest `c604261062ae7fc9db367e52024c45450b2200d7eede4f597b526ccf08a090b5`.
+Frozen digest `4e3bd13caf948da0682381f174b7def407b33944cc433555942fe68abc74da15`
+(the earlier `c604261…` digest is the same rule with one fail-open branch, closed at
+implementation — see the closure correction below).
+
+**Status: IMPLEMENTED.** `src/deltatrack/parsers/pdf_text.py` retains the evidence and
+`src/deltatrack/parsers/pdf_anchors.py` interprets it. Research is closed.
 
 ## 1. The six declined wraps are bounded fail-closed under-joins
 
@@ -204,3 +209,77 @@ uv run python docs/research/pdf-heading-identity/holdout2/build2.py
 uv run python docs/research/pdf-heading-identity/holdout2/score2.py
 uv run python docs/research/pdf-heading-identity/holdout2/pipeline_ab.py
 ```
+
+
+## 6. Closure correction and implementation
+
+### The fail-open branch is closed
+
+The frozen specification had one branch that was not conservative: when tracking was
+unavailable, `C5` could not be evaluated and the boundary fell through to `C6` (JOIN).
+It is now `C5b -> SPLIT`.
+
+This changes no validated result. The branch fired **zero** times on the development
+corpus and **zero** times on either holdout, and re-scoring holdout 2 under the corrected
+specification reproduces its numbers exactly (0 false joins, 21 missed joins, `C5b` never
+taken). The change is monotonic toward the primary invariant: declining can only remove
+joins, and a false join is what the invariant forbids. `TestFailClosedOnMissingEvidence`
+is the control, and it includes the case where the document median cannot be computed at
+all.
+
+### Production reproduces the frozen rule
+
+The check that matters, and the one an implementation can silently fail: for **89
+documents** across the corpus and both holdouts, every account name the frozen
+specification predicts from the stored run/typography/tracking data is emitted by the
+production parser. **8814 predicted names, 0 divergences.** What ships is what was
+validated.
+
+### One property that preserved the existing suites
+
+On geometry-less input every boundary takes the fail-closed branch, so the rule degenerates
+exactly to the pre-#524 behaviour: account = the run's last line, container = the rest.
+That is why the synthetic size-detection suites needed no rewriting, and
+`test_geometryless_input_reproduces_the_pre_524_behaviour` pins it rather than leaving it
+as a happy accident.
+
+### Baselines re-derived, each delta explained
+
+**Anchor goldens.** `118-hr-8282` and `118-hr-8752` are **unchanged** — the controls.
+`118-s-4795` moves 212 → 208. Twelve anchors removed, eight added; eleven of the twelve
+removed are fragments absent from the XML (`SETTLEMENT COMMISSION`, `RESTORATION`,
+`CORPORATION`, …) and seven of the eight added are confirmed XML headings
+(`SALARIES AND EXPENSES, FOREIGN CLAIMS SETTLEMENT COMMISSION`, …).
+
+Two deltas needed individual explanation rather than a set-level pass:
+
+- The removed `account CONSTRUCTION` looked like a real heading disappearing. It is a
+  name-recurrence artifact: three anchors carried that name, two are genuine standalone
+  accounts and survive; the removed one was the fragment of
+  `MAJOR RESEARCH EQUIPMENT AND FACILITIES CONSTRUCTION`, now emitted whole.
+- The added `agency STATE AND LOCAL LAW ENFORCEMENT ACTIVITIES OFFICE ON VIOLENCE AGAINST
+  WOMEN` is a container anchor where shipped emitted none, because shipped's join ended on
+  "AND" and the dangle guard suppressed it. Only the second half is an oracle-established
+  container, so the merge is not adjudicable as a fabrication. Measured corpus-wide over
+  all 89 documents, agency anchors merging two *oracle-established* containers are
+  **1 under shipped and 1 under candidate 4** — the same instance. The change does not
+  make the one-agency-per-leaf shape reachable more often.
+
+**Canonical baseline.** Twelve of twenty-seven cases move; fifteen are unchanged. The
+aggregate justification is §4's 10B/10C: every hunk delta is fragment → complete heading,
+and across the seventeen accepted pairs canonical moves go 165 → 157 with false-fragment
+`Renumbered` cards 21 → 8, with no change to `_pdf_move`.
+
+### Scope actually touched
+
+`pdf_text.py` gains a `LineTypography` record (size histogram, tracking, gap count) filled
+from the existing char walk, and a `typography` field on `Line`. No structural semantics.
+`pdf_anchors.py` gains `_caps_per_word`, `_document_tracking_median`,
+`_account_boundary_splits`, `_account_segment_start`, and the account leaf now emits the
+run's last **segment**. `_is_line_fullness_break` is deliberately **not** reused: it
+carries the major band's 4 pt slack guard and a keep-joined default on missing geometry,
+both wrong here, and sharing it would couple two bands' tuning.
+
+Untouched: `_block_key`, `CandidateSet`, correspondence evidence, assignment, move
+thresholds, `_pdf_move`, grouping-header detection, `_major_anchors_by_size`, `#170`.
+`pdf_parser_revision()` moves, which is correct — what an observation *is* changed.

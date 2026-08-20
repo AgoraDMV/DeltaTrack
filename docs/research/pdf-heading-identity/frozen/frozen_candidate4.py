@@ -48,10 +48,12 @@ track_ratio = tracking(upper) / median(tracking over that DOCUMENT's lines with 
     C3  slack is None (geometry absent)                         -> SPLIT   fail closed
     C4  slack >= 0                                              -> SPLIT
     C5  fill >= FILL_MIN and track_ratio <= TRACK_RATIO_MAX     -> SPLIT   fit manufactured
+    C5b tracking or the document median is unavailable          -> SPLIT   fail closed
     C6  otherwise                                               -> JOIN
 
-C2 is skipped when either caps_per_word is None. C5 is skipped when tracking for the
-upper line is unavailable or the document median cannot be computed.
+C2 is skipped when either caps_per_word is None. When tracking for the upper line or the
+document median is unavailable, C5 cannot be evaluated and C5b declines rather than
+guessing -- the near-full guard is exactly the evidence that is missing.
 
 Rationale for C5, stated once. GPO condenses a line to make text fit. A near-full line
 that was *also* condensed relative to its own document proves only that a fit was
@@ -76,14 +78,15 @@ here and must not be re-tuned against a holdout.
 ================================================================================
     missing caps        C2 skipped; decision falls through. Conservative.
     missing geometry    C3 -> SPLIT. Conservative: declines to join on absent evidence.
-    missing tracking    C5 cannot fire; the boundary falls to C6 -> JOIN.
-                        *** This is the one residual FAIL-OPEN. *** A document whose
-                        tracking cannot be recovered loses the near-full guard and
-                        behaves as candidate 3 did. It is frozen in this direction
-                        because the alternative -- splitting every no-margin boundary in
-                        such a document -- would undo the whole of #524 there. It does
-                        not occur on any development evidence measured, and any holdout
-                        run must report its frequency rather than assume it stays zero.
+    missing tracking    C5b -> SPLIT. Conservative, and CORRECTED at closure.
+
+                        An earlier revision let this fall through to C6 (JOIN), which was
+                        the specification's one fail-open branch. It fired zero times in
+                        development and zero times in either holdout, so closing it
+                        changes no validated result; it is monotonic toward the primary
+                        invariant, because declining can only remove joins and a false
+                        join is the thing the invariant forbids. `test_missing_tracking_
+                        cannot_recreate_a_false_join` is the control that pins it.
 
 ================================================================================
 6. SCORING DEFINITIONS
@@ -164,10 +167,11 @@ def decide(texts, geoms, column_width, profiles, tracking_upper, track_median, i
     if sl >= 0.0:
         return SPLIT, "C4_fullness_split"
     gu = geoms[i]
-    if gu is not None and column_width and tracking_upper is not None and track_median:
-        fill = (gu["right"] - gu["left"]) / column_width
-        if fill >= FILL_MIN and (tracking_upper / track_median) <= TRACK_RATIO_MAX:
-            return SPLIT, "C5_condensed_nearfull"
+    if gu is None or not column_width or tracking_upper is None or not track_median:
+        return SPLIT, "C5b_no_tracking"
+    fill = (gu["right"] - gu["left"]) / column_width
+    if fill >= FILL_MIN and (tracking_upper / track_median) <= TRACK_RATIO_MAX:
+        return SPLIT, "C5_condensed_nearfull"
     return JOIN, "C6_fullness_join"
 
 

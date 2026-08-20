@@ -244,6 +244,7 @@ jobs:
         run: >
           uv run pytest -v -m slow
           tests/test_pdf_corpus_smoke.py
+          tests/test_pdf_account_segmentation.py
           tests/test_bill_tree.py
           tests/test_structure_tree.py
           tests/test_diff_bill.py

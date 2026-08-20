@@ -189,17 +189,30 @@ def test_evidence_reports_the_true_overlap_for_every_aligned_pair() -> None:
 
 
 @pytest.mark.slow
-def test_the_revocation_population_splits_as_224_accepted_plus_6_declined() -> None:
-    """Reconciles this module's 230 with the research record's §3.2 figure of 224.
+def test_the_revocation_population_splits_as_227_accepted_plus_6_declined() -> None:
+    """Partitions the split population by whether ``compare.pdf`` will diff the pair.
 
-    §3.2 counted the split population over the pairs a user can actually reach; this module
-    sweeps every adjacent committed pair, including the six ``compare.pdf`` declines. The
-    partition is taken from the committed canonical baseline, which records ``declined`` per
-    pair, rather than from ``compare.pdf._is_unnumbered_layout`` — the same choice
-    ``test_pdf_canonical_baseline`` makes, and it keeps this off a private cross-module import.
+    This module sweeps every adjacent committed pair, including the six ``compare.pdf``
+    declines. The partition is taken from the committed canonical baseline, which records
+    ``declined`` per pair, rather than from ``compare.pdf._is_unnumbered_layout`` — the same
+    choice ``test_pdf_canonical_baseline`` makes, and it keeps this off a private
+    cross-module import.
 
-    Measured and pinned rather than left as a plausible explanation: 224 + 6 = 230, with the
-    224 landing exactly on §3.2's number.
+    **Was 224 + 6 before #524**, matching the pdf-matching-convergence record's §3.2 figure,
+    which counted the pre-#524 parse. Account-heading segmentation moved the accepted side to
+    227, and the delta is traced rather than assumed: exactly three pairs gained exactly one
+    revocation each —
+
+        115-hr-5895 3_placed-on-calendar-senate -> 4_engrossed-amendment-senate   72 -> 73
+        118-hr-4366 3_placed-on-calendar-senate -> 4_engrossed-amendment-senate   59 -> 60
+        118-hr-4366 4_engrossed-amendment-senate -> 5_engrossed-amendment-house   79 -> 80
+
+    — and the other twenty pairs are unchanged. Those three are the re-typeset amendment
+    pairs that carry the heading corrections, so a block whose boundary moved to the start of
+    a wrapped account name now carries different body text and aligns differently. The
+    declined side is untouched at 6, which is the property this test exists to pin: the
+    admissibility split is not what moved. §3.2's number describes the parse it was measured
+    under and is not restated here.
     """
     baseline = json.loads((DATA_DIR / "pdf_canonical_baseline.json").read_text())
     accepted = declined = 0
@@ -211,10 +224,11 @@ def test_the_revocation_population_splits_as_224_accepted_plus_6_declined() -> N
         else:
             accepted += revoked
 
-    assert (accepted, declined) == (224, 6), (
+    assert (accepted, declined) == (227, 6), (
         f"the split population partitions as {accepted} accepted + {declined} declined, not "
-        "224 + 6. §3.2's figure and this module's now describe different populations for a "
-        "reason that is no longer the admissibility split."
+        "227 + 6. If the declined side moved, the admissibility split changed and that is the "
+        "finding; if only the accepted side moved, name the pairs that gained or lost "
+        "revocations and why their block boundaries differ."
     )
 
 
