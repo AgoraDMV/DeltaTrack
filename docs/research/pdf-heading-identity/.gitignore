@@ -1,24 +1,12 @@
-# Probe output is generated, not committed — the same policy as
-# ../pdf-matching-convergence/.gitignore. Every number in README.md is regenerable by
-# the three commands it lists, in minutes, from the committed corpus.
+# The #524 study is closed and its machinery was deleted at closure. What remains here is
+# ORPHANED LOCAL OUTPUT on machines that ran the study: nothing generates it any more, and
+# nothing reads it. It is ignored rather than committed because `results/` alone is ~166 MB,
+# and a `git add -A` in a worktree that still holds it would otherwise commit 1.4M lines.
 #
-# A result that becomes a genuinely frozen input or oracle is the explicit exception:
-# add it with `git add -f`, and say here and in README.md why it is frozen. There is no
-# such exception today.
+# Delete this file once the local directories below are gone; a fresh clone never has them.
 results/
-
-# Holdout working material. The bulkdata listings and the 796-entry candidate pool are
-# regenerable from `select_holdout.py` and are large; the MANIFEST is not ignored,
-# because bill ids, stages, package ids and artifact hashes are the provenance that
-# makes the run reconstructible without committing a single source document.
 holdout/cache/
 holdout/pool.json
-
-# Regenerable by confounder/population.py; the population is stated in CONFOUNDER-ROUND.md.
-confounder/population.json
-
-# Regenerable by nearfull/population.py; the population is stated in NEARFULL-ROUND.md.
-nearfull/population.json
-
-# Second holdout: same policy as the first.
 holdout2/cache/
+confounder/population.json
+nearfull/population.json

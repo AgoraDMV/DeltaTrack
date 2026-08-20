@@ -500,8 +500,8 @@ def _document_tracking_median(pages: list[Page]) -> float | None:
 def _account_boundary_splits(prev, cur, column_width: float | None, track_median: float | None) -> bool:
     """True when `cur` starts a new heading rather than continuing `prev` (DeltaTrack#524).
 
-    The ordering is load-bearing and is the frozen specification in
-    `docs/research/pdf-heading-identity/frozen/frozen_candidate4.py`:
+    The ordering is load-bearing. It is the operating point validated in
+    `docs/research/pdf-heading-identity/README.md`, which tabulates the same clauses:
 
         line broken mid-word by a hyphen        -> continue (a wrap by construction)
         caps-and-small-caps over even-caps      -> split   (container above an account)

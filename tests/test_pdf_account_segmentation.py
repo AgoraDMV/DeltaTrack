@@ -3,9 +3,8 @@
 A GPO account heading wraps across as many printed lines as it needs, so the heading run
 above a leaf is not always a container — its tail can be the rest of the account's own
 name. `pdf_anchors._account_boundary_splits` decides where the account starts, from
-within-line typography and two geometric facts. The research record is
-`docs/research/pdf-heading-identity/`; the validated specification is frozen at
-`docs/research/pdf-heading-identity/frozen/frozen_candidate4.py`.
+within-line typography and two geometric facts. The rule, its bounds and the external
+validation behind it are summarised in `docs/research/pdf-heading-identity/README.md`.
 
 Three semantic invariants, one test class each, and for each the mutation that reddens it:
 

@@ -64,7 +64,7 @@ def test_anchors_match_golden(name: str):
 # anchors with ZERO title/section/grouping/preamble changes and seven accounts replaced
 # one for one — each a wrap fragment giving way to the complete heading the XML twin
 # carries (`SETTLEMENT COMMISSION` -> `SALARIES AND EXPENSES, FOREIGN CLAIMS SETTLEMENT
-# COMMISSION`, and six more; see docs/research/pdf-heading-identity/CANDIDATE-4.md §6).
+# COMMISSION`, and six more; see docs/research/pdf-heading-identity/README.md).
 # The independence property is preserved going forward: it is frozen against every FUTURE
 # regeneration, which is what it is for. `118-hr-8752` and `118-hr-8282` were untouched by
 # #524 and their baselines are the originals.
