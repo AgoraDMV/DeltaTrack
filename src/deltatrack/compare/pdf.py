@@ -3,7 +3,8 @@
 This is the in-process wrap of the existing PDF pipeline, with the inputs coming
 from uploaded bytes instead of files on disk:
 
-    extract_clean_pages()  (parsers.pdf_text)
+    extract_print_pages()  (parsers.pdf_text)   — both sides, before either is merged
+    merge_print_pages()    (parsers.pdf_text)   — with the pair's POOLED break evidence
     diff_pdfs()            (diff_pdf)
     pdf_full_text()        (parsers.pdf_text)   — both paths (full text + offsets)
     pdf_diff_to_canonical()(formatters.canonical) — both paths (JSON out / embedded)
@@ -22,7 +23,13 @@ from pathlib import Path
 from deltatrack.diff_pdf import PdfDiff, diff_pdfs
 from deltatrack.formatters.canonical import pdf_diff_to_canonical
 from deltatrack.formatters.diff_html import format_diff_html
-from deltatrack.parsers.pdf_text import Page, extract_clean_pages, pdf_full_text, pdf_full_text_print
+from deltatrack.parsers.pdf_text import (
+    Page,
+    extract_print_pages,
+    merge_print_pages,
+    pdf_full_text,
+    pdf_full_text_print,
+)
 
 
 class UnsupportedLayoutError(ValueError):
@@ -119,8 +126,18 @@ def _extract_and_diff(
         start_path.write_bytes(start_bytes)
         end_path.write_bytes(end_bytes)
 
-        old_pages = extract_clean_pages(start_path)
-        new_pages = extract_clean_pages(end_path)
+        # Read both documents before merging either, so the printer's word breaks are
+        # resolved against the POOLED text of the pair (#650). Two versions of one bill
+        # are near-identical documents, so a compound one version never happens to
+        # spell out unbroken is usually spelled out in the other: pooling decides 826
+        # more breaks across the corpus, all of them correctly. It also keeps the two
+        # sides from spelling one word two ways, which would surface as a change to a
+        # word neither version altered.
+        old_read = extract_print_pages(start_path)
+        new_read = extract_print_pages(end_path)
+        pooled = old_read.evidence().pooled_with(new_read.evidence())
+        old_pages = merge_print_pages(old_read, pooled)
+        new_pages = merge_print_pages(new_read, pooled)
 
     if _is_unnumbered_layout(old_pages) or _is_unnumbered_layout(new_pages):
         raise UnsupportedLayoutError(_DECLINE_MESSAGE)

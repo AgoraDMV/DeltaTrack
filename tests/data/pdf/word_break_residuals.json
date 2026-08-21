@@ -1,0 +1,1264 @@
+{
+  "residuals": [
+    {
+      "left": "12",
+      "produced": "12month",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "month",
+      "version": "113-hr-3547/6_enrolled-bill"
+    },
+    {
+      "left": "Anti",
+      "produced": "Anti-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "113-hr-3547/6_enrolled-bill"
+    },
+    {
+      "left": "case-by",
+      "produced": "case-by-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "113-hr-3547/6_enrolled-bill"
+    },
+    {
+      "left": "evidence",
+      "produced": "evidence-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "113-hr-3547/6_enrolled-bill"
+    },
+    {
+      "left": "moderate",
+      "produced": "moderate-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "113-hr-3547/6_enrolled-bill"
+    },
+    {
+      "left": "States",
+      "produced": "States-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "113-hr-83/7_enrolled-bill"
+    },
+    {
+      "left": "multi",
+      "produced": "multi-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "113-hr-83/7_enrolled-bill"
+    },
+    {
+      "left": "project",
+      "produced": "project-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "113-hr-83/7_enrolled-bill"
+    },
+    {
+      "left": "Forces",
+      "produced": "Forcespeculiar\u2019\u2019",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "peculiar\u2019\u2019",
+      "version": "114-hr-2029/1_reported-in-house"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "114-hr-2029/1_reported-in-house"
+    },
+    {
+      "left": "Forces",
+      "produced": "Forcespeculiar\u2019\u2019",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "peculiar\u2019\u2019",
+      "version": "114-hr-2029/3_referred-in-senate"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "114-hr-2029/3_referred-in-senate"
+    },
+    {
+      "left": "hospital",
+      "produced": "hospitalbased",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "based",
+      "version": "114-hr-2029/3_referred-in-senate"
+    },
+    {
+      "left": "Forces",
+      "produced": "Forcespeculiar\u2019\u2019",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "peculiar\u2019\u2019",
+      "version": "114-hr-2029/4_reported-in-senate"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "114-hr-2029/4_reported-in-senate"
+    },
+    {
+      "left": "hospital",
+      "produced": "hospitalbased",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "based",
+      "version": "114-hr-2029/4_reported-in-senate"
+    },
+    {
+      "left": "high",
+      "produced": "high-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "114-hr-2029/7_enrolled-bill"
+    },
+    {
+      "left": "3",
+      "produced": "3fiscal",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fiscal",
+      "version": "115-hr-1625/6_enrolled-bill"
+    },
+    {
+      "left": "burned",
+      "produced": "burned-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "115-hr-1625/6_enrolled-bill"
+    },
+    {
+      "left": "U.S.",
+      "produced": "U.S.Israeli",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "Israeli",
+      "version": "115-hr-244/6_enrolled-bill"
+    },
+    {
+      "left": "burned",
+      "produced": "burned-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "115-hr-244/6_enrolled-bill"
+    },
+    {
+      "left": "grant",
+      "produced": "grantin-aid",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "in-aid",
+      "version": "115-hr-5895/1_reported-in-house"
+    },
+    {
+      "left": "Ninety",
+      "produced": "Ninetyfirst",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "first",
+      "version": "115-hr-5895/2_engrossed-in-house"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "115-hr-5895/2_engrossed-in-house"
+    },
+    {
+      "left": "grant",
+      "produced": "grantin-aid",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "in-aid",
+      "version": "115-hr-5895/2_engrossed-in-house"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "115-hr-5895/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "high",
+      "produced": "highefficiency",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "efficiency",
+      "version": "115-hr-5895/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "value",
+      "produced": "valueadded",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "added",
+      "version": "115-hr-5895/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "Jobs",
+      "produced": "Jobs-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "116-hr-1865/6_enrolled-bill"
+    },
+    {
+      "left": "non",
+      "produced": "non-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "116-hr-1865/6_enrolled-bill"
+    },
+    {
+      "left": "five",
+      "produced": "fivemember",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "member",
+      "version": "117-hr-2471/1_introduced-in-house"
+    },
+    {
+      "left": "12",
+      "produced": "12week",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "week",
+      "version": "117-hr-2471/6_enrolled-bill"
+    },
+    {
+      "left": "Hart-Scott",
+      "produced": "Hart-Scott-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "117-hr-2471/6_enrolled-bill"
+    },
+    {
+      "left": "post",
+      "produced": "post-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "117-hr-2471/6_enrolled-bill"
+    },
+    {
+      "left": "cost",
+      "produced": "costcompetitive",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "competitive",
+      "version": "117-hr-4432/1_reported-in-house"
+    },
+    {
+      "left": "end",
+      "produced": "enditem",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "item",
+      "version": "117-hr-4432/1_reported-in-house"
+    },
+    {
+      "left": "man",
+      "produced": "manportable",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "portable",
+      "version": "117-hr-4432/1_reported-in-house"
+    },
+    {
+      "left": "111",
+      "produced": "111-148",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "148",
+      "version": "117-hr-4502/1_reported-in-house"
+    },
+    {
+      "left": "116",
+      "produced": "116-260",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "260",
+      "version": "117-hr-4502/1_reported-in-house"
+    },
+    {
+      "left": "first",
+      "produced": "firstserve",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "serve",
+      "version": "117-hr-4502/1_reported-in-house"
+    },
+    {
+      "left": "hard",
+      "produced": "hardsided",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "sided",
+      "version": "117-hr-4502/1_reported-in-house"
+    },
+    {
+      "left": "high",
+      "produced": "highcrime",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "crime",
+      "version": "117-hr-4502/1_reported-in-house"
+    },
+    {
+      "left": "in",
+      "produced": "inperson",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "person",
+      "version": "117-hr-4502/1_reported-in-house"
+    },
+    {
+      "left": "non",
+      "produced": "nonpayroll",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "payroll",
+      "version": "117-hr-4502/1_reported-in-house"
+    },
+    {
+      "left": "re",
+      "produced": "retransmitted",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "transmitted",
+      "version": "117-hr-4502/1_reported-in-house"
+    },
+    {
+      "left": "15",
+      "produced": "15passenger",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "passenger",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "Amtrak",
+      "produced": "Amtrakserved",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "served",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "blue",
+      "produced": "blueribbon",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "ribbon",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "bureau",
+      "produced": "bureaurelated",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "related",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "dollar-for",
+      "produced": "dollar-fordollar",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "dollar",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "first",
+      "produced": "firstserve",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "serve",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "first",
+      "produced": "firsttime",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "time",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "gender",
+      "produced": "genderspecific",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "specific",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "government",
+      "produced": "governmentdriven",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "driven",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "hard",
+      "produced": "hardsided",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "sided",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "high",
+      "produced": "highcrime",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "crime",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "in",
+      "produced": "inperson",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "person",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "multi",
+      "produced": "multiphased",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "phased",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "non",
+      "produced": "nonpayroll",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "payroll",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "non",
+      "produced": "nontabulating",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "tabulating",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "not",
+      "produced": "notfor-profit",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "for-profit",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "point",
+      "produced": "pointof-sale",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "of-sale",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "public",
+      "produced": "publicutility",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "utility",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "re",
+      "produced": "retransmitted",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "transmitted",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "self",
+      "produced": "selfcertification",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "certification",
+      "version": "117-hr-4502/2_engrossed-in-house"
+    },
+    {
+      "left": "IRS",
+      "produced": "IRSwide",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "wide",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "center",
+      "produced": "centerfire",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fire",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "country",
+      "produced": "countryspecific",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "specific",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "country-by",
+      "produced": "country-bycountry",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "country",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "ex",
+      "produced": "exservice",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "service",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "fixed",
+      "produced": "fixedprice",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "price",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "good",
+      "produced": "goodfaith",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "faith",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "high",
+      "produced": "highrisk",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "risk",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "non",
+      "produced": "nontracked",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "tracked",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "not",
+      "produced": "notfor-profit",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "for-profit",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "other",
+      "produced": "otherthan-personal",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "than-personal",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "part",
+      "produced": "parttime",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "time",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "point-of",
+      "produced": "point-ofsale",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "sale",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "policy",
+      "produced": "policydetermining",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "determining",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "sub",
+      "produced": "subgrantees",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "grantees",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "sub",
+      "produced": "subnational",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "national",
+      "version": "118-hr-2882/5_engrossed-amendment-house"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "118-hr-4366/1_reported-in-house"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "118-hr-4366/2_engrossed-in-house"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "118-hr-4366/3_placed-on-calendar-senate"
+    },
+    {
+      "left": "1",
+      "produced": "1to",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "to",
+      "version": "118-hr-4366/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "HUD",
+      "produced": "HUDinsured",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "insured",
+      "version": "118-hr-4366/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "case",
+      "produced": "caseby-case",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "by-case",
+      "version": "118-hr-4366/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "cost",
+      "produced": "costof-money",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "of-money",
+      "version": "118-hr-4366/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "118-hr-4366/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "fossil",
+      "produced": "fossilfueled",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fueled",
+      "version": "118-hr-4366/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "gender",
+      "produced": "genderspecific",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "specific",
+      "version": "118-hr-4366/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "non",
+      "produced": "nonadministrative",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "administrative",
+      "version": "118-hr-4366/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "twice-in-a",
+      "produced": "twice-in-apay-period",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "pay-period",
+      "version": "118-hr-4366/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "wood",
+      "produced": "woodbased",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "based",
+      "version": "118-hr-4366/4_engrossed-amendment-senate"
+    },
+    {
+      "left": "HUD",
+      "produced": "HUDinsured",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "insured",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "LOW",
+      "produced": "LOWVOLUME",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "VOLUME",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "NSF",
+      "produced": "NSFowned",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "owned",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "U.S.",
+      "produced": "U.S.FSM",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "FSM",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "U.S.",
+      "produced": "U.S.PALAU",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "PALAU",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "U.S.",
+      "produced": "U.S.Palau",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "Palau",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "U.S.",
+      "produced": "U.S.RMI",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "RMI",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "college",
+      "produced": "collegebased",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "based",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "cost",
+      "produced": "costof-money",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "of-money",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "dual",
+      "produced": "dualhatted",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "hatted",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "enterprise",
+      "produced": "enterprisewide",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "wide",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "fossil",
+      "produced": "fossilfueled",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fueled",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "high",
+      "produced": "highpriority",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "priority",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "multi",
+      "produced": "multibenefit",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "benefit",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "pre",
+      "produced": "predeployment",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "deployment",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "twenty",
+      "produced": "twentyfive",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "five",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "victim",
+      "produced": "victimcentered",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "centered",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "wood",
+      "produced": "woodbased",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "based",
+      "version": "118-hr-4366/5_engrossed-amendment-house"
+    },
+    {
+      "left": "U.S.",
+      "produced": "U.S.FSM",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "FSM",
+      "version": "118-hr-4366/6_enrolled-bill"
+    },
+    {
+      "left": "U.S.",
+      "produced": "U.S.RMI",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "RMI",
+      "version": "118-hr-4366/6_enrolled-bill"
+    },
+    {
+      "left": "first",
+      "produced": "first-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "118-hr-4366/6_enrolled-bill"
+    },
+    {
+      "left": "self",
+      "produced": "self-H.",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "H.",
+      "version": "118-hr-4366/6_enrolled-bill"
+    },
+    {
+      "left": "15",
+      "produced": "15passenger",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "passenger",
+      "version": "118-hr-4820/1_reported-in-house"
+    },
+    {
+      "left": "dollar-for",
+      "produced": "dollar-fordollar",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "dollar",
+      "version": "118-hr-4820/1_reported-in-house"
+    },
+    {
+      "left": "first",
+      "produced": "firsttime",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "time",
+      "version": "118-hr-4820/1_reported-in-house"
+    },
+    {
+      "left": "government",
+      "produced": "governmentdriven",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "driven",
+      "version": "118-hr-4820/1_reported-in-house"
+    },
+    {
+      "left": "multi",
+      "produced": "multiphased",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "phased",
+      "version": "118-hr-4820/1_reported-in-house"
+    },
+    {
+      "left": "public",
+      "produced": "publicutility",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "utility",
+      "version": "118-hr-4820/1_reported-in-house"
+    },
+    {
+      "left": "re",
+      "produced": "rehousing",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "housing",
+      "version": "118-hr-4820/1_reported-in-house"
+    },
+    {
+      "left": "part",
+      "produced": "parttime",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "time",
+      "version": "118-hr-8752/1_reported-in-house"
+    },
+    {
+      "left": "part",
+      "produced": "parttime",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "time",
+      "version": "118-hr-8752/2_engrossed-in-house"
+    },
+    {
+      "left": "118",
+      "produced": "118-31",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "31",
+      "version": "118-hr-8774/1_reported-in-house"
+    },
+    {
+      "left": "cost",
+      "produced": "costcompetitive",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "competitive",
+      "version": "118-hr-8774/1_reported-in-house"
+    },
+    {
+      "left": "118",
+      "produced": "118-31",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "31",
+      "version": "118-hr-8774/2_engrossed-in-house"
+    },
+    {
+      "left": "cost",
+      "produced": "costcompetitive",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "competitive",
+      "version": "118-hr-8774/2_engrossed-in-house"
+    },
+    {
+      "left": "anti",
+      "produced": "antimethamphetamine",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "methamphetamine",
+      "version": "118-s-2321/1_reported-in-senate"
+    },
+    {
+      "left": "pre",
+      "produced": "prerelease",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "release",
+      "version": "118-s-2321/1_reported-in-senate"
+    },
+    {
+      "left": "self",
+      "produced": "selfhelp",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "help",
+      "version": "118-s-2321/1_reported-in-senate"
+    },
+    {
+      "left": "victim",
+      "produced": "victimcentered",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "centered",
+      "version": "118-s-2321/1_reported-in-senate"
+    },
+    {
+      "left": "part",
+      "produced": "parttime",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "time",
+      "version": "118-s-2625/1_reported-in-senate"
+    },
+    {
+      "left": "cost-plus-a",
+      "produced": "cost-plus-afixed-fee",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "fixed-fee",
+      "version": "118-s-4677/1_reported-in-senate"
+    },
+    {
+      "left": "government",
+      "produced": "governmentdriven",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "driven",
+      "version": "118-s-4677/1_reported-in-senate"
+    },
+    {
+      "left": "Representa",
+      "produced": "Representatives",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "tives",
+      "version": "118-s-4690/1_reported-in-senate"
+    },
+    {
+      "left": "not",
+      "produced": "notfor-profit",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "for-profit",
+      "version": "118-s-4690/1_reported-in-senate"
+    },
+    {
+      "left": "pre",
+      "produced": "predevelopment",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "development",
+      "version": "118-s-4690/1_reported-in-senate"
+    },
+    {
+      "left": "anti",
+      "produced": "antimethamphetamine",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "methamphetamine",
+      "version": "118-s-4795/1_reported-in-senate"
+    },
+    {
+      "left": "pre",
+      "produced": "prerelease",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "release",
+      "version": "118-s-4795/1_reported-in-senate"
+    },
+    {
+      "left": "self",
+      "produced": "selfhelp",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "help",
+      "version": "118-s-4795/1_reported-in-senate"
+    },
+    {
+      "left": "victim",
+      "produced": "victimcentered",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "centered",
+      "version": "118-s-4795/1_reported-in-senate"
+    },
+    {
+      "left": "15",
+      "produced": "15passenger",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "passenger",
+      "version": "118-s-4796/1_reported-in-senate"
+    },
+    {
+      "left": "dollar-for",
+      "produced": "dollar-fordollar",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "dollar",
+      "version": "118-s-4796/1_reported-in-senate"
+    },
+    {
+      "left": "government",
+      "produced": "governmentdriven",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "driven",
+      "version": "118-s-4796/1_reported-in-senate"
+    },
+    {
+      "left": "incentive",
+      "produced": "incentivebased",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "based",
+      "version": "118-s-4796/1_reported-in-senate"
+    },
+    {
+      "left": "multi",
+      "produced": "multiphased",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "phased",
+      "version": "118-s-4796/1_reported-in-senate"
+    },
+    {
+      "left": "non",
+      "produced": "nonelderly",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "elderly",
+      "version": "118-s-4796/1_reported-in-senate"
+    },
+    {
+      "left": "one",
+      "produced": "onecall",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "call",
+      "version": "118-s-4796/1_reported-in-senate"
+    },
+    {
+      "left": "public",
+      "produced": "publicutility",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "utility",
+      "version": "118-s-4796/1_reported-in-senate"
+    },
+    {
+      "left": "country-by",
+      "produced": "country-bycountry",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "country",
+      "version": "118-s-4797/1_reported-in-senate"
+    },
+    {
+      "left": "non",
+      "produced": "nonconflict",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "conflict",
+      "version": "118-s-4797/1_reported-in-senate"
+    },
+    {
+      "left": "not",
+      "produced": "notfor-profit",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "for-profit",
+      "version": "118-s-4797/1_reported-in-senate"
+    },
+    {
+      "left": "pre",
+      "produced": "preobligation",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "obligation",
+      "version": "118-s-4797/1_reported-in-senate"
+    },
+    {
+      "left": "cost",
+      "produced": "costcompetitive",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "competitive",
+      "version": "118-s-4921/1_reported-in-senate"
+    },
+    {
+      "left": "third",
+      "produced": "thirdparty",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "party",
+      "version": "118-s-4921/1_reported-in-senate"
+    },
+    {
+      "left": "Representa",
+      "produced": "Representatives",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "tives",
+      "version": "118-s-4927/1_reported-in-senate"
+    },
+    {
+      "left": "grant",
+      "produced": "grantin-aid",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "in-aid",
+      "version": "118-s-4927/1_reported-in-senate"
+    },
+    {
+      "left": "government",
+      "produced": "governmentdriven",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "driven",
+      "version": "118-s-4928/1_reported-in-senate"
+    },
+    {
+      "left": "point",
+      "produced": "pointof-sale",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "of-sale",
+      "version": "118-s-4928/1_reported-in-senate"
+    },
+    {
+      "left": "fixed",
+      "produced": "fixedprice",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "price",
+      "version": "118-s-4942/1_reported-in-senate"
+    },
+    {
+      "left": "hard",
+      "produced": "hardsided",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "sided",
+      "version": "118-s-4942/1_reported-in-senate"
+    },
+    {
+      "left": "high",
+      "produced": "highcrime",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "crime",
+      "version": "118-s-4942/1_reported-in-senate"
+    },
+    {
+      "left": "non",
+      "produced": "nonpayroll",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "payroll",
+      "version": "118-s-4942/1_reported-in-senate"
+    },
+    {
+      "left": "117",
+      "produced": "117-43",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "43",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "24",
+      "produced": "24month",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "month",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "GROSS",
+      "produced": "GROSSPERCENTAGE",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "PERCENTAGE",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "IRS",
+      "produced": "IRSrun",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "run",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "T",
+      "produced": "TAO",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "AO",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "U.S.",
+      "produced": "U.S.Cuba",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "Cuba",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "anti",
+      "produced": "antiballistic",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "ballistic",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "anti",
+      "produced": "antilock",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "lock",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "counter",
+      "produced": "countertransnational",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "transnational",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "multiple",
+      "produced": "multipleparty",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "party",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "ship-to",
+      "produced": "ship-toshore",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "shore",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "sponsor",
+      "produced": "sponsorowned",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "owned",
+      "version": "119-hr-1/1_reported-in-house"
+    },
+    {
+      "left": "weather",
+      "produced": "weatherrelated",
+      "reason": "no in-document evidence for either form; decided by case shape",
+      "right": "related",
+      "version": "119-hr-1/1_reported-in-house"
+    }
+  ]
+}

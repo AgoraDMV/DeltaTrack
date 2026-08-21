@@ -30,6 +30,12 @@ import pypdfium2.raw as pdfium_raw
 
 _NUMBERED_LINE = re.compile(r"^(\d{1,2}) (.*)$")
 _SOFT_HYPHEN_BREAK = re.compile(r"(\w)-\n([a-z])")
+# A word as the break-evidence index counts one: starts alphanumeric, may carry
+# internal hyphens, apostrophes and periods (`E-Verify`, `U.S.C.`, `Nation's`).
+_WORD_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9'’\-\.]*")
+# The word fragment a printed line ends on when the printer broke it mid-word. The
+# final character before the hyphen is alphanumeric, matching `_is_break_tail`.
+_BREAK_TAIL = re.compile(r"[A-Za-z0-9][A-Za-z0-9'’\-\.]*[A-Za-z0-9]-$|[A-Za-z0-9]-$")
 _SMART_GLYPHS = str.maketrans(
     {
         "‘": "'",
@@ -210,32 +216,171 @@ def _parse_print_lines(chrome_stripped: str) -> list[Line]:
     return parsed
 
 
-def _merge_print_lines(parsed: list[Line]) -> tuple[list[Line], list[tuple[int, int]]]:
-    """Rejoin per-page soft hyphens at line boundaries.
+def _is_break_tail(text: str) -> bool:
+    """Whether a printed line was broken mid-word: alphanumeric, then a hyphen, at end.
 
-    When line[i] ends with `WORD-` and line[i+1] starts lowercase, merge them
-    into the earlier line and drop the later record. Chain: a single hunk can
-    span 3+ lines (e.g. `wel-\\nfare; ... (in-\\ncreased by …)`), so the merged
-    line may itself end in another soft hyphen to join with the line after.
+    This is the JOIN signal, and it is deliberately the printed hyphen rather than
+    PDFium's U+FFFE marker. The marker is reliable where it appears but is not
+    exhaustive: swept over the corpus, 1,390 of 52,044 line-final hyphens carry no
+    marker at all — every one in an enrolled print (which emits none), plus a 0-4%
+    tail in numbered prints that is ordinary syllable breaks (`Administra-` /
+    `tion`). Gating the join on the marker would stop joining all of them. The
+    marker is also disposition-blind: GPO breaks a compound at its own hyphen and
+    PDFium marks that identically (`McKinney￾22 Vento`), so it cannot answer the
+    question `_break_keeps_hyphen` exists for.
+
+    A period before the hyphen counts, so an abbreviation compound broken at its own
+    hyphen (`U.S.-` / `FSM Compact`, `U.S.-` / `Palau Compact`) is a break like any
+    other; requiring an alphanumeric there left 28 of them split across the corpus.
+    That is safe because the join ALSO requires the continuation to begin with an
+    alphanumeric, which is what excludes the two things a line-final hyphen otherwise
+    means: an em-dash introducing an enumeration (`is amended-` / `(1) in paragraph`)
+    and a suspended hyphen (`short-` / `, mid-, and long-range`).
+    """
+    return len(text) >= 2 and text.endswith("-") and (text[-2].isalnum() or text[-2] == ".")
+
+
+def _break_left(text: str) -> str:
+    """The word fragment before a break hyphen (`…the McKinney-` -> `McKinney`)."""
+    m = _BREAK_TAIL.search(text)
+    return m.group(0)[:-1] if m else ""
+
+
+def _break_right(text: str) -> str:
+    """The word fragment continuing a break (`Vento Homeless…` -> `Vento`)."""
+    m = _WORD_TOKEN.match(text)
+    return m.group(0) if m else ""
+
+
+def _canon_form(token: str) -> str:
+    """Fold a word token onto the form the evidence index is keyed by."""
+    return token.replace("‘", "'").replace("’", "'").strip("'\".,;:()[]").lower()
+
+
+def _is_all_caps(fragment: str) -> bool:
+    return fragment.upper() == fragment and any(c.isalpha() for c in fragment)
+
+
+def _shape_keeps_hyphen(left: str, right: str) -> bool:
+    """Last-resort disposition from letter case alone, when no evidence exists.
+
+    Measured against GPO's XML over the fixture corpus, this decides 1,978 breaks
+    with 118 wrong — all in one direction (a lowercase-continuation compound with no
+    evidence anywhere, `government-` / `driven`). Widening it was tried and is worse:
+    treating a digit-final left fragment or an internal hyphen as proof of a compound
+    takes the error count from 118 to 214 and breaks 119 sites that are correct today,
+    because a syllable break inside an already-hyphenated compound (`space-avail-` /
+    `able`) then reads as a compound break. Left deliberately narrow.
+    """
+    if right[:1].islower():
+        return False  # a syllable break: `equip-` / `ment`
+    if _is_all_caps(left) and _is_all_caps(right):
+        return False  # an all-caps heading wrapped mid-word: `INTEL-` / `LIGENCE`
+    return True  # a capitalised compound: `McKinney-` / `Vento`, `E-` / `Verify`
+
+
+class BreakEvidence:
+    """How a document spells, in its own text, the words its printer broke across lines.
+
+    Deciding whether a break hyphen belongs to the word is not answerable from the
+    break itself — the printed page is identical for `INTEL-` / `LIGENCE` and for
+    `McKinney-` / `Vento`. It is answerable from the rest of the document, which
+    almost always writes the word out somewhere it did not have to break: `intelligence`
+    appears unbroken 7 times elsewhere in 118-hr-8752, `Non-Dedicated` once.
+
+    Swept over the fixture corpus against GPO's XML as an oracle, this decides 47,875
+    of 50,679 breaks (94.5%) with ZERO errors; pooling a compared pair's two documents
+    (`pooled_with`) adds 826 more, also with zero. The remainder falls to
+    `_shape_keeps_hyphen`.
+
+    The index deliberately excludes the fragments AT break sites, so a break is never
+    evidence for itself.
+    """
+
+    __slots__ = ("_counts",)
+
+    def __init__(self, counts: dict[str, int] | None = None) -> None:
+        self._counts = counts or {}
+
+    @classmethod
+    def from_print_lines(cls, pages: list[list[Line]]) -> "BreakEvidence":
+        counts: dict[str, int] = {}
+        for parsed in pages:
+            continues_a_break = False
+            for line in parsed:
+                tokens = _WORD_TOKEN.findall(line.text)
+                first = 1 if (continues_a_break and tokens) else 0
+                continues_a_break = _is_break_tail(line.text)
+                last = len(tokens) - 1 if continues_a_break else len(tokens)
+                for token in tokens[first:last]:
+                    key = _canon_form(token)
+                    if key:
+                        counts[key] = counts.get(key, 0) + 1
+        return cls(counts)
+
+    def pooled_with(self, other: "BreakEvidence") -> "BreakEvidence":
+        """Both sides of a comparison as one index (#650 step 3).
+
+        Two versions of one bill are near-identical documents, so a word one version
+        happens never to spell out unbroken is usually spelled out in the other. It
+        also removes the only cross-version disagreement the corpus contains
+        (`non-administrative` in 118-hr-4366), which would otherwise show up as a
+        spurious one-word change between two versions that both print it the same way.
+        """
+        counts = dict(self._counts)
+        for key, n in other._counts.items():
+            counts[key] = counts.get(key, 0) + n
+        return BreakEvidence(counts)
+
+    def keeps_hyphen(self, left: str, right: str) -> bool:
+        """Whether the break hyphen between two fragments belongs to the word."""
+        kept = self._counts.get(_canon_form(f"{left}-{right}"), 0)
+        dropped = self._counts.get(_canon_form(f"{left}{right}"), 0)
+        if kept and dropped:
+            return kept >= dropped
+        if kept or dropped:
+            return bool(kept)
+        return _shape_keeps_hyphen(left, right)
+
+
+def _join_break(left_text: str, right_text: str, evidence: BreakEvidence) -> str:
+    """Join a broken line onto its continuation, keeping or dropping the break hyphen."""
+    if evidence.keeps_hyphen(_break_left(left_text), _break_right(right_text)):
+        return left_text + right_text
+    return left_text[:-1] + right_text
+
+
+def _merge_print_lines(
+    parsed: list[Line], evidence: BreakEvidence | None = None
+) -> tuple[list[Line], list[tuple[int, int]]]:
+    """Rejoin per-page word breaks at line boundaries.
+
+    When line[i] ends mid-word (`WORD-`) and line[i+1] starts with an alphanumeric,
+    merge them into the earlier line and drop the later record. Chain: a single hunk
+    can span 3+ lines (e.g. `wel-\\nfare; ... (in-\\ncreased by …)`), so the merged
+    line may itself end in another break to join with the line after.
+
+    The hyphen is kept or dropped per `evidence`; with no evidence supplied the
+    disposition falls back to letter case alone (`_shape_keeps_hyphen`).
+
+    Before #650 the join additionally required a LOWERCASE continuation, which meant
+    an uppercase one was not joined at all — `INTEL-` and `LIGENCE` stayed on separate
+    lines and read to a consumer as two words. Requiring only an alphanumeric keeps
+    the blank-line exclusion that guard also happened to provide.
 
     Returns the merged lines and, parallel to them, the `[start, end)` slice of
     `parsed` each merged line was built from (so callers can map a merged line
     back to the printed lines it covers).
     """
+    evidence = evidence if evidence is not None else BreakEvidence()
     merged: list[Line] = []
     ranges: list[tuple[int, int]] = []
     i = 0
     while i < len(parsed):
         current = parsed[i]
         next_i = i + 1
-        while (
-            next_i < len(parsed)
-            and current.text.endswith("-")
-            and len(current.text) >= 2
-            and current.text[-2].isalnum()
-            and parsed[next_i].text[:1].islower()
-        ):
-            current = Line(current.line_number, current.text[:-1] + parsed[next_i].text)
+        while next_i < len(parsed) and _is_break_tail(current.text) and parsed[next_i].text[:1].isalnum():
+            current = Line(current.line_number, _join_break(current.text, parsed[next_i].text, evidence))
             next_i += 1
         merged.append(current)
         ranges.append((i, next_i))
@@ -507,10 +652,66 @@ def _attach_geometry(ln: Line, line_sizes: dict[int, tuple[float, LineGeom]]) ->
     return replace(ln, glyph_size=size, geom=geom)
 
 
-def extract_clean_pages(pdf_path: Path) -> list[Page]:
+def _rejoin_page_seam_breaks(
+    merged: list[list[Line]], ranges: list[list[tuple[int, int]]], evidence: BreakEvidence
+) -> None:
+    """Join a word the printer broke across a PAGE boundary, in place.
+
+    `_merge_print_lines` runs per page and so cannot see a break whose continuation
+    is the first line of the next page. That is not a rare corner: swept over the
+    fixture corpus it is 1,542 breaks, more than the whole uppercase population #650
+    was filed for, and every one of them reaches `full_text` as a dangling `serv-`
+    with its `ices` on the far side of a page break.
+
+    The merged line keeps the FIRST line's page and line coordinates, because the word
+    begins there. That follows the same choice `pdf_blocks._rejoin_cross_page_hyphens`
+    already made for the diff's block builder — which this makes redundant, since the
+    join now happens once, upstream, for every consumer.
+
+    Consequence worth knowing: the continuation's printed line on the next page is no
+    longer covered by any merged line's range, so `pdf_full_text_print` has no offset
+    entry for it. A change citing that coordinate cannot be located and gets a null
+    span, the same degradation that already applied to unnumbered lines.
+    """
+    for i in range(len(merged) - 1):
+        while merged[i] and merged[i + 1] and _is_break_tail(merged[i][-1].text):
+            continuation = merged[i + 1][0]
+            if not continuation.text[:1].isalnum():
+                break
+            tail = merged[i][-1]
+            merged[i][-1] = Line(
+                tail.line_number,
+                _join_break(tail.text, continuation.text, evidence),
+                tail.glyph_size,
+                tail.geom,
+            )
+            merged[i + 1].pop(0)
+            ranges[i + 1].pop(0)
+
+
+@dataclass(frozen=True)
+class PrintPages:
+    """A document read but not yet merged: printed lines plus each page's glyph sidecar.
+
+    Extraction is split in two so that the merge can be given evidence the read pass
+    collects (#650). Deciding a break hyphen needs the whole document, and pooling a
+    compared PAIR of documents decides more of them, which a single-document call
+    cannot do. `extract_clean_pages` is the one-document convenience over both halves.
+    """
+
+    printed: tuple[tuple[Line, ...], ...]
+    sizes: tuple[dict[int, tuple[float, LineGeom]], ...]
+
+    def evidence(self) -> BreakEvidence:
+        return BreakEvidence.from_print_lines([list(p) for p in self.printed])
+
+
+def extract_print_pages(pdf_path: Path) -> PrintPages:
+    """Read every page into printed lines, with no rejoining. First half of extraction."""
     pdf = pdfium.PdfDocument(str(pdf_path))
     try:
-        pages: list[Page] = []
+        printed: list[tuple[Line, ...]] = []
+        sizes: list[dict[int, tuple[float, LineGeom]]] = []
         for i in range(len(pdf)):
             # pypdfium2 tracks each pdf[i] page as a child held until pdf.close();
             # close it (and the textpage) per iteration so handles don't accumulate
@@ -523,14 +724,47 @@ def extract_clean_pages(pdf_path: Path) -> list[Page]:
             finally:
                 textpage.close()
                 page_obj.close()
-            chrome_stripped = strip_page_chrome(normalize_raw(raw))
-            print_lines = _parse_print_lines(chrome_stripped)
-            merged, ranges = _merge_print_lines(print_lines)
-            merged = [_attach_geometry(ln, line_sizes) for ln in merged]
-            pages.append(Page(i + 1, tuple(merged), tuple(print_lines), tuple(ranges)))
-        return pages
+            printed.append(tuple(_parse_print_lines(strip_page_chrome(normalize_raw(raw)))))
+            sizes.append(line_sizes)
     finally:
         pdf.close()
+    return PrintPages(tuple(printed), tuple(sizes))
+
+
+def merge_print_pages(read: PrintPages, evidence: BreakEvidence) -> list[Page]:
+    """Rejoin printed word breaks into whole-word lines. Second half of extraction."""
+    merged: list[list[Line]] = []
+    ranges: list[list[tuple[int, int]]] = []
+    for print_lines in read.printed:
+        page_merged, page_ranges = _merge_print_lines(list(print_lines), evidence)
+        merged.append(page_merged)
+        ranges.append(page_ranges)
+    _rejoin_page_seam_breaks(merged, ranges, evidence)
+    return [
+        Page(
+            i + 1,
+            tuple(_attach_geometry(ln, read.sizes[i]) for ln in merged[i]),
+            read.printed[i],
+            tuple(ranges[i]),
+        )
+        for i in range(len(read.printed))
+    ]
+
+
+def extract_clean_pages(pdf_path: Path) -> list[Page]:
+    """Extract every page as printed lines plus the merged whole-word lines the diff reads.
+
+    Two passes over the document, because the merge needs evidence the first pass
+    collects. Whether a break hyphen belongs to the word (`McKinney-Vento`) or was the
+    printer's (`INTELLIGENCE`) is decided from how the rest of the document spells that
+    word, so every page must be read before any page can be merged. See `BreakEvidence`.
+
+    A caller comparing two documents should use `extract_print_pages` +
+    `merge_print_pages` with the pair's pooled evidence instead, which decides several
+    hundred more breaks and keeps the two sides from spelling one word two ways.
+    """
+    read = extract_print_pages(pdf_path)
+    return merge_print_pages(read, read.evidence())
 
 
 def _render_lines(lines: tuple[Line, ...]) -> tuple[list[str], list[tuple[int, int]]]:
