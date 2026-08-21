@@ -31,10 +31,11 @@ from deltatrack.formatters.canonical import (
 )
 from deltatrack.parsers.pdf_anchors import Anchor
 
-# Local pin (guard against unintended bumps). 2.0 removed the deprecated `amounts`
-# field (#274), leaving `amount_entries` (added in 1.4, #86) as the only money field;
-# 1.3 added the optional `tree` field (#108).
-SCHEMA_VERSION = "2.0"
+# Local pin (guard against unintended bumps). 2.1 added the optional `join_points`
+# field (#650); 2.0 removed the deprecated `amounts` field (#274), leaving
+# `amount_entries` (added in 1.4, #86) as the only money field; 1.3 added the optional
+# `tree` field (#108).
+SCHEMA_VERSION = "2.1"
 
 
 # ---------- XML producer ------------------------------------------------------
