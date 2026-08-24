@@ -25,25 +25,37 @@ which asks whether the words survived. They make this suite the only place that 
 ask whether the word was reassembled correctly, which is a fidelity question.
 
 **The oracle.** For a bill published in both formats, GPO's XML is an independent
-transcription with no printed line breaks in it, so every word form the reflowed PDF
-produces at a break should be a word form the XML has. Read here with lxml's
-``itertext`` rather than through ``normalize_bill``, so the oracle side stays
-independent of DeltaTrack code (same reason test_pdf_xml_prose_recall.py writes its
-own extractor).
+transcription with no printed line breaks in it. A reconstruction is checked against
+that version's XML BY POSITION, not by vocabulary: the word must appear there with the
+PDF's neighbouring words around it (`XmlOracle`). Asking only whether the bill writes
+that form anywhere would certify a reconstruction from an unrelated occurrence, and
+could not choose at all where a bill uses both spellings in different places. Read with
+lxml's ``itertext`` rather than through ``normalize_bill``, so the oracle side stays
+independent of DeltaTrack code (same reason test_pdf_xml_prose_recall.py writes its own
+extractor).
 
 **What is asserted**, per dual-format version:
 
   1. No word the printer split reaches ``full_text`` still split. A dangling
      ``INTEL-`` reads to a consumer as a word boundary that is not in the document.
      Asked against the XML, not against the merger's rule, so it cannot pass vacuously
-     by restating the implementation -- see `_unjoined_words`.
-  2. Every word form produced AT a join is a word form the XML carries.
+     by restating the implementation -- see `_unjoined`.
+  2. Every word reconstructed AT a join matches the XML in that position.
+
+**What this cannot see.** Both clauses are scoped to the sites the oracle can judge. A
+break whose reconstruction is attested in neither form, or in both equally, is EXCLUDED
+and counted -- 53 across the corpus, asserted per version -- rather than passed. The
+page-seam breaks that running-header chrome keeps split (#535) sit in that excluded set,
+because a chrome token is not a word and no reconstruction of it is attested. So clause
+1 reaching zero does not mean no word is left split in ``full_text``; it means none is
+left split where the XML can say so. A reader who took it for the stronger claim would
+stop looking for #535, which is still open.
 
 **The residual set.** Clause 2 does not reach zero. A break whose two candidate forms
 are both absent from the document's own text and from the other version compared with
 it is decided by case shape, and shape is wrong for a lowercase-continuation compound
 with no evidence anywhere (``government-`` / ``driven``). Those sites are enumerated
-in ``_RESIDUALS`` and asserted by SET EQUALITY, not as a ceiling: a ceiling is
+in the committed fixture (`_residuals`) and asserted by SET EQUALITY, not as a ceiling: a ceiling is
 satisfied by fixing one site and breaking another, which is precisely the swap this
 file exists to catch. Shrinking the set is an explicit commit that shows which sites
 moved. Growing it without a stated reason is a regression.
@@ -101,9 +113,12 @@ class XmlOracle:
     Trigram alone is too strict to be a gate -- it leaves ~1,500 corpus sites undecided
     that context can in fact resolve.
 
-    Measured against plain vocabulary membership over the corpus, this contradicts it at
-    zero sites and decides ~69 more, because local context resolves cases where a bill
-    uses both spellings.
+    Measured with THIS class over the sites the repair produces, aligned matching decides
+    50,785 breaks against vocabulary membership's 50,716, and the two contradict each
+    other at zero sites. The +69 is where a bill uses both spellings and only position
+    can choose. (An earlier revision quoted the same figures from a standalone probe
+    whose tiering differed from this class; they are re-derived here on the shipped
+    code.)
     """
 
     __slots__ = ("_vocab", "_bigrams", "_trigrams")
