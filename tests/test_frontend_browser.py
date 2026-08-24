@@ -992,34 +992,28 @@ _FIND_PAGE_SRC = (
 )
 
 
-def _find_fixture_texts() -> tuple[str, str, dict]:
-    """(printed display text, merged whole-word text, that page's join points).
+def _find_fixture_texts() -> tuple[str, str]:
+    """(printed display text, merged whole-word text) from the real parser.
 
-    All three come from the producer the browser has to agree with — `pdf_full_text`
-    is the reflowed ground truth the flattened search string must reproduce, so the
-    fixture can't encode a belief about GPO's line-joining that the parser doesn't
-    share. Since #650 the join points travel with the text for the same reason: the
-    browser applies the producer's decision rather than re-deriving one, so a fixture
-    that withheld them would be testing a document the pipeline never emits.
-
-    The page is merged with its OWN evidence, exactly as `extract_clean_pages` does.
+    Both come from the producer the browser has to agree with — `pdf_full_text`
+    is the de-hyphenated ground truth the flattened search string must
+    reproduce, so the fixture can't encode a belief about GPO's line-joining
+    that the parser doesn't share.
     """
     from deltatrack.parsers.pdf_text import (
-        BreakEvidence,
         Page,
         _merge_print_lines,
         _parse_print_lines,
         pdf_full_text,
         pdf_full_text_print,
-        pdf_print_join_points,
     )
 
     print_lines = _parse_print_lines(_FIND_PAGE_SRC.rstrip("\n"))
-    merged, ranges = _merge_print_lines(print_lines, BreakEvidence.from_print_lines([print_lines]))
+    merged, ranges = _merge_print_lines(print_lines)
     page = Page(1, tuple(merged), tuple(print_lines), tuple(ranges))
     printed_text, _ = pdf_full_text_print([page])
     merged_text, _ = pdf_full_text([page])
-    return printed_text, merged_text, pdf_print_join_points([page])
+    return printed_text, merged_text
 
 
 def _render_find_report() -> str:
@@ -1031,7 +1025,7 @@ def _render_find_report() -> str:
     """
     from deltatrack.formatters.diff_html import format_diff_html
 
-    printed_text, _, join_points = _find_fixture_texts()
+    printed_text, _ = _find_fixture_texts()
     start = printed_text.index("vehicles")
     canonical = {
         "schema_version": "2.0",
@@ -1042,7 +1036,6 @@ def _render_find_report() -> str:
         },
         "summary": {"added": 0, "removed": 0, "modified": 1},
         "full_text": {"v1": "", "v2": printed_text},
-        "join_points": {"v1": {"at": [], "drop": ""}, "v2": join_points},
         "changes": [
             {
                 "id": "c0",
@@ -1170,7 +1163,7 @@ def test_find_agrees_with_the_parser_merged_text(chromium, tmp_path):
     """
     import re as _re
 
-    _, merged_text, _joins = _find_fixture_texts()
+    _, merged_text = _find_fixture_texts()
     # Windows stay inside one merged line. Each merged line is already whole-word
     # (the parser rejoined its soft hyphens), so this pins the de-hyphenation
     # contract without asserting how the JS joins one display line to the next.
