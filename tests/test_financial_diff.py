@@ -731,7 +731,7 @@ class TestSectionsWhoseOnlyChangeIsMoney:
     def change_cards():
         """The report's change cards, as (breadcrumb heading, card markup) pairs.
 
-        Scoped to the changes view deliberately. The report also carries a full-bill
+        Scoped to the changes view deliberately. The report also carries a full-text
         view, which renders every section whether or not it changed, so asserting a
         section name or an amount against the whole document passes with the defect
         present -- verified: the first draft of these tests did exactly that and was
@@ -752,7 +752,7 @@ class TestSectionsWhoseOnlyChangeIsMoney:
         changes_view = html[start : later[0] if later else len(html)]
 
         cards = []
-        for chunk in changes_view.split('class="change-card')[1:]:
+        for chunk in changes_view.split('class="change')[1:]:
             heading = re.search(r"<h3>(.*?)</h3>", chunk, re.S)
             cards.append((heading.group(1) if heading else "", chunk))
         return cards

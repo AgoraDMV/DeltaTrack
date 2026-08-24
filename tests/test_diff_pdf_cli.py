@@ -43,8 +43,8 @@ class TestCli:
         assert "reported-in-house" in html
         assert "engrossed-in-house" in html
         # Delegating to compare_pdfs_html means the report carries the
-        # full-bill view + embedded export, not just the changed-section cards.
-        assert "full-bill" in html
+        # full-text view + embedded export, not just the changed-section cards.
+        assert "full-text" in html
         assert "diff.json" in html
 
     def test_stdout_when_no_output(self, capsys):
