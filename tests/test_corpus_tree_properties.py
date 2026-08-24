@@ -257,7 +257,7 @@ def _assert_no_blank_toc_rows(roots: list[dict], full_text: str) -> None:
     """Invariant 4: the leveled TOC the tree renders has no blank clickable rows
     and no empty collapsible groups (the consumed-output blank-row check)."""
     html = _build_tree_nav(roots, full_text)
-    leaves = re.findall(r'<li class="tree-node[^"]*">(.*?)</li>', html, re.S)
+    leaves = re.findall(r'<li class="tree-node"[^>]*>(.*?)</li>', html, re.S)
     blank_leaves = [leaf for leaf in leaves if not re.sub(r"<[^>]+>", "", leaf).strip()]
     assert not blank_leaves, f"{len(blank_leaves)} blank TOC leaf row(s)"
     summaries = re.findall(r"<summary[^>]*>(.*?)</summary>", html, re.S)

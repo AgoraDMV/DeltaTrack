@@ -58,9 +58,9 @@ def _build_card(change: ChangeView, index: int) -> str:
     # output. Escape so a stray value can't break attribute quoting.
     ct = escape(change.change_type)
 
-    parts = [f'<div class="change {ct}{extra_card_class}" id="change-{index}" data-type="{ct}">']
+    parts = [f'<div class="change{extra_card_class}" id="change-{index}" data-type="{ct}">']
     parts.append('<div class="change__header">')
-    parts.append(f'<span class="change-type change-type--{ct}">{ct}</span>')
+    parts.append(f'<span class="change-type" data-type="{ct}">{ct}</span>')
     parts.append(f"<h3{h3_class}>{change.heading_html}</h3>")
     if change.section_number:
         parts.append(f'<span class="section-number">{escape(change.section_number)}</span>')
@@ -138,7 +138,7 @@ def _build_nav_item(change: ChangeView, index: int) -> str:
     return (
         f'<li class="{nav_class}" data-type="{ct}">'
         f'<a href="#change-{index}">'
-        f'<span class="change-type change-type--{ct}">{ct}</span> '
+        f'<span class="change-type" data-type="{ct}">{ct}</span> '
         f"{label}"
         f"</a></li>"
     )
@@ -313,17 +313,29 @@ def _build_tree_nav(tree_nodes: list[dict], full_text: str) -> str:
         label = escape(node["label"])
         return f'<a href="#fb-off-{off}">{label}</a>' if off is not None else f"<span>{label}</span>"
 
-    def level_class(node: dict) -> str:
-        """The node's own level, as a class, so an entry says what part of the bill it is.
+    def level_attr(node: dict) -> str:
+        """The node's own level, verbatim, so an entry says what part of the bill it is.
 
-        The level is the canonical contract's `tree.level`, which that schema records as
+        The value is the canonical contract's `tree.level`, which that schema records as
         shared GPO vocabulary (`division`, `title`, `agency`, `account`, `section` and
-        the rest). It already reaches this renderer and was being discarded, so the nav
+        the rest). It already reached this renderer and was being discarded, so the nav
         could not say whether an entry was a title or an account without reading its
-        text. Emitting it is what lets a reader, a stylesheet or a model tell them apart.
+        label text.
+
+        Carried as `data-level` rather than a class, matching `data-type` on a change
+        card: a contract value belongs in an attribute under the contract's own field
+        name, with the contract's own value, so a reader or a model sees the pair the
+        schema defines rather than a name mangled into one token. It also leaves the
+        class namespace free, which matters because GPO's own stylesheet uses bare
+        `.title` and `.division`; `[data-level="title"]` can adopt those rules without
+        colliding with them.
+
+        The vocabulary is closed and drawn from this repository's own literals
+        (`structure_tree._LEAF_LEVEL` and `_interior_level`), never from bill text, so
+        it needs no escaping to be a safe attribute value.
         """
         level = (node.get("level") or "").strip()
-        return f" level-{level}" if level else ""
+        return f' data-level="{level}"' if level else ""
 
     def render(node: dict) -> str:
         kids = node.get("children") or []
@@ -339,9 +351,9 @@ def _build_tree_nav(tree_nodes: list[dict], full_text: str) -> str:
             # nothing, so render a clickable leaf that jumps to the node's span. When
             # the group DOES have labeled children (leading short-title/definitions
             # sections) it falls through to the <details> toggle below (#161).
-            return f'<li class="tree-node{level_class(node)}">{link(node)}</li>'
+            return f'<li class="tree-node"{level_attr(node)}>{link(node)}</li>'
         return (
-            f'<li><details class="tree-group{level_class(node)}">'
+            f'<li><details class="tree-group"{level_attr(node)}>'
             f'<summary class="disclosure">{link(node)}</summary>'
             f'<ul class="tree">{inner}</ul></details></li>'
         )
@@ -373,8 +385,16 @@ def _build_sidebar(
     tree_v2 = (canonical.get("tree") or {}).get("v2") if (canonical and canonical.get("tree")) else None
     if order_map is None:
         order_map = _node_order_map(tree_v2)
+    full_text_v2 = (canonical.get("full_text") or {}).get("v2") if canonical else None
+    # A pane is paired with a view only when there is a second view to switch to.
+    tree_v2_has_full_text = bool(full_text_v2)
+    changes_pane_open = (
+        '<div class="sidebar-changes" data-view="changes">\n'
+        if tree_v2_has_full_text
+        else '<div class="sidebar-changes">\n'
+    )
     changes_pane = (
-        '<div class="sidebar-changes">\n'
+        f"{changes_pane_open}"
         '<div class="filters">\n'
         '<div class="filters__title">Filter changes</div>\n'
         '<label class="filter-row"><input type="radio" name="change-filter" value="all" checked> All</label>\n'
@@ -383,12 +403,11 @@ def _build_sidebar(
         f"{_build_change_groups(view, order_map)}\n"
         "</div>"
     )
-    full_text_v2 = (canonical.get("full_text") or {}).get("v2") if canonical else None
     # The tree builder owns the navigation outright (#462). It also renders the
     # "no sections" empty state, so a canonical carrying full text but no usable tree
     # still gets a pane saying so rather than silently losing the navigation.
     tree_html = _build_tree_nav(tree_v2 or [], full_text_v2) if full_text_v2 else None
-    tree_pane = "" if tree_html is None else f'<div class="sidebar-tree" hidden>{tree_html}</div>'
+    tree_pane = "" if tree_html is None else f'<div class="sidebar-tree" data-view="full" hidden>{tree_html}</div>'
     return f'<nav class="sidebar">\n{changes_pane}\n{tree_pane}\n</nav>'
 
 
@@ -429,7 +448,7 @@ def _summary_bar_html(summary: dict[str, int]) -> str:
         if count > 0:
             items.append(
                 f'<span class="summary-item">'
-                f'<span class="change-type change-type--{key}">{key}</span> '
+                f'<span class="change-type" data-type="{key}">{key}</span> '
                 f"<strong>{count}</strong>"
                 f"</span>"
             )
@@ -768,7 +787,10 @@ def _views_html(
     if not _has_full_bill(canonical):
         return changes_inner
     full_bill = _full_bill_html(display_canonical or canonical)
-    return f'<div class="view view-changes">{changes_inner}</div><div class="view view-full" hidden>{full_bill}</div>'
+    return (
+        f'<div class="view view-changes" data-view="changes">{changes_inner}</div>'
+        f'<div class="view view-full" data-view="full" hidden>{full_bill}</div>'
+    )
 
 
 # Ready-made questions a staffer can paste into an LLM alongside the diff.json,
@@ -1053,10 +1075,10 @@ summary:hover .disclosure::before, summary.disclosure:hover::before { color: var
 /* Badges */
 .change-type { display: inline-block; padding: 2px 8px; border-radius: 999px;
   font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-.change-type--modified { background: var(--diff-modified); color: var(--diff-modified-foreground); }
-.change-type--added { background: var(--diff-add); color: var(--diff-add-foreground); }
-.change-type--removed { background: var(--diff-remove); color: var(--diff-remove-foreground); }
-.change-type--moved { background: var(--diff-moved); color: var(--diff-moved-foreground); }
+.change-type[data-type="modified"] { background: var(--diff-modified); color: var(--diff-modified-foreground); }
+.change-type[data-type="added"] { background: var(--diff-add); color: var(--diff-add-foreground); }
+.change-type[data-type="removed"] { background: var(--diff-remove); color: var(--diff-remove-foreground); }
+.change-type[data-type="moved"] { background: var(--diff-moved); color: var(--diff-moved-foreground); }
 
 /* Card groups: cards nested under their tree-node headings (#172) */
 .change-group { margin: 6px 0 14px; }
@@ -1070,10 +1092,10 @@ summary:hover .disclosure::before, summary.disclosure:hover::before { color: var
 /* Change cards */
 .change { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px;
   padding: 16px 18px; background: var(--card); box-shadow: var(--shadow-soft); }
-.change.added { border-left: 3px solid var(--success); }
-.change.removed { border-left: 3px solid var(--destructive); }
-.change.modified { border-left: 3px solid var(--gold); }
-.change.moved { border-left: 3px solid var(--primary); }
+.change[data-type="added"] { border-left: 3px solid var(--success); }
+.change[data-type="removed"] { border-left: 3px solid var(--destructive); }
+.change[data-type="modified"] { border-left: 3px solid var(--gold); }
+.change[data-type="moved"] { border-left: 3px solid var(--primary); }
 .change.unanchored { border-left: 3px solid var(--muted-foreground); background: var(--muted); }
 .change.unanchored .change__header h3 {
   color: var(--muted-foreground); font-style: italic; font-weight: 400; }
@@ -1273,12 +1295,12 @@ document.addEventListener('DOMContentLoaded', function() {
       b.setAttribute('aria-selected', on ? 'true' : 'false');
     });
     document.querySelectorAll('.view').forEach(function(el) {
-      el.hidden = !el.classList.contains('view-' + name);
+      el.hidden = el.dataset.view !== name;
     });
     // Swap the sidebar variant (only when a TOC variant was rendered).
     if (sidebarToc) {
-      sidebarToc.hidden = name !== 'full';
-      if (sidebarChanges) sidebarChanges.hidden = name === 'full';
+      sidebarToc.hidden = sidebarToc.dataset.view !== name;
+      if (sidebarChanges) sidebarChanges.hidden = sidebarChanges.dataset.view !== name;
     }
   }
   toggleBtns.forEach(function(b) {

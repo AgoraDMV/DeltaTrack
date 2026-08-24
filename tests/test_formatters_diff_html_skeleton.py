@@ -104,10 +104,10 @@ def test_summary_bar_canonical_order():
     """
     html = format_diff_html(_empty(summary={"modified": 5, "added": 3, "removed": 2, "moved": 1}))
     # Find each change-type marker and confirm ascending positions.
-    pos_modified = html.find('class="change-type change-type--modified"')
-    pos_added = html.find('class="change-type change-type--added"')
-    pos_removed = html.find('class="change-type change-type--removed"')
-    pos_moved = html.find('class="change-type change-type--moved"')
+    pos_modified = html.find('class="change-type" data-type="modified"')
+    pos_added = html.find('class="change-type" data-type="added"')
+    pos_removed = html.find('class="change-type" data-type="removed"')
+    pos_moved = html.find('class="change-type" data-type="moved"')
     assert -1 < pos_modified < pos_added < pos_removed < pos_moved
 
 

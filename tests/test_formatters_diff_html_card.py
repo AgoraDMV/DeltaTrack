@@ -30,9 +30,9 @@ def _change(**overrides) -> ChangeView:
 
 def test_basic_card_structure():
     html = _build_card(_change(old_text="old prose", new_text="new prose"), 0)
-    assert html.startswith('<div class="change modified" id="change-0" data-type="modified">')
+    assert html.startswith('<div class="change" id="change-0" data-type="modified">')
     assert html.rstrip().endswith("</div>")
-    assert '<span class="change-type change-type--modified">modified</span>' in html
+    assert '<span class="change-type" data-type="modified">modified</span>' in html
     assert "<h3>TITLE I &gt; Customs</h3>" in html
 
 
@@ -83,7 +83,7 @@ def test_degraded_card_adds_unanchored_class_and_h3_class():
         ),
         0,
     )
-    assert '<div class="change modified unanchored"' in html
+    assert '<div class="change unanchored"' in html
     assert '<h3 class="degraded">' in html
 
 
