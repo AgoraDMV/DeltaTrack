@@ -79,9 +79,7 @@ def main() -> int:
     rows.sort(key=lambda r: (r["version"], r["left"], r["right"]))
     out = gate._RESIDUALS_PATH
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(
-        json.dumps({"residuals": rows, "undecided": undecided}, indent=2, sort_keys=True) + "\n"
-    )
+    out.write_text(json.dumps({"residuals": rows, "undecided": undecided}, indent=2, sort_keys=True) + "\n")
     print(f"\nwrote {len(rows)} residuals and {sum(undecided.values())} undecided sites to {out.relative_to(_ROOT)}")
     return 0
 

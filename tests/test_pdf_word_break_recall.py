@@ -51,10 +51,18 @@ because a chrome token is not a word and no reconstruction of it is attested. So
 left split where the XML can say so. A reader who took it for the stronger claim would
 stop looking for #535, which is still open.
 
-**The residual set.** Clause 2 does not reach zero. A break whose two candidate forms
-are both absent from the document's own text and from the other version compared with
-it is decided by case shape, and shape is wrong for a lowercase-continuation compound
-with no evidence anywhere (``government-`` / ``driven``). Those sites are enumerated
+**The residual set.** Clause 2 does not reach zero. This gate runs the SINGLE-DOCUMENT
+path (`cached_pages` -> `extract_clean_pages`), so the evidence it exercises is the
+document's own text and nothing else. A break whose two candidate forms are both absent
+from that text falls to the case-shape rule, and shape is wrong for a
+lowercase-continuation compound with no evidence anywhere (``government-`` /
+``driven``).
+
+The production comparison path can additionally borrow the other version being
+compared, after the document's own evidence is silent (`compare/pdf.py`,
+`BreakEvidence.then`). That path is NOT exercised here, so the residual set below is an
+upper bound on what a reader of a comparison sees, and no count in this file should be
+read as measuring sibling evidence. Those sites are enumerated
 in the committed fixture (`_residuals`) and asserted by SET EQUALITY, not as a ceiling: a ceiling is
 satisfied by fixing one site and breaking another, which is precisely the swap this
 file exists to catch. Shrinking the set is an explicit commit that shows which sites
@@ -139,12 +147,10 @@ class XmlOracle:
         return bool(prev_w and next_w) and (prev_w, word, next_w) in self._trigrams
 
     def _bigram(self, word: str, prev_w: str, next_w: str) -> bool:
-        return bool(prev_w and (prev_w, word) in self._bigrams) or bool(
-            next_w and (word, next_w) in self._bigrams
-        )
+        return bool(prev_w and (prev_w, word) in self._bigrams) or bool(next_w and (word, next_w) in self._bigrams)
 
     def verdict(self, keep: str, drop: str, prev_w: str, next_w: str) -> str:
-        """"KEEP" / "DROP" when context decides, else "UNDECIDED".
+        """ "KEEP" / "DROP" when context decides, else "UNDECIDED".
 
         The two candidates are compared WITHIN a tier before falling to the next one.
         Comparing across tiers reads a weaker match for one candidate as competing with
@@ -279,9 +285,10 @@ def _residuals() -> dict[str, set[tuple[str, str]]]:
     """The known-wrong joins, per version, from the committed fixture.
 
     A break whose two candidate forms are both unattested in the document's own text
-    and its sibling's falls to the case-shape rule, which cannot tell a
-    lowercase-continuation compound (``government-`` / ``driven``) from a syllable
-    break. Every entry here is that case.
+    falls to the case-shape rule, which cannot tell a lowercase-continuation compound
+    (``government-`` / ``driven``) from a syllable break. Every entry here is that case,
+    measured on the single-document path this gate runs; a comparison that can also
+    borrow the sibling version resolves some of them and never more.
 
     Regenerate with `scripts/regen_word_break_residuals.py` and review the diff. Do NOT
     add entries to clear a red run without first establishing which form the bill

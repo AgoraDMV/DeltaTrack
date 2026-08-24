@@ -877,5 +877,3 @@ def pdf_full_text_print(pages: list[Page]) -> tuple[str, dict[tuple[int, int], t
         chunks.extend(rows)
         base += spans[-1][1] + 1 if spans else 0
     return "\n".join(chunks), line_offsets
-
-
