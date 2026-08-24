@@ -91,14 +91,65 @@ def _canon(token: str) -> str:
     return token.strip("'\".,;:()[]").lower()
 
 
-def _xml_word_forms(xml_path: Path) -> set[str]:
-    """Every distinct word form in a bill XML, canonicalized."""
-    tree = etree.parse(str(xml_path))
-    forms: set[str] = set()
-    for text in tree.getroot().itertext():
-        for token in _WORD.findall(text):
-            forms.add(_canon(token))
-    return forms
+class XmlOracle:
+    """A bill version's XML, queried by ALIGNED LOCAL CONTEXT rather than by vocabulary.
+
+    Asking only "does this bill write that form anywhere" is not sufficient as a
+    specification: it can certify a reconstruction from an unrelated occurrence
+    elsewhere in the document, and it cannot choose at all when a bill uses both
+    spellings in different places. Requiring the reconstructed word to appear WITH its
+    PDF neighbours pins it to a position instead of a vocabulary.
+
+    Tiered, because the two formats do not tokenize identically: a trigram match is
+    demanded first, and a bigram on either side accepted when no trigram matches.
+    Trigram alone is too strict to be a gate -- it leaves ~1,500 corpus sites undecided
+    that context can in fact resolve.
+
+    Measured against plain vocabulary membership over the corpus, this contradicts it at
+    zero sites and decides ~69 more, because local context resolves cases where a bill
+    uses both spellings.
+    """
+
+    __slots__ = ("_vocab", "_bigrams", "_trigrams")
+
+    def __init__(self, xml_path: Path | None = None, *, tokens: list[str] | None = None) -> None:
+        if tokens is None:
+            tokens = []
+            for text in etree.parse(str(xml_path)).getroot().itertext():
+                for token in _WORD.findall(text):
+                    c = _canon(token)
+                    if c:
+                        tokens.append(c)
+        self._vocab = set(tokens)
+        self._bigrams = set(zip(tokens, tokens[1:]))
+        self._trigrams = set(zip(tokens, tokens[1:], tokens[2:]))
+
+    def _trigram(self, word: str, prev_w: str, next_w: str) -> bool:
+        return bool(prev_w and next_w) and (prev_w, word, next_w) in self._trigrams
+
+    def _bigram(self, word: str, prev_w: str, next_w: str) -> bool:
+        return bool(prev_w and (prev_w, word) in self._bigrams) or bool(
+            next_w and (word, next_w) in self._bigrams
+        )
+
+    def verdict(self, keep: str, drop: str, prev_w: str, next_w: str) -> str:
+        """"KEEP" / "DROP" when context decides, else "UNDECIDED".
+
+        The two candidates are compared WITHIN a tier before falling to the next one.
+        Comparing across tiers reads a weaker match for one candidate as competing with
+        a stronger match for the other: a bill writing both `anti-terrorism training`
+        and `antiterrorism funds` gives the hyphenated form a trigram at this position
+        and the closed form only a bigram, and mixing the two makes the site look
+        undecided when context in fact settles it.
+        """
+        for attests in (self._trigram, self._bigram):
+            k = attests(keep, prev_w, next_w)
+            d = attests(drop, prev_w, next_w)
+            if k != d:
+                return "KEEP" if k else "DROP"
+            if k and d:
+                return "UNDECIDED"  # both attested at this strength; no weaker tier can settle it
+        return "UNDECIDED"
 
 
 def _merge_groups(pages: list[Page]) -> list[tuple[int, str, list[str], list[int]]]:
@@ -149,66 +200,82 @@ def _word_at(text: str, index: int) -> str:
     return ""
 
 
-def _joined_words(groups: list[tuple[int, str, list[str], list[int]]]) -> list[tuple[str, str, str]]:
-    """(left fragment, right fragment, produced word) for every join the merger made."""
-    out: list[tuple[str, str, str]] = []
+def _neighbours(fragments: list[str], k: int) -> tuple[str, str, str, str]:
+    """(left, right, word before the split, word after it) for seam `k`.
+
+    The neighbours are what pins the reconstruction to a POSITION when it is put to the
+    XML, rather than merely to that bill's vocabulary.
+    """
+    here, nxt = _WORD.findall(fragments[k]), _WORD.findall(fragments[k + 1])
+    left = here[-1].rstrip("-") if here else ""
+    right = nxt[0] if nxt else ""
+    prev_w = _canon(here[-2]) if len(here) >= 2 else ""
+    next_w = _canon(nxt[1]) if len(nxt) >= 2 else ""
+    return left, right, prev_w, next_w
+
+
+def _joins(groups: list[tuple[int, str, list[str], list[int]]]) -> list[dict]:
+    """Every join the merger made, with what it produced and the context around it."""
+    out: list[dict] = []
     for _page_no, merged, fragments, seams in groups:
         for k, seam in enumerate(seams):
-            left = (_WORD.findall(fragments[k]) or [""])[-1].rstrip("-")
-            right = _WORD.findall(fragments[k + 1]) or [""]
-            out.append((left, right[0], _word_at(merged, seam)))
+            left, right, prev_w, next_w = _neighbours(fragments, k)
+            out.append(
+                {
+                    "left": left,
+                    "right": right,
+                    "prev": prev_w,
+                    "next": next_w,
+                    "produced": _word_at(merged, seam),
+                }
+            )
     return out
 
 
-def _unjoined_words(
-    groups: list[tuple[int, str, list[str], list[int]]], pages: list[Page], forms: set[str]
-) -> list[tuple[int, str, str]]:
-    """(page, left, right) for a word the printer split that reached `full_text` split.
+def _unjoined(groups, pages: list[Page], oracle: "XmlOracle") -> list[tuple[str, str]]:
+    """(left, right) for a word the printer split that reached `full_text` still split.
 
-    Asked against the XML rather than against the merger's own rule, deliberately. The
-    mechanical question -- "did a line end in a hyphen with an alphanumeric after it,
-    and was it joined?" -- is one the merger now always answers yes to, so a test
-    phrased that way could never fail: it would restate the implementation and pass
-    vacuously. The oracle question cannot: two fragments are a split WORD when putting
-    them together makes a word form the bill has and leaving them apart does not.
+    Asked against the XML, not against the merger's rule. The mechanical question --
+    "did a line end in a hyphen with a word after it, and was it joined?" -- is one the
+    merger now always answers yes to, so a test phrased that way would restate the
+    implementation and pass vacuously. Two fragments are a split WORD when putting them
+    together makes a word the bill has in that position and leaving them apart does not.
 
-    That also stops three things a line-final hyphen means other than a word break from
-    reading as defects, without needing to enumerate them: an em-dash introducing an
-    enumeration (`is amended-` / `(1) in paragraph`), a suspended hyphen (`short-` /
-    `, mid-, and long-range`), and the running-footer chrome that PDFium floats between
-    a page-seam break and its continuation (`† HR 4366 EAS`, issue #535). None of the
-    three joins into a word, so none is reported here.
+    This also excuses, without enumerating them, the things a line-final hyphen means
+    other than a word break: an em-dash introducing an enumeration, a suspended hyphen,
+    and running-header chrome standing between a page-seam break and its continuation.
+    None of the three reconstructs into an attested word.
     """
     flat = [line.text for page in pages for line in page.print_lines]
     cursor = 0
-    out: list[tuple[int, str, str]] = []
-    for page_no, _merged, fragments, _seams in groups:
+    out: list[tuple[str, str]] = []
+    for _page_no, _merged, fragments, _seams in groups:
         cursor += len(fragments)
-        tail = fragments[-1].rstrip()
-        m = _BREAK_TAIL.search(tail)
+        tail_text = fragments[-1].rstrip()
+        m = _BREAK_TAIL.search(tail_text)
         if not m or cursor >= len(flat):
             continue
-        left = m.group(0)[:-1]
-        right = (_WORD.findall(flat[cursor]) or [""])[0]
+        left, right, prev_w, next_w = _neighbours([tail_text, flat[cursor]], 0)
         if not right:
             continue
-        whole = {_canon(left + "-" + right), _canon(left + right)} & forms
-        if whole and _canon(left) not in forms:
-            out.append((page_no, left, right))
+        verdict = oracle.verdict(_canon(f"{left}-{right}"), _canon(f"{left}{right}"), prev_w, next_w)
+        if verdict != "UNDECIDED":
+            out.append((left, right))
     return out
 
 
 def _residuals() -> dict[str, set[tuple[str, str]]]:
-    """The known-irreducible joins, per version, from the committed fixture.
+    """The known-wrong joins, per version, from the committed fixture.
 
-    A break whose two candidate forms are BOTH absent from the document's own text
-    falls to `_shape_keeps_hyphen`, and shape cannot tell a lowercase-continuation
-    compound (``government-`` / ``driven``) from a syllable break. Every entry here is
-    that case; each carries the reason it could not be decided.
+    A break whose two candidate forms are both unattested in the document's own text
+    and its sibling's falls to the case-shape rule, which cannot tell a
+    lowercase-continuation compound (``government-`` / ``driven``) from a syllable
+    break. Every entry here is that case.
 
     Regenerate with `scripts/regen_word_break_residuals.py` and review the diff. Do NOT
-    add entries to clear a red run without first establishing which of the two forms
-    the bill actually uses -- a wrong entry silently blesses an invented word.
+    add entries to clear a red run without first establishing which form the bill
+    actually uses: a wrong entry silently blesses an invented word, which is exactly how
+    16 joins onto running-header chrome (`evidence-H.`) were once accepted here.
     """
     if not _RESIDUALS_PATH.exists():
         return {}
@@ -217,6 +284,18 @@ def _residuals() -> dict[str, set[tuple[str, str]]]:
     for entry in raw["residuals"]:
         out.setdefault(entry["version"], set()).add((entry["left"], entry["right"]))
     return out
+
+
+def _undecided_budget() -> dict[str, int]:
+    """Per version, how many sites the aligned oracle cannot decide.
+
+    Owned explicitly rather than ignored: a site the oracle cannot judge is a site this
+    gate does not cover, so silent growth of that set is a quiet weakening of the gate
+    and has to be a failure in its own right.
+    """
+    if not _RESIDUALS_PATH.exists():
+        return {}
+    return dict(json.loads(_RESIDUALS_PATH.read_text()).get("undecided", {}))
 
 
 _CASES = dual_format_versions()
@@ -232,28 +311,37 @@ def test_printed_word_breaks_reflow_to_real_words(bill: str, xml_path: Path, pdf
     pages = cached_pages(pdf_path)
     version = f"{bill}/{pdf_path.stem}"
 
+    oracle = XmlOracle(xml_path)
     groups = _merge_groups(pages)
-    forms = _xml_word_forms(xml_path)
-    unjoined = _unjoined_words(groups, pages, forms)
     expected = _residuals().get(version, set())
 
-    invented: dict[tuple[str, str], str] = {}
-    for left, right, produced in _joined_words(groups):
-        if _canon(produced) not in forms:
-            invented[(left, right)] = produced
+    wrong: dict[tuple[str, str], str] = {}
+    undecided = 0
+    for join in _joins(groups):
+        keep = _canon(f"{join['left']}-{join['right']}")
+        drop = _canon(f"{join['left']}{join['right']}")
+        verdict = oracle.verdict(keep, drop, join["prev"], join["next"])
+        if verdict == "UNDECIDED":
+            undecided += 1
+            continue
+        produced = _canon(join["produced"])
+        if produced != (keep if verdict == "KEEP" else drop):
+            wrong[(join["left"], join["right"])] = join["produced"]
 
     problems: list[str] = []
+
+    unjoined = _unjoined(groups, pages, oracle)
     if unjoined:
-        shown = "; ".join(f"p{n}: {a}- / {b}" for n, a, b in unjoined[:6])
+        shown = "; ".join(f"{a}- / {b}" for a, b in unjoined[:6])
         problems.append(f"{len(unjoined)} words the printer split reached full_text still split -- {shown}")
 
     # Set equality, not a ceiling: a ceiling is satisfied by fixing one site and
     # breaking another, which is the swap this file exists to catch.
-    unexpected = sorted(set(invented) - expected)
+    unexpected = sorted(set(wrong) - expected)
     if unexpected:
-        shown = "; ".join(f"{a}- / {b} -> {invented[(a, b)]!r}" for a, b in unexpected[:6])
-        problems.append(f"{len(unexpected)} joins produced a word form absent from the XML -- {shown}")
-    repaired = sorted(expected - set(invented))
+        shown = "; ".join(f"{a}- / {b} -> {wrong[(a, b)]!r}" for a, b in unexpected[:6])
+        problems.append(f"{len(unexpected)} joins disagree with the XML in context -- {shown}")
+    repaired = sorted(expected - set(wrong))
     if repaired:
         shown = "; ".join(f"{a}- / {b}" for a, b in repaired[:6])
         problems.append(
@@ -261,8 +349,14 @@ def test_printed_word_breaks_reflow_to_real_words(bill: str, xml_path: Path, pdf
             f"{_RESIDUALS_PATH.name} -- {shown}"
         )
 
-    assert not problems, f"{version}: " + " | ".join(problems)
+    budget = _undecided_budget().get(version)
+    if budget is not None and undecided != budget:
+        problems.append(
+            f"the aligned oracle now leaves {undecided} sites undecided here, not {budget}; "
+            f"a growing undecided set narrows what this gate covers"
+        )
 
+    assert not problems, f"{version}: " + " | ".join(problems)
 
 def test_join_points_reproduce_the_reflowed_text() -> None:
     """The carried join points are sufficient: applying them reflows the printed text
@@ -310,3 +404,87 @@ def test_join_points_reproduce_the_reflowed_text() -> None:
     out.append(printed[prev:])
 
     assert "".join("".join(out).split()) == "".join(reflowed_expected.split())
+
+
+# --- Negative controls -----------------------------------------------------------
+# Three ways a repair can look correct while being wrong. Each pins one, and each was
+# confirmed to go red when the corresponding mistake is reintroduced.
+
+
+def test_a_page_seam_break_is_never_joined_to_running_header_chrome() -> None:
+    """The dominant cross-page case, and the one a naive repair corrupts.
+
+    PDFium floats the running header to the top of the next page's reading order, so at
+    a page seam it lands between a broken word and its continuation. It begins with an
+    alphanumeric, so a repair that only checks "does the continuation start with a
+    letter" joins to it and manufactures `evidence-H.`, a form no bill contains. In the
+    corpus this shape outnumbers the genuine cross-page uppercase breaks 16 to 5, so
+    getting it wrong corrupts the common case while the named examples still pass.
+
+    Mutation that must fail this: dropping the `_SEAM_CHROME` guard in
+    `_rejoin_page_seam_breaks`.
+    """
+    from deltatrack.parsers.pdf_text import (
+        BreakEvidence,
+        PrintPages,
+        _parse_print_lines,
+        merge_print_pages,
+    )
+
+    page1 = tuple(_parse_print_lines("22 Grants to collaborate on use of evidence-"))
+    page2 = tuple(_parse_print_lines("H. R. 3547—61\n1 based positive behavior strategies"))
+    read = PrintPages((page1, page2), ({}, {}))
+    text = "\n".join(page.text for page in merge_print_pages(read, BreakEvidence()))
+
+    assert "evidence-H." not in text, "joined a broken word to the running header"
+    assert "evidenceH." not in text, "joined a broken word to the running header"
+    assert "H. R. 3547" in text, "the header itself must survive as its own line"
+
+
+def test_each_version_keeps_its_own_spelling_when_the_two_disagree() -> None:
+    """A real spelling change between versions must survive the repair.
+
+    Sibling evidence exists so a version can resolve breaks its own text leaves open.
+    If instead the two versions' counts are merged and the majority wins, the larger
+    document overrules the smaller about its own text: v1 here is unambiguous, and a
+    pooled majority would render it `NonDedicated`, erasing a difference the documents
+    actually have and reporting no change where there is one.
+
+    Mutation that must fail this: summing the two indexes and taking the majority
+    instead of consulting the sibling only where the document itself is silent.
+    """
+    from deltatrack.parsers.pdf_text import BreakEvidence, _merge_print_lines, _parse_print_lines
+
+    # v1 writes the hyphenated form once and never the closed one; v2 the reverse, more
+    # often, which is what lets a majority overrule v1.
+    v1 = BreakEvidence({"non-dedicated": 1})
+    v2 = BreakEvidence({"nondedicated": 5})
+    split = _parse_print_lines("15 Standards for Non-\n16 Dedicated Facilities")
+
+    v1_text = _merge_print_lines(list(split), v1.then(v2))[0][0].text
+    v2_text = _merge_print_lines(list(split), v2.then(v1))[0][0].text
+
+    assert "Non-Dedicated" in v1_text, "v1's own decisive evidence was overruled"
+    assert "NonDedicated" in v2_text, "v2's own decisive evidence was overruled"
+    assert v1_text != v2_text, "the spelling difference between the versions disappeared"
+
+
+def test_the_oracle_decides_by_context_not_by_vocabulary() -> None:
+    """The gate's oracle must be positional, or a flipped disposition can stay green.
+
+    A bill that uses both spellings in different places has both in its vocabulary, so
+    membership accepts either reconstruction and cannot catch a flip. Local context can:
+    `anti-terrorism training` and `antiterrorism funds` are different positions.
+
+    Mutation that must fail this: asking `form in vocabulary` instead of matching the
+    reconstruction against its neighbours.
+    """
+    xml = "the anti-terrorism training program and the antiterrorism funds account".split()
+    oracle = XmlOracle(tokens=xml)
+
+    # Both forms are in the vocabulary, so membership alone is indifferent here.
+    assert {"anti-terrorism", "antiterrorism"} <= set(xml)
+
+    assert oracle.verdict("anti-terrorism", "antiterrorism", "the", "training") == "KEEP"
+    assert oracle.verdict("anti-terrorism", "antiterrorism", "the", "funds") == "DROP"
+    assert oracle.verdict("anti-terrorism", "antiterrorism", "", "") == "UNDECIDED"

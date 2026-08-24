@@ -36,6 +36,20 @@ _WORD_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9'’\-\.]*")
 # The word fragment a printed line ends on when the printer broke it mid-word. The
 # final character before the hyphen is alphanumeric, matching `_is_break_tail`.
 _BREAK_TAIL = re.compile(r"[A-Za-z0-9][A-Za-z0-9'’\-\.]*[A-Za-z0-9]-$|[A-Za-z0-9]-$")
+# Running furniture PDFium floats to the TOP of the next page's reading order, where it
+# lands between a word broken at the page seam and its continuation: `H. R. 3547—61` on
+# enrolled prints, `† HR 4366 EAS` on Senate engrossed amendments. It begins with an
+# alphanumeric, so the join's "continuation starts alphanumeric" guard does not stop it,
+# and joining to it manufactures `evidence-H.` -- a word form no bill contains. Matched
+# as a WHOLE line: prose that merely mentions a bill (`HR 4366 is amended`) does not
+# match, because a real body line continues past the number.
+_SEAM_CHROME = re.compile(
+    r"^[^A-Za-z0-9]*"
+    r"(?:HCONRES|SCONRES|HJRES|SJRES|HRES|SRES|HR|H|S)"
+    r"\.?\s*(?:R|RES|J|CON)?\.?\s*"
+    r"\d[\d\s—–-]*"
+    r"(?:[A-Z]{2,4})?\s*$"
+)
 _SMART_GLYPHS = str.maketrans(
     {
         "‘": "'",
@@ -295,12 +309,20 @@ class BreakEvidence:
 
     The index deliberately excludes the fragments AT break sites, so a break is never
     evidence for itself.
+
+    Evidence is held as ORDERED TIERS, not one merged index, and the first tier that can
+    answer wins. That distinction is load-bearing. Summing a compared pair's counts and
+    taking the majority lets the larger document overrule the smaller one about its own
+    text: if v1 writes `Non-Dedicated` and never `NonDedicated`, while v2 writes
+    `NonDedicated` more often, a pooled majority renders BOTH as `NonDedicated`. That
+    corrupts v1, which was never ambiguous, and it erases a real spelling change between
+    the two versions -- the diff stops reporting a difference the documents actually have.
     """
 
-    __slots__ = ("_counts",)
+    __slots__ = ("_tiers",)
 
-    def __init__(self, counts: dict[str, int] | None = None) -> None:
-        self._counts = counts or {}
+    def __init__(self, counts: dict[str, int] | None = None, *, _tiers: tuple = ()) -> None:
+        self._tiers = _tiers if _tiers else (dict(counts or {}),)
 
     @classmethod
     def from_print_lines(cls, pages: list[list[Line]]) -> "BreakEvidence":
@@ -318,28 +340,31 @@ class BreakEvidence:
                         counts[key] = counts.get(key, 0) + 1
         return cls(counts)
 
-    def pooled_with(self, other: "BreakEvidence") -> "BreakEvidence":
-        """Both sides of a comparison as one index (#650 step 3).
+    def then(self, other: "BreakEvidence") -> "BreakEvidence":
+        """This document's evidence first, `other`'s consulted only where this is silent.
 
-        Two versions of one bill are near-identical documents, so a word one version
-        happens never to spell out unbroken is usually spelled out in the other. It
-        also removes the only cross-version disagreement the corpus contains
-        (`non-administrative` in 118-hr-4366), which would otherwise show up as a
-        spurious one-word change between two versions that both print it the same way.
+        Used to let a comparison borrow its sibling version (#650): two versions of one
+        bill are near-identical, so a compound one version never happens to spell out
+        unbroken is often spelled out in the other. Strictly subordinate, so borrowing
+        can only decide breaks the document itself leaves open, never overrule it.
         """
-        counts = dict(self._counts)
-        for key, n in other._counts.items():
-            counts[key] = counts.get(key, 0) + n
-        return BreakEvidence(counts)
+        return BreakEvidence(_tiers=self._tiers + other._tiers)
 
-    def keeps_hyphen(self, left: str, right: str) -> bool:
-        """Whether the break hyphen between two fragments belongs to the word."""
-        kept = self._counts.get(_canon_form(f"{left}-{right}"), 0)
-        dropped = self._counts.get(_canon_form(f"{left}{right}"), 0)
+    def _attested(self, tier: dict[str, int], left: str, right: str) -> bool | None:
+        kept = tier.get(_canon_form(f"{left}-{right}"), 0)
+        dropped = tier.get(_canon_form(f"{left}{right}"), 0)
         if kept and dropped:
             return kept >= dropped
         if kept or dropped:
             return bool(kept)
+        return None
+
+    def keeps_hyphen(self, left: str, right: str) -> bool:
+        """Whether the break hyphen between two fragments belongs to the word."""
+        for tier in self._tiers:
+            verdict = self._attested(tier, left, right)
+            if verdict is not None:
+                return verdict
         return _shape_keeps_hyphen(left, right)
 
 
@@ -676,7 +701,7 @@ def _rejoin_page_seam_breaks(
     for i in range(len(merged) - 1):
         while merged[i] and merged[i + 1] and _is_break_tail(merged[i][-1].text):
             continuation = merged[i + 1][0]
-            if not continuation.text[:1].isalnum():
+            if not continuation.text[:1].isalnum() or _SEAM_CHROME.match(continuation.text.strip()):
                 break
             tail = merged[i][-1]
             merged[i][-1] = Line(

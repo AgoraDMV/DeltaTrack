@@ -1,10 +1,14 @@
 """Regenerate the word-break residual fixture read by tests/test_pdf_word_break_recall.py.
 
-A residual is a printed word break the merger could not decide correctly: neither
-candidate form (`left-right` nor `leftright`) appears anywhere in the document's own
-text, so `pdf_text._shape_keeps_hyphen` decides it from letter case alone, and case
-cannot tell a lowercase-continuation compound (`government-` / `driven`) from a
-syllable break (`equip-` / `ment`).
+A residual is a printed word break whose reconstruction disagrees with the bill's XML
+read IN CONTEXT: neither candidate form is attested in the document's own text or its
+sibling version's, so `pdf_text._shape_keeps_hyphen` decides it from letter case alone,
+and case cannot tell a lowercase-continuation compound (`government-` / `driven`) from
+a syllable break (`equip-` / `ment`).
+
+The file also records, per version, how many sites the aligned oracle cannot decide at
+all. Those are sites the gate does not cover, so the count is asserted rather than
+ignored.
 
 Run after an INTENTIONAL change to the break rule, then review the JSON diff:
 
@@ -38,31 +42,46 @@ from tests import test_pdf_word_break_recall as gate  # noqa: E402
 
 def main() -> int:
     rows: list[dict[str, str]] = []
+    undecided: dict[str, int] = {}
     for bill, xml_path, pdf_path in dual_format_versions():
         version = f"{bill}/{pdf_path.stem}"
         pages = cached_pages(pdf_path)
-        forms = gate._xml_word_forms(xml_path)
+        oracle = gate.XmlOracle(xml_path)
         seen: set[tuple[str, str]] = set()
-        for left, right, produced in gate._joined_words(gate._merge_groups(pages)):
-            if gate._canon(produced) in forms or (left, right) in seen:
+        n_undecided = 0
+        for join in gate._joins(gate._merge_groups(pages)):
+            keep = gate._canon(f"{join['left']}-{join['right']}")
+            drop = gate._canon(f"{join['left']}{join['right']}")
+            verdict = oracle.verdict(keep, drop, join["prev"], join["next"])
+            if verdict == "UNDECIDED":
+                n_undecided += 1
                 continue
-            seen.add((left, right))
+            if gate._canon(join["produced"]) == (keep if verdict == "KEEP" else drop):
+                continue
+            key = (join["left"], join["right"])
+            if key in seen:
+                continue
+            seen.add(key)
             rows.append(
                 {
                     "version": version,
-                    "left": left,
-                    "right": right,
-                    "produced": produced,
-                    "reason": "no in-document evidence for either form; decided by case shape",
+                    "left": join["left"],
+                    "right": join["right"],
+                    "produced": join["produced"],
+                    "expected": keep if verdict == "KEEP" else drop,
+                    "reason": "no in-document or sibling evidence for either form; decided by case shape",
                 }
             )
-        print(f"{version:52s} residuals={len(seen)}", flush=True)
+        undecided[version] = n_undecided
+        print(f"{version:52s} residuals={len(seen):4d} undecided={n_undecided:4d}", flush=True)
 
     rows.sort(key=lambda r: (r["version"], r["left"], r["right"]))
     out = gate._RESIDUALS_PATH
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps({"residuals": rows}, indent=2, sort_keys=True) + "\n")
-    print(f"\nwrote {len(rows)} residuals to {out.relative_to(_ROOT)}")
+    out.write_text(
+        json.dumps({"residuals": rows, "undecided": undecided}, indent=2, sort_keys=True) + "\n"
+    )
+    print(f"\nwrote {len(rows)} residuals and {sum(undecided.values())} undecided sites to {out.relative_to(_ROOT)}")
     return 0
 
 
