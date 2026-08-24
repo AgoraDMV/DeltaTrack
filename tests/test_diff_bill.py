@@ -1310,7 +1310,10 @@ class TestCli:
         # with the division. Lowercasing is what bridges the two here, and the gap itself
         # is #689 (one concept, two names, neither matching the contract).
         for change in data["changes"]:
-            path_str = " ".join(change["path"]["v2"] or change["path"]["v1"]).lower()
+            # `or []` because a canonical change may carry `path: {v1: null, v2: null}`
+            # (front matter has no section breadcrumb on either side), and a TypeError
+            # here would report a filter failure as a crash.
+            path_str = " ".join(change["path"]["v2"] or change["path"]["v1"] or []).lower()
             assert "military construction, army" in path_str
 
     def test_subprocess_entrypoint(self):
