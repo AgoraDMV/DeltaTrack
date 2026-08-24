@@ -13,8 +13,12 @@ passes on two documents that are wrong in the same way. The schema test covers t
 direction byte-identity cannot: both surfaces drifting together, away from
 ``schema/canonical-diff.schema.json``.
 
-Real bill XML, so ``@pytest.mark.slow`` (see AGENTS.md). The fixture pair is
-committed and manifested, so these fail closed rather than skipping.
+Both formats are held to it. ``./diff_pdf.py`` gained ``--format json`` in the same
+change, and the PDF half is the one with no prior behaviour to preserve, so pinning it
+now is what keeps it from acquiring a second vocabulary the way the XML half did.
+
+Real bill documents, so ``@pytest.mark.slow`` (see AGENTS.md). The fixture pair is
+committed and manifested in both formats, so these fail closed rather than skipping.
 """
 
 from __future__ import annotations
@@ -26,32 +30,41 @@ from pathlib import Path
 import pytest
 
 from deltatrack.diff_bill import build_parser, cmd_compare
+from deltatrack.diff_pdf import main as diff_pdf_main
 from tests.corpus_paths import FIXTURES_DIR
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = ROOT / "schema" / "canonical-diff.schema.json"
 
 BILL_DIR = FIXTURES_DIR / "118-hr-8752"
-V1 = BILL_DIR / "1_reported-in-house.xml"
-V2 = BILL_DIR / "2_engrossed-in-house.xml"
+V1_STEM = "1_reported-in-house"
+V2_STEM = "2_engrossed-in-house"
 
 
 def _cli_json(tmp_dir: Path, old: Path, new: Path) -> str:
-    """``./diff_bill.py compare --format json``, driven through its real argument parser."""
+    """The command's JSON output, driven through its real argument parser.
+
+    Dispatches on the extension, because the two commands are meant to be the same
+    offer: `./diff_bill.py compare --format json` and `./diff_pdf.py --format json`.
+    """
     out = tmp_dir / "cli.json"
-    cmd_compare(build_parser().parse_args(["compare", str(old), str(new), "--format", "json", "-o", str(out)]))
+    if old.suffix == ".xml":
+        cmd_compare(build_parser().parse_args(["compare", str(old), str(new), "--format", "json", "-o", str(out)]))
+    else:
+        diff_pdf_main([str(old), str(new), "--format", "json", "-o", str(out)])
     return out.read_text()
 
 
 def _endpoint_json(old: Path, new: Path) -> dict:
-    """``POST /api/compare?format=xml&output=json``, driven through the real route."""
+    """``POST /api/compare?output=json``, driven through the real FastAPI route."""
     from fastapi.testclient import TestClient
 
     from web.app import app
 
+    fmt = old.suffix.lstrip(".")
     with open(old, "rb") as start, open(new, "rb") as end:
         response = TestClient(app).post(
-            "/api/compare?format=xml&output=json",
+            f"/api/compare?format={fmt}&output=json",
             files={
                 "start_file": (old.name, start, "application/octet-stream"),
                 "end_file": (new.name, end, "application/octet-stream"),
@@ -61,27 +74,35 @@ def _endpoint_json(old: Path, new: Path) -> dict:
     return response.json()
 
 
-@pytest.fixture(scope="module")
-def unprefixed_pair(tmp_path_factory) -> tuple[Path, Path]:
+@pytest.fixture(scope="module", params=["xml", "pdf"])
+def unprefixed_pair(request, tmp_path_factory) -> tuple[Path, Path]:
     """The fixture pair copied under stems carrying no ``<n>_`` legislative ordinal.
 
     The two surfaces derive a version's identity from the filename by different
     algorithms: ``version_stems.label_from_stem`` strips a numeric prefix and
     ``version_number_from_stem`` reads the ordinal off it, while
-    ``web/app.py::_label_from_filename`` strips only the path and the extension and
-    has no ordinal to read at all. On ``1_reported-in-house.xml`` they therefore
-    disagree, and that disagreement is #692 (one bill pair, three different version
-    headings), a property of the two label algorithms rather than of the diff.
+    ``web/app.py::_label_from_filename`` strips only the path and the extension and has
+    no ordinal to read at all. On ``1_reported-in-house.xml`` they therefore disagree,
+    and that disagreement is #692 (one bill pair, three different version headings), a
+    property of the two label algorithms rather than of the diff.
 
     Removing the prefix removes that variable, so the parity gate below measures the
     document rather than re-measuring #692. What the corpus filenames *do* change is
     asserted separately, so the exclusion stays one named key wide.
     """
-    tmp = tmp_path_factory.mktemp("unprefixed")
-    old, new = tmp / "reported-in-house.xml", tmp / "engrossed-in-house.xml"
-    shutil.copyfile(V1, old)
-    shutil.copyfile(V2, new)
+    ext = request.param
+    tmp = tmp_path_factory.mktemp(f"unprefixed-{ext}")
+    old, new = tmp / f"reported-in-house.{ext}", tmp / f"engrossed-in-house.{ext}"
+    shutil.copyfile(BILL_DIR / f"{V1_STEM}.{ext}", old)
+    shutil.copyfile(BILL_DIR / f"{V2_STEM}.{ext}", new)
     return old, new
+
+
+@pytest.fixture(scope="module", params=["xml", "pdf"])
+def corpus_pair(request) -> tuple[Path, Path]:
+    """The committed fixture pair under its real ``<n>_<label>`` names."""
+    ext = request.param
+    return BILL_DIR / f"{V1_STEM}.{ext}", BILL_DIR / f"{V2_STEM}.{ext}"
 
 
 @pytest.mark.slow
@@ -89,9 +110,9 @@ def test_the_command_and_the_endpoint_return_the_same_document(tmp_path, unprefi
     """Same two files in, byte-identical canonical JSON out.
 
     This is the gate #693 is verified by, and reverting the routing in
-    ``cmd_compare`` is the mutation that turns it red: the internal diff dictionary
-    shares two top-level keys with the canonical document and none of its change
-    fields.
+    ``diff_bill.cmd_compare`` is the mutation that turns it red: the internal diff
+    dictionary shares two top-level keys with the canonical document and none of its
+    change fields.
     """
     old, new = unprefixed_pair
     cli_text = _cli_json(tmp_path, old, new)
@@ -102,7 +123,7 @@ def test_the_command_and_the_endpoint_return_the_same_document(tmp_path, unprefi
 
 
 @pytest.mark.slow
-def test_only_the_version_identity_depends_on_the_filename(tmp_path):
+def test_only_the_version_identity_depends_on_the_filename(tmp_path, corpus_pair):
     """On the committed corpus stems, ``versions`` is the only key that may differ.
 
     The mutation this catches and the test above cannot: making any *other* canonical
@@ -113,8 +134,9 @@ def test_only_the_version_identity_depends_on_the_filename(tmp_path):
     Deliberately not an inequality assertion on ``versions``: when #692 lands and the
     two algorithms converge, this test should stay green rather than pin the defect.
     """
-    cli = json.loads(_cli_json(tmp_path, V1, V2))
-    endpoint = _endpoint_json(V1, V2)
+    old, new = corpus_pair
+    cli = json.loads(_cli_json(tmp_path, old, new))
+    endpoint = _endpoint_json(old, new)
 
     assert set(cli) == set(endpoint)
     assert {k: v for k, v in cli.items() if k != "versions"} == {k: v for k, v in endpoint.items() if k != "versions"}
