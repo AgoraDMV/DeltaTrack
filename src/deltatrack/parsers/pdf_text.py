@@ -302,10 +302,16 @@ class BreakEvidence:
     almost always writes the word out somewhere it did not have to break: `intelligence`
     appears unbroken 7 times elsewhere in 118-hr-8752, `Non-Dedicated` once.
 
-    Swept over the fixture corpus against GPO's XML as an oracle, this decides 47,875
-    of 50,679 breaks (94.5%) with ZERO errors; pooling a compared pair's two documents
-    (`pooled_with`) adds 826 more, also with zero. The remainder falls to
-    `_shape_keeps_hyphen`.
+    A document's own text decides the large majority of its breaks. Where it is silent,
+    a comparison can borrow the other version being compared (`then`), which is
+    near-identical and often spells out unbroken what this one only ever printed broken.
+    The remainder falls to `_shape_keeps_hyphen`.
+
+    An earlier revision POOLED the pair's counts into one index and took the majority.
+    That is not equivalent and is not safe: see `then`. The measurement offered for it
+    at the time, that the two versions never disagreed afterwards, was vacuous, because
+    pooling applies identical evidence to both sides and so guarantees agreement by
+    construction.
 
     The index deliberately excludes the fragments AT break sites, so a break is never
     evidence for itself.
@@ -785,8 +791,9 @@ def extract_clean_pages(pdf_path: Path) -> list[Page]:
     word, so every page must be read before any page can be merged. See `BreakEvidence`.
 
     A caller comparing two documents should use `extract_print_pages` +
-    `merge_print_pages` with the pair's pooled evidence instead, which decides several
-    hundred more breaks and keeps the two sides from spelling one word two ways.
+    `merge_print_pages` with `own.then(sibling)` instead, so breaks this document leaves
+    open can be settled by the other version without either version being overruled
+    about its own text.
     """
     read = extract_print_pages(pdf_path)
     return merge_print_pages(read, read.evidence())

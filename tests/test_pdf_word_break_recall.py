@@ -345,11 +345,20 @@ def test_printed_word_breaks_reflow_to_real_words(bill: str, xml_path: Path, pdf
             f"{_RESIDUALS_PATH.name} -- {shown}"
         )
 
-    budget = _undecided_budget().get(version)
-    if budget is not None and undecided != budget:
+    # Required, not optional. Reading the budget with a default would let deleting a
+    # version's entry disable this control for that version, which is the weakening the
+    # count exists to prevent -- the check would then fail OPEN on the one edit most
+    # likely to be made to quiet it.
+    budgets = _undecided_budget()
+    if version not in budgets:
         problems.append(
-            f"the aligned oracle now leaves {undecided} sites undecided here, not {budget}; "
-            f"a growing undecided set narrows what this gate covers"
+            f"no undecided-site budget recorded for this version in {_RESIDUALS_PATH.name}; "
+            f"regenerate rather than removing the entry"
+        )
+    elif undecided != budgets[version]:
+        problems.append(
+            f"the aligned oracle now leaves {undecided} sites undecided here, not "
+            f"{budgets[version]}; a growing undecided set narrows what this gate covers"
         )
 
     assert not problems, f"{version}: " + " | ".join(problems)
@@ -437,3 +446,20 @@ def test_the_oracle_decides_by_context_not_by_vocabulary() -> None:
     assert oracle.verdict("anti-terrorism", "antiterrorism", "the", "training") == "KEEP"
     assert oracle.verdict("anti-terrorism", "antiterrorism", "the", "funds") == "DROP"
     assert oracle.verdict("anti-terrorism", "antiterrorism", "", "") == "UNDECIDED"
+
+
+def test_every_collected_version_has_an_undecided_budget() -> None:
+    """The budget must cover exactly the versions the gate runs on.
+
+    Set equality rather than presence: a stale entry for a version no longer in the
+    corpus is as much a drift signal as a missing one, and the per-version check above
+    can only speak for versions that are collected.
+
+    Mutation that must fail this: deleting any key from `undecided` in the fixture.
+    """
+    recorded = set(_undecided_budget())
+    collected = {f"{bill}/{pdf.stem}" for bill, _xml, pdf in _CASES}
+    assert recorded == collected, (
+        f"undecided-site budget does not match the collected versions; "
+        f"missing {sorted(collected - recorded)}, stale {sorted(recorded - collected)}"
+    )

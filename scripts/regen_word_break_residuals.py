@@ -20,8 +20,9 @@ Never add an entry just to clear a red run -- establish which form the bill actu
 uses first, because a wrong entry silently blesses an invented word.
 
 Note this measures the SINGLE-DOCUMENT path (`extract_clean_pages`). The shipped
-comparison pools both versions' evidence (`compare/pdf.py`) and resolves strictly
-more, so this fixture is an upper bound on what a reader actually sees.
+comparison additionally lets each version borrow the other where its own text is silent
+(`compare/pdf.py`, own evidence first), which can only settle breaks this path leaves
+to the fallback, so this fixture is an upper bound on what a reader actually sees.
 """
 
 from __future__ import annotations
