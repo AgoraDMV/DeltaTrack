@@ -297,11 +297,11 @@ def _block_key(block: _Block) -> str:
 def _extract_amount_pairs(v1_text: str, v2_text: str) -> tuple[tuple[int | None, int | None], ...]:
     """All amount pairs from match_amounts as a tuple, including unchanged pairs.
 
-    The full pair list (changed / added / removed / unchanged) is carried on the
-    hunk. The canonical producer categorizes it into `amount_entries` — the export's
-    only money field since v2.0 (#274) — dropping unchanged (`old == new`) pairs
-    there (`formatters/canonical.py:_amount_entries`). Preserving the unchanged
-    pairs here keeps this function a lossless view of match_amounts.
+    The full pair list (changed / added / removed / unchanged) is carried on the hunk
+    and goes no further: schema v3.0 removed `amount_entries`, the export field this
+    used to feed, because pairing a figure on one side with a figure on the other is a
+    claim about an account the pipeline cannot yet type (#671). The pairs stay here as
+    an observation, unpublished, for the financial-semantics layer in #115 to read.
     """
     return tuple(match_amounts(v1_text, v2_text))
 

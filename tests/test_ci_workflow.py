@@ -24,7 +24,10 @@ nothing about the rest of the workflow, so adding a job or a step does not touch
 from __future__ import annotations
 
 import ast
+import json
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -702,4 +705,304 @@ def test_a_module_named_beside_a_real_invocation_is_not_covered(tmp_path: Path) 
     )
     assert "test_other_gate.py" in covered, (
         f"the genuinely invoked module in that block was not detected: {sorted(covered)}"
+    )
+
+
+# --- Every weekly failure reaches a person, whatever failed --------------------
+# `corpus-parity.yml` is the only workflow that files an issue, and therefore the only
+# scheduled workflow with tracker-backed failure reporting. (`security.yml` also runs on a
+# Monday cron, 17 minutes earlier, and reports nowhere but the run list.) That report is
+# what makes the gate worth having: a red weekly run emails whoever last edited the cron
+# expression and nobody else, which the workflow's own comment explains at the reporting
+# step. The report was gated on
+#
+#     if: failure() && steps.parity.outcome == 'failure'
+#
+# so it also required the CHECK to have failed. A checkout, uv, Python-install or
+# `uv sync` failure leaves that step `skipped` -- or unset, when checkout dies before the
+# step exists -- so the workflow went red and filed nothing (#680).
+#
+# That is fail-open in the worse direction. A parity failure is a real signal about
+# upstream data that someone would eventually chase; a broken runner is invisible, and
+# the gate stops running entirely while every Monday adds another red to an inbox nobody
+# owns. Four scheduled runs had passed at the time of filing, so the reporting step had
+# never executed in either branch: its correctness was unobserved, not just its coverage.
+#
+# TWO properties are pinned below and they fail on different mutations, so neither makes
+# the other redundant. `_failure_report_failures` reads the CONDITION and answers "does
+# every job failure reach the reporting step at all". The script test EXECUTES the step's
+# own `run:` text and answers "once there, does it tell the two failures apart". Re-gating
+# the condition leaves the script test green; collapsing the two titles leaves the
+# condition guard green.
+
+PARITY_WORKFLOW = WORKFLOWS / "corpus-parity.yml"
+
+# The two titles the reporting script chooses between. They must differ: the reuse search
+# matches on title, so one shared title would post "Still failing as of the weekly run"
+# onto an open corpus-drift report every time the runner broke, misattributing the cause.
+_DRIFT_TITLE = "Corpus filenames diverge from govinfo enumeration"
+_SETUP_TITLE = "Weekly corpus-parity check could not run"
+
+# A phrase carried by one report body and absent from the other. The titles alone do not
+# pin the diagnosis: copying the drift body under the setup title would hand a reader an
+# infrastructure failure described as an upstream corpus rename, telling them to re-fetch
+# bills that are not the problem, with every title assertion still green.
+_DRIFT_PHRASE = "bill filenames on disk that govinfo enumeration no longer produces"
+_SETUP_PHRASE = "never reached its assertion"
+
+# The reporting step is located by what it DOES -- `gh issue create` inside an executable
+# `run:` block -- never by its `name`. Matching the name would let a rename drop the step
+# out of this guard and take the assertion with it, silently, which is the vacuous pass
+# `test_failure_report_guard_detects_a_missing_report_step` pins.
+_FILES_AN_ISSUE = re.compile(r"\bgh issue create\b")
+
+# Any read of another step's result inside the condition reintroduces #680, whichever step
+# and whichever spelling: `outcome` is the result before `continue-on-error` applies and
+# `conclusion` the one after, and both read `skipped` for a step that never ran.
+_STEP_RESULT_REFERENCE = re.compile(r"steps\.[A-Za-z0-9_-]+\.(?:outcome|conclusion)")
+
+
+def _issue_reporting_steps(workflow: dict) -> list[dict]:
+    return [
+        step
+        for job in (workflow.get("jobs") or {}).values()
+        for step in (job.get("steps") or [])
+        if _FILES_AN_ISSUE.search(str(step.get("run", "")))
+    ]
+
+
+def _failure_report_failures(path: Path) -> list[str]:
+    """Why a job failure in `path` would go unreported, as failures; empty when none would.
+
+    One validation path, as `_security_push_failures` above: the live guard asserts this
+    is empty for the real corpus-parity.yml, and two negative controls assert it fires --
+    one for the exact condition #680 was filed against, one for a workflow whose reporting
+    step is gone. A rewrite that accepts either of those flips all three at once, so the
+    live assertion cannot go quietly vacuous.
+    """
+    workflow = yaml.safe_load(path.read_text(encoding="utf-8"))
+    steps = _issue_reporting_steps(workflow)
+    if not steps:
+        return [f"{path.name} has no step running `gh issue create`, so no failure reaches the tracker"]
+
+    failures: list[str] = []
+    for step in steps:
+        name = step.get("name", "<unnamed step>")
+        # An absent `if:` is not a neutral default here: the step would then run only when
+        # everything before it SUCCEEDED, reporting nothing ever. It reads below as a
+        # condition that never calls failure(), which is exactly what it is.
+        condition = str(step.get("if", ""))
+        if "failure()" not in condition:
+            failures.append(f"{name!r} has if: {condition!r}, which never calls failure()")
+        if "always()" in condition:
+            failures.append(f"{name!r} has if: {condition!r}; always() also files a report on a green run")
+        reference = _STEP_RESULT_REFERENCE.search(condition)
+        if reference is not None:
+            failures.append(f"{name!r} gates on {reference.group(0)}, so a failure BEFORE that step files nothing")
+    return failures
+
+
+def test_every_job_failure_reaches_the_failure_report() -> None:
+    """A failure anywhere in the parity job must reach the tracker, not just a parity failure.
+
+    Protects the reporting contract the workflow argues for in prose: a weekly job's
+    failure has to land somewhere a person actually looks. The mutation that turns this
+    red is re-adding any `steps.*.outcome` term to the condition, narrowing it to
+    `success()`, or widening it to `always()`.
+    """
+    failures = _failure_report_failures(PARITY_WORKFLOW)
+    assert not failures, (
+        f"a job failure in {PARITY_WORKFLOW.name} would not be reported ({'; '.join(failures)}). "
+        "The infrastructure failures are the ones that persist: the workflow reddens weekly "
+        "into an inbox nobody owns and the parity gate stops running -- see #680."
+    )
+
+
+def test_failure_report_guard_detects_a_step_gated_condition(tmp_path: Path) -> None:
+    """The exact condition #680 was filed against must be rejected, not merely disliked.
+
+    Runs the live validator against a workflow carrying the pre-fix condition verbatim.
+    Without this the live assertion above could pass because the validator stopped reading
+    conditions at all, which is indistinguishable from passing because the condition is
+    right.
+    """
+    gated = tmp_path / "corpus-parity.yml"
+    gated.write_text(
+        "on:\n"
+        "  schedule:\n"
+        '    - cron: "17 6 * * 1"\n'
+        "jobs:\n"
+        "  parity:\n"
+        "    steps:\n"
+        "      - name: Check corpus filenames against live govinfo enumeration\n"
+        "        id: parity\n"
+        "        run: uv run pytest -m slow --run-network tests/test_govinfo_corpus_parity.py\n"
+        "      - name: Report a failure as an issue\n"
+        "        if: failure() && steps.parity.outcome == 'failure'\n"
+        '        run: gh issue create --title "$title" --body "$body"\n',
+        encoding="utf-8",
+    )
+    failures = _failure_report_failures(gated)
+    assert failures, "the validator accepted the exact step-gated condition #680 was filed against"
+    assert any("steps.parity.outcome" in failure for failure in failures), (
+        f"the failure does not name the step reference that causes the gap: {failures}"
+    )
+
+
+def test_failure_report_guard_detects_a_missing_report_step(tmp_path: Path) -> None:
+    """A workflow that files nothing must fail the guard rather than pass it empty-handed.
+
+    The condition checks iterate over the reporting steps found, so a workflow with none
+    would satisfy every one of them vacuously and report zero failures. Deleting the
+    reporting step is a realistic edit -- it is the one step a "simplify the weekly job"
+    change would drop -- and it retires the whole reporting mechanism, which is a strictly
+    worse outcome than the gap #680 describes.
+    """
+    silent = tmp_path / "corpus-parity.yml"
+    silent.write_text(
+        "on:\n"
+        "  schedule:\n"
+        '    - cron: "17 6 * * 1"\n'
+        "jobs:\n"
+        "  parity:\n"
+        "    steps:\n"
+        "      - name: Check corpus filenames against live govinfo enumeration\n"
+        "        id: parity\n"
+        "        run: uv run pytest -m slow --run-network tests/test_govinfo_corpus_parity.py\n",
+        encoding="utf-8",
+    )
+    failures = _failure_report_failures(silent)
+    assert failures, "the validator passed a workflow with no issue-filing step at all"
+    assert "gh issue create" in failures[0], f"the failure does not name what is missing: {failures}"
+
+
+def _report_script(path: Path) -> str:
+    """The reporting step's own `run:` text, exactly as CI would execute it.
+
+    Read out of the parsed workflow rather than copied into this module, so the test
+    cannot drift from the script that actually runs. A copy would encode this test's
+    belief about the script and stay green while the two diverged.
+    """
+    steps = _issue_reporting_steps(yaml.safe_load(path.read_text(encoding="utf-8")))
+    assert len(steps) == 1, f"expected exactly one issue-filing step in {path.name}, found {len(steps)}"
+    return str(steps[0]["run"])
+
+
+def _run_report_script(tmp_path: Path, parity_outcome: str) -> list[list[str]]:
+    """Execute the real reporting script against a stubbed `gh`; return the calls it made."""
+    script = tmp_path / "report.sh"
+    script.write_text(_report_script(PARITY_WORKFLOW), encoding="utf-8")
+
+    calls = tmp_path / "gh-calls.jsonl"
+    stub_dir = tmp_path / "bin"
+    stub_dir.mkdir()
+    stub = stub_dir / "gh"
+    # Records argv and prints nothing. Empty output from `gh issue list` stands for "no
+    # open report of this kind", so the script takes its create path. The shebang names
+    # this interpreter directly, so the stub does not depend on the stripped PATH below
+    # happening to contain a python.
+    stub.write_text(
+        f"#!{sys.executable}\n"
+        "import json, os, sys\n"
+        "with open(os.environ['GH_CALLS'], 'a') as handle:\n"
+        "    handle.write(json.dumps(sys.argv[1:]) + '\\n')\n",
+        encoding="utf-8",
+    )
+    stub.chmod(0o755)
+
+    # An EMPTY working directory, deliberately. The failure being reported may be the
+    # checkout itself, so a reporting path that reads anything out of the repository could
+    # not run in precisely the case #680 is about. The environment is stripped to the
+    # variables the step declares, for the same reason: `set -u` then turns any reliance
+    # on something CI does not provide into a non-zero exit rather than a silent empty
+    # substitution.
+    workdir = tmp_path / "empty"
+    workdir.mkdir()
+
+    completed = subprocess.run(
+        ["bash", str(script)],
+        cwd=workdir,
+        env={
+            "PATH": f"{stub_dir}:/usr/bin:/bin",
+            "GH_CALLS": str(calls),
+            "GH_TOKEN": "stub-token",
+            "GITHUB_REPOSITORY": "AgoraDMV/DeltaTrack",
+            "RUN_URL": "https://example.invalid/actions/runs/1",
+            "PARITY_OUTCOME": parity_outcome,
+        },
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 0, (
+        f"the reporting script exited {completed.returncode} for PARITY_OUTCOME={parity_outcome!r}: {completed.stderr}"
+    )
+    return [json.loads(line) for line in calls.read_text(encoding="utf-8").splitlines()]
+
+
+def _argument(call: list[str], flag: str) -> str:
+    assert flag in call, f"{flag} is not among the arguments of `gh {' '.join(call)}`"
+    return call[call.index(flag) + 1]
+
+
+@pytest.mark.parametrize(
+    ("parity_outcome", "expected_title", "expected_phrase", "wrong_phrase"),
+    [
+        ("failure", _DRIFT_TITLE, _DRIFT_PHRASE, _SETUP_PHRASE),
+        ("skipped", _SETUP_TITLE, _SETUP_PHRASE, _DRIFT_PHRASE),
+        ("", _SETUP_TITLE, _SETUP_PHRASE, _DRIFT_PHRASE),
+    ],
+    ids=["check-failed", "check-skipped", "check-never-existed"],
+)
+def test_failure_report_titles_and_explains_each_condition(
+    tmp_path: Path, parity_outcome: str, expected_title: str, expected_phrase: str, wrong_phrase: str
+) -> None:
+    """Corpus drift and a broken runner file separate reports, and reuse separate reports.
+
+    Two things are pinned, and the title alone is not enough for either.
+
+    The TITLE is what the reuse search matches on, so sharing one would comment "Still
+    failing as of the weekly run" onto an open corpus-drift report whenever the runner
+    broke, blaming upstream data for an infrastructure fault and leaving the real state
+    buried. The mutation is giving both branches the same title.
+
+    The BODY is what a reader acts on, and it can be wrong while the title is right.
+    Copying the drift body under the setup title would tell someone whose runner broke to
+    re-download bills and edit `_ACCEPTED_EXTRA_STEMS`, none of which is the problem, and
+    a title-only assertion stays green throughout. So each case asserts a phrase its own
+    body carries AND that the other body's phrase is absent; presence alone would still
+    pass if the two bodies were concatenated.
+
+    The three cases are the three values CI can actually produce. `failure` is the check
+    itself; `skipped` is a step that failed ahead of it; the empty string is the checkout
+    dying before the parity step exists, so `steps.parity` never enters the context. The
+    last is the headline case of #680 and is the reason the assertions run from an empty
+    directory.
+    """
+    calls = _run_report_script(tmp_path, parity_outcome)
+
+    assert [call[:2] for call in calls] == [["issue", "list"], ["issue", "create"]], (
+        f"expected a reuse search followed by one create, got {calls}"
+    )
+    search, create = calls
+
+    assert _argument(search, "--search") == f'"{expected_title}" in:title', (
+        f"the reuse search for PARITY_OUTCOME={parity_outcome!r} does not look for its own report: {search}"
+    )
+    assert _argument(create, "--title") == expected_title, (
+        f"PARITY_OUTCOME={parity_outcome!r} filed the wrong report title: {create}"
+    )
+    assert _argument(create, "--repo") == "AgoraDMV/DeltaTrack", f"filed against the wrong repository: {create}"
+
+    body = _argument(create, "--body")
+    assert "https://example.invalid/actions/runs/1" in body, (
+        f"the report body does not carry the run log link, which is all a reader has: {create}"
+    )
+    assert expected_phrase in body, (
+        f"PARITY_OUTCOME={parity_outcome!r} filed {expected_title!r} without the explanation that "
+        f"condition calls for; expected a body saying {expected_phrase!r}, got: {body!r}"
+    )
+    assert wrong_phrase not in body, (
+        f"PARITY_OUTCOME={parity_outcome!r} filed a body describing the OTHER condition "
+        f"({wrong_phrase!r}), which sends the reader after the wrong cause: {body!r}"
     )

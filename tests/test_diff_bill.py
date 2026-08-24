@@ -761,11 +761,13 @@ class TestCompareLegacyTwoPathForm:
         )
         data = json.loads(capsys.readouterr().out)
         assert data["financial_summary"] == {"sections_with_financial_changes": 1}
+        # End-to-end through the CLI: the multiset facts survive #671, the pairing
+        # does not. Exact dict so a re-added field fails here too, not only in the
+        # serializer unit test.
         assert data["changes"][0]["financial"] == {
             "old_amounts": [1000000],
             "new_amounts": [2000000],
             "amounts_changed": True,
-            "paired_amounts": [[1000000, 2000000]],
             "has_amendment_annotations": False,
         }
 

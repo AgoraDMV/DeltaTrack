@@ -34,8 +34,8 @@ asserts a POSITIVE COUNT of validated entries.
 Scope: only entries whose parametrize id is a manifest fixture reference — either
 ``<bill>/<stage>.<fmt>`` or the extensionless ``<bill>/<stage>`` stage form — are
 manifest-validated. Gate cases that are not parametrized over a manifest fixture — the
-class-based ``test_diff_validation`` gates, the plain ``skipif`` functions in
-``test_financial_callout_whole_item``, the unparametrized CI-slow floors — have no
+class-based ``test_diff_validation`` gates, plain module-level ``skipif`` functions,
+the unparametrized CI-slow floors — have no
 manifest coupling to drift, so they are left to the module-prefix guard and the runtime
 ceiling.
 
@@ -190,11 +190,11 @@ def test_guard_flags_a_real_entry_when_its_fixture_leaves_the_manifest() -> None
 
 def test_guard_ignores_entries_with_no_manifest_fixture_key() -> None:
     """Entries that key on no manifest fixture — a class-based diff gate, a plain
-    ``skipif`` callout function — carry no manifest coupling and must NOT be flagged
+    module-level test function — carry no manifest coupling and must NOT be flagged
     (the false-positive direction: this guard governs manifest drift only)."""
     non_fixture = {
         "tests/test_diff_validation.py::TestControlledDiff::test_added_section": "r",
-        "tests/test_financial_callout_whole_item.py::test_sec_20004_callout_nets_to_zero": "r",
+        "tests/test_pdf_diff_recall.py::test_annotation_case_selection_is_not_empty": "r",
     }
     assert stale_allowlist_entries(non_fixture, manifest_fixture_ids()) == {}
 

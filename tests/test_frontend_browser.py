@@ -168,9 +168,16 @@ def _render_grouped_report() -> str:
     """A full standalone report whose cards group under tree nodes (#172).
 
     Hand-built canonical (the consumed contract) with a v2 tree and change
-    spans in one offset space, so the own-span join is live: one financial
-    change directly under TITLE I, two non-financial changes under its
-    SALARIES / OPERATIONS accounts. Exercises the real _JS.
+    spans in one offset space, so the own-span join is live: one ADDED change
+    directly under TITLE I, two MODIFIED changes under its SALARIES /
+    OPERATIONS accounts. Exercises the real _JS.
+
+    The change types are load-bearing: the Structural filter selects on
+    ``data-type !== 'modified'``, so this shape gives it exactly one survivor,
+    directly under the parent node. That is what makes the filter tests below
+    prove a *recount* of a nested subtree rather than a blanket hide. Before
+    #671 the same shape was expressed with the Financial filter and one card
+    carrying amount entries, a field the canonical no longer has.
     """
     from deltatrack.formatters.diff_html import format_diff_html
 
@@ -183,10 +190,10 @@ def _render_grouped_report() -> str:
             "children": list(children),
         }
 
-    def change(i, start, end, amount_entries):
+    def change(i, start, end, change_type="modified"):
         return {
             "id": f"c{i}",
-            "change_type": "modified",
+            "change_type": change_type,
             "section_number": "",
             "path": {"v1": ["TITLE I"], "v2": ["TITLE I"]},
             "location": None,
@@ -194,7 +201,6 @@ def _render_grouped_report() -> str:
             # The appended token survives word_diff as ONE contiguous <ins>
             # text node, so the find bar (which scans text nodes) can hit it.
             "text": {"old": f"shared {i}", "new": f"shared {i} added{i}"},
-            "amount_entries": amount_entries,
             "move": None,
             "full_text_span": {"v1": None, "v2": {"start": start, "end": end}},
         }
@@ -211,17 +217,17 @@ def _render_grouped_report() -> str:
         ),
     ]
     canonical = {
-        "schema_version": "2.0",
+        "schema_version": "3.0",
         "bill": {"type": "hr", "number": 1, "congress": 119},
         "versions": {
             "v1": {"label": "v1", "version_number": 1, "source": "xml"},
             "v2": {"label": "v2", "version_number": 2, "source": "xml"},
         },
-        "summary": {"added": 0, "removed": 0, "modified": 3, "moved": 0},
+        "summary": {"added": 1, "removed": 0, "modified": 2, "moved": 0},
         "changes": [
-            change(0, 2, 5, [{"old": 100, "new": 200, "kind": "changed"}]),  # TITLE I direct, financial
-            change(1, 20, 30, []),  # SALARIES
-            change(2, 70, 80, []),  # OPERATIONS
+            change(0, 2, 5, "added"),  # TITLE I direct
+            change(1, 20, 30),  # SALARIES
+            change(2, 70, 80),  # OPERATIONS
         ],
         "full_text": {"v1": "x" * 120, "v2": "TITLE I\n" + "y" * 112},
         "tree": {"v1": [], "v2": tree_v2},
@@ -278,7 +284,6 @@ def _render_full_bill_report() -> str:
             "location": None,
             "anchor_resolution": "resolved",
             "text": {"old": f"shared {i}", "new": f"shared {i} added{i}"},
-            "amount_entries": [],
             "move": None,
             "full_text_span": {
                 "v1": None,
@@ -287,7 +292,7 @@ def _render_full_bill_report() -> str:
         }
 
     canonical = {
-        "schema_version": "2.0",
+        "schema_version": "3.0",
         "bill": {"type": "hr", "number": 1, "congress": 119},
         "versions": {
             "v1": {"label": "v1", "version_number": 1, "source": "xml"},
@@ -362,7 +367,7 @@ def test_counter_follows_full_bill_navigation(chromium, tmp_path):
 
 
 def test_filtering_hides_empty_card_groups_and_updates_nav_counts(chromium, tmp_path):
-    """Financial filter empties the account groups: their card-group headings
+    """Structural filter empties the account groups: their card-group headings
     hide, and the TITLE I nav-group count recounts to the visible subtree (#172).
     Browser-level because the contract lives in applyFilters' runtime behavior,
     which string-level _JS assertions can't prove."""
@@ -376,9 +381,9 @@ def test_filtering_hides_empty_card_groups_and_updates_nav_counts(chromium, tmp_
     title_count = page.locator(".nav-group__count").first
     assert title_count.inner_text() == "(3)"
 
-    page.locator('input[name="change-filter"][value="financial"]').check()
-    # The two account groups hold only non-financial cards -> hidden; the
-    # TITLE I group keeps its direct financial card and its count recounts.
+    page.locator('input[name="change-filter"][value="structural"]').check()
+    # The two account groups hold only `modified` cards -> hidden; the TITLE I
+    # group keeps its direct `added` card and its count recounts.
     assert page.locator(".card-group:visible").count() == 1
     assert title_count.inner_text() == "(1)"
     assert page.locator("#change-0").is_visible()
@@ -445,11 +450,16 @@ def test_counter_follows_explicit_card_navigation(chromium, tmp_path):
     that card, so the next arrow step continues from what the reader is looking
     at rather than from wherever the arrows last were (#185).
 
-    Three entry points: sidebar nav links, Financial Summary row links, and a
-    click on the card itself (which is what makes the scroll-and-read flow
-    work). The index is taken against the currently visible targets, so it has
-    to stay correct with the type filter active. Browser-level because the
-    contract is the runtime index lookup, which string assertions can't prove.
+    Two entry points: sidebar nav links and a click on the card itself (which is
+    what makes the scroll-and-read flow work). The index is taken against the
+    currently visible targets, so it has to stay correct with the type filter
+    active. Browser-level because the contract is the runtime index lookup,
+    which string assertions can't prove.
+
+    A third entry point, Financial Summary row links, was removed with the table
+    in #671 — along with the case where a jump target outlives its own card,
+    which only the table could produce (applyFilters hides cards and their
+    sidebar nav items together, so no surviving gesture points at a hidden card).
     """
     report = tmp_path / "grouped_sync.html"
     report.write_text(_render_grouped_report(), encoding="utf-8")
@@ -470,25 +480,18 @@ def test_counter_follows_explicit_card_navigation(chromium, tmp_path):
     page.locator("#btn-next").click()
     assert counter.inner_text() == "3 / 3"
 
-    # 2. Financial Summary row link (only change-0 carries amounts). The table
-    # ships collapsed, so open it before reaching a row.
-    fin = page.locator("details.financial-summary")
-    assert fin.evaluate("el => el.open") is False
-    fin.locator("summary").click()
-    page.locator('.financial-table a[href="#change-0"]').first.click()
-    assert counter.inner_text() == "1 / 3"
-
-    # 3. A click on the card body itself, then keyboard stepping from there.
+    # 2. A click on the card body itself, then keyboard stepping from there.
     page.locator("#change-1").click(position={"x": 5, "y": 5})
     assert counter.inner_text() == "2 / 3"
     page.keyboard.press("ArrowRight")
     assert counter.inner_text() == "3 / 3"
 
-    # The index is against the *visible* targets: with the financial filter on,
-    # change-0 is the only target, so jumping to it is 1 / 1, not 1 / 3.
-    page.locator('input[name="change-filter"][value="financial"]').check()
+    # The index is against the *visible* targets: with the Structural filter on,
+    # change-0 (the one `added` card) is the only target, so jumping to it is
+    # 1 / 1, not 1 / 3.
+    page.locator('input[name="change-filter"][value="structural"]').check()
     assert counter.inner_text() == "0 / 1"
-    page.locator('.financial-table a[href="#change-0"]').first.click()
+    page.locator("#change-0").click(position={"x": 5, "y": 5})
     assert counter.inner_text() == "1 / 1"
 
     # A jump into a collapsed group still resolves to the right index: the card
@@ -498,16 +501,6 @@ def test_counter_follows_explicit_card_navigation(chromium, tmp_path):
     salaries.evaluate("el => el.open = false")
     page.locator('.sidebar a[href="#change-1"]').click()
     assert salaries.evaluate("el => el.open") is True
-    assert counter.inner_text() == "2 / 3"
-
-    # A jump whose target is not in the visible set leaves the position alone
-    # rather than resetting it. applyFilters hides cards and their sidebar nav
-    # items, but not Financial Summary rows, so a row can outlive its card and
-    # stay clickable: on a real report (HR 4366 reported-vs-enrolled) the
-    # Structural filter leaves 28 such links. Hiding the card directly puts the
-    # DOM in that state without needing a change type this fixture lacks.
-    page.locator("#change-0").evaluate("el => el.style.display = 'none'")
-    page.locator('.financial-table a[href="#change-0"]').first.click()
     assert counter.inner_text() == "2 / 3"
     page.close()
 
@@ -1028,7 +1021,7 @@ def _render_find_report() -> str:
     printed_text, _ = _find_fixture_texts()
     start = printed_text.index("vehicles")
     canonical = {
-        "schema_version": "2.0",
+        "schema_version": "3.0",
         "bill": {"type": "hr", "number": 8752, "congress": 118},
         "versions": {
             "v1": {"label": "Reported", "version_number": 1, "source": "pdf"},
@@ -1045,7 +1038,6 @@ def _render_find_report() -> str:
                 "location": None,
                 "anchor_resolution": "resolved",
                 "text": {"old": "cars", "new": "vehicles"},
-                "amount_entries": [],
                 "move": None,
                 "full_text_span": {"v1": None, "v2": {"start": start, "end": start + len("vehicles")}},
             }

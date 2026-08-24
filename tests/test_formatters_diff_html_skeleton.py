@@ -33,7 +33,7 @@ def _empty(**overrides) -> dict:
     )
     base.update(overrides)
     return {
-        "schema_version": "2.0",
+        "schema_version": "3.0",
         "bill": {"type": base["bill_type"], "number": base["bill_number"], "congress": base["congress"]},
         "versions": {
             "v1": {"label": base["v1_label"], "version_number": base["v1_version_number"], "source": "xml"},

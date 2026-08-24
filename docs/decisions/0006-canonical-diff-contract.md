@@ -83,43 +83,46 @@ statement about the schema, not a promise that every reader will reject it.
 
 ### The money contract
 
-A `Change` carries exactly one exported money field, `amount_entries`.
+A `Change` carries **no** money field. `amounts` was removed in schema 2.0 and
+`amount_entries` in 3.0 (#671); nothing replaces either.
 
-- **Required, not merely sole.** These are two distinct guarantees. Being the only
-  money field prevents ambiguity about which field to read; being *required* lets a
-  consumer distinguish "this change has no money entries" (an empty array) from "this
-  document does not satisfy the contract" (the field absent). An optional-and-sole
-  field would collapse those two into one silence.
-- **The obsolete changed-only money field is absent from the contract**, rather than
-  retained beside `amount_entries` with prose declaring a winner. Two plausible
-  machine-readable authorities for the same concept, one of them structurally
-  incomplete, is a correctness bug rather than untidiness: the report directs a staffer
-  to hand an exported diff to an AI assistant, and a machine holding only that artifact
-  cannot read this repository's documentation to learn which field wins. Reading the
-  incomplete one would answer questions about a bill's appropriations while seeing a
-  fraction of them — confidently, with every newly
-  funded or wholly defunded program invisible, and those are usually the changes a
-  staffer most wants. The schema forbids the legacy field outright.
-- **Entries are self-describing**, distinguishing `changed`, `added` and `removed`, and
-  an absent side is represented explicitly as null. The schema is the exhaustive
-  authority for the exact shape.
-- **One-sided changes stay representable on the money axis.** A producer may not omit
-  money from a change merely because one side is absent: a wholly added or wholly
-  removed item is exactly the case a money-aware consumer most needs, so the pipelines
-  extract against the empty side rather than emitting nothing.
-- **Canonicalization does not perform value-symmetric cancellation.** An `added` and a
-  `removed` entry are not collapsed merely because their values are equal. On a
-  renumbered list the pairing emits a shuffled item's identical value as a net-zero
-  added/removed pair, and distinguishing that from two genuinely distinct equal-value
-  items needs within-list content alignment the producer does not have. So the producer
-  reports the changed/added/removed entries the pairing semantics emit, and richer
-  alignment — or presentation-side collapse — is downstream policy. (This is narrower
-  than "every raw pair survives": a pair whose sides are equal is not a change and is
-  dropped.)
+The contract draws its line between what the pipeline **observes** and what it
+**claims**.
 
-This concerns the *extraction and representation* of money, not its interpretation.
-Reading appropriations language for meaning is out of scope here and bounded by
-[0018](0018-text-triggers-are-financial-only.md).
+- **Observations are exported.** The dollar figures in a node's own block are
+  published per side and unpaired as `tree[].own_amounts`, with a conservation
+  invariant tested against real bills. This makes no statement about change, so no
+  interpretation is needed to read it honestly.
+- **Pairing is a claim, and the pipeline cannot yet support it.** `amount_entries`
+  paired a figure on one side with a figure on the other and published the
+  difference. An appropriations paragraph carries several kinds of number — a
+  top-line appropriation, sub-allocations carved out of that same top line, ceilings
+  ("not to exceed $X"), loan and guarantee commitment limitations, and incidental
+  figures that are not appropriations in any sense — and the field represented all of
+  them identically, under a `path` that is the document breadcrumb where the text
+  sits rather than the account the money belongs to. Interpreting appropriations
+  language for meaning is out of scope here and bounded by
+  [0018](0018-text-triggers-are-financial-only.md), which defers the interpreting
+  layer to #115. Until that layer exists, the honest export carries no paired amount.
+- **Removed rather than caveated.** The export is built to be read by a machine: the
+  report ships prompts telling a staffer to upload `diff.json` to an AI assistant, and
+  a machine holding only that artifact cannot read this repository's documentation to
+  learn that a field is not to be trusted. The same reasoning removed the legacy
+  `amounts` field in 2.0 rather than deprecating it in prose, and it applies with more
+  force to a field that is *present and wrong* than to one that is merely incomplete.
+- **The schema forbids it outright**, rather than leaving it optional. `Change` sets
+  `additionalProperties: false`, so a document carrying `amount_entries` is invalid,
+  and a 2.x document is rejected by major version before its money can be silently
+  dropped.
+- **What is not affected.** Amount extraction, the per-node inventory, and the
+  `--financial` CLI filter with its `old_amounts` / `new_amounts` / `amounts_changed`
+  multiset facts are all untouched. "The set of dollar figures in this section differs
+  between versions" is a true statement that needs no type model.
+
+Re-adding a typed money field is planned, not abandoned. It needs the account-level
+model in #115 and the leveled tree in #175 first, so an amount can be attached to an
+account and classified as appropriation, sub-allocation, ceiling or limitation before
+it is shown as a number in a Change column.
 
 ### Compatibility
 

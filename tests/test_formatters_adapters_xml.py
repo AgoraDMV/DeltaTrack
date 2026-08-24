@@ -3,7 +3,7 @@
 The adapter takes a diff dict (from bill_diff_to_dict) and produces the
 neutral DiffView that the unified renderer consumes. The adapter is where
 XML-pipeline-specific quirks (display_path escape order, section number
-placement, paired_amounts pairing) are resolved.
+placement) are resolved.
 
 These tests pin the contract; the renderer's own snapshot tests come later.
 """
@@ -76,7 +76,6 @@ def test_modified_change_basic_fields():
     assert cv.citation_html == ""
     assert cv.degraded is False
     assert cv.move_info_html == ""
-    assert cv.amount_pairs == ()
 
 
 def test_path_segments_are_html_escaped_per_segment():
@@ -162,31 +161,6 @@ def test_moved_change_renders_move_info_html():
     assert "NEW &gt; Loc" in cv.move_info_html
     assert cv.move_info_html.startswith('<div class="move-info">')
     assert cv.move_info_html.endswith("</div>")
-
-
-def test_amount_pairs_filtered_to_real_changes():
-    """Drops one-sided None pairs and zero-delta pairs. Pure annotation
-    insertions on an unchanged base are dropped entirely — the renderer
-    no longer surfaces them as a separate callout note."""
-    change = {
-        "change_type": "modified",
-        "display_path_old": ["X"],
-        "display_path_new": ["X"],
-        "old_text": "a",
-        "new_text": "b",
-        "section_number": "",
-        "financial": {
-            "old_amounts": [1000, 2000, 5000],
-            "new_amounts": [1500, 2000, None],
-            "amounts_changed": True,
-            "paired_amounts": [(1000, 1500), (2000, 2000), (5000, None)],
-            "has_amendment_annotations": False,
-        },
-    }
-    view = xml_dict_to_view(_diff_dict(changes=[change]))
-    cv = view.changes[0]
-    # Only the (1000, 1500) pair is a real change: differ AND both sides present.
-    assert cv.amount_pairs == ((1000, 1500),)
 
 
 def test_unchanged_changes_are_filtered_out():

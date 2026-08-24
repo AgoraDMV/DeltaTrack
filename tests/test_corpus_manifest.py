@@ -13,11 +13,13 @@ These are fast (non-slow) on purpose, for two reasons:
 """
 
 import json
+from collections import Counter
 
 import pytest
 
 from tests import conftest
 from tests.corpus_paths import DATA_DIR
+from tests.pdf_corpus import adjacent_pdf_pairs
 from tests.validation_sources import JURISDICTIONS
 
 
@@ -648,4 +650,65 @@ def test_all_report_fixtures_committed() -> None:
         f"validation_sources.py but absent from tests/data/: {missing}. Each missing fixture "
         "silently removes its subcommittee from external validation. Restore the committed "
         "file(s) or rebuild with `uv run python scripts/build_validation.py --fetch`."
+    )
+
+
+# --- PDF corpus smoke pairs: collected-case floor (#601) --------------------------------
+# Placed here rather than in tests/test_pdf_corpus_smoke.py for the reason recorded above
+# the committee-report floor: that module's module-level ``pytestmark = pytest.mark.slow``
+# would confine this guarantee to the slow tier, and pytest has no per-test un-marking. The
+# completeness question belongs in the FAST tier on every CI run, and it is cheap there --
+# importing the smoke module for its ``_PAIRS`` runs only its module body, and
+# ``adjacent_pdf_pairs()`` just globs the committed fixture tree, extracting no PDF. Importing
+# a ``@slow`` module does not carry its marker over: marks come from collection, not import,
+# so this test stays in the fast tier and the smoke cases stay deselected there.
+
+
+def _collect_pdf_smoke_parameters() -> dict[str, Counter]:
+    """Collect the smoke module and return each test's actual parameter multiset."""
+
+    class _CollectionRecorder:
+        items = []
+
+        def pytest_collection_modifyitems(self, session, config, items) -> None:
+            self.items = list(items)
+
+    recorder = _CollectionRecorder()
+    result = pytest.main(
+        ["--collect-only", "-qq", "-n", "0", "tests/test_pdf_corpus_smoke.py"],
+        plugins=[recorder],
+    )
+    assert result == pytest.ExitCode.OK, f"smoke-suite collection failed with exit code {result}"
+
+    collected: dict[str, Counter] = {}
+    prefix = "tests/test_pdf_corpus_smoke.py::TestPdfCorpusSmoke::"
+    for item in recorder.items:
+        if not item.nodeid.startswith(prefix):
+            continue
+        params = tuple(item.callspec.params[name] for name in ("bill", "old_pdf", "new_pdf"))
+        collected.setdefault(item.originalname, Counter())[params] += 1
+    return collected
+
+
+def test_pdf_corpus_smoke_pairs_are_complete() -> None:
+    """The smoke suite collects every adjacent PDF pair (#601).
+
+    The floor is deliberately split into two independent checks. The canonical discovery
+    floor catches a corpus or pairing collapse, while the collection invariant compares the
+    actual ``pytest`` parameter values for every smoke test to that canonical multiset. Reading
+    collected ``callspec.params`` closes the coordinated false green where the module's
+    ``_PAIRS`` remains complete but the parametrization decorator consumes ``_PAIRS[:3]``.
+    """
+    canonical = adjacent_pdf_pairs()
+    assert len(canonical) >= 15, (
+        f"expected >=15 adjacent PDF pairs, adjacent_pdf_pairs() found {len(canonical)} -- "
+        "either the committed corpus lost PDF fixtures or the pairing helper stopped finding "
+        "them"
+    )
+
+    expected = Counter(canonical)
+    collected = _collect_pdf_smoke_parameters()
+    assert collected, "the PDF smoke suite collected no parameterized tests"
+    assert all(parameters == expected for parameters in collected.values()), (
+        "the PDF smoke suite's collected (bill, old_pdf, new_pdf) multiset differs from adjacent_pdf_pairs()"
     )

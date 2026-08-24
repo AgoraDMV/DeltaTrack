@@ -30,6 +30,7 @@ import copy
 import importlib.util
 import json
 import random
+import shutil
 
 import pytest
 
@@ -661,22 +662,47 @@ def test_a_wrong_parser_commit_cannot_establish_completeness(evaluator, records,
         assert "a1-one-to-one" in refused, metric
 
 
-def test_the_parser_revision_is_derived_from_the_code_not_declared(frame):
+def test_the_parser_revision_is_derived_from_the_code_not_declared(frame, tmp_path, monkeypatch):
     """It must be a function of the parser source, so it cannot be a decorative constant.
 
     Hashing the transitive `deltatrack.*` imports of `bill_tree` is deliberately over-broad: a
     module that cannot affect node emission may still move the revision. That direction costs a
     re-verification; the other direction silently certifies a universe derived by different code.
+
+    The mutation runs against a COPY of the checkout, never the checkout itself (#686). This test
+    used to append the probe line to the live `src/deltatrack/bill_tree.py` and restore it in a
+    `finally`, which is unsafe for the same reason `tests/test_pdf_observation_identity.py` keeps
+    its own mutations in a `package_copy`: the suite runs under `-n auto`, so another worker can
+    read the tree mid-write. That module's `real_source_is_never_mutated` guard did exactly that
+    and reddened `fast-tests` on a branch touching no source at all. A worker killed between the
+    write and the restore would also leave a probe line in tracked source.
+
+    `parser_revision` resolves modules under `REPO / "src"`, so repointing that one name runs the
+    REAL revision walk against a tree this test may edit freely. Nothing here re-implements the
+    walk; a test-only replica would prove the replica correct and say nothing about the probe.
+
+    The copy is proved faithful BEFORE it is mutated: a mutation control measuring a different
+    tree would report agreement while testing nothing, which is the failure the assertion between
+    the copy and the first `!=` exists to prevent.
     """
     rev = frame.parser_revision()
     assert len(rev) == 64 and rev == frame.parser_revision(), "must be a stable content hash"
 
-    src = (PROJECT_ROOT / "src" / "deltatrack" / "bill_tree.py").read_bytes()
+    checkout = tmp_path / "checkout"
+    shutil.copytree(PROJECT_ROOT / "src", checkout / "src", ignore=shutil.ignore_patterns("__pycache__"))
+    monkeypatch.setattr(frame, "REPO", checkout)
+    assert frame.parser_revision() == rev, (
+        "the copied tree does not reproduce the checkout's revision, so every assertion below "
+        "would be measuring a different parser than the one under evaluation"
+    )
+
+    parser = checkout / "src" / "deltatrack" / "bill_tree.py"
+    src = parser.read_bytes()
     try:
-        (PROJECT_ROOT / "src" / "deltatrack" / "bill_tree.py").write_bytes(src + b"\n# provenance probe\n")
+        parser.write_bytes(src + b"\n# provenance probe\n")
         assert frame.parser_revision() != rev, "editing the parser must change the revision"
     finally:
-        (PROJECT_ROOT / "src" / "deltatrack" / "bill_tree.py").write_bytes(src)
+        parser.write_bytes(src)
     assert frame.parser_revision() == rev, "restoring the parser must restore the revision"
 
 

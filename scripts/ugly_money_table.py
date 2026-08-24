@@ -1,11 +1,23 @@
 #!/usr/bin/env python3
 """Emit a deliberately unstyled money-diff table for staffer validation.
 
-The point is to strip ALL fidelity and styling so the only thing under test is:
-is the structured money data itself worth looking at? If a staffer leans into
-this ugly table, the moat is the data, not the rendering.
+DISABLED by #671, which removed `paired_amounts` from the `--financial` JSON this
+reads. The script built exactly the paired old/new/change table that issue removed
+from the report, for the same reason: an appropriations paragraph mixes top-line
+appropriations, sub-allocations carved out of them, "not to exceed" ceilings and
+loan guarantee commitment limitations, and this table rendered them identically.
 
-Usage:
+It exits with an error rather than being deleted or quietly repointed. Deleting it
+is a call for whoever owns the validation exercise; repointing it at the surviving
+`old_amounts` / `new_amounts` would change what it measures without saying so; and
+leaving it alone was the worst option, because `f.get("paired_amounts", [])` returns
+`[]` now, so it would print "0 changed amounts" for a real appropriations bill --
+a silent wrong answer, which is the failure class #671 exists to remove.
+
+Restoring it needs the account-level model in #115 and the leveled tree in #175,
+after which a table like this can say which KIND of figure each row is.
+
+Usage (once restored):
     python scripts/ugly_money_table.py OLD.xml NEW.xml -o table.html
 """
 
@@ -24,7 +36,21 @@ def fmt(n):
     return "—" if n is None else f"${n:,.0f}"
 
 
+DISABLED_MESSAGE = (
+    "ugly_money_table.py is disabled: it renders paired old/new/change amounts, and "
+    "#671 removed `paired_amounts` from the --financial JSON because the pipeline "
+    "cannot yet say whether a figure is an appropriation, a sub-allocation of one, a "
+    "ceiling or a commitment limitation. Running it now would report 0 changed "
+    "amounts for every bill. See #115 and #175."
+)
+
+
 def main():
+    raise SystemExit(DISABLED_MESSAGE)
+
+
+def _build_table_disabled_pending_115():
+    """The original body, kept intact so restoring it is a deletion rather than a rewrite."""
     ap = argparse.ArgumentParser()
     ap.add_argument("old_xml")
     ap.add_argument("new_xml")

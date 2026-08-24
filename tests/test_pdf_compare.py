@@ -593,9 +593,16 @@ def test_compare_pdfs_html_returns_standalone_report():
 
     assert html.lstrip().startswith("<!DOCTYPE html>")
     assert "change-card" in html
-    assert "financial-table" in html
     assert "Reported in House" in html
     assert "Engrossed in House" in html
+    # #671, on the PDF entry point the web app calls. The bill's own dollar figures
+    # still appear in the card bodies; what is gone is the report presenting any of
+    # them as a change. Paired with the presence assertions above so a report that
+    # failed to render at all cannot pass this as an absence.
+    assert "financial-table" not in html
+    assert "financial-callout" not in html
+    assert "data-financial" not in html
+    assert "Financial Summary" not in html
 
 
 @pytest.mark.slow

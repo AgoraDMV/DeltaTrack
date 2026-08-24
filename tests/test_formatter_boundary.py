@@ -214,7 +214,6 @@ def _prose_card(old_text: str, new_text: str) -> str:
             move_info_html="",
             old_text=old_text,
             new_text=new_text,
-            amount_pairs=(),
         ),
         0,
     )

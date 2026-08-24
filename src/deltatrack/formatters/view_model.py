@@ -51,10 +51,6 @@ class ChangeView:
     new_text: str
     """New text body. "" when absent."""
 
-    amount_pairs: tuple[tuple[int | None, int | None], ...]
-    """Already filtered to "real" amount changes (both sides present and
-    differing). The renderer iterates without re-filtering."""
-
     group_label: str = ""
     """Raw (unescaped) section label the sidebar groups this change under —
     the top of its breadcrumb (e.g. "TITLE I"). Empty → "Uncategorized"."""
@@ -65,14 +61,13 @@ class ChangeView:
     could not place the change (no tree, null span, uncovered position) — the
     renderer then falls back to group_label for that card."""
 
-    amount_entries: tuple[tuple[int | None, int | None, str], ...] = ()
-    """Self-describing base-amount changes (#86): (old, new, kind) with kind in
-    {"changed", "added", "removed"}. Lossless — added/removed whole items included,
-    no reorder cancellation (that is #87). Defaulted so pre-#86 constructions (which
-    set only `amount_pairs`) still build. The callout and financial summary read this;
-    `amount_pairs` is the changed-only in-memory view, derived from these entries when
-    building from a canonical. It is internal — the export field of the same shape was
-    removed in schema v2.0 (#274) for being silently incomplete."""
+    # The view model carries NO money field (#671). `amount_pairs` and
+    # `amount_entries` fed the Financial Summary table and the per-card callout,
+    # and both are gone: the report presents no dollar figure as a change until an
+    # amount can be typed to an account (#115, #175). This is a view model, so a
+    # field here is presentation by definition — the observations themselves are
+    # untouched, in `amounts.py`, `tree[].own_amounts`, `FinancialChange` and
+    # `PdfHunk.amount_pairs`, which is where a future typing layer reads them.
 
 
 @dataclass(frozen=True)

@@ -45,7 +45,6 @@ def _change(change_id: str, change_type: str, **fields) -> dict:
         "section_number": None,
         "location": None,
         "anchor_resolution": "resolved",
-        "amount_entries": [],
         "move": None,
         **fields,
     }
@@ -55,7 +54,7 @@ def _no_full_text() -> dict:
     """A document carrying no full text — the report the renderer produces without
     a full-bill pane, an embed, find, navigation or export."""
     return {
-        "schema_version": "2.0",
+        "schema_version": "3.0",
         "bill": _BILL,
         "versions": _versions("xml"),
         "summary": _SUMMARY,
@@ -71,7 +70,7 @@ def _canonical() -> dict:
     v2 = "    1  ADD0\n    2  MOD1\n    3  KEEP"
     v1 = "    1  OLD0\n    2  OLD1\n    3  GONE"  # "GONE" content at 31..35
     return {
-        "schema_version": "2.0",
+        "schema_version": "3.0",
         "bill": _BILL,
         "versions": _versions("pdf"),
         "summary": _SUMMARY,
@@ -237,7 +236,7 @@ def _xml_canonical() -> dict:
     v2 = "DEPARTMENT OF DEFENSE\n\nMilitary construction, army"
     v1 = "DEPARTMENT OF DEFENSE\n\narmy construction"
     return {
-        "schema_version": "2.0",
+        "schema_version": "3.0",
         "bill": _BILL,
         "versions": _versions("xml"),
         "summary": _SUMMARY,
@@ -325,6 +324,47 @@ def test_export_prompts_shown_immediately():
         assert prompt in html
 
 
+#: The exact wording the export must offer, spelled out as a literal rather than read
+#: from `_LLM_PROMPTS`. A test that iterates the tuple asserts only that the tuple
+#: renders, so it follows the prompt wherever it goes and cannot catch it being changed
+#: back to something the pipeline cannot support.
+_OBSERVATION_ONLY_PROMPT = (
+    "Identify changes that mention dollar figures. Show the surrounding old and new bill "
+    "text. Do not classify the figures as appropriations, account-level funding changes, "
+    "or funding increases or decreases."
+)
+
+#: Negative control. This is the retired prompt, kept here ONLY so the gate below has a
+#: known-bad string to prove it can detect. It must not appear in any shipped surface.
+_RETIRED_FUNDING_PROMPT = "Which programs or accounts had their funding increased or decreased"
+
+
+def test_export_prompt_locates_dollar_figures_without_classifying_them():
+    """#671 — the export may help a reader FIND money, not tell them what it means.
+
+    The report ships prompts telling a staffer to upload `diff.json` to an AI assistant.
+    The retired prompt asked which programs or accounts had funding increased or
+    decreased and to put it in a table, which is a question the pipeline cannot answer:
+    an appropriations block mixes top-line appropriations, sub-allocations carved out of
+    them, "not to exceed" ceilings and loan guarantee commitment limitations, and nothing
+    yet distinguishes them (#115). An assistant holding only the export cannot read this
+    repository to learn the question was leading, so the wording is the whole safeguard.
+
+    Asserted at the rendered boundary, not against `_LLM_PROMPTS`: the modal and prompt
+    list must genuinely render before the absence check means anything, otherwise this
+    would pass just as well on a report that shows no prompts at all.
+    """
+    html = format_diff_html(_canonical())
+
+    # Presence first, so the absence assertion below cannot pass vacuously.
+    assert 'id="export-modal"' in html
+    assert 'id="export-prompts" class="export-prompts"' in html
+    assert 'class="prompt-text"' in html
+
+    assert _OBSERVATION_ONLY_PROMPT in html
+    assert _RETIRED_FUNDING_PROMPT not in html
+
+
 def test_no_export_without_full_text():
     html = format_diff_html(_no_full_text())
     assert 'id="export-open"' not in html
@@ -336,7 +376,7 @@ def test_canonical_json_embedded_and_valid():
     m = re.search(r'<script type="application/json" id="diff-data">(.*?)</script>', html, re.DOTALL)
     assert m, "embed missing"
     data = json.loads(m.group(1).replace("<\\/", "</"))
-    assert data["schema_version"] == "2.0"
+    assert data["schema_version"] == "3.0"
     assert len(data["changes"]) == 3
 
 

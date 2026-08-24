@@ -148,7 +148,7 @@ Production ops (hosting, limits, systemd) live in gitignored `docs-for-ai/deploy
 
 **Landing page / two-path messaging** — `web/webapp/index.html`
 
-**Sample report** — replace `web/webapp/sample/example.html` after renderer changes (copy from `examples/*_pdf_diff.html` or regenerate)
+**Sample report** — replace `web/webapp/sample/example.html` after renderer changes (copy from `examples/*_pdf_diff.html` or regenerate). Not a discipline you have to remember: `test_served_sample_matches_the_pdf_example` compares the two byte for byte and prints the `cp` to run.
 
 **Do not** duplicate diff logic in JavaScript; the web app should stay a thin client over `POST /api/compare`.
 

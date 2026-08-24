@@ -110,25 +110,69 @@ def test_no_committed_example_is_orphaned(tmp_path, monkeypatch):
 _TOKEN_DECL = re.compile(r"(--[\w-]+)\s*:\s*([^;{}]+)")
 
 
+#: A `var(--name)` reference, however the reference is spaced.
+_VAR_REFERENCE = re.compile(r"var\(\s*(--[\w-]+)")
+
+#: The contents of the report's one `<style>` element, and a `/* ... */` CSS comment.
+_STYLE_BLOCK = re.compile(r"<style[^>]*>(.*?)</style>", re.S)
+_CSS_COMMENT = re.compile(r"/\*.*?\*/", re.S)
+
+
 def _css_tokens(css: str) -> dict[str, str]:
     """`--name: value` declarations in a stylesheet fragment, whitespace-normalized."""
     return {name: " ".join(value.split()) for name, value in _TOKEN_DECL.findall(css)}
 
 
-def test_index_page_tokens_match_the_report_tokens():
-    """The landing page and the reports it links use the same brand values.
+def _live_stylesheet(html: str) -> str:
+    """A rendered report's embedded CSS: `<style>` only, with comments stripped.
 
-    `render_examples.INDEX_TOKENS` is a hand-copied subset of the report stylesheet, so
-    it can fall behind a brand change and leave the demo's front door looking like a
-    different product than everything behind it — the mismatch #42 was filed over. Read
-    from a *rendered report* rather than the module source, so this compares what a
-    visitor actually gets. (Upstreaming both to BillTrax is epic #37.)
+    Both narrowings are load-bearing for the palette census below, which reads a
+    `var()` as evidence that a token is *used*. Text that never executes as CSS is not
+    evidence: a report is mostly bill content, and this stylesheet carries prose
+    comments that mention the properties they explain. Counting either lets a dead
+    token look used — the exact false green this scoping closes, since the census is
+    the only thing standing between the palette and the dead declarations #667 removed.
+
+    Stripping comments before the declarations are read matters too: a `--name: value`
+    or a `}` inside a comment would otherwise be taken for a declaration, or truncate
+    the `:root` block early.
     """
-    report_css = (EXAMPLES / "hr8752_xml_diff.html").read_text()
-    report_tokens = _css_tokens(
-        report_css[report_css.index(":root {") : report_css.index("}", report_css.index(":root {"))]
-    )
-    index_tokens = _css_tokens(render_examples.INDEX_TOKENS)
+    return _CSS_COMMENT.sub("", "\n".join(_STYLE_BLOCK.findall(html)))
+
+
+def _root_block(html: str) -> str:
+    """The `:root { ... }` declarations of a rendered report's embedded stylesheet."""
+    start = html.index(":root {")
+    return html[start : html.index("}", start)]
+
+
+def test_index_page_tokens_match_the_report_tokens():
+    """The landing page and the reports it links use the same palette values.
+
+    Both derive from `deltatrack.palette`, so this compares a *committed rendered report*
+    against what that module produces today. What it detects is the surfaces emitting
+    different palette values, which happens when the committed examples go stale against
+    a palette change, or when one surface stops taking its values from the module and
+    carries different ones. Diverging values are what let the demo's front door look like
+    a different product from everything behind it, the mismatch #42 was filed over.
+
+    It does not detect derivation itself, and should not: a hand-written literal holding
+    the same values passes, because nothing a reader sees has changed.
+
+    Read from a rendered report rather than the renderer's module, so what a visitor
+    actually gets is what is compared.
+
+    History: `INDEX_TOKENS` was a hand-copied subset of the report stylesheet until it
+    became generated, and this test existed to keep that copy honest.
+
+    Both sides are read comment-free, for the reason `_live_stylesheet` gives: a value
+    kept only in a comment is not the value anything renders with. Since `_css_tokens`
+    lets the last declaration win, a commented copy sitting after a changed live one
+    would otherwise answer this comparison in its place and hide the drift.
+    """
+    report_css = _live_stylesheet((EXAMPLES / "hr8752_xml_diff.html").read_text())
+    report_tokens = _css_tokens(_root_block(report_css))
+    index_tokens = _css_tokens(_CSS_COMMENT.sub("", render_examples.INDEX_TOKENS))
 
     assert index_tokens, "no tokens parsed from INDEX_TOKENS; this comparison would vacuously pass"
     assert report_tokens, "no tokens parsed from the rendered report; this comparison would vacuously pass"
@@ -139,9 +183,53 @@ def test_index_page_tokens_match_the_report_tokens():
         if report_tokens.get(name) != value
     }
     assert not mismatched, (
-        "examples/index.html uses brand tokens that differ from the reports it links "
-        f"(name: index value vs report value): {mismatched}. Re-copy the values into "
-        "render_examples.INDEX_TOKENS and re-run the script."
+        "examples/index.html uses palette values that differ from the reports it links "
+        f"(name: index value vs report value): {mismatched}. Both should come from "
+        "`deltatrack.palette`. Regenerate with `uv run python scripts/render_examples.py` "
+        "and commit the result; if that does not clear it, `INDEX_TOKENS` is no longer "
+        "emitting the palette's values for those names."
+    )
+
+
+def test_the_report_palette_declares_exactly_what_it_uses():
+    """No token a report declares is unused, and no `var()` it uses is undeclared (#667).
+
+    The palette is DeltaTrack's own and ships in full inside every report, so a token
+    nothing references is weight carried by every reader for no effect. Eleven had
+    accumulated while the block was held identical to another product's, which is the
+    pressure this pins against: the cheapest way to satisfy a copy is to take the whole
+    source, and nothing then objects to the parts that style nothing here.
+
+    Read from a *rendered report* rather than `_DESIGN_TOKENS_CSS`, for the same reason
+    as the token comparison above — the report is what ships, so the check covers
+    anything that reaches the stylesheet, not just the one constant. Narrowed to the
+    CSS that actually runs, via `_live_stylesheet`: counting `var()` text from report
+    content or a comment would let a dead token pass as used.
+
+    The undeclared half is the safety catch on the unused half: the cheap way to satisfy
+    a dead-token check is to delete a token something actually uses, and a `var()` with
+    no declaration behind it fails silently in a browser rather than loudly here.
+    """
+    css = _live_stylesheet((EXAMPLES / "hr8752_pdf_diff.html").read_text())
+    declared = set(_css_tokens(_root_block(css)))
+    used = set(_VAR_REFERENCE.findall(css))
+
+    assert css, "no <style> block parsed from the rendered report; this check would vacuously pass"
+    assert declared, "no tokens parsed from the rendered report; this check would vacuously pass"
+    assert used, "no var() references parsed from the rendered report; this check would vacuously pass"
+
+    unused = sorted(declared - used)
+    assert not unused, (
+        f"the report stylesheet declares tokens nothing references: {unused}. They ship "
+        "in every report and style nothing. Either use them or drop them from "
+        "`_DESIGN_TOKENS_CSS`."
+    )
+
+    undeclared = sorted(used - declared)
+    assert not undeclared, (
+        f"the report stylesheet uses var() names it never declares: {undeclared}. Each "
+        "resolves to nothing when the report is opened, so whatever they style falls "
+        "back silently rather than failing here."
     )
 
 

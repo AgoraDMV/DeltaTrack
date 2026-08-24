@@ -2,7 +2,7 @@
 
 Covers all change types (added, removed, modified, moved) plus the optional
 features carried via ChangeView fields: citation block, degraded styling,
-section number, move-info. The callout (financial) lands in step 7;
+section number, move-info. The financial callout was removed in #671;
 this step focuses on card structure and body.
 """
 
@@ -23,7 +23,6 @@ def _change(**overrides) -> ChangeView:
         move_info_html="",
         old_text="",
         new_text="",
-        amount_pairs=(),
     )
     base.update(overrides)
     return ChangeView(**base)
@@ -31,7 +30,7 @@ def _change(**overrides) -> ChangeView:
 
 def test_basic_card_structure():
     html = _build_card(_change(old_text="old prose", new_text="new prose"), 0)
-    assert html.startswith('<div class="change-card modified" id="change-0" data-type="modified" data-financial="0">')
+    assert html.startswith('<div class="change-card modified" id="change-0" data-type="modified">')
     assert html.rstrip().endswith("</div>")
     assert '<span class="badge badge-modified">modified</span>' in html
     assert "<h3>TITLE I &gt; Customs</h3>" in html

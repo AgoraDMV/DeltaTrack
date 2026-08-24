@@ -9,7 +9,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "pattern": "^2\\.[0-9]+$",
+      "pattern": "^3\\.[0-9]+$",
       "description": "Major.minor. Consumers reject unknown majors."
     },
     "full_text": {
@@ -118,7 +118,6 @@
         "location",
         "anchor_resolution",
         "text",
-        "amount_entries",
         "move"
       ],
       "additionalProperties": false,
@@ -171,20 +170,6 @@
           "properties": {
             "old": { "type": ["string", "null"] },
             "new": { "type": ["string", "null"] }
-          }
-        },
-        "amount_entries": {
-          "type": "array",
-          "description": "The change's base-amount changes, and the only money field (v2.0 removed the deprecated changed-only `amounts`, #274). Self-describing and lossless: every changed/added/removed amount, with no reorder cancellation (that is #87/consumer policy). `added` has null old, `removed` has null new, `changed` has both present and differing. Unchanged (old == new) pairs are dropped. Required, so a consumer never has to test for the key: an empty array on a change with no money.",
-          "items": {
-            "type": "object",
-            "required": ["old", "new", "kind"],
-            "additionalProperties": false,
-            "properties": {
-              "old": { "type": ["integer", "null"] },
-              "new": { "type": ["integer", "null"] },
-              "kind": { "enum": ["changed", "added", "removed"] }
-            }
           }
         },
         "move": {

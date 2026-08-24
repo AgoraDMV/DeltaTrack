@@ -17,10 +17,8 @@ def test_change_view_constructs_with_pdf_only_fields():
         move_info_html="",
         old_text="old",
         new_text="new",
-        amount_pairs=((1000, 2000),),
     )
     assert cv.degraded is True
-    assert cv.amount_pairs == ((1000, 2000),)
 
 
 def test_diff_view_allows_missing_version_numbers():

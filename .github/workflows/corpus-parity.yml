@@ -62,10 +62,25 @@ jobs:
         run: uv run pytest -v -m slow --run-network tests/test_govinfo_corpus_parity.py
 
       - name: Report a failure as an issue
-        if: failure() && steps.parity.outcome == 'failure'
+        # `failure()` alone, with no `steps.parity.outcome` term, and that is the whole of
+        # #680. The old condition required BOTH that the job failed and that the parity
+        # step itself failed, so a checkout, uv, Python-install or `uv sync` failure left
+        # that step `skipped` (or unset, when checkout died before it existed), reddened
+        # the workflow and filed nothing. Those are the infrastructure failures, and they
+        # are the ones that persist: the gate stops running altogether while the only
+        # signal is a weekly email to whoever last edited the cron line. WHICH failure
+        # occurred is read from the environment below to choose a title, never from here.
+        #
+        # `tests/test_ci_workflow.py` pins this. A `steps.*` reference in this condition,
+        # a missing `failure()`, an `always()`, or deleting this step, each fail a guard.
+        if: failure()
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # `skipped` when an earlier step failed, empty when checkout failed before this
+          # step existed. Only the literal `failure` means the check ran and found real
+          # divergence, so every other value is reported as an infrastructure failure.
+          PARITY_OUTCOME: ${{ steps.parity.outcome }}
         # A weekly job's failure has to land somewhere a person actually looks. GitHub
         # emails scheduled-workflow failures to whoever last edited the cron expression,
         # which is not a reliable owner, so this files into the tracker instead.
@@ -73,16 +88,38 @@ jobs:
         # Reuses an existing open report rather than filing a new one each week: a
         # genuine upstream rename stays broken until someone re-fetches the corpus, and a
         # duplicate every Monday would train everyone to ignore it.
+        #
+        # The two conditions get DIFFERENT titles, which is load-bearing rather than
+        # cosmetic: the reuse search below matches on title, so a shared one would post
+        # "Still failing as of the weekly run" onto an open corpus-drift report every time
+        # the runner broke, misattributing the cause and burying the real state. Separate
+        # titles also let each condition reuse only a report of its own kind.
+        #
+        # Each `body=` keeps its continuation lines at the indentation of `set -uo
+        # pipefail` rather than following the `if`. YAML strips only the block's common
+        # indentation, so anything deeper survives as leading whitespace inside the filed
+        # issue.
         run: |
           set -uo pipefail
-          title='Corpus filenames diverge from govinfo enumeration'
-          body="The weekly parity check found bill filenames on disk that govinfo enumeration no longer produces, which means the corpus gates are keying on stale names. Run log: $RUN_URL
+          if [ "$PARITY_OUTCOME" = "failure" ]; then
+            title='Corpus filenames diverge from govinfo enumeration'
+            body="The weekly parity check found bill filenames on disk that govinfo enumeration no longer produces, which means the corpus gates are keying on stale names. Run log: $RUN_URL
 
           The failure names each stale stem. Re-download the affected bill with \`tools/fetch_bills.py download <congress> <type> <number> --format both\`, or add the stem to \`_ACCEPTED_EXTRA_STEMS\` in \`tests/test_govinfo_corpus_parity.py\` if it is legitimate (a Public Law text, for instance).
 
           A failure here can also mean govinfo was unreachable rather than that anything changed. Check the log before re-fetching.
 
           Filed automatically by \`.github/workflows/corpus-parity.yml\` (#342)."
+          else
+            title='Weekly corpus-parity check could not run'
+            body="The weekly parity check never reached its assertion. The job failed before the check ran, at the checkout, the uv install, the Python install, or the dependency sync. Run log: $RUN_URL
+
+          Nothing is watching corpus filenames until this is fixed. An upstream rename would now mis-key the committed fixtures with no signal at all, which is the failure this workflow exists to catch (#342). The check is not failing; it is not running.
+
+          Likely causes, in rough order: a lockfile the sync step will not accept, a \`.python-version\` naming an interpreter uv cannot fetch, or a transient runner or network fault. The run log names the step that failed.
+
+          Filed automatically by \`.github/workflows/corpus-parity.yml\` (#680)."
+          fi
 
           existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
             --search "\"$title\" in:title" --json number --jq '.[0].number // empty')

@@ -179,12 +179,21 @@ def compute_financial_change(
 
 
 def financial_change_to_dict(fc: FinancialChange) -> dict:
-    """Serialize a FinancialChange for JSON output."""
+    """Serialize a FinancialChange for JSON output.
+
+    `paired_amounts` is deliberately absent (#671). What survives here are multiset
+    facts about one section — which dollar figures appear on each side, and whether
+    the two sets differ. Those need no type model to be true. Pairing a figure on one
+    side with a figure on the other and publishing the difference is a claim about an
+    account, and an appropriations paragraph mixes top-line appropriations,
+    sub-allocations carved out of them, "not to exceed" ceilings and loan guarantee
+    commitment limitations with nothing distinguishing them; ADR 0018 defers the layer
+    that could to #115. The pairs stay on the dataclass, unpublished, for that layer.
+    """
     return {
         "old_amounts": list(fc.old_amounts),
         "new_amounts": list(fc.new_amounts),
         "amounts_changed": fc.amounts_changed,
-        "paired_amounts": [list(pair) for pair in fc.paired_amounts],
         "has_amendment_annotations": fc.has_amendment_annotations,
     }
 
@@ -2181,7 +2190,10 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument(
         "--financial",
         action="store_true",
-        help="Only show sections with financial changes; add amount details to output",
+        help=(
+            "Only show sections whose set of dollar figures differs between versions; "
+            "adds each side's amounts to the JSON output"
+        ),
     )
     compare.add_argument(
         "--format",

@@ -1,4 +1,4 @@
-# Canonical Diff JSON — v2.0
+# Canonical Diff JSON — v3.0
 
 This document specifies the canonical JSON shape produced when comparing two
 versions of a bill. It is the public contract between the diff engine and any
@@ -8,10 +8,36 @@ XML inputs and a diff produced from PDF inputs share this shape.
 
 ## Versioning
 
-Top-level field: `schema_version: "2.0"`.
+Top-level field: `schema_version: "3.0"`.
 
 ## Changelog
 
+- **3.0** — **Breaking:** removed `amount_entries` from each change object and from
+  its `required` list (#671). No field replaces it: a change object now carries no
+  money at all. The field paired a dollar figure on one side with a figure on the
+  other and published the difference as a change, and the pipeline has no
+  account-level model to say what either figure *is*. An appropriations paragraph
+  carries several kinds of number — a top-line appropriation, sub-allocations carved
+  out of that same top line ("of which, $X shall be for..."), ceilings ("not to
+  exceed $X"), loan and guarantee commitment limitations, and incidental figures
+  that are not appropriations in any sense — and `amount_entries` represented all of
+  them identically. ADR 0018 defers the layer that would interpret what an amount
+  means to #115, and that layer does not exist, so the field was publishing
+  account-level conclusions the producer cannot compute. Removing it rather than
+  caveating it is deliberate: the export is built to be read by a machine (the
+  report ships prompts telling a staffer to upload `diff.json` to an AI assistant),
+  and a caveat in prose does not reach that reader. Consumers MUST NOT read
+  `amount_entries`; a 2.x document that carries it is rejected by major version, so
+  its money is never silently dropped. **What is unaffected:** `tree[].own_amounts`
+  is untouched — it is per-side and unpaired, makes no change claim, and its
+  conservation invariant is tested against real bills, so it remains the substrate
+  a future financial-typing layer reads. The `--financial` CLI filter and its
+  `old_amounts` / `new_amounts` / `amounts_changed` multiset facts are also
+  untouched: "the set of dollar figures in this section differs between versions" is
+  a true statement that needs no type model. A financial view is still wanted; what
+  it needs first is #115 and #175, so an amount can be attached to an account and
+  classified as appropriation, sub-allocation, ceiling or limitation before it is
+  shown as a number in a Change column.
 - **2.0** — **Breaking:** removed the deprecated `amounts` field from each change
   object and from its `required` list (#274). `amount_entries` fully supersedes it.
   `amounts` held only the `changed`-kind subset, so it structurally could not
@@ -33,8 +59,9 @@ Top-level field: `schema_version: "2.0"`.
   `changed`-kind subset of `amount_entries`, kept for back-compat until the next
   major. No consumer reads `schema_version`, so a consumer reading `amount_entries`
   MUST fall back to `amounts` when the field is absent (pre-1.4 documents).
-  Additive, backward compatible. *(Superseded by 2.0: `amounts` and the fallback
-  rule are both gone — this entry is history, not a live rule.)*
+  Additive, backward compatible. *(Superseded by 2.0, then removed entirely in 3.0:
+  `amounts`, `amount_entries` and the fallback rule are all gone — this entry is
+  history, not a live rule.)*
 - **1.3** — Added optional top-level `tree: { v1, v2 } | null` field: the
   per-side leveled structure tree (#108). Each side is an ordered list of
   root `TreeNode`s; each node carries `label`, `level` (the shared GPO
@@ -76,7 +103,7 @@ Top-level field: `schema_version: "2.0"`.
 
 ```jsonc
 {
-  "schema_version": "2.0",
+  "schema_version": "3.0",
   "generator": { "name": "deltatrack", "version": "0.x" },
   "bill":      { "type": "HR", "number": 4366, "congress": 118 },
   "versions": {
@@ -179,7 +206,6 @@ that need a different order MUST resort.
   },
   "anchor_resolution": "resolved",
   "text":    { "old": "...", "new": "..." },
-  "amount_entries": [ { "old": 5000000, "new": 5500000, "kind": "changed" } ],
   "move":    null,
   "full_text_span": {                            // optional, v1.2+
     "v1": { "start": 4823, "end": 4961 },
@@ -273,48 +299,28 @@ Plain text bodies. `null` on the side that doesn't exist (`added`: `old=null`;
 `removed`: `new=null`). Word-level inline diffs are NOT carried in the JSON;
 renderers compute them at render time.
 
-### `amount_entries` (v1.4+; the only money field as of v2.0)
+### Money fields: none (removed in v3.0)
 
-Self-describing base-amount changes: every changed, added, or removed amount the
-diff found, in document order, **losslessly**.
+A change object carries **no** money field. `amounts` was removed in v2.0 and
+`amount_entries` in v3.0 (#671); nothing replaces either.
 
-```jsonc
-"amount_entries": [
-  { "old": 250000000, "new": 500000000, "kind": "changed" },
-  { "old": 250000000, "new": null,      "kind": "removed" },
-  { "old": null,      "new": 350000000, "kind": "added"   }
-]
-```
+The line the contract draws is between what the pipeline **observes** and what it
+**claims**. Extracting the dollar figures in a block of text, and inventorying them
+per node and per side, are observations, and both are still published:
+`tree[].own_amounts` carries the figures in each node's own block, unpaired, with a
+conservation invariant tested against real bills. Pairing a figure on one side with
+a figure on the other and publishing the difference is a claim about an account, and
+the pipeline has no account model to support it — `path` is the document breadcrumb
+where the text sits, not the account the money belongs to.
 
-- `kind: "changed"` — both sides present and differing (`old != new`).
-- `kind: "added"` — `old` is `null`; a whole item appeared.
-- `kind: "removed"` — `new` is `null`; a whole item vanished.
-- Unchanged pairs (`old == new`, e.g. only floor-amendment annotations moved) are
-  dropped.
+A consumer that wants to show money to a reader should read `tree[].own_amounts`
+alongside `full_text` and present the figures **in the sentence they appear in**, so
+the reader can see whether a number is an appropriation, a sub-allocation of one, a
+ceiling, or a commitment limitation. Presenting them as bare Old/New/Change columns
+is what this break exists to stop.
 
-**No reorder cancellation.** On a renumbered list, `match_amounts` emits a shifted
-item's identical value as a net-zero added/removed pair. Distinguishing that from
-two genuinely-distinct equal-value items needs within-list content alignment (#87),
-so the producer reports every entry honestly and leaves reorder handling to the
-consumer. A cross-version consumer may apply its own alignment
-policy; any presentation-side collapse is a consumer concern, not baked into the
-contract.
-
-As of v2.0 this is a change object's **only** money field, so there is exactly one
-list to read and no subset to confuse it with. It is also **required**: a change
-with no money carries an empty array rather than omitting the key, so a consumer
-reads it unconditionally and never has to distinguish "no money here" from "this
-producer didn't write the field".
-
-**An amount here need not appear in this change's `text`.** The two fields are
-derived from different renderings of the same section: `text` carries the
-match-normalized body (the form used to pair sections across versions), while
-amounts are extracted from the readable rendering, which keeps section content the
-normalized form truncates (#365). So a consumer that searches `text` for a figure
-listed in `amount_entries` can legitimately fail to find it, and must not treat
-that as a producer error or a reason to drop the amount. To show a reader the text
-an amount came from, use `full_text_span` to index into `full_text`, which is the
-readable rendering; that is the correspondence the report itself renders from.
+Re-adding a typed money field is planned: it needs the account-level model in #115
+and the leveled tree in #175 first.
 
 ### `full_text_span` (optional, v1.2+)
 

@@ -7,7 +7,7 @@ node_path (no tree in the canonical) the cards render flat exactly as before.
 
 Invariants pinned here because the page's JS depends on them:
 - ``id="change-{i}"`` keeps the original change-order index under grouping
-  (sidebar hrefs and the financial summary's links resolve by it).
+  (sidebar hrefs resolve by it).
 - Card groups render ``<details ... open>`` — ``navTargets()`` drops cards
   whose ``offsetParent`` is null, so a closed-by-default group would silently
   remove its cards from prev/next stepping and the counter.
@@ -32,7 +32,6 @@ def _change(**overrides) -> ChangeView:
         move_info_html="",
         old_text="old",
         new_text="new",
-        amount_pairs=(),
     )
     base.update(overrides)
     return ChangeView(**base)
@@ -83,8 +82,8 @@ def test_cards_group_nested_by_node_path_and_open_by_default():
 
 def test_cards_keep_original_change_order_indices_under_grouping():
     # Change 0 files under SALARIES (nested, renders later); change 1 under
-    # TITLE I directly. Grouping must not renumber ids — the financial table
-    # and sidebar link to #change-{original index}.
+    # TITLE I directly. Grouping must not renumber ids — the sidebar links
+    # to #change-{original index}.
     html = _cards_section_html(_view([_change(node_path=ACCOUNT), _change(node_path=TITLE)]))
     assert 'id="change-0"' in html and 'id="change-1"' in html
     assert html.find('id="change-1"') < html.find('id="change-0"')

@@ -304,13 +304,13 @@ def assert_manifest_committed(collected: Sequence, kind: str) -> None:
 # Adding an entry is a deliberate act: it records a fixture the gates cannot assert
 # on, which is a coverage gap, not a neutral fact. Say why in the comment.
 #
-# Scope: the three gates that skip per-case on content, plus
-# test_financial_callout_whole_item, whose channel is fixture ABSENCE rather than
-# content — its three XML cases carry skipif(not (_V1.exists() and _V2.exists())).
-# Both versions are committed and manifested, so an absent fixture means someone
-# deleted it, and the #86 headline gate going quiet is what this ceiling exists to
-# catch. It is not a manifest-parametrized module, so the #217 fixture floor does not
-# cover it.
+# Scope: the three gates that skip per-case on content.
+#
+# test_financial_callout_whole_item was watched here for a fixture-ABSENCE channel
+# (its XML cases carried skipif(not (_V1.exists() and _V2.exists()))). It was removed
+# with the financial callout it asserted on (#671), so there is no longer a module to
+# watch. The 119-hr-1 fixtures it named are still committed and manifested, and the
+# #217 fixture floor covers them; nothing is left uncovered by dropping the entry.
 #
 # Why not watch the other corpus modules: test_node_join_corpus,
 # test_xml_subsection_nodes, test_pdf_subsection_recall and
@@ -323,7 +323,6 @@ CORPUS_GATE_MODULES = (
     "tests/test_corpus_properties.py",
     "tests/test_corpus_tree_properties.py",
     "tests/test_diff_validation.py",
-    "tests/test_financial_callout_whole_item.py",
 )
 
 ALLOWED_CORPUS_SKIPS = {

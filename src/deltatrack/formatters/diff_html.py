@@ -17,9 +17,10 @@ from __future__ import annotations
 import json
 from html import escape
 
-from deltatrack.formatters._text import fmt_dollar, word_diff
+from deltatrack.formatters._text import word_diff
 from deltatrack.formatters.canonical import view_from_canonical
 from deltatrack.formatters.view_model import ChangeView, DiffView
+from deltatrack.palette import root_block
 
 __all__ = ["format_diff_html"]
 
@@ -56,12 +57,8 @@ def _build_card(change: ChangeView, index: int) -> str:
     # adapter pulls it from a dict that ultimately reflects upstream parser
     # output. Escape so a stray value can't break attribute quoting.
     ct = escape(change.change_type)
-    data_financial = "1" if _amount_entries_for(change) else "0"
 
-    parts = [
-        f'<div class="change-card {ct}{extra_card_class}" id="change-{index}"'
-        f' data-type="{ct}" data-financial="{data_financial}">'
-    ]
+    parts = [f'<div class="change-card {ct}{extra_card_class}" id="change-{index}" data-type="{ct}">']
     parts.append('<div class="change-header">')
     parts.append(f'<span class="badge badge-{ct}">{ct}</span>')
     parts.append(f"<h3{h3_class}>{change.heading_html}</h3>")
@@ -75,10 +72,6 @@ def _build_card(change: ChangeView, index: int) -> str:
     body = _card_body_html(change)
     if body:
         parts.append(body)
-
-    callout = _build_callout(change)
-    if callout:
-        parts.append(callout)
 
     parts.append("</div>")
     return "\n".join(parts)
@@ -135,86 +128,6 @@ def _moved_body_html(change: ChangeView) -> str:
     return "\n".join(parts)
 
 
-def _amount_entries_for(change: ChangeView) -> tuple[tuple[int | None, int | None, str], ...]:
-    """The change's amount entries, preferring `amount_entries` (#86).
-
-    Falls back to mapping the deprecated `amount_pairs` (changed-only) to
-    ``kind="changed"`` entries, so a ChangeView built with only `amount_pairs`
-    (older callers, hand-built test fixtures) still renders.
-    """
-    if change.amount_entries:
-        return change.amount_entries
-    return tuple((old, new, "changed") for old, new in change.amount_pairs)
-
-
-def _signed_delta(value: int) -> tuple[str, str]:
-    """(display, css_class) for a signed dollar delta. Sign goes outside the
-    formatter so the result is "-$500", not "$-500"."""
-    if value > 0:
-        return f"+{fmt_dollar(value)}", "increase"
-    if value < 0:
-        return f"-{fmt_dollar(abs(value))}", "decrease"
-    return fmt_dollar(0), "neutral"
-
-
-def _build_callout(change: ChangeView) -> str:
-    """Render the financial callout for a card.
-
-    Layout: flex rows with semantic .increase / .decrease delta classes for
-    color. Returns "" when the change carries no amount entries.
-
-    Three row kinds (#86): a `changed` value pair (``$X → $Y``), a whole-item
-    `added` amount (``+$X``), and a whole-item `removed` amount (``−$X``). When any
-    added/removed row is present, a closing **Net:** row sums the honest movement
-    (Σnew − Σold across entries) — this is what makes a removal-plus-equal-change
-    read as $0 rather than a lone increase. Renumbering can leave net-zero
-    added/removed noise rows (deferred to #87); they are shown honestly and cancel
-    in the net.
-    """
-    entries = _amount_entries_for(change)
-    if not entries:
-        return ""
-    parts = ['<div class="financial-callout">']
-    net = 0
-    has_one_sided = False
-    for old, new, kind in entries:
-        if kind == "added":
-            has_one_sided = True
-            net += new
-            delta_str, delta_class = _signed_delta(new)
-            parts.append(
-                f'<div class="row"><span class="label">Added:</span>'
-                f"<span>{fmt_dollar(new)}</span>"
-                f'<span class="delta {delta_class}">({delta_str})</span></div>'
-            )
-        elif kind == "removed":
-            has_one_sided = True
-            net -= old
-            delta_str, delta_class = _signed_delta(-old)
-            parts.append(
-                f'<div class="row"><span class="label">Removed:</span>'
-                f"<span>{fmt_dollar(old)}</span>"
-                f'<span class="delta {delta_class}">({delta_str})</span></div>'
-            )
-        else:  # changed
-            diff = new - old
-            net += diff
-            delta_str, delta_class = _signed_delta(diff)
-            parts.append(
-                f'<div class="row"><span class="label">Amount:</span>'
-                f"<span>{fmt_dollar(old)} &rarr; {fmt_dollar(new)}</span>"
-                f'<span class="delta {delta_class}">({delta_str})</span></div>'
-            )
-    if has_one_sided:
-        net_str, net_class = _signed_delta(net)
-        parts.append(
-            f'<div class="row net"><span class="label">Net:</span>'
-            f'<span class="delta {net_class}">{net_str}</span></div>'
-        )
-    parts.append("</div>")
-    return "".join(parts)
-
-
 def _build_nav_item(change: ChangeView, index: int) -> str:
     """Render a single sidebar <li> for a change."""
     nav_class = "nav-item unanchored" if change.degraded else "nav-item"
@@ -222,9 +135,8 @@ def _build_nav_item(change: ChangeView, index: int) -> str:
     if change.section_number:
         label = f"{escape(change.section_number)} — {label}"
     ct = escape(change.change_type)
-    fin = "1" if _amount_entries_for(change) else "0"
     return (
-        f'<li class="{nav_class}" data-type="{ct}" data-financial="{fin}">'
+        f'<li class="{nav_class}" data-type="{ct}">'
         f'<a href="#change-{index}">'
         f'<span class="badge badge-{ct}">{ct}</span> '
         f"{label}"
@@ -453,7 +365,6 @@ def _build_sidebar(
         '<div class="filters">\n'
         '<div class="filters__title">Filter changes</div>\n'
         '<label class="filter-row"><input type="radio" name="change-filter" value="all" checked> All</label>\n'
-        '<label class="filter-row"><input type="radio" name="change-filter" value="financial"> Financial</label>\n'
         '<label class="filter-row"><input type="radio" name="change-filter" value="structural"> Structural</label>\n'
         "</div>\n"
         f"{_build_change_groups(view, order_map)}\n"
@@ -524,9 +435,8 @@ def _cards_section_html(view: DiffView, order_map: dict[tuple, int] | None = Non
     arbitrary depth. ``open`` is load-bearing, not cosmetic: ``navTargets()``
     filters cards by ``offsetParent``, so a closed-by-default group's cards
     would silently vanish from prev/next stepping and the counter. Each card
-    keeps ``id="change-{original index}"`` — the sidebar hrefs and the
-    financial summary link by change-order index, so grouping may reorder the
-    DOM but never renumber. Sibling groups follow v2 document order when
+    keeps ``id="change-{original index}"`` — the sidebar hrefs link by
+    change-order index, so grouping may reorder the DOM but never renumber. Sibling groups follow v2 document order when
     ``order_map`` is given. Changes without a node_path trail in flat
     ``group_label`` groups; when NO change has one (no tree in the canonical)
     the section renders flat exactly as before.
@@ -555,87 +465,6 @@ def _cards_section_html(view: DiffView, order_map: dict[tuple, int] | None = Non
         cards = "\n".join(_build_card(view.changes[i], i) for i in fallback[label])
         blocks.append(group_html(label, cards))
     return "\n".join(blocks)
-
-
-def _build_financial_summary(view: DiffView) -> str:
-    """Render the top-of-page Financial Summary table.
-
-    One row per amount entry (#86): changed value pairs plus whole-item added and
-    removed amounts. Entries from the same change share a section cell via rowspan.
-    Each row carries a data-group index so the JS column sort keeps groups
-    together. An added row has no old amount and a removed row no new amount —
-    rendered as "—", never ``fmt_dollar(None)`` (which raises).
-
-    Wrapped in a ``<details>`` that is *closed* by default: on a real
-    appropriations bill the table runs hundreds of rows and pushes the bill text
-    off the first several screens. The summary carries the entry count so the
-    table's size is visible without opening it, and ``revealCard`` opens the
-    <details> like any other, so find-in-page hits and #change-N jumps still work.
-
-    Returns "" when no change carries any amount entry.
-    """
-    rows: list[tuple[int, ChangeView]] = [(i, c) for i, c in enumerate(view.changes) if _amount_entries_for(c)]
-    if not rows:
-        return ""
-
-    entry_count = sum(len(_amount_entries_for(c)) for _, c in rows)
-    noun = "amount change" if entry_count == 1 else "amount changes"
-    lines = [
-        '<details class="financial-summary">',
-        f'<summary><h2 class="disclosure">Financial Summary</h2>'
-        f'<span class="count">{entry_count} {noun}</span></summary>',
-        '<table class="financial-table">',
-        "<thead><tr>",
-        "<th>Section</th>",
-        "<th>Old Amount</th>",
-        "<th>New Amount</th>",
-        "<th>Change ($)</th>",
-        "<th>Change (%)</th>",
-        "</tr></thead>",
-        "<tbody>",
-    ]
-
-    for group_idx, (change_index, change) in enumerate(rows):
-        entries = _amount_entries_for(change)
-        section_label = change.heading_html or change.nav_label_html
-        for entry_idx, (old, new, kind) in enumerate(entries):
-            if kind == "added":
-                change_dollar, row_class = _signed_delta(new)
-                change_pct = "—"  # no old baseline to compute a percentage against
-            elif kind == "removed":
-                change_dollar, row_class = _signed_delta(-old)
-                change_pct = "-100.0%" if old != 0 else "—"  # the item is fully removed
-            else:  # changed
-                diff = new - old
-                change_dollar, row_class = _signed_delta(diff)
-                if old != 0:
-                    pct_value = diff / old * 100
-                    pct_sign = "+" if pct_value >= 0 else ""
-                    change_pct = f"{pct_sign}{pct_value:.1f}%"
-                else:
-                    change_pct = "—"
-
-            old_cell = fmt_dollar(old) if old is not None else "—"
-            new_cell = fmt_dollar(new) if new is not None else "—"
-
-            if entry_idx == 0:
-                rowspan_attr = f' rowspan="{len(entries)}"' if len(entries) > 1 else ""
-                section_cell = f'<td{rowspan_attr}><a href="#change-{change_index}">{section_label}</a></td>'
-            else:
-                section_cell = ""
-
-            lines.append(
-                f'<tr class="{row_class}" data-group="{group_idx}">'
-                f"{section_cell}"
-                f'<td class="amount">{old_cell}</td>'
-                f'<td class="amount">{new_cell}</td>'
-                f'<td class="amount change-amount">{change_dollar}</td>'
-                f'<td class="amount change-amount">{change_pct}</td>'
-                f"</tr>"
-            )
-
-    lines.append("</tbody></table></details>")
-    return "\n".join(lines)
 
 
 def _has_full_bill(canonical: dict | None) -> bool:
@@ -920,7 +749,7 @@ def _views_html(
     if order_map is None:
         order_map = _node_order_map((canonical.get("tree") or {}).get("v2") if canonical else None)
     changes_inner = (
-        f"{_build_financial_summary(view)}\n<h2>Changes</h2>\n{_cards_section_html(view, order_map)}"
+        f"<h2>Changes</h2>\n{_cards_section_html(view, order_map)}"
         '\n<p class="filter-empty" id="filter-empty" hidden>No changes match this filter.</p>'
     )
     if not _has_full_bill(canonical):
@@ -929,11 +758,25 @@ def _views_html(
     return f'<div class="view view-changes">{changes_inner}</div><div class="view view-full" hidden>{full_bill}</div>'
 
 
-# Ready-made questions a staffer can paste into an LLM alongside the diff.json.
-# Tailored to the canonical schema (sections, amounts) and appropriations bills.
+# Ready-made questions a staffer can paste into an LLM alongside the diff.json,
+# tailored to the canonical schema (sections, amounts) and appropriations bills.
+#
+# They may help a reader LOCATE dollar figures and inspect the text around them; they
+# must not invite conclusions about program or account funding, because the pipeline
+# cannot yet say what a figure means (#671). An appropriations block mixes top-line
+# appropriations, sub-allocations carved out of them, "not to exceed" ceilings and loan
+# guarantee commitment limitations, and #115 is where the typing that separates them
+# gets built.
+#
+# That constraint bites harder here than in on-screen copy: the export exists to be
+# handed to a machine, and an assistant holding only diff.json cannot read this
+# repository to learn a question was leading. The prompt is the whole instruction it
+# receives.
 _LLM_PROMPTS = (
     "Summarize the most significant changes between these two versions of the bill in plain English.",
-    "Which programs or accounts had their funding increased or decreased, and by how much? Put it in a table.",
+    "Identify changes that mention dollar figures. Show the surrounding old and new bill "
+    "text. Do not classify the figures as appropriations, account-level funding changes, or "
+    "funding increases or decreases.",
     "List every section that was added or removed between the two versions.",
     "Beyond dollar amounts, are there any policy, legal, or eligibility changes I should be aware of?",
     "Explain what changed in a specific section (give me the section number) and why it might matter.",
@@ -1120,40 +963,11 @@ def format_diff_html(
 # inert when their classes aren't applied, so both pipelines share one stylesheet.
 # ---------------------------------------------------------------------------
 
-# Canonical brand tokens — mirrored verbatim from BillTrax's src/app/globals.css :root,
-# so the block is drop-in and CI can guard drift (BillTrax owns the brand; DeltaTrack
-# consumes — see DeltaTrack#37). Names and values match BillTrax exactly, with two
-# documented exceptions:
-#   - The DeltaTrack-local group (font stacks, shadow) below: fonts use system fallbacks
-#     because reports are zero-egress and must not fetch webfonts; BillTrax keeps shadows
-#     in its tailwind config rather than :root.
-#   - --diff-modified/--diff-moved are new diff-state tokens not yet in BillTrax; the
-#     matching addition on the BillTrax side is tracked in DeltaTrack#37.
-_DESIGN_TOKENS_CSS = """\
-:root {
-  --background: #f9f7f5; --foreground: #1c1c3a;
-  --card: #ffffff; --card-foreground: #1c1c3a;
-  --popover: #ffffff; --popover-foreground: #1c1c3a;
-  --primary: #2c2c5c; --primary-foreground: #f9f7f5;
-  --secondary: #eef0f8; --secondary-foreground: #2c2c5c;
-  --muted: #f2f0ed; --muted-foreground: #686881;
-  --accent: #ede8df; --accent-foreground: #2c2c5c;
-  --gold: #c9944e; --gold-foreground: #1c1c3a;
-  --destructive: #c04040; --destructive-foreground: #f9f7f5;
-  --success: #3d9b6d; --success-foreground: #f9f7f5;
-  --diff-add: #d3f0e2; --diff-add-foreground: #1a6647;
-  --diff-remove: #f5ddd8; --diff-remove-foreground: #8a2828;
-  --diff-modified: #f1e6d2; --diff-modified-foreground: #8a6320;
-  --diff-moved: #eef0f8; --diff-moved-foreground: #2c2c5c;
-  --border: #e3ddd7; --input: #e3ddd7; --ring: #2c2c5c; --chart-5: #3b6fa0;
-  --radius: 0.625rem;
-  /* DeltaTrack-local (not synced from BillTrax): system font stacks + soft shadow */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: ui-serif, Georgia, 'Times New Roman', serif;
-  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --shadow-soft: 0 1px 2px 0 rgba(28,28,58,0.04), 0 1px 3px 0 rgba(28,28,58,0.06);
-}
-"""
+# The palette is `deltatrack.palette`, not this file. Every report embeds it at render
+# time, which is what keeps a report zero-egress (ADR 0011): nothing is fetched when one
+# is opened. Gated by `test_the_report_palette_declares_exactly_what_it_uses`, which
+# reads a rendered report and fails on a token this stylesheet does not use.
+_DESIGN_TOKENS_CSS = root_block()
 
 _CSS = (
     _DESIGN_TOKENS_CSS
@@ -1230,31 +1044,6 @@ summary:hover .disclosure::before, summary.disclosure:hover::before { color: var
 .badge-added { background: var(--diff-add); color: var(--diff-add-foreground); }
 .badge-removed { background: var(--diff-remove); color: var(--diff-remove-foreground); }
 .badge-moved { background: var(--diff-moved); color: var(--diff-moved-foreground); }
-
-/* Financial summary: collapsed by default so the table doesn't bury the text.
-   The caret hangs off the <h2> rather than the <summary>, so it is sized in `em`
-   against the heading and stays legible at the heading's scale. On the summary it
-   would inherit body text and read as the sidebar's 11px marker, which is small
-   enough that the heading doesn't look like a control at all. */
-.financial-summary { margin: 0 0 20px; }
-.financial-summary > summary { cursor: pointer; list-style: none; display: flex;
-  align-items: baseline; gap: 10px; padding: 4px 8px 4px 4px; margin-left: -4px;
-  border-radius: var(--radius); width: fit-content; }
-.financial-summary > summary::-webkit-details-marker { display: none; }
-.financial-summary > summary:hover { background: var(--secondary); }
-.financial-summary > summary h2 { display: inline-flex; align-items: center; gap: 10px; margin: 0; }
-.financial-summary > summary .count { color: var(--muted-foreground); font-size: 13px; font-weight: 400; }
-
-/* Financial table */
-.financial-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px; }
-.financial-table th { background: var(--muted); text-align: left; padding: 9px;
-  border-bottom: 1px solid var(--border); }
-.financial-table td { padding: 7px 9px; border-bottom: 1px solid var(--border); }
-.financial-table .amount { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
-.financial-table a { color: var(--primary); text-decoration: none; }
-.financial-table a:hover { text-decoration: underline; }
-tr.increase .change-amount { color: var(--success); }
-tr.decrease .change-amount { color: var(--destructive); }
 
 /* Card groups: cards nested under their tree-node headings (#172) */
 .card-group { margin: 6px 0 14px; }
@@ -1393,18 +1182,6 @@ mark.find-hit--current { background: var(--gold); color: #fff; }
   background: var(--secondary); cursor: pointer; font: inherit; font-family: var(--font-sans); font-size: 12px; }
 .prompt-copy:hover { background: var(--accent); }
 .prompt-text { line-height: 1.5; }
-
-/* Financial callout (canonical: PDF's flex rows) */
-.financial-callout { margin-top: 12px; padding: 10px 14px; background: var(--secondary);
-  border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px;
-  font-variant-numeric: tabular-nums; }
-.financial-callout .row { display: flex; gap: 10px; margin-bottom: 2px; }
-.financial-callout .row.net { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border);
-  font-weight: 600; }
-.financial-callout .label { color: var(--muted-foreground); min-width: 110px; }
-.financial-callout .delta.decrease { color: var(--destructive); font-weight: 600; }
-.financial-callout .delta.increase { color: var(--success); font-weight: 600; }
-.financial-callout .delta.neutral { color: var(--muted-foreground); font-weight: 600; }
 
 /* Nav targets clear the sticky action bar when scrolled to via Prev/Next */
 .change-card, .full-bill [id^="attr-"], .full-bill [id^="sec-"], .full-bill [id^="fb-off-"],
@@ -1554,12 +1331,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Change-type filter: All / Financial / Structural (radios only).
+  // Change-type filter: All / Structural (radios only).
   function applyFilters() {
     var typeEl = document.querySelector('input[name="change-filter"]:checked');
     var mode = typeEl ? typeEl.value : 'all';
     var typeOk = function(el) {
-      if (mode === 'financial') return el.dataset.financial === '1';
       if (mode === 'structural') return el.dataset.type !== 'modified';
       return true;
     };
@@ -1682,10 +1458,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   // Delegated so it covers every entry point at once, branching on the active
-  // view the same way navTargets() does. Changes view: sidebar nav links,
-  // financial-table row links, and a click on the card itself (which is what
-  // makes the scroll-and-read flow work) — all exact-match, since a #change-N
-  // anchor points straight at a target. Full-bill view: TOC links (resolved
+  // view the same way navTargets() does. Changes view: sidebar nav links and a
+  // click on the card itself (which is what makes the scroll-and-read flow
+  // work) — all exact-match, since a #change-N anchor points straight at a target. Full-bill view: TOC links (resolved
   // at-or-after) and a click on an inline highlight (exact). The sidebar's own
   // handler above runs first (it is bound on the anchor), so the view is already
   // switched and the group already revealed by the time this resolves the index.
@@ -1966,38 +1741,6 @@ document.addEventListener('DOMContentLoaded', function() {
   toggleBtns.forEach(function(b) { b.addEventListener('click', function() { setTimeout(runFind, 0); }); });
   document.querySelectorAll('input[name="change-filter"]').forEach(function(r) {
     r.addEventListener('change', function() { setTimeout(runFind, 0); });
-  });
-
-  // Financial table sort (groups rowspan rows together by data-group)
-  document.querySelectorAll('.financial-table th').forEach(function(th, colIdx) {
-    th.style.cursor = 'pointer';
-    th.addEventListener('click', function() {
-      var table = th.closest('table');
-      var tbody = table.querySelector('tbody');
-      var rows = Array.from(tbody.querySelectorAll('tr'));
-      var groups = [];
-      var groupMap = {};
-      rows.forEach(function(row) {
-        var g = row.dataset.group;
-        if (!(g in groupMap)) {
-          groupMap[g] = groups.length;
-          groups.push([]);
-        }
-        groups[groupMap[g]].push(row);
-      });
-      var asc = th.dataset.sort !== 'asc';
-      th.dataset.sort = asc ? 'asc' : 'desc';
-      groups.sort(function(a, b) {
-        var aVal = a[0].cells[colIdx] ? a[0].cells[colIdx].textContent.replace(/[^\\d.-]/g, '') : '';
-        var bVal = b[0].cells[colIdx] ? b[0].cells[colIdx].textContent.replace(/[^\\d.-]/g, '') : '';
-        var aNum = parseFloat(aVal), bNum = parseFloat(bVal);
-        if (!isNaN(aNum) && !isNaN(bNum)) return asc ? aNum - bNum : bNum - aNum;
-        return asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      });
-      groups.forEach(function(group) {
-        group.forEach(function(row) { tbody.appendChild(row); });
-      });
-    });
   });
 });
 """

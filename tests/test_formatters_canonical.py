@@ -31,10 +31,10 @@ from deltatrack.formatters.canonical import (
 )
 from deltatrack.parsers.pdf_anchors import Anchor
 
-# Local pin (guard against unintended bumps). 2.0 removed the deprecated `amounts`
-# field (#274), leaving `amount_entries` (added in 1.4, #86) as the only money field;
-# 1.3 added the optional `tree` field (#108).
-SCHEMA_VERSION = "2.0"
+# Local pin (guard against unintended bumps). 3.0 removed `amount_entries` (#671), so
+# a change object carries no money field at all; 2.0 had removed the deprecated
+# `amounts` before it (#274); 1.3 added the optional `tree` field (#108).
+SCHEMA_VERSION = "3.0"
 
 
 # ---------- XML producer ------------------------------------------------------
@@ -92,8 +92,7 @@ def test_xml_modified_change_canonical_fields():
     assert c["location"] is None
     assert c["anchor_resolution"] == "resolved"
     assert c["text"] == {"old": "old prose", "new": "new prose"}
-    assert c["amount_entries"] == []
-    assert "amounts" not in c, "the deprecated changed-only money field was removed in 2.0 (#274)"
+    assert not [k for k in c if "amount" in k], f"a change object carries no money field since 3.0 (#671): {sorted(c)}"
     assert c["move"] is None
 
 
@@ -163,58 +162,6 @@ def test_xml_same_parent_label_change_emits_renumbered_move():
         "new_label": "(b) In general",
         "body_unchanged": True,
     }
-
-
-def test_xml_amount_entries_drop_unchanged_and_keep_whole_item_moves():
-    """Unchanged (2000, 2000) is dropped; whole-item added/removed are kept (#86).
-
-    Pre-#274 this asserted the changed-only `amounts` field, which by construction
-    reported ONLY the (1000, 1500) pair and silently lost the other two — the
-    incompleteness 2.0 removed the field over.
-    """
-    change = {
-        "change_type": "modified",
-        "display_path_old": ["X"],
-        "display_path_new": ["X"],
-        "old_text": "a",
-        "new_text": "b",
-        "section_number": "",
-        "financial": {
-            "paired_amounts": [(1000, 1500), (2000, 2000), (5000, None), (None, 500)],
-        },
-    }
-    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[change]))
-    assert canonical["changes"][0]["amount_entries"] == [
-        {"old": 1000, "new": 1500, "kind": "changed"},
-        {"old": 5000, "new": None, "kind": "removed"},
-        {"old": None, "new": 500, "kind": "added"},
-    ]
-    assert "amounts" not in canonical["changes"][0]
-
-
-def test_xml_zeroing_surfaces_as_real_amount_change():
-    """A line zeroed to $0 is a real change and must reach canonical output (#60).
-
-    Guards the end-to-end "visible, not silent" guarantee: ($5,000 -> $0) survives
-    the real-change filter (is-not-None, not truthiness), while an unchanged ($0 -> $0)
-    is correctly dropped.
-    """
-    change = {
-        "change_type": "modified",
-        "display_path_old": ["X"],
-        "display_path_new": ["X"],
-        "old_text": "a",
-        "new_text": "b",
-        "section_number": "",
-        "financial": {
-            "paired_amounts": [(5000, 0), (0, 0), (0, 7500)],
-        },
-    }
-    canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[change]))
-    assert canonical["changes"][0]["amount_entries"] == [
-        {"old": 5000, "new": 0, "kind": "changed"},
-        {"old": 0, "new": 7500, "kind": "changed"},
-    ]
 
 
 def test_xml_unchanged_changes_are_dropped():
@@ -541,31 +488,7 @@ def test_pdf_change_carries_no_deprecated_amounts_field():
     canonical = pdf_diff_to_canonical(diff, **_pdf_meta())
     change = canonical["changes"][0]
     money_fields = sorted(k for k in change if "amount" in k)
-    assert money_fields == ["amount_entries"], f"expected one money field, got {money_fields}"
-
-
-def test_pdf_amount_entries_categorize_added_removed():
-    """#86: amount_entries carries the full categorized set (changed/added/removed),
-    losslessly. Since #274 it is the only money field on a change."""
-    hunk = PdfHunk(
-        change_type="modified",
-        v1_anchor=SEC_101,
-        v2_anchor=SEC_101,
-        v1_range=(1, 1, 1, 5),
-        v2_range=(1, 1, 1, 5),
-        v1_text="x",
-        v2_text="y",
-        amount_pairs=((1000, 1500), (2000, 2000), (None, 500), (5000, None)),
-    )
-    diff = PdfDiff(hunks=(hunk,), v1_anchors=(SEC_101,), v2_anchors=(SEC_101,))
-    change = pdf_diff_to_canonical(diff, **_pdf_meta())["changes"][0]
-    # Unchanged (2000, 2000) dropped; the rest categorized in order.
-    assert change["amount_entries"] == [
-        {"old": 1000, "new": 1500, "kind": "changed"},
-        {"old": None, "new": 500, "kind": "added"},
-        {"old": 5000, "new": None, "kind": "removed"},
-    ]
-    assert "amounts" not in change, "removed in 2.0 (#274)"
+    assert money_fields == [], f"a change object carries no money field since 3.0 (#671), got {money_fields}"
 
 
 # ---------- Schema validation -------------------------------------------------
@@ -637,14 +560,16 @@ def test_schema_rejects_a_change_carrying_the_removed_amounts_field():
         jsonschema.validate(canonical, _load_schema())
 
 
-def test_schema_requires_amount_entries_on_every_change():
-    """Counterpart to the above: `amount_entries` is required, not merely allowed.
+def test_schema_rejects_a_change_carrying_amount_entries():
+    """The 3.0 counterpart: `amount_entries` is not merely unwritten, it is illegal.
 
-    Optional-and-sole would still leave a consumer distinguishing "no money on this
-    change" from "field absent"; the producer always writes it, so the schema says so.
+    Removing a field from the producer alone would let it back in through any
+    consumer that hand-builds a document, and `additionalProperties: false` is what
+    stops that -- but only while the property is genuinely absent from the schema.
+    This asserts the rejection itself, the same way the `amounts` case above does.
     """
     canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[_schema_probe_change()]))
-    del canonical["changes"][0]["amount_entries"]
+    canonical["changes"][0]["amount_entries"] = [{"old": 100, "new": 200, "kind": "changed"}]
     with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate(canonical, _load_schema())
 
@@ -801,26 +726,33 @@ _READABLE_FULL_TEXT = {"v1": "SEC. 1.  (a) The old", "v2": "SEC. 1.  (a) The new
 _READABLE_SPANS = {"v1": {"E1": (9, 20)}, "v2": {"E1": (9, 20)}}
 
 
-def test_reader_rejects_a_pre_2_0_document_instead_of_rendering_it_moneyless():
-    """A 1.x document parses fine here but has no `amount_entries` at all (#274).
+@pytest.mark.parametrize(
+    ("version", "stale_money_field", "payload"),
+    [
+        ("1.4", "amounts", [{"old": 100, "new": 200}]),
+        ("2.0", "amount_entries", [{"old": 100, "new": 200, "kind": "changed"}]),
+    ],
+)
+def test_reader_rejects_an_older_major_instead_of_rendering_it_moneyless(version, stale_money_field, payload):
+    """An older document parses fine here but carries a money field this reader ignores.
 
     Without this guard the reader degrades to "every change has no money" — silently,
-    which is exactly the failure the 2.0 break removes. The schema has always said
-    consumers reject unknown majors; nothing enforced it until now.
+    which is exactly the failure each break removes: #274 for a 1.x document's
+    `amounts`, and #671 for a 2.x document's `amount_entries`. The schema has always
+    said consumers reject unknown majors; the guard is what enforces it.
     """
     canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[_schema_probe_change()]))
-    canonical["schema_version"] = "1.4"
-    canonical["changes"][0]["amounts"] = [{"old": 100, "new": 200}]
-    del canonical["changes"][0]["amount_entries"]
+    canonical["schema_version"] = version
+    canonical["changes"][0][stale_money_field] = payload
     with pytest.raises(ValueError, match="schema_version"):
         view_from_canonical(canonical)
 
 
 def test_reader_accepts_a_current_document():
-    """The guard must not reject everything: current output still reads, with money."""
+    """The guard must not reject everything: current output still reads."""
     canonical = xml_diff_to_canonical(_xml_diff_dict(changes=[_schema_probe_change()]))
     assert canonical["schema_version"] == SCHEMA_VERSION
-    assert view_from_canonical(canonical).changes[0].amount_entries == ((100, 200, "changed"),)
+    assert view_from_canonical(canonical).changes[0].old_text
 
 
 def test_card_prefers_readable_full_text_slice():
