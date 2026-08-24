@@ -505,7 +505,7 @@ def _view_toggle_html(canonical: dict | None) -> str:
         '<div class="view-toggle" role="tablist" aria-label="View mode">'
         '<button class="view-toggle__btn is-active" data-view="changes" role="tab"'
         ' aria-selected="true">Changes</button>'
-        '<button class="view-toggle__btn" data-view="full-text" role="tab"'
+        '<button class="view-toggle__btn" data-view="full" role="tab"'
         ' aria-selected="false">Full bill</button>'
         "</div>"
     )
@@ -768,9 +768,7 @@ def _views_html(
     if not _has_full_bill(canonical):
         return changes_inner
     full_bill = _full_bill_html(display_canonical or canonical)
-    return (
-        f'<div class="view view-changes">{changes_inner}</div><div class="view view-full-text" hidden>{full_bill}</div>'
-    )
+    return f'<div class="view view-changes">{changes_inner}</div><div class="view view-full" hidden>{full_bill}</div>'
 
 
 # Ready-made questions a staffer can paste into an LLM alongside the diff.json,
@@ -1279,8 +1277,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     // Swap the sidebar variant (only when a TOC variant was rendered).
     if (sidebarToc) {
-      sidebarToc.hidden = name !== 'full-text';
-      if (sidebarChanges) sidebarChanges.hidden = name === 'full-text';
+      sidebarToc.hidden = name !== 'full';
+      if (sidebarChanges) sidebarChanges.hidden = name === 'full';
     }
   }
   toggleBtns.forEach(function(b) {
@@ -1412,7 +1410,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // clicked highlight against the same set navTargets() steps through.
   var FULL_TARGET_SEL = '[id^="attr-"], .removed-change';
   function navTargets() {
-    var full = document.querySelector('.view-full-text');
+    var full = document.querySelector('.view-full');
     if (full && !full.hidden) {
       return [].slice.call(full.querySelectorAll(FULL_TARGET_SEL));
     }
@@ -1481,7 +1479,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // switched and the group already revealed by the time this resolves the index.
   document.addEventListener('click', function(e) {
     if (!e.target || !e.target.closest) return;
-    var full = document.querySelector('.view-full-text');
+    var full = document.querySelector('.view-full');
     if (full && !full.hidden) {
       var tree = e.target.closest('.sidebar-tree a[href^="#"]');
       if (tree) {
@@ -1517,7 +1515,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var findHits = [];
   var findIdx = -1;
   function activeView() {
-    var full = document.querySelector('.view-full-text');
+    var full = document.querySelector('.view-full');
     if (full && !full.hidden) return full;
     return document.querySelector('.view-changes') || document.body;
   }

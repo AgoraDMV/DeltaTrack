@@ -327,7 +327,7 @@ def test_counter_follows_full_bill_navigation(chromium, tmp_path):
     page = chromium.new_page(viewport={"width": 1280, "height": 900})
     page.goto(report.as_uri(), wait_until="domcontentloaded")
 
-    page.locator('.view-toggle__btn[data-view="full-text"]').click()
+    page.locator('.view-toggle__btn[data-view="full"]').click()
     counter = page.locator("#nav-counter")
     assert counter.inner_text() == "0 / 3"
 
@@ -1051,7 +1051,7 @@ def _open_full_bill(chromium, tmp_path, name="find_report.html"):
     report.write_text(_render_find_report(), encoding="utf-8")
     page = chromium.new_page(viewport={"width": 1280, "height": 900})
     page.goto(report.as_uri(), wait_until="domcontentloaded")
-    page.locator('.view-toggle__btn[data-view="full-text"]').click()
+    page.locator('.view-toggle__btn[data-view="full"]').click()
     return page
 
 

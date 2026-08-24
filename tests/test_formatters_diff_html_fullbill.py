@@ -125,7 +125,7 @@ def test_no_full_bill_ui_without_full_text_but_document_still_embedded():
 
     # No full-text UI: nothing to drive it.
     assert "data-view=" not in html
-    assert 'class="view view-full-text"' not in html
+    assert 'class="view view-full"' not in html
 
     # The document travels with the report anyway, intact.
     m = re.search(r'<script type="application/json" id="diff-data">(.*?)</script>', html, re.DOTALL)
@@ -137,9 +137,9 @@ def test_toggle_and_both_views_present():
     html = format_diff_html(_canonical())
     assert 'class="view-toggle"' in html
     assert 'data-view="changes"' in html
-    assert 'data-view="full-text"' in html
+    assert 'data-view="full"' in html
     assert 'class="view view-changes"' in html
-    assert 'class="view view-full-text"' in html
+    assert 'class="view view-full"' in html
 
 
 def test_action_bar_has_nav_controls_and_counter():
