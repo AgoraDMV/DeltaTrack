@@ -1031,3 +1031,79 @@ cannot change the architecture result.
 into `pdf-study-continuation-execution` requires a NEW continuation authorization; the one
 at 74ccf247 speaks for the apparatus as it stood before this repair. That is deliberately
 not done in this round.
+
+## A55 — POST-BOUNDARY APPARATUS DEVIATION
+
+```json
+{"id": "A55", "kind": "DEVIATION",
+ "commits": ["b0dcd648", "7cc12308"],
+ "classification": "POST-BOUNDARY APPARATUS DEVIATION (AUTHORIZATION MECHANISM)",
+ "made_after_boundary": "de60dddf906bc4b01e5ffbe9af4d3e833a9a2be7 (continuation boundary)",
+ "results_already_visible": {
+  "members": 17,
+  "pages": 4190,
+  "d_frame_census": 13992,
+  "s1_documents_firing": "17/17",
+  "p_head_documents": 12,
+  "p_head_pages": 2864,
+  "cross_engine": "17/17 measured, n_qualified 0"
+ },
+ "affects_membership": false,
+ "affects_scoring_rule": false,
+ "affects_metric_values": false,
+ "affects_architecture_decision": false,
+ "affects_execution_authorization": true,
+ "affects_reproducibility_surface": false,
+ "narrowing": "A55 changes only HOW A CONTINUATION AUTHORIZATION IS SUCCEEDED. It reads no holdout byte and changes no threshold, selection rule, metric definition, route derivation or architecture rule. It does not modify the population, the frames, the frozen key, the original execution marker or any existing authorization, and it never renames, edits, deletes, recommits or reinterprets the sequence-1 artifact. affects_execution_authorization is TRUE by construction: this record is about the authorization mechanism itself. affects_reproducibility_surface is FALSE, and that is AUDITED rather than assumed: `probes/x04_freeze_check.py` is a member of none of METHODOLOGY_SURFACE, RESULT_BEARING_DATA or AUTHORIZATION_EXTRAS, so no blob in the 31-entry authorization manifest moves. It is the gate that polices the surface, not a member of it. Verified against the real tree at 74ccf247: the repaired gate reports EXECUTION PERMITTED AS CONTINUATION with 31 current result-bearing blobs unchanged, the identical verdict the pre-A55 gate gives on the same commit.",
+ "files_touched": ["probes/x04_freeze_check.py"]}
+```
+
+**The defect.** A50 made the continuation authorization write-once, which is correct, and
+implemented that as a TERMINAL state. `--authorize-apparatus-continuation` refuses unless
+the authorization is ABSENT, so once a valid one exists the generator will not produce
+another under any circumstances. A50's own closing clause, "a further deviation requires a
+NEW explicit review and ruling; this does not chain", states the review requirement
+correctly. The code enforced it by making the required artifact unbuildable. Those are not
+the same thing, and the difference is invisible until a second reviewed deviation arrives.
+
+**Why it surfaces now.** A54 moves `probes/build_oracle.py` and `probes/score_metrics.py`,
+both members of the 31-entry authorization manifest. Projected onto
+`pdf-study-continuation-execution`, the authorization at 74ccf247 correctly goes stale: it
+still validates as an artifact, and it no longer speaks for the apparatus in force. Before
+this repair there was no lawful way forward. The only ways to resume were to edit a
+write-once file or to suppress the check, and both destroy the evidence the artifact exists
+to preserve.
+
+**The repair.** An append-only chain. Sequence 1 keeps its filename and is never renamed,
+edited, deleted or recommitted. Each successor is a NEW file,
+`EXECUTION-CONTINUATION-AUTHORIZATION-<n>.json`, committed exactly once, carrying an
+explicit integer sequence and binding its immediate predecessor by path, authorizing commit
+and blob. The chain is derived from repository history and exact filenames, never from what
+the newest artifact claims its own ancestry to be, so a successor cannot certify the one
+fact the chain exists to establish.
+
+**What it does not weaken.** Write-once is preserved exactly, because nothing is ever
+edited: a successor is an addition, not a revision. Authority does not roll forward. Every
+changed apparatus still requires its own separate reviewed, committed artifact, and the gate
+stays FORBIDDEN until that artifact is committed. An invalid, missing, mutated or deleted
+predecessor invalidates the whole chain, and a later entry cannot cure an earlier one, so
+appending is not a repair mechanism. "Is there something new to authorize" is asked against
+the LATEST authorization rather than the original marker, so an unchanged apparatus cannot
+receive a second licence. A55 supersedes A50 in exactly one respect: A50 provided no
+successor mechanism. Nothing else A50 established is changed.
+
+**Read-only verification against the real tree.** Established without modifying the
+preserved worktree, which remains clean at 74ccf247. At 74ccf247 the one-entry chain is
+valid and the gate reports PERMITTED AS CONTINUATION, with zero drift against the
+authorization itself. Projecting integration of d5330a54 onto a scratch branch: freeze
+integrity COMPLETE, execution readiness OPEN, sequence 1 still VALID but stale on exactly
+two manifest blobs, execution FORBIDDEN, and sequence 2 named as required. The relied-on
+deviation set derives from history to exactly `["A48", "A54"]`. Generating sequence 2 there
+succeeded with its entire working-tree footprint being one new untracked file, so no frozen
+scientific artifact is touched. That generated artifact was discarded and the scratch
+worktrees removed; no successor authorization was committed anywhere.
+
+**What A55 does not do.** It does not integrate `pdf-study-continuation-execution`, create
+any successor authorization, prepare a human-review packet, adjudicate, score, or decide the
+architecture. It creates no authorization of any kind. It makes one buildable, once, subject
+to the same review every authorization has always required.
