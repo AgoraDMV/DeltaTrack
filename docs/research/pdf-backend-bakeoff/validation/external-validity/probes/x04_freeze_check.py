@@ -2953,6 +2953,263 @@ def a50_authorization_controls() -> list[tuple[str, bool]]:
             checks.append(("A50-8 ...and the further change is itself named as drift",
                            any("CURRENT-METHODOLOGY DRIFT probes/alpha.py" in r for r in reasons2)))
 
+
+            # ================= A55 -- THE SUCCESSOR MECHANISM ==========================
+            # ENTRY STATE, INHERITED FROM A50-8 RATHER THAN REBUILT: a VALID committed
+            # sequence 1, a further post-boundary change that is committed AND declared,
+            # and a gate that is FORBIDDEN because the authorization has gone stale. That
+            # is exactly the state the real study reached after A54, and exactly the state
+            # the pre-A55 generator could not leave: it refused whenever an authorization
+            # existed, so the one lawful response -- a new reviewed artifact -- was the one
+            # thing it would not produce.
+            seq1_text = CONTINUATION_AUTH.read_text()
+            seq1_rel = str(CONTINUATION_AUTH.relative_to(root))
+            seq1_commits_before = len(_a50_git(root, "log", "--format=%H", "--", seq1_rel).splitlines())
+            base_v2 = _a50_git(root, "rev-parse", "HEAD")
+            seq2_path, seq3_path = continuation_auth_path(2), continuation_auth_path(3)
+
+            checks.append(("A55-0 an authorization EXISTS, the condition the pre-A55 generator refused on",
+                           continuation_auth_state()[0] == "VALID"))
+            checks.append(("A55-0 ...and the chain is VALID, so that refusal was never an integrity failure",
+                           not authorization_chain(cM)[1]))
+            checks.append(("A55-0 ...while the gate is FORBIDDEN, so the study could proceed no other way",
+                           continuation_decision(cM)[0] == "FORBIDDEN"))
+
+            # 1 -- THE REPAIR. The same generator, on the same state, now writes a successor.
+            rc_s2, _ = _a50_try_authorize()
+            wrote_seq2 = seq2_path.exists()
+            checks.append(("A55-1 the repaired generator WRITES sequence 2 over a valid sequence 1",
+                           rc_s2 == 0 and wrote_seq2))
+            checks.append(("A55-1 ...and sequence 1 is untouched, byte for byte",
+                           CONTINUATION_AUTH.read_text() == seq1_text))
+            # EVERY ARM BELOW DEPENDS ON A SEQUENCE 2 HAVING BEEN GENERATED. If the
+            # generator did not produce one, they cannot be evaluated -- and a suite that
+            # CRASHES here reports an error where it owes an attributable red arm, which is
+            # the difference between 'the successor mechanism regressed' and 'the tests
+            # broke'. Measured: removing the successor mechanism raised KeyError from the
+            # binding control instead of failing A55-1, and the whole A55 block reported
+            # zero failures while being wholly unevaluated.
+            if not wrote_seq2:
+                checks.append(
+                    ("A55 successor arms are UNEVALUABLE without a generated sequence 2", False)
+                )
+            else:
+                good_seq2 = seq2_path.read_text() if seq2_path.exists() else "{}"
+
+                # 2 -- WRITING IS NOT AUTHORITY. The gate stays shut until the successor is committed.
+                checks.append(("A55-2 an UNCOMMITTED sequence 2 leaves the gate FORBIDDEN",
+                               continuation_decision(cM)[0] == "FORBIDDEN"))
+                checks.append(("A55-2 ...reported as UNCOMMITTED rather than silently accepted",
+                               authorization_entry_state(seq2_path)[0] == "UNCOMMITTED"))
+
+                # ---- FILENAME DISCIPLINE, on scratch branches -----------------------------
+                # COMMITTED, because a naming fault must be caught on an otherwise intact entry.
+                # An uncommitted file is already refused for a different reason, and a control
+                # that passed on THAT would say nothing about the naming rule it claims to test.
+                def a55_scratch(branch: str, name: str, label: str, needle: str) -> None:
+                    _a50_git(root, "checkout", "-q", "-B", branch, base_v2)
+                    _a50_git(root, "reset", "-q", "--hard", base_v2)
+                    _a50_git(root, "clean", "-qfd")
+                    (continuation_auth_dir() / name).write_text(good_seq2)
+                    _a50_git(root, "add", "-A")
+                    _a50_git(root, "commit", "-qm", f"scratch {name}")
+                    _, errs = authorization_chain(cM)
+                    checks.append((label, any(needle in e for e in errs)))
+                    checks.append((f"{label} -- and the gate is FORBIDDEN",
+                                   continuation_decision(cM)[0] == "FORBIDDEN"))
+                    checks.append((f"{label} -- sequence 1 still byte-identical",
+                                   CONTINUATION_AUTH.read_text() == seq1_text))
+
+                a55_scratch("a55gap", "EXECUTION-CONTINUATION-AUTHORIZATION-3.json",
+                            "A55-3 a GAP (sequence 3 with no sequence 2) invalidates the chain", "GAP")
+                a55_scratch("a55dup", "EXECUTION-CONTINUATION-AUTHORIZATION-1.json",
+                            "A55-4 a DUPLICATE sequence-1 filename invalidates the chain", "claims sequence 1")
+                a55_scratch("a55pad", "EXECUTION-CONTINUATION-AUTHORIZATION-02.json",
+                            "A55-5 a MALFORMED zero-padded filename invalidates the chain",
+                            "unexpected authorization filename")
+
+                # ---- back on the real branch: commit the successor ------------------------
+                _a50_git(root, "checkout", "-q", "main")
+                _a50_git(root, "reset", "-q", "--hard", base_v2)
+                _a50_git(root, "clean", "-qfd")
+                seq2_path.write_text(good_seq2)
+                _a50_git(root, "add", "-A")
+                _a50_git(root, "commit", "-qm", "cA2 authorize the apparatus continuation, sequence 2")
+                after_seq2 = _a50_git(root, "rev-parse", "HEAD")
+
+                chain_now, chain_errs = authorization_chain(cM)
+                rec2 = json.loads(good_seq2)
+                checks.append(("A55-6 a committed valid sequence 2 forms the chain [1, 2]",
+                               [s for s, _ in chain_now] == [1, 2] and not chain_errs))
+                checks.append(("A55-6 ...and the gate PERMITS AS CONTINUATION",
+                               continuation_decision(cM)[0] == "PERMITTED AS CONTINUATION"))
+                checks.append(("A55-6 ...and sequence 2 binds sequence 1 by path, commit AND blob",
+                               rec2.get("supersedes", {}).get("path") == str(CONTINUATION_AUTH.relative_to(EV))
+                               and rec2["supersedes"]["authorizing_commit"] == authorizing_commit_of(CONTINUATION_AUTH)
+                               and rec2["supersedes"]["blob"] == blob_sha(CONTINUATION_AUTH)))
+                checks.append(("A55-6 ...and identifies itself as a continuation, never a pristine execution",
+                               rec2.get("continuation_of_inaugural_execution") is True
+                               and rec2.get("fresh_pristine_execution") is False))
+                checks.append(("A55-6 ...and sequence 1 was never RECOMMITTED",
+                               len(_a50_git(root, "log", "--format=%H", "--", seq1_rel).splitlines())
+                               == seq1_commits_before))
+
+                # 7 -- NOTHING NEW SINCE THE LATEST ENTRY. Asked against sequence 2, not the
+                # marker: against the marker an already-authorized deviation reads as a change
+                # forever, and the generator would mint successors over an untouched apparatus.
+                rc_same, _ = _a50_try_authorize()
+                checks.append(("A55-7 an UNCHANGED surface cannot receive another authorization", rc_same != 0))
+                checks.append(("A55-7 ...and no sequence 3 was written", not seq3_path.exists()))
+
+                # 8 -- THE SUCCESSOR'S RELIED-ON SET IS EXACT, in both directions, exactly as A52
+                # requires of sequence 1. Operands derived from the fixture, never hardcoded.
+                def variant2(**changes) -> list[str]:
+                    rec = json.loads(good_seq2)
+                    for k, v in changes.items():
+                        rec.pop(k, None) if v is _DROP else rec.__setitem__(k, v)
+                    seq2_path.write_text(json.dumps(rec, indent=1))
+                    try:
+                        return continuation_auth_errors(cM, seq2_path)
+                    finally:
+                        seq2_path.write_text(good_seq2)
+
+                req2 = required_deviation_ids(cM)
+                irrelevant2 = sorted({r.get("id") for r in parse_deviations()[0]} - req2, key=str)
+                checks.append(("A55-8 the fixture offers a real deviation the successor does NOT rely on",
+                               bool(req2) and bool(irrelevant2)))
+                checks.append(("A55-8 the successor acknowledges EXACTLY the derived relied-on set",
+                               sorted(rec2.get("acknowledged_deviations") or []) == sorted(req2)))
+                checks.append(("A55-8 PADDING the successor's relied-on set is refused",
+                               any("declares no post-boundary change" in e
+                                   for e in variant2(acknowledged_deviations=sorted(req2) + irrelevant2[:1]))))
+                checks.append(("A55-8 OMITTING it entirely is refused",
+                               any("acknowledges no reviewed deviation" in e
+                                   for e in variant2(acknowledged_deviations=[]))))
+
+                # 9 -- MUTATION OR DELETION OF EITHER LINK invalidates the WHOLE chain.
+                def chain_broken(label: str, needle: str) -> None:
+                    _, errs = authorization_chain(cM)
+                    checks.append((label, any(needle in e for e in errs)))
+                    checks.append((f"{label} -- and the gate is FORBIDDEN",
+                                   continuation_decision(cM)[0] == "FORBIDDEN"))
+
+                CONTINUATION_AUTH.write_text(seq1_text + "\n")
+                chain_broken("A55-9 a MUTATED sequence 1 invalidates the chain", "is UNCOMMITTED, not VALID")
+                CONTINUATION_AUTH.write_text(seq1_text)
+                checks.append(("A55-9 ...and the chain is valid again once restored", not authorization_chain(cM)[1]))
+
+                seq2_path.write_text(good_seq2 + "\n")
+                chain_broken("A55-10 a MUTATED sequence 2 invalidates the chain", "is UNCOMMITTED, not VALID")
+                seq2_path.write_text(good_seq2)
+                checks.append(("A55-10 ...and the chain is valid again once restored", not authorization_chain(cM)[1]))
+
+                CONTINUATION_AUTH.unlink()
+                chain_broken("A55-11 a DELETED predecessor invalidates the chain", "is DELETED")
+                CONTINUATION_AUTH.write_text(seq1_text)
+                checks.append(("A55-11 ...and the chain is valid again once restored", not authorization_chain(cM)[1]))
+
+                # 12 / 13 -- A FOREIGN PREDECESSOR. Committed once, so the entry itself is VALID
+                # and the refusal is attributable to the BINDING rather than to write-once.
+                def a55_binding(branch: str, label: str, needle: str, **sup_changes) -> None:
+                    _a50_git(root, "checkout", "-q", "-B", branch, base_v2)
+                    _a50_git(root, "reset", "-q", "--hard", base_v2)
+                    _a50_git(root, "clean", "-qfd")
+                    rec = json.loads(good_seq2)
+                    rec["supersedes"] = dict(rec["supersedes"], **sup_changes)
+                    seq2_path.write_text(json.dumps(rec, indent=1))
+                    _a50_git(root, "add", "-A")
+                    _a50_git(root, "commit", "-qm", f"scratch {branch}")
+                    checks.append((f"{label} -- the entry is VALID, so the refusal is about the BINDING",
+                                   authorization_entry_state(seq2_path)[0] == "VALID"))
+                    _, errs = authorization_chain(cM)
+                    checks.append((label, any(needle in e for e in errs)))
+                    checks.append((f"{label} -- and the gate is FORBIDDEN",
+                                   continuation_decision(cM)[0] == "FORBIDDEN"))
+
+                a55_binding("a55fc", "A55-12 a FOREIGN predecessor commit invalidates the chain",
+                            "names predecessor commit", authorizing_commit=h["c0"])
+                a55_binding("a55fb", "A55-13 a FOREIGN predecessor blob invalidates the chain",
+                            "names predecessor blob", blob="0" * 40)
+
+                # 14 -- CURING BY APPENDING IS REFUSED. A well-formed sequence 3 over an invalid
+                # sequence 2 must not launder the chain, or every integrity rule below it is
+                # one commit away from being optional.
+                _a50_git(root, "checkout", "-q", "-B", "a55cure", base_v2)
+                _a50_git(root, "reset", "-q", "--hard", base_v2)
+                _a50_git(root, "clean", "-qfd")
+                bad2 = json.loads(good_seq2)
+                bad2["supersedes"] = dict(bad2["supersedes"], blob="0" * 40)
+                seq2_path.write_text(json.dumps(bad2, indent=1))
+                _a50_git(root, "add", "-A")
+                _a50_git(root, "commit", "-qm", "an invalid sequence 2")
+                good3 = json.loads(good_seq2)
+                good3["sequence"] = 3
+                good3["supersedes"] = {"sequence": 2, "path": str(seq2_path.relative_to(EV)),
+                                       "authorizing_commit": authorizing_commit_of(seq2_path),
+                                       "blob": blob_sha(seq2_path)}
+                seq3_path.write_text(json.dumps(good3, indent=1))
+                _a50_git(root, "add", "-A")
+                _a50_git(root, "commit", "-qm", "a well-formed sequence 3 over an invalid sequence 2")
+                _, cure_errs = authorization_chain(cM)
+                checks.append(("A55-14 a well-formed sequence 3 does NOT cure an invalid sequence 2",
+                               any("names predecessor blob" in e for e in cure_errs)))
+                checks.append(("A55-14 ...and the chain is reported INVALID from sequence 2 onward",
+                               any("INVALID from sequence 2 onward" in e for e in cure_errs)))
+                checks.append(("A55-14 ...and the gate is FORBIDDEN",
+                               continuation_decision(cM)[0] == "FORBIDDEN"))
+                checks.append(("A55-14 ...and the generator REFUSES to extend a broken chain",
+                               _a50_try_authorize()[0] != 0))
+
+                # ---- back on the real branch: drift AFTER a successor ---------------------
+                _a50_git(root, "checkout", "-q", "main")
+                _a50_git(root, "reset", "-q", "--hard", after_seq2)
+                _a50_git(root, "clean", "-qfd")
+                checks.append(("A55-15 the chain is valid again on the real branch",
+                               not authorization_chain(cM)[1]))
+
+                (root / "src" / "gamma.py").write_text("SEGMENT = 7\n")
+                _a50_git(root, "add", "-A")
+                _a50_git(root, "commit", "-qm", "cU an undeclared change after sequence 2")
+                checks.append(("A55-16 UNDECLARED drift after a successor is FORBIDDEN",
+                               continuation_decision(cM)[0] == "FORBIDDEN"))
+                checks.append(("A55-16 ...and the generator REFUSES to authorize it",
+                               _a50_try_authorize()[0] != 0))
+                checks.append(("A55-16 ...and no sequence 3 was written", not seq3_path.exists()))
+
+                # DISCLOSURE IS STILL NOT AUTHORITY, one link further along.
+                _a50_declare_extra(ev, "U", _a50_git(root, "rev-parse", "HEAD"), ["repo:src/gamma.py"])
+                _a50_git(root, "add", "-A")
+                _a50_git(root, "commit", "-qm", "cUD declare the change made after sequence 2")
+                checks.append(("A55-17 DECLARED but not re-authorized drift remains FORBIDDEN",
+                               continuation_decision(cM)[0] == "FORBIDDEN"))
+                rc_s3, _ = _a50_try_authorize()
+                checks.append(("A55-17 ...and only then does the generator write sequence 3",
+                               rc_s3 == 0 and seq3_path.exists()))
+                _a50_git(root, "add", "-A")
+                _a50_git(root, "commit", "-qm", "cA3 authorize the apparatus continuation, sequence 3")
+                checks.append(("A55-17 ...after which the chain is [1, 2, 3] and PERMITS AS CONTINUATION",
+                               [s for s, _ in authorization_chain(cM)[0]] == [1, 2, 3]
+                               and continuation_decision(cM)[0] == "PERMITTED AS CONTINUATION"))
+                checks.append(("A55-17 ...with sequence 2 still byte-identical", seq2_path.read_text() == good_seq2))
+
+                # 18 -- BACKWARD COMPATIBILITY, ASSERTED RATHER THAN ASSUMED. A branch carrying
+                # ONLY the legacy artifact must still form a valid one-entry chain.
+                _a50_git(root, "checkout", "-q", "-B", "a55legacy", base_v2)
+                _a50_git(root, "reset", "-q", "--hard", base_v2)
+                _a50_git(root, "clean", "-qfd")
+                legacy_chain, legacy_errs = authorization_chain(cM)
+                checks.append(("A55-18 a branch carrying ONLY sequence 1 forms a valid one-entry chain",
+                               [s for s, _ in legacy_chain] == [1] and not legacy_errs))
+
+                # 19 -- and through every control above, the legacy artifact never moved.
+                _a50_git(root, "checkout", "-q", "main")
+                _a50_git(root, "clean", "-qfd")
+                checks.append(("A55-19 sequence 1 is byte-identical after every A55 control",
+                               CONTINUATION_AUTH.read_text() == seq1_text))
+                checks.append(("A55-19 ...and still has exactly one modifying commit",
+                               len(_a50_git(root, "log", "--format=%H", "--", seq1_rel).splitlines())
+                               == seq1_commits_before))
+
             # 4b / 3b -- WRITE-ONCE, asserted on real second commits. Last, because they are
             # not revertible: a second modifying commit is a permanent property of history.
             CONTINUATION_AUTH.write_text(good_auth + "\n// touched\n")
