@@ -2,153 +2,76 @@
 """
 fetch_bill_archives:
 
-Downloads bulk bill data using GovInfo BILLSTATUS bulk archive ZIP files.
-This is a separate API and separate logic from the usual congres.gov API.
-It is meant for large volumes of bills. When combined with bill_index,
-fetch_bill_archives creates a large index of bill metadata that can be
-used for data analysis and testing.
+Companion to ``fetch_bill_text_archives.py``. Downloads BILLSTATUS bulk ZIPs and
+extracts them into ``bills/<id>/<id>_status.xml``.
 """
 
 from __future__ import annotations
 
+import argparse
 import re
-import shutil
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
 from datetime import date
 from pathlib import Path
-from time import perf_counter
-from typing import Any, Iterator
+from typing import Any
 
 import httpx
 
-from bill_index import BillIndex, InsertMode, make_bill_id
-from shared.bill_types import BILL_TYPES
+from shared.bill_index import BillIndex, make_bill_id
+from shared.bill_types import resolve_bill_types
+from shared.http import download_archives as http_download_archives
+from shared.zip import extract_archive
 
-BillMetadata = dict[str, Any]
-
-# The REPOSITORY root, not this script's directory: `parents[1]` because the fetch
-# tooling lives in `tools/` while the working directories it fills are gitignored at the
-# root (`/bills`, `/bills_bulk_text` — anchored, see .gitignore). Resolving them beside
-# the script instead would put hundreds of MB of downloads outside those rules, which is
-# the silent-`git add` failure #308 exists to prevent (#367).
 PROJECT_DIR = Path(__file__).resolve().parents[1]
-
 DEFAULT_BILLS_DIR = PROJECT_DIR / "bills"
+DEFAULT_ZIP_DIR = PROJECT_DIR / "bills_bulk_status"
+BILLSTATUS_ZIP_FORMAT = "BILLSTATUS-{congress}-{bill_type}.zip"
 
-GOVINFO_BILLSTATUS_ZIP_URL = (
-    "https://www.govinfo.gov/bulkdata/BILLSTATUS/{congress}/{bill_type}/BILLSTATUS-{congress}-{bill_type}.zip"
+GOVINFO_BASE_URL = "https://www.govinfo.gov/bulkdata/"
+GOVINFO_BILLSTATUS_ZIP_URL_FORMAT = (
+    GOVINFO_BASE_URL + "BILLSTATUS/{congress}/{bill_type}/BILLSTATUS-{congress}-{bill_type}.zip"
 )
-
-# Ceiling on what one archive may expand to on disk (#279). `zipfile.extractall`
-# applies no bound of its own, so a crafted archive -- a few MB of highly repetitive
-# data that inflates to terabytes -- would fill the disk before anything noticed.
-#
-# Calibrated against the real bulk data rather than guessed: on 2026-07-21 the largest
-# BILLSTATUS archive is 118-hr, 34 MB compressed expanding to 162 MiB across 10,564
-# members, a 5.0x ratio; every member is XML. 2 GiB leaves better than an order of
-# magnitude of headroom for corpus growth while still refusing anything that could
-# plausibly exhaust a disk. Raise it deliberately if real archives ever approach it;
-# the failure mode of a too-low ceiling is a loud refusal, not a silent truncation.
-MAX_UNCOMPRESSED_BYTES = 2 * 1024**3
-
-# Companion ceiling on member *count* (#306). The byte ceiling above sums declared
-# uncompressed sizes, but empty members declare zero bytes: 200,000 empty files weigh
-# nothing against MAX_UNCOMPRESSED_BYTES yet still consume 200,000 inodes and directory
-# entries, exhausting the filesystem the byte ceiling was meant to protect. Inode
-# exhaustion degrades worse than a full disk -- it affects the whole machine and is
-# harder to diagnose, since free space still reads as available.
-#
-# Calibrated the same way as the byte ceiling: the largest real BILLSTATUS archive is
-# 118-hr at 10,564 members (the figure #300 measured), so 100,000 keeps better than a
-# 9x margin for corpus growth while refusing the 200,000-member archive #306 demonstrated
-# by a factor of two. As with the byte ceiling, a too-low bound fails loud (a refusal),
-# never silent -- raise it deliberately if real archives ever approach it.
-MAX_MEMBER_COUNT = 100_000
-
-_POPULAR_TITLE_RE = re.compile(r"^popular\s+titles?\b", re.IGNORECASE)
-_BILLSTATUS_XML_GLOB = "BILLSTATUS*.xml"
-_BILLSTATUS_XML_NAME_RE = re.compile(r"^BILLSTATUS-(\d+)([a-z]+)(\d+)\.xml$", re.IGNORECASE)
-LOG_PERFORMANCE = False
-
-_LEGACY_COLUMN_RENAMES = {
-    "action_count": "actionCount",
-    "version_count": "versionCount",
-    "budget_estimate_count": "budgetEstimateCount",
-    "amendment_count": "amendmentCount",
-    "related_bills_count": "relatedBillsCount",
-}
+GOVINFO_BILL_FILENAME_RE = re.compile(
+    r"^BILLSTATUS-(\d+)([a-z]+)(\d+)\.xml$",
+    re.IGNORECASE,
+)
+GOVINFO_BILLSTATUS_FILENAME_FORMAT = "BILLSTATUS-{congress}{bill_type}{number}.xml"
 
 
-# STEP 1: Download zip archives
-# The fastest way to get massive amounts of bill metadata is to download complete zip archives from govinfo bulk data.
-# Bill archives are stored per congress and bill type. Each zip file has per-bill metadata for up to thousands of bills.
-def archive_url(congress: int, bill_type: str) -> str:
-    """Build direct download URL for one BILLSTATUS archive ZIP."""
-    return GOVINFO_BILLSTATUS_ZIP_URL.format(congress=congress, bill_type=bill_type)
-
-
-def resolve_destination(destination: Path | str | None = None) -> Path:
-    """Resolve a relative destination against the repository root (see PROJECT_DIR)."""
-    path = Path(destination or DEFAULT_BILLS_DIR)
-    if not path.is_absolute():
-        path = PROJECT_DIR / path
-    return path
+def parse_billstatus_filename(filename: str) -> tuple[int, str, int]:  # (congress, bill_type, number)
+    """``BILLSTATUS-119hr1.xml`` → ``(119, "hr", 1)``."""
+    match = GOVINFO_BILL_FILENAME_RE.match(Path(filename).name)
+    if not match:
+        return (0, "", 0)
+    congress, bill_type, number = match.groups()
+    return int(congress), bill_type, int(number)
 
 
 def archive_destination(destination: Path, congress: int, bill_type: str) -> Path:
-    """Build the output path for one BILLSTATUS archive ZIP."""
-    return destination / f"{congress}-{bill_type}.zip"
+    """Return the local path for one BILLSTATUS archive."""
+    return destination / BILLSTATUS_ZIP_FORMAT.format(congress=congress, bill_type=bill_type)
 
 
-def archive_error_path(destination: Path, congress: int, bill_type: str) -> Path:
-    """Build the error marker path for one failed archive download."""
-    return destination / f"{congress}-{bill_type}.error"
+def billstatus_zip_url(congress: int, bill_type: str) -> str:
+    return GOVINFO_BILLSTATUS_ZIP_URL_FORMAT.format(congress=congress, bill_type=bill_type)
 
 
-def _print_download_progress(downloaded: int, total: int) -> None:
-    """Print a single-line download progress update to stderr."""
-    if total:
-        pct = downloaded * 100 // total
-        mb_done = downloaded / (1024 * 1024)
-        mb_total = total / (1024 * 1024)
-        print(f"\r  {mb_done:.1f}/{mb_total:.1f} MB ({pct}%)", end="", file=sys.stderr, flush=True)
-    else:
-        mb_done = downloaded / (1024 * 1024)
-        print(f"\r  {mb_done:.1f} MB downloaded", end="", file=sys.stderr, flush=True)
+def billstatus_zip_filename(congress: int, bill_type: str) -> str:
+    return BILLSTATUS_ZIP_FORMAT.format(congress=congress, bill_type=bill_type)
 
 
-def archive_temp_path(dest: Path) -> Path:
-    """Build temporary path used while downloading one archive."""
-    return dest.with_suffix(dest.suffix + ".part")
+def billstatus_filename(congress: int, bill_type: str, number: int) -> str:
+    return GOVINFO_BILLSTATUS_FILENAME_FORMAT.format(congress=congress, bill_type=bill_type, number=number)
 
 
-def _verify_archive_complete(path: Path) -> None:
-    """Raise unless path is a readable ZIP archive.
-
-    The content-length check is the completeness signal only when the server sends
-    that header; a chunked response legitimately omits it, and then a truncated body
-    is indistinguishable from a whole one by byte count alone (#63). The archive's own
-    end-of-central-directory record is the fallback signal: it is written last, so a
-    short read loses it and the file no longer opens. This is the same operation
-    extract_archive performs downstream -- doing it before committing turns a silently
-    cached partial archive into a failed download that the next run retries.
-
-    Emptiness is deliberately not checked: a zero-member ZIP is structurally valid,
-    and truncation always destroys the end-of-central-directory record, so a short
-    read can only ever produce "does not open", never "opens with zero members".
-    """
-    try:
-        with zipfile.ZipFile(path):
-            pass
-    except (zipfile.BadZipFile, OSError) as exc:
-        raise httpx.HTTPError(f"Incomplete download: {path.name} is not a readable ZIP archive ({exc})") from exc
-
-
-def _progress_prefix(index: int, total: int) -> str:
-    """Build a ``current/total:`` progress prefix for batch status lines."""
-    return f"{index}/{total}:"
+def enumerate_congresses(from_congress: int, to_congress: int) -> list[int]:
+    return list(
+        range(from_congress, to_congress + 1)
+        if from_congress <= to_congress
+        else range(from_congress, to_congress - 1, -1)
+    )
 
 
 def enumerate_tasks(
@@ -157,426 +80,160 @@ def enumerate_tasks(
     *,
     bill_types: list[str] | None = None,
 ) -> list[tuple[int, str]]:
-    """Return newest-first (congress, bill_type) tasks for a validated selection."""
-    selected_types = _validate_archive_params(from_congress, to_congress, bill_types)
-    congresses = reversed(range(from_congress, to_congress + 1))
-    return [(congress, bill_type) for congress in congresses for bill_type in selected_types]
-
-
-# STEP 1: Download archives
-# The bulk data API has zip files per congress and bill type. Each ZIP file has per-bill metadata.
-def download_archive_zip(client: httpx.Client, url: str, dest: Path) -> None:
-    """Stream one archive ZIP to disk atomically, printing progress when possible."""
-    temp_path = archive_temp_path(dest)
-    if temp_path.exists():
-        temp_path.unlink()
-
-    try:
-        with client.stream("GET", url, follow_redirects=True, timeout=300) as response:
-            response.raise_for_status()
-            total = int(response.headers.get("content-length", 0) or 0)
-            downloaded = 0
-            with temp_path.open("wb") as fh:
-                for chunk in response.iter_bytes(chunk_size=256 * 1024):
-                    if not chunk:
-                        continue
-                    fh.write(chunk)
-                    downloaded += len(chunk)
-                    _print_download_progress(downloaded, total)
-            print(file=sys.stderr)
-            if total and downloaded != total:
-                raise httpx.HTTPError(f"Incomplete download: got {downloaded} of {total} bytes")
-        _verify_archive_complete(temp_path)
-        temp_path.replace(dest)
-    except Exception:
-        if temp_path.exists():
-            temp_path.unlink()
-        raise
+    """Return the BILLSTATUS archive scopes for a congress range."""
+    return [
+        (congress, bill_type)
+        for congress in enumerate_congresses(from_congress, to_congress)
+        for bill_type in resolve_bill_types(bill_types)
+    ]
 
 
 def download_archives(
     from_congress: int,
     to_congress: int,
+    bill_types: list[str],
+    destination: Path,
     *,
-    bill_types: list[str] | None = None,
-    destination: Path | str | None = None,
+    overwrite_existing: bool = False,
 ) -> list[Path]:
-    """Download BILLSTATUS archive ZIPs for congress/type combinations."""
-    destination = resolve_destination(destination)
-    destination.mkdir(parents=True, exist_ok=True)
-    downloaded: list[Path] = []
+    """Download BILLSTATUS ZIPs for each (congress, type); skip existing unless overwriting."""
     tasks = enumerate_tasks(from_congress, to_congress, bill_types=bill_types)
-    total = len(tasks)
-
+    urls = [billstatus_zip_url(congress, bill_type) for congress, bill_type in tasks]
     with httpx.Client(timeout=300) as client:
-        for index, (congress, bill_type) in enumerate(tasks, start=1):
-            prefix = _progress_prefix(index, total)
-            dest = archive_destination(destination, congress, bill_type)
-            error_path = archive_error_path(destination, congress, bill_type)
-
-            if dest.exists():
-                print(f"{prefix} Skipping existing archive: {dest.name}", file=sys.stderr)
-                # The archive beside it disproves the marker, so clear it here too and
-                # not only on the download path (#259). Leaving it would let the two
-                # states contradict each other for as long as the cache survives.
-                error_path.unlink(missing_ok=True)
-                continue
-
-            url = archive_url(congress, bill_type)
-            print(f"{prefix} Downloading {dest.name}", file=sys.stderr)
-            print(f"  {url}", file=sys.stderr)
-            try:
-                download_archive_zip(client, url, dest)
-            except Exception as exc:
-                error_path.write_text(str(exc), encoding="utf-8")
-                print(f"{prefix} Failed {dest.name}: wrote {error_path.name}", file=sys.stderr)
-                continue
-
-            if error_path.exists():
-                error_path.unlink()
-            downloaded.append(dest)
-            print(f"{prefix} Saved: {dest.name}", file=sys.stderr)
-
-    return downloaded
+        return http_download_archives(
+            client,
+            urls,
+            destination,
+            url_to_path=lambda url, index: archive_destination(Path(), *tasks[index]),
+            skip_existing=not overwrite_existing,
+        )
 
 
-# Step 2: Extract archives
-# Once we have zip files per congress and bill type, we need to extract the per-bill metadata from the archives.
-def archive_extract_dir(source: Path, archive: Path) -> Path:
-    """Build extraction directory for one archive (same stem as the zip)."""
-    return source / archive.stem
-
-
-def extract_archive(archive: Path, dest_dir: Path) -> None:
-    """Extract one archive ZIP into dest_dir, refusing an oversized expansion.
-
-    Two ceilings guard extraction, both read from the central directory before a
-    single byte is written -- a ceiling enforced during extraction has already spent
-    the disk it protects. The byte ceiling bounds total uncompressed size; the member
-    ceiling bounds file *count*, because empty members declare zero bytes and so slip
-    the byte ceiling entirely while still consuming inodes (#306). Member *paths* are
-    untrusted too, but `zipfile.extractall` already sanitizes traversal and absolute
-    paths (see test_members_cannot_escape_the_destination_directory), so
-    re-implementing the walk to add filtering would reintroduce that escape to solve a
-    problem the stdlib has handled.
-    """
-    with zipfile.ZipFile(archive) as zf:
-        infos = zf.infolist()
-        member_count = len(infos)
-        if member_count > MAX_MEMBER_COUNT:
-            raise ValueError(
-                f"{archive.name} holds {member_count} members, over the {MAX_MEMBER_COUNT} ceiling; refusing to extract"
-            )
-        declared = sum(info.file_size for info in infos)
-        if declared > MAX_UNCOMPRESSED_BYTES:
-            raise ValueError(
-                f"{archive.name} declares {declared} uncompressed bytes, over the "
-                f"{MAX_UNCOMPRESSED_BYTES} ceiling; refusing to extract"
-            )
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        zf.extractall(dest_dir)
-
-
-def extract_archives(source: Path | str | None = None) -> list[Path]:
-    """Extract all ZIP archives in source, skipping existing folders."""
-    source = resolve_destination(source)
-    if not source.is_dir():
-        raise ValueError(f"Source folder does not exist: {source}")
-
-    extracted: list[Path] = []
-    archives = sorted(source.glob("*.zip"))
-    total = len(archives)
-
-    for index, archive in enumerate(archives, start=1):
-        prefix = _progress_prefix(index, total)
-        dest_dir = archive_extract_dir(source, archive)
-        if dest_dir.exists():
-            print(f"{prefix} Skipping existing folder: {dest_dir.name}", file=sys.stderr)
-            continue
-
-        print(f"{prefix} Extracting {archive.name}", file=sys.stderr)
-        try:
-            extract_archive(archive, dest_dir)
-        except Exception as exc:
-            if dest_dir.exists():
-                shutil.rmtree(dest_dir)
-            print(f"{prefix} Failed {archive.name}: {exc}", file=sys.stderr)
-            continue
-
-        extracted.append(dest_dir)
-
-    return extracted
-
-
-def iter_billstatus_files(
-    from_congress: int,
-    to_congress: int,
-    *,
-    bill_types: list[str] | None = None,
-    destination: Path | str | None = None,
-) -> Iterator[Path]:
-    """Yield BILLSTATUS XML files for archive folders matching the congress/type selection."""
-    for congress, bill_type in enumerate_tasks(
-        from_congress,
-        to_congress,
-        bill_types=bill_types,
-    ):
-        yield from enumerate_files(congress, bill_type, destination=destination)
-
-
-def enumerate_files(
-    congress: int,
-    bill_type: str,
-    *,
-    destination: Path | str | None = None,
-) -> list[Path]:
-    """Return BILLSTATUS XML files for one extracted archive folder."""
-    destination = resolve_destination(destination)
-    archive_dir = archive_extract_dir(
-        destination,
-        archive_destination(destination, congress, bill_type),
-    )
-    if not archive_dir.is_dir():
-        return []
-    return sorted(archive_dir.glob(_BILLSTATUS_XML_GLOB))
-
-
-def _bill_id_from_xml_path(xml_path: Path | str) -> str | None:
-    """Derive bill id from BILLSTATUS xml file name without opening the file."""
-    match = _BILLSTATUS_XML_NAME_RE.match(Path(xml_path).name)
-    if not match:
-        return None
-    congress, bill_type, number = match.groups()
-    return make_bill_id(congress, bill_type.lower(), number)
-
-
-def _xml_path_from_bill_id(bill_id: str) -> Path:
-    """Derive BILLSTATUS XML file path from bill id."""
-    congress, bill_type, number = bill_id.split("-")
-    return Path(f"BILLSTATUS-{congress}{bill_type}{number}.xml")
-
-
-def _pick_bill_title(bill: ET.Element) -> str:
-    """Prefer a popular title; otherwise use the first listed title."""
-    titles = bill.find("titles")
-    if titles is not None:
-        for item in titles.findall("item"):
-            title_type = item.findtext("titleType", "")
-            if _POPULAR_TITLE_RE.match(title_type):
-                title = item.findtext("title", "").strip()
-                if title:
-                    return title
-
-        for item in titles.findall("item"):
-            title = item.findtext("title", "").strip()
-            if title:
-                return title
-
-    return bill.findtext("title", "").strip()
-
-
-def _bill_number(bill: ET.Element) -> str:
-    """Read bill number from modern or legacy BILLSTATUS XML."""
-    return (bill.findtext("number") or bill.findtext("billNumber") or "").strip()
-
-
-def _bill_type_slug(bill: ET.Element) -> str:
-    """Read bill type slug from modern or legacy BILLSTATUS XML."""
-    return (bill.findtext("type") or bill.findtext("billType") or "").strip().lower()
-
-
-def _committee_count(bill: ET.Element) -> int:
-    """Count committees across modern and legacy BILLSTATUS XML layouts."""
-    items = bill.findall("committees/item")
-    if not items:
-        items = bill.findall("committees/billCommittees/item")
-    return len(items)
-
-
-def _first_summary_length(bill: ET.Element) -> int:
-    """Return character length of the first CRS summary text, if present."""
-    summaries = bill.find("summaries")
-    if summaries is None:
-        return 0
-
-    for tag_path in ("summary", "billSummaries/item", "item"):
-        first_summary = summaries.find(tag_path)
-        if first_summary is not None:
-            return len((first_summary.findtext("text", "") or "").strip())
-
-    return 0
-
-
-def _days_active(introduced_date: str, last_action_date: str) -> int | None:
-    """Return days between introduction and last action, if both dates are present."""
-    if not introduced_date or not last_action_date:
-        return None
-    start = date.fromisoformat(introduced_date)
-    end = date.fromisoformat(last_action_date)
-    return (end - start).days
-
-
-def extract_bill_metadata_from_archive_xml(source: Path | str) -> BillMetadata:
-    """
-    Convert one GovInfo BILLSTATUS XML file into succinct bill metadata.
-    XML data is from responses to requests of the form:
-    https://www.govinfo.gov/bulkdata/BILLSTATUS/119/hr/BILLSTATUS-119hr123.xml
-
-    """
-    xml_path = Path(source)
-    bill = ET.parse(xml_path).getroot().find("bill")
+def extract_bill_metadata(xml_content: str | bytes, bill_id: str) -> dict[str, Any]:
+    """Pull a short status summary from one BILLSTATUS XML. ``bill_id`` comes from the filename."""
+    if isinstance(xml_content, bytes):
+        xml_content = xml_content.decode("utf-8", errors="replace")
+    bill = ET.fromstring(xml_content).find("bill")
     if bill is None:
-        raise ValueError(f"No <bill> element found in {xml_path}")
+        raise ValueError(f"No <bill> element in {bill_id}")
 
-    congress = bill.findtext("congress", "").strip()
-    number = _bill_number(bill)
-    bill_type = _bill_type_slug(bill)
-    if not congress or not number or not bill_type:
-        raise ValueError(f"Missing congress, type, or number in {xml_path}")
+    introduced = bill.findtext("introducedDate", "").strip()
+    last_action = bill.findtext("latestAction/actionDate", "").strip()
+    days_active = None
+    if introduced and last_action:
+        days_active = (date.fromisoformat(last_action) - date.fromisoformat(introduced)).days
 
-    introduced_date = bill.findtext("introducedDate", "").strip()
-    last_action_date = bill.findtext("latestAction/actionDate", "").strip()
-
+    committees = bill.findall("committees/item") or bill.findall("committees/billCommittees/item")
     return {
-        "id": make_bill_id(congress, bill_type, number),
-        "title": _pick_bill_title(bill),
-        "introducedDate": introduced_date,
-        "lastActionDate": last_action_date,
-        "daysActive": _days_active(introduced_date, last_action_date),
+        "id": bill_id,
+        "title": (bill.findtext("title") or "").strip(),
+        "introducedDate": introduced,
+        "lastActionDate": last_action,
+        "daysActive": days_active,
         "status": bill.findtext("latestAction/text", "").strip(),
         "policyArea": bill.findtext("policyArea/name", "").strip(),
-        "historySize": xml_path.stat().st_size,
-        "summaryLength": _first_summary_length(bill),
+        "historySize": len(xml_content),
         "actionCount": len(bill.findall("actions/item")),
         "versionCount": len(bill.findall("textVersions/item")),
-        "budgetEstimateCount": len(bill.findall("cboCostEstimates/item")),
         "amendmentCount": len(bill.findall("amendments/amendment")),
         "relatedBillsCount": len(bill.findall("relatedBills/item")),
-        "committeeCount": _committee_count(bill),
-        "sponsorCount": len(bill.findall("sponsors/item")),
+        "committeeCount": len(committees),
     }
 
 
-def _validate_archive_params(
-    from_congress: int,
-    to_congress: int,
-    bill_types: list[str] | None,
-) -> list[str]:
-    """Validate congress range and bill types; return selected type slugs."""
-    if from_congress > to_congress:
-        raise ValueError(f"from_congress ({from_congress}) must be <= to_congress ({to_congress})")
-
-    selected_types = bill_types or list(BILL_TYPES)
-    unknown = [bill_type for bill_type in selected_types if bill_type not in BILL_TYPES]
-    if unknown:
-        raise ValueError(f"Unknown bill types: {unknown}")
-    return selected_types
-
-
-def parse_bill_archives(
-    from_congress: int,
-    to_congress: int,
+def convert_archives(
+    zip_dir: Path,
+    out_dir: Path,
     *,
-    bill_types: list[str] | None = None,
-    destination: Path | str | None = None,
-    index: BillIndex | None = None,
-    mode: InsertMode = "skip",
-):
-    """Parse BILLSTATUS XML for archive folders matching the congress/type selection."""
-    destination = resolve_destination(destination)
+    from_congress: int,
+    to_congress: int,
+    bill_types: list[str],
+    overwrite_existing: bool = False,
+    bill_index_path: Path | None = None,
+) -> None:
+    """Extract BILLSTATUS members via ``extract_archive`` into ``<id>/<id>_status.xml``."""
     tasks = enumerate_tasks(from_congress, to_congress, bill_types=bill_types)
-    task_count = len(tasks)
-    index = index or BillIndex(DEFAULT_BILLS_DIR / "bills.csv")
-    index.rename_columns(_LEGACY_COLUMN_RENAMES)
-    for task_index, (congress, bill_type) in enumerate(tasks, start=1):
-        prefix = _progress_prefix(task_index, task_count)
+    zip_paths = [archive_destination(zip_dir, congress, bill_type) for congress, bill_type in tasks]
+    bill_index = BillIndex(csv_path=bill_index_path) if bill_index_path else None
+    records: list[dict[str, Any]] = []
 
-        enum_start = perf_counter()
-        bill_xml_paths = enumerate_files(congress, bill_type, destination=destination)
-        enumerate_secs = perf_counter() - enum_start
-        bill_ids = [_bill_id_from_xml_path(xml_path) for xml_path in bill_xml_paths]
-        bill_paths_by_id = {bill_id: xml_path for xml_path, bill_id in zip(bill_xml_paths, bill_ids)}
-        new_bill_ids, existing_bill_ids = index.find_new_and_existing_bill_ids(bill_ids)
-        parse_bill_ids = new_bill_ids if mode == "skip" else bill_ids
-        parse_bill_paths = [bill_paths_by_id[bill_id] for bill_id in parse_bill_ids]
+    def handle_file(filename: str, _i: int, _zf: zipfile.ZipFile) -> str | None:
+        congress, bill_type, number = parse_billstatus_filename(filename)
+        bill_id = f"{congress}-{bill_type}-{number}"
+        return f"{bill_id}/{bill_id}_status.xml"
 
-        extract_start = perf_counter()
-        records = [extract_bill_metadata_from_archive_xml(xml_path) for xml_path in parse_bill_paths]
-        extract_secs = perf_counter() - extract_start
+    def handle_content(content: bytes, filename: str, _i: int, _zf: zipfile.ZipFile) -> bytes:
+        if bill_index is not None:
+            congress, bill_type, number = parse_billstatus_filename(filename)
+            bill_id = make_bill_id(congress, bill_type, number)
+            try:
+                records.append(extract_bill_metadata(content, bill_id))
+            except Exception as exc:
+                print(f"  error extracting metadata from {filename}: {exc}", file=sys.stderr)
+                records.append({"id": bill_id, "bill_status_error": str(exc)})
+        return content
 
-        merge_start = perf_counter()
-        index.add_bills(records, mode=mode)
-        merge_secs = perf_counter() - merge_start
-
-        status_parts = []
-        if existing_bill_ids:
-            status_parts.append(f"found {len(existing_bill_ids)} existing bills")
-        if new_bill_ids:
-            status_parts.append(f"added {len(new_bill_ids)} new bills")
-        updated_count = len(existing_bill_ids) if mode != "skip" else 0
-        if updated_count:
-            status_parts.append(f"updated {updated_count} bills")
-
-        print(
-            f"{prefix} {congress}-{bill_type} - {', '.join(status_parts)}",
-            file=sys.stderr,
-        )
-
-        if LOG_PERFORMANCE:
-            print(
-                (
-                    f"{prefix} {congress}-{bill_type} performance - "
-                    f"enumerating files: {enumerate_secs:.3f}s, "
-                    f"extracting metadata: {extract_secs:.3f}s, "
-                    f"merging index: {merge_secs:.3f}s"
-                ),
-                file=sys.stderr,
+    for i, path in enumerate(zip_paths):
+        print(f"  {i + 1}/{len(zip_paths)}: extracting {path.name}...", file=sys.stderr)
+        try:
+            extract_archive(
+                path,
+                out_dir=out_dir,
+                files=GOVINFO_BILL_FILENAME_RE,
+                overwrite_existing=overwrite_existing,
+                file_handler=handle_file,
+                file_content_handler=handle_content,
             )
+        except Exception as exc:
+            if not path.exists():
+                print(f"  {path.name} not found, skipping", file=sys.stderr)
+            else:
+                print(f"  error extracting {path.name}: {exc}", file=sys.stderr)
 
-    if index is not None:
-        print(
-            (f"Done parsing: bill index saved at {index.csv_path.resolve()} with {len(index.bills)} records"),
-            file=sys.stderr,
-        )
+    if bill_index is not None and records:
+        bill_index.add_bills(records, mode="merge")
 
 
-def fetch_bill_archives(
-    from_congress: int,
-    to_congress: int,
-    *,
-    bill_types: list[str] | None = None,
-    destination: Path | str | None = None,
-    index: BillIndex | None = None,
-    mode: InsertMode = "merge",
-) -> list[BillMetadata]:
-    """Download, extract, and index GovInfo BILLSTATUS bulk archives.
-
-    Each phase skips work that is already done: existing ZIPs, extracted folders,
-    and bill ids already present in the index (when merging).
-    """
-    destination = resolve_destination(destination)
-
-    print("Phase 1/3: Download archives", file=sys.stderr)
-    download_archives(
-        from_congress,
-        to_congress,
-        bill_types=bill_types,
-        destination=destination,
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--from-congress", type=int, default=118)
+    p.add_argument("--to-congress", type=int, default=119)
+    p.add_argument(
+        "--types",
+        nargs="+",
+        default=["all"],
+        help="Bill types to download. Use 'all' to include every key from shared/BILL_TYPES.",
     )
+    p.add_argument("--zip-dir", type=Path, default=DEFAULT_ZIP_DIR)
+    p.add_argument("--out-dir", type=Path, default=DEFAULT_BILLS_DIR)
+    p.add_argument("--bill-index-file", type=Path, help="Optional CSV to merge per-bill metadata")
+    p.add_argument(
+        "--overwrite-existing",
+        action="store_true",
+        help="Re-download ZIPs and overwrite extracted status files (default: skip existing)",
+    )
+    return p
 
-    print("Phase 2/3: Extract archives", file=sys.stderr)
-    extract_archives(destination)
 
-    print("Phase 3/3: Parse metadata into index", file=sys.stderr)
-    return parse_bill_archives(
-        from_congress,
-        to_congress,
-        bill_types=bill_types,
-        destination=destination,
-        index=index,
-        mode=mode,
+def main() -> None:
+    args = build_parser().parse_args()
+    download_archives(
+        args.from_congress,
+        args.to_congress,
+        args.types,
+        args.zip_dir,
+        overwrite_existing=args.overwrite_existing,
+    )
+    convert_archives(
+        args.zip_dir,
+        args.out_dir,
+        from_congress=args.from_congress,
+        to_congress=args.to_congress,
+        bill_types=args.types,
+        overwrite_existing=args.overwrite_existing,
+        bill_index_path=args.bill_index_file,
     )
 
 
 if __name__ == "__main__":
-    fetch_bill_archives(112, 119, index=BillIndex(DEFAULT_BILLS_DIR / "bills.csv"))
+    main()

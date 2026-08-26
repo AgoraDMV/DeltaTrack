@@ -176,7 +176,7 @@ def test_the_boundary_scan_actually_looked_at_something():
     )
 
     forbidden = _forbidden_names()
-    for expected in ("fetch_bills", "bill_index", "shared", "web"):
+    for expected in ("fetch_bills", "shared", "web"):
         assert expected in forbidden, f"forbidden roster missed {expected!r} -- derivation is broken, not the code"
 
 

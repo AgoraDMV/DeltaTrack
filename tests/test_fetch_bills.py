@@ -3,17 +3,20 @@
 import argparse
 import json
 import time
+import zipfile
 
 import httpx
 import pytest
 import respx
 
+import fetch_bills as fb
 import fetch_govinfo as gi
 from fetch_bills import (
     api_get,
     build_parser,
     cmd_download,
     cmd_download_all,
+    cmd_fetch_index,
     congress_for_year,
     download_all_versions,
     download_version_xml,
@@ -27,8 +30,13 @@ from fetch_bills import (
     save_version,
     version_path,
 )
+from tests.utils import EMPTY_ZIP_BYTES, assert_files, mock_http_requests
 
 TEST_API_KEY = "test-key"
+
+
+def fetch_index(args: list[str]) -> int:
+    return cmd_fetch_index(client=None, args=build_parser().parse_args(["fetch-index"] + args), api_key=None)
 
 
 def _govinfo_billstatus(congress: int, btype: str, number: int, *codes: str) -> bytes:
@@ -973,7 +981,6 @@ class TestDownloadGuardIntegration:
 
 def _write_search_corpus(dirpath):
     """A minimal local BILLSTATUS ZIP with one approps + one non-approps bill."""
-    import zipfile
 
     def doc(number, title, code):
         return (
@@ -1037,7 +1044,6 @@ class TestSearchCommand:
         assert "118-hr-5" in out
 
     def test_congress_and_type_filters_narrow_the_index(self, tmp_path, capsys):
-        import zipfile
 
         def doc(congress, btype, number, title):
             return (
@@ -1158,34 +1164,12 @@ class TestFetchIndexCommand:
         with pytest.raises(SystemExit):
             build_parser().parse_args(["fetch-index"])
 
-    def test_wires_scoped_single_type_download(self, tmp_path, monkeypatch):
-        import fetch_bills
-
-        calls = {}
-
-        def fake_download(from_congress, to_congress, *, bill_types, destination):
-            calls.update(
-                from_congress=from_congress,
-                to_congress=to_congress,
-                bill_types=bill_types,
-                destination=destination,
-            )
-            (destination / "118-hr.zip").write_bytes(b"")  # simulate the landed archive
-            return [destination / "118-hr.zip"]
-
-        monkeypatch.setattr(fetch_bills, "download_archives", fake_download)
-        args = build_parser().parse_args(
-            ["fetch-index", "--congress", "118", "--type", "hr", "--billstatus-dir", str(tmp_path)]
-        )
-        from fetch_bills import cmd_fetch_index
-
-        rc = cmd_fetch_index(None, args, None)
-        assert rc == 0  # every requested archive present after the run
-        assert calls["from_congress"] == 118
-        assert calls["to_congress"] == 118  # single congress: the lightweight slice
-        assert calls["bill_types"] == ["hr"]
-        # Resolved against cwd so it points where `search` reads (not script-relative).
-        assert calls["destination"] == tmp_path.resolve()
+    @respx.mock
+    def test_single_congress_and_bill_type_download(self, tmp_path):
+        mock_http_requests(content=EMPTY_ZIP_BYTES)
+        rc = fetch_index(["--congress", "118", "--type", "hr", "--billstatus-dir", str(tmp_path)])
+        assert rc == 0
+        assert_files(tmp_path, {"BILLSTATUS-118-hr.zip"})
 
     def test_type_omitted_fetches_all_types_for_the_congress(self, tmp_path, monkeypatch):
         import fetch_bills
@@ -1244,18 +1228,17 @@ class TestFetchIndexCommand:
             fetch_bills.main()
         assert exc.value.code == 1
 
+    @respx.mock
     def test_main_routes_and_succeeds(self, tmp_path, monkeypatch):
         # Happy-path routing: main() dispatches `fetch-index` to the download and exits 0
         # when the archive lands.
-        import fetch_bills
-
-        monkeypatch.setattr(fetch_bills, "download_archives", _fake_download_landing("118-hr.zip"))
+        mock_http_requests(content=EMPTY_ZIP_BYTES)
         monkeypatch.setattr(
             "sys.argv",
             ["fetch_bills", "fetch-index", "--congress", "118", "--type", "hr", "--billstatus-dir", str(tmp_path)],
         )
         with pytest.raises(SystemExit) as exc:
-            fetch_bills.main()
+            fb.main()
         assert exc.value.code == 0
 
 

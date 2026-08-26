@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from bill_index.bill_index import (
+from tools.shared.bill_index import (
     BillIdentifier,
     BillIndex,
     _decode_value,

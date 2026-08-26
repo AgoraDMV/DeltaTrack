@@ -15,7 +15,8 @@ import httpx
 import pytest
 import respx
 
-from fetch_bill_archives import archive_temp_path, download_archive_zip
+from tests.utils import assert_files
+from tools.shared.http import download_zip as download_archive_zip
 
 ARCHIVE_URL = "https://www.govinfo.gov/bulkdata/BILLSTATUS/999/hr/BILLSTATUS-999-hr.zip"
 
@@ -53,8 +54,7 @@ class TestDownloadArchiveZip:
             with pytest.raises(httpx.HTTPError):
                 download_archive_zip(client, ARCHIVE_URL, dest)
 
-        assert not dest.exists()
-        assert not archive_temp_path(dest).exists()
+        assert_files(tmp_path, ["999-hr.zip.error"])
 
     @respx.mock
     def test_healthy_body_without_content_length_is_committed(self, tmp_path):
@@ -67,7 +67,7 @@ class TestDownloadArchiveZip:
             download_archive_zip(client, ARCHIVE_URL, dest)
 
         assert dest.read_bytes() == full
-        assert not archive_temp_path(dest).exists()
+        assert_files(tmp_path, ["999-hr.zip"])
         with zipfile.ZipFile(dest) as zf:
             assert zf.namelist() == ["BILLSTATUS-999hr1.xml"]
 
