@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 from shared.bill_types import BILL_TYPES, resolve_bill_types
-from tests.utils import assert_message_contains_strings
 
 
 def test_empty_defaults_to_all() -> None:
@@ -25,4 +24,5 @@ def test_invalid_bill_type_raises_error() -> None:
     # Example error message:
     # Unknown bill type 'not-a-type'. Bill type must be one of: 'hr', 's', 'hjres', 'sjres', ...
     message = str(excinfo.value)
-    assert_message_contains_strings(message, ["Unknown bill type", "not-a-type", *BILL_TYPES.keys(), "all"])
+    for part in ["Unknown bill type", "not-a-type", *BILL_TYPES.keys(), "all"]:
+        assert part in message, f"Missing {part!r} in message: {message}"

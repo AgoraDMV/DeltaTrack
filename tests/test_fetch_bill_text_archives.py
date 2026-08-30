@@ -8,6 +8,7 @@ cannot fire and the archive's own structure is the only completeness signal.
 
 from __future__ import annotations
 
+import io
 import re
 import shlex
 import zipfile
@@ -21,22 +22,19 @@ from fetch_bill_text_archives import download_zip
 from fetch_bill_text_archives import main as fetch_bill_text_archives_main
 from fetch_govinfo import sessions_for_congress
 from shared.bill_types import BILL_TYPES
-from tests.utils import (
-    EMPTY_ZIP_BYTES,
-    archive_bytes,
-    assert_files,
-    assert_message_contains_strings,
-    mock_http_requests,
-)
 
 ARCHIVE_URL = "https://www.govinfo.gov/bulkdata/BILLS/999/1/hr/BILLS-999-1-hr.zip"
 
 
 def _bills_zip_bytes() -> bytes:
     """One well-formed BILLS archive ZIP, as govinfo serves it."""
-    return archive_bytes(
-        {"BILLS-999hr1ih.xml": b"<bill><congress>999</congress><type>HR</type><number>1</number></bill>"}
-    )
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr(
+            "BILLS-999hr1ih.xml",
+            b"<bill><congress>999</congress><type>HR</type><number>1</number></bill>",
+        )
+    return buf.getvalue()
 
 
 def _chunked(body: bytes) -> httpx.Response:
@@ -55,6 +53,60 @@ def run_fetch_bill_text_archives(command: str, tmp_path: Path) -> None:
     # Add explicit zip and out dirs so tests remain hermetic and predictable.
     args += ["--zip-dir", str(tmp_path), "--out-dir", str(tmp_path)]
     return fetch_bill_text_archives_main(args)
+
+
+def assert_files(folder: Path, files: set[str] | list[str]) -> None:
+    """Assert the folder contains exactly the given filenames."""
+    __tracebackhide__ = True
+    actual = {path.name for path in folder.iterdir()}
+    expected = set(files)
+    if actual != expected:
+        extra = actual - expected
+        missing = expected - actual
+        raise AssertionError(
+            "\n".join(
+                filter(
+                    None,
+                    [
+                        f"Unexpected file contents in folder {folder}:",
+                        f"expected: {expected}",
+                        f"actual: {actual}",
+                        f"extra: {extra}" if extra else None,
+                        f"missing: {missing}" if missing else None,
+                    ],
+                )
+            )
+        )
+
+
+def assert_message_contains_strings(message: str, expected_strings: list[str]) -> None:
+    """Assert each expected string appears in message."""
+    __tracebackhide__ = True
+    for part in expected_strings:
+        assert part in message, f"Missing '{part!r}' in message: {message}"
+
+
+def mock_http_requests(
+    url: re.Pattern[str] = re.compile(".*"),
+    status_code: int = 200,
+    content: bytes | list[bytes] = b"",
+    headers: dict[str, str] | None = None,
+) -> respx.Route:
+    """Mock matching GET requests with one response."""
+    return respx.get(url).mock(return_value=httpx.Response(status_code, headers=headers, content=content))
+
+
+def archive_bytes(members: dict[str, bytes] | None = None) -> bytes:
+    """Build a well-formed ZIP archive payload from members."""
+    members = members or {}
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as zf:
+        for member, body in members.items():
+            zf.writestr(member, body)
+    return buf.getvalue()
+
+
+EMPTY_ZIP_BYTES = archive_bytes()
 
 
 class TestDownloadZip:
