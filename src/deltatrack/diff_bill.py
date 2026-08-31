@@ -2096,7 +2096,7 @@ def cmd_compare(args: argparse.Namespace) -> None:
         output = json.dumps(diff_dict, indent=2)
 
     if args.output:
-        with open(args.output, "w") as f:
+        with open(args.output, "w", encoding="utf-8") as f:
             f.write(output)
     else:
         print(output)

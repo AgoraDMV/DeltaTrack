@@ -1378,7 +1378,7 @@ def main(argv: list[str] | None = None) -> None:
         v2_label=args.v2_label,
     )
     if args.output:
-        args.output.write_text(html)
+        args.output.write_text(html, encoding="utf-8")
         print(f"Wrote {args.output}", file=sys.stderr)
     else:
         print(html)

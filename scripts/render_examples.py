@@ -40,6 +40,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from deltatrack.compare.pdf import compare_pdfs_html  # noqa: E402
 from deltatrack.compare.xml import compare_xml_files_html  # noqa: E402
+from deltatrack.palette import LANDING_SUBSET, declarations  # noqa: E402
 from deltatrack.version_stems import label_from_stem, version_number_from_stem  # noqa: E402
 from tests.corpus_paths import FIXTURES_DIR  # noqa: E402
 
@@ -153,16 +154,10 @@ def render_pdf_diff(spec: ExampleSpec) -> Path:
 
 RENDERERS = {"xml": render_xml_diff, "pdf": render_pdf_diff}
 
-#: DeltaTrack's palette, kept to the subset the landing page uses. Copied from the
-#: report stylesheet in `formatters/diff_html.py`, which owns these values, so the page
-#: a visitor lands on and the reports it links look like one product.
-#: `tests/test_committed_examples.py` fails if they drift apart.
-INDEX_TOKENS = """  --background: #f9f7f5; --foreground: #1c1c3a;
-  --card: #ffffff; --primary: #2c2c5c; --muted-foreground: #686881;
-  --border: #e3ddd7; --radius: 0.625rem;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: ui-serif, Georgia, 'Times New Roman', serif;
-  --shadow-soft: 0 1px 2px 0 rgba(28,28,58,0.04), 0 1px 3px 0 rgba(28,28,58,0.06);"""
+#: The subset of DeltaTrack's palette this page uses, generated from
+#: `deltatrack.palette` rather than copied. There is one set of values, so the page a
+#: visitor lands on and the reports it links cannot drift apart by transcription.
+INDEX_TOKENS = declarations(LANDING_SUBSET)
 
 INDEX_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">

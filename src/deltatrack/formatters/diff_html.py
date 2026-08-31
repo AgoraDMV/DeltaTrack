@@ -20,6 +20,7 @@ from html import escape
 from deltatrack.formatters._text import word_diff
 from deltatrack.formatters.canonical import view_from_canonical
 from deltatrack.formatters.view_model import ChangeView, DiffView
+from deltatrack.palette import root_block
 
 __all__ = ["format_diff_html"]
 
@@ -962,32 +963,11 @@ def format_diff_html(
 # inert when their classes aren't applied, so both pipelines share one stylesheet.
 # ---------------------------------------------------------------------------
 
-# DeltaTrack's report palette, decided here (#667). Every report embeds this block at
-# render time, which is what keeps a report zero-egress (ADR 0011): nothing is fetched
-# when one is opened, so the font stacks below are system fallbacks, not webfonts.
-# The set stays exactly what the stylesheet uses — an unreferenced token ships in every
-# report and styles nothing. Gated by
-# `test_the_report_palette_declares_exactly_what_it_uses`.
-_DESIGN_TOKENS_CSS = """\
-:root {
-  --background: #f9f7f5; --foreground: #1c1c3a;
-  --card: #ffffff; --border: #e3ddd7;
-  --primary: #2c2c5c; --primary-foreground: #f9f7f5;
-  --secondary: #eef0f8; --muted: #f2f0ed; --muted-foreground: #686881;
-  --accent: #ede8df; --gold: #c9944e;
-  --destructive: #c04040; --success: #3d9b6d;
-  --diff-add: #d3f0e2; --diff-add-foreground: #1a6647;
-  --diff-remove: #f5ddd8; --diff-remove-foreground: #8a2828;
-  --diff-modified: #f1e6d2; --diff-modified-foreground: #8a6320;
-  --diff-moved: #eef0f8; --diff-moved-foreground: #2c2c5c;
-  --radius: 0.625rem;
-  /* System font stacks and a soft shadow. */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: ui-serif, Georgia, 'Times New Roman', serif;
-  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --shadow-soft: 0 1px 2px 0 rgba(28,28,58,0.04), 0 1px 3px 0 rgba(28,28,58,0.06);
-}
-"""
+# The palette is `deltatrack.palette`, not this file. Every report embeds it at render
+# time, which is what keeps a report zero-egress (ADR 0011): nothing is fetched when one
+# is opened. Gated by `test_the_report_palette_declares_exactly_what_it_uses`, which
+# reads a rendered report and fails on a token this stylesheet does not use.
+_DESIGN_TOKENS_CSS = root_block()
 
 _CSS = (
     _DESIGN_TOKENS_CSS

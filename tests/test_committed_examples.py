@@ -149,12 +149,21 @@ def _root_block(html: str) -> str:
 def test_index_page_tokens_match_the_report_tokens():
     """The landing page and the reports it links use the same palette values.
 
-    `render_examples.INDEX_TOKENS` is a hand-copied subset of the report stylesheet, so
-    it can fall behind a palette change and leave the demo's front door looking like a
-    different product than everything behind it — the mismatch #42 was filed over. Read
-    from a *rendered report* rather than the module source, so this compares what a
-    visitor actually gets. `formatters/diff_html.py` is the one place these values are
-    decided (#667); this test keeps the copy honest, it does not make it a second source.
+    Both derive from `deltatrack.palette`, so this compares a *committed rendered report*
+    against what that module produces today. What it detects is the surfaces emitting
+    different palette values, which happens when the committed examples go stale against
+    a palette change, or when one surface stops taking its values from the module and
+    carries different ones. Diverging values are what let the demo's front door look like
+    a different product from everything behind it, the mismatch #42 was filed over.
+
+    It does not detect derivation itself, and should not: a hand-written literal holding
+    the same values passes, because nothing a reader sees has changed.
+
+    Read from a rendered report rather than the renderer's module, so what a visitor
+    actually gets is what is compared.
+
+    History: `INDEX_TOKENS` was a hand-copied subset of the report stylesheet until it
+    became generated, and this test existed to keep that copy honest.
 
     Both sides are read comment-free, for the reason `_live_stylesheet` gives: a value
     kept only in a comment is not the value anything renders with. Since `_css_tokens`
@@ -174,9 +183,11 @@ def test_index_page_tokens_match_the_report_tokens():
         if report_tokens.get(name) != value
     }
     assert not mismatched, (
-        "examples/index.html uses brand tokens that differ from the reports it links "
-        f"(name: index value vs report value): {mismatched}. Re-copy the values into "
-        "render_examples.INDEX_TOKENS and re-run the script."
+        "examples/index.html uses palette values that differ from the reports it links "
+        f"(name: index value vs report value): {mismatched}. Both should come from "
+        "`deltatrack.palette`. Regenerate with `uv run python scripts/render_examples.py` "
+        "and commit the result; if that does not clear it, `INDEX_TOKENS` is no longer "
+        "emitting the palette's values for those names."
     )
 
 
