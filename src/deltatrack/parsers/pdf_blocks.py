@@ -1,24 +1,15 @@
 """PDF observation production: the anchor-delimited blocks the differ compares.
 
-Slice 1 of the ADR 0020 PDF convergence work
-(``docs/research/pdf-matching-convergence/``). This module holds the block-formation
-machinery **relocated unchanged from** ``diff_pdf``; no behaviour moves with it, and
-``tests/test_pdf_observation_emission.py`` pins the emitted sequence byte for byte across
-the relocation.
+``tests/test_pdf_observation_emission.py`` pins the emitted sequence byte for byte.
 
-**Why it is here and not in the differ.** What a PDF observation *is* was defined by the
-module that matches them. Two things follow from that, and the second is the blocking one:
-
-- Observation production and matching policy could not be changed independently, or
-  reviewed apart.
-- ADR 0019 requires a **parser revision** "derived from the parser implementation, [changing]
-  whenever code capable of changing the emitted observations changes". While block formation
-  lived in ``diff_pdf``, that revision would have had to hash the matcher — so editing a
-  threshold would have changed observation identity and quarantined every stored artifact,
-  while a genuine re-segmentation and a matching tweak would have been indistinguishable.
-
-With the machinery here, a PDF parser revision is a hash over ``pdf_text``, ``pdf_anchors``
-and this module, and the matcher is not in it.
+**Why it is here and not in the differ.** ADR 0019 requires a **parser revision** "derived
+from the parser implementation, [changing] whenever code capable of changing the emitted
+observations changes". With block formation in the differ that revision would have to hash
+the matcher, so editing a threshold would change observation identity and quarantine every
+stored artifact, and a genuine re-segmentation would be indistinguishable from a matching
+tweak. With the machinery here, a PDF parser revision is a hash over ``pdf_text``,
+``pdf_anchors`` and this module, and the matcher is not in it. Background:
+``docs/research/pdf-matching-convergence/``.
 
 **The emitted sequence, stated once.** The PDF observation sequence for one document is
 exactly the blocks :func:`_group_into_blocks` returns, in the order it returns them — the
@@ -39,12 +30,12 @@ from a differ; the arrow runs
 :func:`~deltatrack.amounts.extract_amounts` is consumed by
 :func:`_is_strippable_heading_line`, and that call is **result-bearing**: an uppercase
 heading with no recognised amount may be stripped from a block body, while one carrying an
-amount must be retained. It therefore belongs to this module's parser-revision closure. It
-previously came from ``deltatrack.diff_bill``, which meant a change to the money regexes
-could alter the emitted PDF observation sequence without touching any file that closure
-covered — the exact failure ADR 0019 identity exists to prevent. ``deltatrack.amounts`` is
-source-neutral and imports nothing from ``deltatrack``, so depending on it adds no differ to
-observation identity.
+amount must be retained. It therefore belongs to this module's parser-revision closure.
+Sourcing it from a differ instead would let a change to the money regexes alter the emitted
+PDF observation sequence without touching any file that closure covers — the exact failure
+ADR 0019 identity exists to prevent. ``deltatrack.amounts`` is source-neutral and imports
+nothing from ``deltatrack``, so depending on it adds no differ to observation identity.
+History: #492.
 
 **Parser-revision closure for PDF observations:** ``parsers/pdf_text.py`` +
 ``parsers/pdf_anchors.py`` + this module + ``deltatrack/amounts.py`` + the pypdfium2
