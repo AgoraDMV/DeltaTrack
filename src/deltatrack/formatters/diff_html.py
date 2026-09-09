@@ -675,8 +675,8 @@ def _removed_appendix_html(removed: list[dict], v1_text: str) -> str:
         heading = path or "<em>(unknown location)</em>"
         cid = escape(str(change.get("id", "")))
         blocks.append(
-            f'<article class="removed-change" id="attr-{cid}">'
-            f'<div class="removed-change__head">{heading}</div>'
+            f'<article class="removed-changes__item" id="attr-{cid}">'
+            f'<div class="removed-changes__item-head">{heading}</div>'
             f'<del class="diff-removed">{escape(text)}</del></article>'
         )
     return (
@@ -1187,9 +1187,9 @@ mark.find-hit--current { background: var(--gold); color: #fff; }
 .full-text .moved-mark { background: var(--diff-moved); color: var(--diff-moved-foreground); padding: 0 1px; }
 .removed-changes { margin-top: 28px; border-top: 1px solid var(--border); padding-top: 16px; }
 .removed-changes__note { font-size: 13px; color: var(--muted-foreground); margin-bottom: 12px; }
-.removed-change { margin-bottom: 12px; }
-.removed-change__head { font-size: 13px; color: var(--muted-foreground); margin-bottom: 4px; font-weight: 600; }
-.removed-change .diff-removed { white-space: pre-wrap; }
+.removed-changes__item { margin-bottom: 12px; }
+.removed-changes__item-head { font-size: 13px; color: var(--muted-foreground); margin-bottom: 4px; font-weight: 600; }
+.removed-changes__item .diff-removed { white-space: pre-wrap; }
 
 /* Export button + modal */
 .export-btn { padding: 6px 16px; border: 1px solid var(--primary);
@@ -1224,7 +1224,7 @@ mark.find-hit--current { background: var(--gold); color: #fff; }
 
 /* Nav targets clear the sticky action bar when scrolled to via Prev/Next */
 .change, .full-text [id^="attr-"], .full-text [id^="sec-"], .full-text [id^="fb-off-"],
-.removed-change { scroll-margin-top: 64px; }
+.removed-changes__item { scroll-margin-top: 64px; }
 
 /* Full-bill section TOC (sidebar variant) */
 .sidebar-changes[hidden], .sidebar-tree[hidden] { display: none; }
@@ -1434,7 +1434,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // The full-text view's targets are the inline marks themselves plus the
   // removed-text appendix blocks. Named once: the click handler resolves a
   // clicked highlight against the same set navTargets() steps through.
-  var FULL_TARGET_SEL = '[id^="attr-"], .removed-change';
+  var FULL_TARGET_SEL = '[id^="attr-"], .removed-changes__item';
   function navTargets() {
     var full = document.querySelector('.view-full');
     if (full && !full.hidden) {
