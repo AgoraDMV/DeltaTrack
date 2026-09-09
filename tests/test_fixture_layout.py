@@ -740,6 +740,63 @@ def test_every_exemption_names_a_file_the_scan_reaches() -> None:
     )
 
 
+def test_the_exemption_sets_stay_within_their_tiers() -> None:
+    """Nothing may be exempted that is not acquisition-tier code (gap G2).
+
+    The control above checks that every exemption key still RESOLVES to a scanned file. It
+    never checks that the key is DESERVED. Those failures point opposite ways: a dead key
+    is an exemption that has stopped applying, while an over-broad one applies perfectly to
+    a file that should never have had it. Measured before this existed -- adding
+    ``src/deltatrack/similarity.py`` to ``_DOWNLOAD_TIER_FILES`` and then planting a real
+    committed-fixture path in that module left this module at 29 passed and the whole
+    non-browser suite green. Exempting product code is a one-line, silent, permanent hole,
+    and it is the single cheapest way to defeat every bill rule in this file.
+
+    The bounds are literals here rather than constants beside the sets they bound, for the
+    reason ``test_exclusions_stay_within_the_research_tree`` spells out: a second
+    configuration value lets the policy certify itself, because widening both together
+    passes. Written here, widening is an edit to an assertion, which reads as the decision
+    it is.
+
+    The two bounds differ in shape because the two sets carry different risk.
+
+    ``_DOWNLOAD_TIER_FILES`` switches off every bill rule for a file, so it is bounded by
+    TIER rather than by name: ``tools/`` holds the fetchers whose output directory
+    ``bills/`` is, and ``tests/`` holds their tests and the live-network parity gate. A
+    prefix bound lets a new fetcher test in without ceremony while making product code
+    unrepresentable -- which is the only direction that matters, since #367 showed the
+    acquisition tier is where exemptions legitimately accumulate.
+
+    ``_DOWNLOAD_ROOT_NAMERS`` is enumerated instead. It waives one narrow rule for files
+    that name the download ROOT and never a bill beneath it, there are two of them, and
+    both are deliberate architectural facts rather than a growing class:
+    ``tests/corpus_paths.py`` defines ``DOWNLOADS_DIR`` because that name has to live
+    somewhere, and ``src/deltatrack/diff_bill.py`` carries ``compare``'s ``--bills-dir``
+    default (ADR 0013 / #152). A prefix bound cannot express that, because the second one
+    IS product code: any bound admitting it admits every other engine module too. So the
+    membership is frozen, and a third entry has to be argued for here.
+    """
+    tier_bound = ("tools/", "tests/")
+    escaped = sorted(k for k in _DOWNLOAD_TIER_FILES if not k.startswith(tier_bound))
+    assert not escaped, (
+        f"{len(escaped)} exemption(s) in _DOWNLOAD_TIER_FILES are outside the acquisition "
+        f"tier: {escaped}. That set switches off EVERY bill rule for a file, so a product "
+        "module listed there may address committed fixtures through bills/ forever with "
+        "nothing red. If such a module genuinely needs the download tree, it belongs in "
+        "_DOWNLOAD_ROOT_NAMERS, which waives one rule rather than all of them."
+    )
+
+    allowed_root_namers = {"tests/corpus_paths.py", "src/deltatrack/diff_bill.py"}
+    unexpected = sorted(_DOWNLOAD_ROOT_NAMERS - allowed_root_namers)
+    assert not unexpected, (
+        f"{len(unexpected)} unrecognised exemption(s) in _DOWNLOAD_ROOT_NAMERS: "
+        f"{unexpected}. Membership is frozen rather than bounded by prefix, because one "
+        "legitimate member is product code and no prefix admits it without admitting the "
+        "whole engine. Adding an entry means arguing for it here, next to the two that "
+        "have a recorded reason."
+    )
+
+
 def test_no_source_reaches_into_bills_for_a_committed_fixture() -> None:
     """Failure mode 1: a committed fixture addressed through the download tree.
 
