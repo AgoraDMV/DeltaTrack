@@ -8,10 +8,22 @@ could return the engine's internal diff dictionary while
 ``POST /api/compare?output=json`` returned the canonical contract, two documents
 sharing two of eight top-level keys, with the whole suite green.
 
-The gate is byte-identity rather than "both look canonical", because a shape check
+The gate is document equality rather than "both look canonical", because a shape check
 passes on two documents that are wrong in the same way. The schema test covers the
-direction byte-identity cannot: both surfaces drifting together, away from
+direction equality cannot: both surfaces drifting together, away from
 ``schema/canonical-diff.schema.json``.
+
+**Equality is of the parsed documents, not of the bytes**, and the two surfaces really
+do serialize differently: the command writes ``json.dumps(..., indent=2)``, which
+indents and escapes non-ASCII, while the endpoint returns Starlette's ``JSONResponse``,
+which emits compact UTF-8. Measured on the fixture pair below, 551,433 bytes against
+380,599, with ``\u2014`` on one side and raw em dash bytes on the other. Byte identity
+would mean indenting the HTTP response to match a file on disk, which costs every API
+caller about 45% more payload and buys nothing: ``schema/canonical-diff.md`` specifies
+a document, and #691 (the epic making every surface produce the same answer) asks the
+surfaces to agree on the answer, not on the whitespace. So do not "strengthen" this
+into a byte comparison; it would fail on formatting while saying nothing about whether
+the two agree.
 
 Both formats are held to it. ``./diff_pdf.py`` gained ``--format json`` in the same
 change, and the PDF half is the one with no prior behaviour to preserve, so pinning it
@@ -52,7 +64,7 @@ def _cli_json(tmp_dir: Path, old: Path, new: Path) -> str:
         cmd_compare(build_parser().parse_args(["compare", str(old), str(new), "--format", "json", "-o", str(out)]))
     else:
         diff_pdf_main([str(old), str(new), "--format", "json", "-o", str(out)])
-    return out.read_text()
+    return out.read_text(encoding="utf-8")
 
 
 def _endpoint_json(old: Path, new: Path) -> dict:
@@ -107,19 +119,18 @@ def corpus_pair(request) -> tuple[Path, Path]:
 
 @pytest.mark.slow
 def test_the_command_and_the_endpoint_return_the_same_document(tmp_path, unprefixed_pair):
-    """Same two files in, byte-identical canonical JSON out.
+    """Same two files in, the same canonical document out.
 
     This is the gate #693 is verified by, and reverting the routing in
     ``diff_bill.cmd_compare`` is the mutation that turns it red: the internal diff
     dictionary shares two top-level keys with the canonical document and none of its
     change fields.
+
+    See the module docstring for why this compares parsed documents rather than bytes.
     """
     old, new = unprefixed_pair
-    cli_text = _cli_json(tmp_path, old, new)
-    endpoint = _endpoint_json(old, new)
 
-    assert json.loads(cli_text) == endpoint
-    assert cli_text == json.dumps(endpoint, indent=2), "same document, different serialization"
+    assert json.loads(_cli_json(tmp_path, old, new)) == _endpoint_json(old, new)
 
 
 @pytest.mark.slow
@@ -144,7 +155,7 @@ def test_only_the_version_identity_depends_on_the_filename(tmp_path, corpus_pair
 
 @pytest.mark.slow
 def test_the_command_output_validates_against_the_published_schema(tmp_path, unprefixed_pair):
-    """Byte-identity says the two agree; this says what they agree on is the contract."""
+    """The parity test says the two agree; this says what they agree on is the contract."""
     jsonschema = pytest.importorskip("jsonschema")
 
     old, new = unprefixed_pair
