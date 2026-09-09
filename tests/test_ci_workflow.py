@@ -30,6 +30,7 @@ from __future__ import annotations
 import ast
 import json
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -745,18 +746,30 @@ def test_a_module_named_beside_a_real_invocation_is_not_covered(tmp_path: Path) 
 #
 # DeltaTrack's steps are NOT on that default. Every `uv run` step in ci.yml carries
 # `if: ${{ !cancelled() }}`, deliberately, so that a red gate still reports the rest of
-# its tier instead of hiding behind the first failure. That condition also means a failed
-# `uv sync --locked` does not stop the steps after it. Reproduced directly against uv
-# 0.12.5 on a tree whose pyproject.toml declared a dependency `uv.lock` did not contain:
+# its tier instead of hiding behind the first failure. That condition lets the later steps
+# EXECUTE after a failed `uv sync --locked`; it does not erase the earlier failure, so the
+# job and the required `test` aggregator are red either way and a stale lockfile cannot
+# merge on this alone. What the condition does cost, absent this rule, is that those steps
+# still run -- resolving and rewriting an uncommitted graph inside the runner, and testing
+# against it, before anyone reads the red. Locking every `uv run` is therefore
+# defence-in-depth plus correct attribution, not the thing standing between a stale
+# lockfile and `develop`.
 #
-#   uv sync --locked     exit 1, uv.lock unchanged
-#   uv export --locked   exit 2, uv.lock unchanged
-#   uv run --locked ...  exit 2, uv.lock unchanged
-#   uv run ...           exit 0, INSTALLED the dependency and REWROTE uv.lock
+# Reproduced against uv 0.12.10 on a tree whose pyproject.toml declared a dependency
+# `uv.lock` did not contain, hashing the lockfile after each command:
 #
-# So the workflows diverge from the guide's bare `uv run` on purpose, and the divergence
-# is the point rather than an oversight. Anyone "normalising" it back to the documented
-# spelling reopens the hole, and this guard is what tells them so.
+#   uv sync --locked                     exit 1, uv.lock unchanged
+#   uv export --locked                   exit 2, uv.lock unchanged
+#   uv run --locked python -c ...        exit 2, uv.lock unchanged
+#   uv run python -c ... --locked        exit 0, REWROTE uv.lock  <- flag went to the child
+#   uv --project . run python -c ...     exit 0, REWROTE uv.lock
+#
+# The last two are why this reads TOKENS rather than searching the command for the flag.
+# Everything after `uv run`'s child command belongs to that child, so a `--locked` there is
+# an argument to pytest, not an assertion to uv -- uv documents that boundary, and the
+# third line above shows the child receiving it. A substring search calls both of those
+# safe. So the rule is the repository's canonical SPELLING: `uv <subcommand> --locked`,
+# with the flag in uv's own option position, immediately after the subcommand.
 #
 # NOT a separate `uv lock --check` step (#678 argues this at length): it fires on exactly
 # the condition these commands already fail on, in exactly the runs where they already
@@ -764,14 +777,57 @@ def test_a_module_named_beside_a_real_invocation_is_not_covered(tmp_path: Path) 
 
 #: A uv subcommand that RESOLVES the dependency graph, and so can read or rewrite
 #: `uv.lock`. `uv python install` is absent because it installs an interpreter and never
-#: touches the lockfile, and `uvx` (`uv tool run`) is absent because it runs a tool in
-#: its own isolated environment rather than the project's -- neither has a `--locked`.
-_UV_RESOLVING_SUBCOMMAND = re.compile(r"\buv\s+(sync|export|run)\b")
+#: touches the lockfile, and `uvx` / `uv tool run` are absent because they run a tool in
+#: an isolated environment rather than the project's -- none of them takes `--locked`.
+_RESOLVING_SUBCOMMANDS = frozenset({"sync", "export", "run"})
 
-#: `--locked` as a whole argument. Matching the bare substring would also accept
-#: `--locked-something`, and, more to the point, the `--no-emit-project` neighbours in
-#: the security export make a loose match easy to write and hard to notice.
-_ASSERTS_LOCKED = re.compile(r"(?:^|\s)--locked(?:\s|$)")
+#: uv's GLOBAL options that consume the following token, from `uv --help`. Needed only to
+#: find where the subcommand starts: in `uv --project . run pytest` the `.` is a value, not
+#: the subcommand, and mistaking it for one makes the whole command invisible to this guard.
+_UV_GLOBAL_OPTIONS_TAKING_A_VALUE = frozenset(
+    {"--color", "--allow-insecure-host", "--directory", "--project", "--config-file", "--cache-dir"}
+)
+
+#: `NAME=value` prefixes, which the shell strips before the executable.
+_ENV_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
+
+
+def _uv_resolving_subcommand(command: str) -> tuple[str, bool] | None:
+    """`(subcommand, asserts_locked)` for a project-resolving uv command, else ``None``.
+
+    Tokenised rather than pattern-matched, because both false greens above are invisible to
+    a search over the raw string: one puts `--locked` past the child-command boundary, and
+    the other puts a global option between `uv` and its subcommand.
+
+    `asserts_locked` is true only for the canonical spelling, `--locked` immediately after
+    the subcommand. That is stricter than uv's own parser, which would also accept it later
+    among uv's options -- deliberately so. One spelling is what the workflows use, it is the
+    one position that cannot silently belong to a child command, and #672 is this
+    repository's record of what happens when a convention admits variation nothing checks.
+    """
+    try:
+        tokens = shlex.split(command)
+    except ValueError:  # unbalanced quotes; not something this guard can read
+        return None
+
+    index = 0
+    while index < len(tokens) and _ENV_ASSIGNMENT.match(tokens[index]):
+        index += 1
+    if index >= len(tokens) or tokens[index] != "uv":
+        return None
+    index += 1
+
+    while index < len(tokens) and tokens[index].startswith("-"):
+        option = tokens[index]
+        index += 1
+        # `--opt=value` carries its own value; `--opt value` eats the next token.
+        if option in _UV_GLOBAL_OPTIONS_TAKING_A_VALUE and index < len(tokens):
+            index += 1
+
+    if index >= len(tokens) or tokens[index] not in _RESOLVING_SUBCOMMANDS:
+        return None
+    subcommand = tokens[index]
+    return subcommand, tokens[index + 1 : index + 2] == ["--locked"]
 
 
 def _lockfile_assertion_failures(directory: Path) -> list[str]:
@@ -791,7 +847,10 @@ def _lockfile_assertion_failures(directory: Path) -> list[str]:
 
     Reads the parsed YAML rather than the file text, and reuses `_logical_commands`, so a
     commented-out invocation and a command mentioned in prose are both excluded on the
-    same terms as the slow-module coverage guard above.
+    same terms as the slow-module coverage guard above. Scope is `.github/workflows` only:
+    the `uv run` lines in AGENTS.md and CONTRIBUTING.md are documentation for a developer's
+    own machine, where a rewritten lockfile shows up in `git status` rather than silently
+    inside a runner.
     """
     failures: list[str] = []
     for path in _workflow_files(directory):
@@ -802,32 +861,19 @@ def _lockfile_assertion_failures(directory: Path) -> list[str]:
                 if not isinstance(block, str):
                     continue
                 for command in _logical_commands(block):
-                    match = _UV_RESOLVING_SUBCOMMAND.search(command)
-                    if match is None:
+                    invocation = _uv_resolving_subcommand(command)
+                    if invocation is None:
                         continue
-                    if _ASSERTS_LOCKED.search(command) is not None:
+                    subcommand, asserts_locked = invocation
+                    if asserts_locked:
                         continue
-                    subcommand = match.group(1)
-                    where = f"{path.name}:{job_id}"
-                    text = command.strip()
-                    if subcommand == "sync":
-                        failures.append(
-                            f"{where}: `{text}` re-resolves and rewrites uv.lock when it "
-                            f"disagrees with pyproject.toml, so this job would test a graph "
-                            f"that was never committed. Add --locked."
-                        )
-                    elif subcommand == "export":
-                        failures.append(
-                            f"{where}: `{text}` exports a lockfile it has not checked, so "
-                            f"pip-audit would certify a stale dependency set. Use --locked, "
-                            f"not --frozen."
-                        )
-                    else:
-                        failures.append(
-                            f"{where}: `{text}` installs and re-locks on its own, and these steps "
-                            f"run under `if: !cancelled()`, so a failed install step does not stop "
-                            f"it. Add --locked."
-                        )
+                    failures.append(
+                        f"{path.name}:{job_id}: `{command.strip()}` can resolve the project graph "
+                        f"and does not assert the committed lockfile. Spell it "
+                        f"`uv {subcommand} --locked ...`, with the flag directly after the "
+                        f"subcommand -- later is an argument to the child command, and `--frozen` "
+                        f"skips the freshness check rather than making it."
+                    )
     return failures
 
 
@@ -837,75 +883,41 @@ def test_every_uv_command_resolves_from_the_committed_lockfile() -> None:
     assert failures == [], "workflows can resolve a dependency graph that was never committed:\n" + "\n".join(failures)
 
 
-def test_a_bare_uv_sync_is_detected(tmp_path: Path) -> None:
-    """The mutation the fix undoes: `--locked` dropped from an install step."""
-    (tmp_path / "ci.yml").write_text(
-        "on: [push]\njobs:\n  build:\n    steps:\n      - run: uv sync\n",
-        encoding="utf-8",
-    )
-    failures = _lockfile_assertion_failures(tmp_path)
-    assert failures, "a bare `uv sync` was accepted as asserting lock freshness"
-    assert "Add --locked" in failures[0], (
-        "the install-step branch fired, but with another branch's diagnosis, which sends the "
-        f"reader after the wrong fix: {failures}"
-    )
+#: Each is one way a workflow can resolve an uncommitted graph while looking correct. No
+#: positive control accompanies them: the live guard above runs against the real workflows,
+#: whose nineteen resolving commands all carry the flag, so a rule that rejected everything
+#: would redden there rather than pass unnoticed.
+_UNLOCKED_COMMANDS = [
+    pytest.param("uv sync", id="bare-sync"),
+    pytest.param("uv export --frozen --format requirements-txt -o r.txt", id="frozen-export"),
+    # The documented pattern, and unsafe here: `if: !cancelled()` lets the second step run
+    # after the first fails, so it resolves and rewrites the graph before anyone reads the red.
+    pytest.param("uv run pytest -v", id="bare-run"),
+    # Both false greens a substring search accepts. uv never sees either flag: the first is
+    # an argument to `python`, and in the second the guard must step over `--project .` to
+    # find the subcommand at all. Verified against uv 0.12.10 -- both rewrote uv.lock.
+    pytest.param("uv run python -c 'print(1)' --locked", id="locked-after-child-command"),
+    pytest.param("uv --project . run pytest -v", id="global-option-before-subcommand"),
+]
 
 
-def test_a_frozen_export_is_detected(tmp_path: Path) -> None:
-    """The audit's original spelling. `--frozen` reads the lockfile without checking it.
+@pytest.mark.parametrize("command", _UNLOCKED_COMMANDS)
+def test_a_command_that_can_resolve_without_asserting_is_detected(command: str, tmp_path: Path) -> None:
+    """Every way a resolving command can skip the assertion is reported, not just a missing flag.
 
-    Named separately from the bare-sync control because it is a DIFFERENT defect with the
-    same symptom: not a missing flag, but the wrong one of two that look interchangeable.
-    A guard that only tested for absence would accept this.
-    """
-    (tmp_path / "security.yml").write_text(
-        "on: [push]\njobs:\n  audit:\n    steps:\n      - run: uv export --frozen --format requirements-txt -o r.txt\n",
-        encoding="utf-8",
-    )
-    failures = _lockfile_assertion_failures(tmp_path)
-    assert failures, "`uv export --frozen` was accepted as asserting lock freshness"
-    assert "not --frozen" in failures[0], (
-        "the export branch fired without naming the flag swap that fixes it, which is the whole "
-        f"difference between this defect and a missing flag: {failures}"
-    )
-
-
-def test_a_bare_uv_run_is_detected_even_after_a_locked_sync(tmp_path: Path) -> None:
-    """A correct install step does not excuse the bare `uv run` after it.
-
-    This is the case the guard exists for, and the one an earlier revision got wrong. The
-    workflow below is exactly the documented pattern -- `uv sync --locked`, then a bare
-    `uv run` -- and it is unsafe HERE because DeltaTrack's run steps carry
-    `if: ${{ !cancelled() }}`, so the failed sync does not stop them. Reproduced against
-    uv directly: after `uv sync --locked` refused a stale tree, the bare `uv run`
-    installed the undeclared dependency and rewrote `uv.lock`.
-
-    A guard that forgave this would be green on every workflow in the repository today
-    and would still be describing a protection that does not exist.
+    The last two ids are the ones that matter most, because they are the failures this
+    guard shipped with: `--locked` past the child-command boundary belongs to the child,
+    and a global option before the subcommand hid the whole command from a pattern that
+    expected `uv` and its subcommand to be adjacent. Both left the guard green while uv
+    rewrote the lockfile.
     """
     (tmp_path / "ci.yml").write_text(
-        "on: [push]\njobs:\n  test:\n    steps:\n      - run: uv sync --locked\n      - run: uv run pytest -v\n",
+        f"on: [push]\njobs:\n  test:\n    steps:\n      - run: uv sync --locked\n      - run: {command}\n",
         encoding="utf-8",
     )
-    failures = _lockfile_assertion_failures(tmp_path)
-    assert failures, "a bare `uv run` was excused by the locked `uv sync` before it"
-    assert "installs and re-locks on its own" in failures[0], (
-        "the `uv run` branch fired without explaining that `uv run` is itself an install path, "
-        f"which is the non-obvious fact the reader needs: {failures}"
+    assert _lockfile_assertion_failures(tmp_path), (
+        f"`{command}` was accepted as asserting the committed lockfile, and it does not"
     )
-
-
-def test_a_self_locked_uv_run_is_accepted(tmp_path: Path) -> None:
-    """The positive control: `--locked` on the command itself is what the rule asks for.
-
-    Without this the negative controls are equally satisfied by a rule that rejects EVERY
-    `uv run`, which would be unsatisfiable rather than strict.
-    """
-    (tmp_path / "ci.yml").write_text(
-        "on: [push]\njobs:\n  test:\n    steps:\n      - run: uv run --locked pytest -v\n",
-        encoding="utf-8",
-    )
-    assert _lockfile_assertion_failures(tmp_path) == [], "`uv run --locked` was rejected despite asserting for itself"
 
 
 # --- Every weekly failure reaches a person, whatever failed --------------------
