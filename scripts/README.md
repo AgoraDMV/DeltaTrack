@@ -164,16 +164,6 @@ and open both reports ([TESTING.md](../TESTING.md#comparing-the-two-pipelines-by
 | `ugly_money_table.py <old.xml> <new.xml> -o <out>` | Emit a deliberately unstyled money-diff table for staffer validation (fidelity stripped so only the money diff is under test). |
 | `render_examples.py` | Regenerate the committed example HTML diffs and landing page under `examples/`. The only renderer of the published examples; CI deploys what it wrote, and `tests/test_committed_examples.py` fails if they're stale. |
 
-## Similarity-threshold audit prototypes
-
-One-off prototypes from the similarity-function investigation; kept for reproducibility.
-
-| Script | What it does |
-|--------|--------------|
-| `p1_similarity_fixtures.py` | P.1 — synthetic stress fixtures for the similarity function. |
-| `p2_catalog_survey.py` | P.2 — real-bill cliff survey. Requires BillTrax data (MySQL/container). |
-| `p3_prototypes.py` | P.3 — alternative similarity-function prototypes (normalize / Levenshtein / Jaccard). |
-
 ## Smoke test
 
 | Script | What it does |

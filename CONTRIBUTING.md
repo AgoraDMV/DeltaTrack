@@ -222,7 +222,7 @@ uv run pytest -m slow \
   --deselect tests/test_govinfo_corpus_parity.py   # 5. Every slow gate CI runs
 ```
 
-CI splits gate 5 across three steps so a red build names the area it came from; run whole it covers all of them, against vendored and committed fixtures, with no downloads or API key. The deselection is CI's one deliberate omission: a live-network gate that cannot run offline.
+CI splits gate 5 across several jobs so a red build names the area it came from; run whole it covers all of them, against vendored and committed fixtures, with no downloads or API key. The deselection is CI's one deliberate omission: a live-network gate that cannot run offline.
 
 Selecting by marker means a module joining a CI step is covered here automatically. History: #220, #320, #288 — this block enumerated each step's modules and went stale in three consecutive pull requests, because nothing ties prose to the workflow.
 
