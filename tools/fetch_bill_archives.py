@@ -24,7 +24,7 @@ from typing import Any, Iterator
 import httpx
 
 from bill_index import BillIndex, InsertMode, make_bill_id
-from shared.bill_types import BILL_TYPES, resolve_bill_types
+from shared.bill_types import BILL_TYPES
 
 BillMetadata = dict[str, Any]
 
@@ -158,9 +158,9 @@ def enumerate_tasks(
     bill_types: list[str] | None = None,
 ) -> list[tuple[int, str]]:
     """Return newest-first (congress, bill_type) tasks for a validated selection."""
-    bill_types = resolve_bill_types(bill_types)
+    selected_types = _validate_archive_params(from_congress, to_congress, bill_types)
     congresses = reversed(range(from_congress, to_congress + 1))
-    return [(congress, bill_type) for congress in congresses for bill_type in bill_types]
+    return [(congress, bill_type) for congress in congresses for bill_type in selected_types]
 
 
 # STEP 1: Download archives
@@ -455,6 +455,22 @@ def extract_bill_metadata_from_archive_xml(source: Path | str) -> BillMetadata:
         "committeeCount": _committee_count(bill),
         "sponsorCount": len(bill.findall("sponsors/item")),
     }
+
+
+def _validate_archive_params(
+    from_congress: int,
+    to_congress: int,
+    bill_types: list[str] | None,
+) -> list[str]:
+    """Validate congress range and bill types; return selected type slugs."""
+    if from_congress > to_congress:
+        raise ValueError(f"from_congress ({from_congress}) must be <= to_congress ({to_congress})")
+
+    selected_types = bill_types or list(BILL_TYPES)
+    unknown = [bill_type for bill_type in selected_types if bill_type not in BILL_TYPES]
+    if unknown:
+        raise ValueError(f"Unknown bill types: {unknown}")
+    return selected_types
 
 
 def parse_bill_archives(
