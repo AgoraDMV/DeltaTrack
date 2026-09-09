@@ -44,7 +44,7 @@ from pathlib import Path
 import pytest
 
 from tests.conftest import _git_tracked_paths
-from tests.corpus_paths import DOWNLOADS_DIR, FIXTURES_DIR, PROJECT_ROOT, sweep_bill_dirs
+from tests.corpus_paths import DATA_DIR, DOWNLOADS_DIR, FIXTURES_DIR, PROJECT_ROOT, sweep_bill_dirs
 from tests.engine_guard import engine_is_foreign
 
 # Modules that legitimately name ``bills/``: they are about the DOWNLOAD tier itself
@@ -1059,23 +1059,51 @@ def test_fixture_tree_is_not_gitignored() -> None:
     probe = FIXTURES_DIR / "118-hr-4366" / "1_reported-in-house.xml"
     assert probe.exists(), "precondition: the probed fixture exists"
 
-    # git check-ignore answers 0 (ignored) / 1 (not ignored), but 128 for "not a git
-    # work tree" — which tests run from an unpacked sdist would hit. That is git
-    # declining to answer, not a verdict, so skip as the tracking gate above does
-    # rather than reporting a layout failure the checkout cannot possibly have.
+    # Whether this is a work tree is asked DIRECTLY, and is the only thing that may skip.
+    # Inferring it from a check-ignore exit code, as this test used to, silently converted
+    # every other 128 into a skip that claimed "not a git work tree" while standing in one.
+    inside = subprocess.run(
+        ["git", "-C", str(PROJECT_ROOT), "rev-parse", "--is-inside-work-tree"],
+        capture_output=True,
+        text=True,
+    )
+    if inside.returncode != 0 or inside.stdout.strip() != "true":
+        pytest.skip("not a git work tree — git cannot answer whether a path is ignored")
+
+    # `--no-index` is load-bearing, and its absence is why this control could not fail.
+    # Without it `git check-ignore` reports on what git would DO with the path, and it
+    # would do nothing to a TRACKED file whatever .gitignore says: measured, appending
+    # `tests/corpus/**/*.xml` to .gitignore left this at rc=1 ("not ignored") and the
+    # module at 28 passed, which is the reassurance this test exists to give and had
+    # stopped earning. With the flag git answers the question actually being asked --
+    # would the ignore rules cover this path -- and the same mutation reports rc=0.
+    #
+    # The probe below is under tests/, not under bills/. The old one crossed the download
+    # tree, which the .gitignore comment on `/bills` says is commonly a SYMLINK, and git
+    # refuses a pathspec "beyond a symbolic link" with 128 -- so on exactly the developer
+    # setup that file goes out of its way to support, this control skipped instead of
+    # running. Measured with bills/ symlinked: 27 passed, 1 skipped.
     ignored = subprocess.run(
-        ["git", "-C", str(PROJECT_ROOT), "check-ignore", "-q", str(DOWNLOADS_DIR / "118-hr-4366" / "x.xml")],
+        ["git", "-C", str(PROJECT_ROOT), "check-ignore", "-q", "--no-index",
+         str(DATA_DIR / "extract_cache" / "probe.json")],
         capture_output=True,
     )
-    if ignored.returncode not in (0, 1):
-        pytest.skip("not a git work tree — git cannot answer whether a path is ignored")
-    assert ignored.returncode == 0, "probe is broken: bills/ should be ignored, so a real result is meaningful"
+    assert ignored.returncode == 0, (
+        "probe is broken: tests/data/extract_cache/ is gitignored, so check-ignore must "
+        f"report it as ignored (got rc={ignored.returncode}). Until it does, a negative "
+        "result below would mean nothing."
+    )
 
     result = subprocess.run(
-        ["git", "-C", str(PROJECT_ROOT), "check-ignore", "-q", str(probe)],
+        ["git", "-C", str(PROJECT_ROOT), "check-ignore", "-q", "--no-index", str(probe)],
         capture_output=True,
     )
-    assert result.returncode == 1, f"{probe} is gitignored — committed fixtures must be storable"
+    assert result.returncode == 1, (
+        f"{probe} is matched by an ignore rule — committed fixtures must be storable. A "
+        "broad pattern (a stray `*.pdf`, a `corpus` entry) puts the project back into the "
+        "silent `git add` no-op that #308 exists to remove: the file is simply never "
+        "staged, the suite passes locally, and CI receives nothing."
+    )
 
 
 # Trees whose ignore rule must survive the directory being a SYMLINK. A trailing slash
