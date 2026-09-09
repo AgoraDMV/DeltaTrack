@@ -7,8 +7,8 @@ Guidelines for AI coding agents working on this repository.
 ```bash
 source ./init                    # Install deps + activate the venv (source it; ./init alone runs in a subshell and the activation is lost)
 uv sync                          # (what ./init runs to install dependencies)
-uv run pytest -m "not slow and not browser"  # Fast tests only (~1s)
-uv run pytest                    # All tests (no download needed; fixtures are committed)
+uv run pytest -m "not slow and not browser"  # Fast tests only (the first run builds the PDF extraction cache, so it is much slower than later ones)
+uv run pytest                    # Every tier; bill fixtures are committed, but the browser tier skips unless `playwright install chromium` has been run
 uv run pytest tests/test_diff_bill.py::TestMatchNodesIntegration  # Single test
 uv run python diff_pdf.py <v1.pdf> <v2.pdf> -o <out.html>              # Render the PDF-derived diff
 uv run python diff_bill.py compare <v1.xml> <v2.xml> --format html -o <out.html>  # ...and the XML-derived one (see TESTING.md)
