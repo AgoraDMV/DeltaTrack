@@ -330,11 +330,15 @@ def _build_tree_nav(tree_nodes: list[dict], full_text: str) -> str:
         `.title` and `.division`; `[data-level="title"]` can adopt those rules without
         colliding with them.
 
-        The vocabulary is closed and drawn from this repository's own literals
-        (`structure_tree._LEAF_LEVEL` and `_interior_level`), never from bill text, so
-        it needs no escaping to be a safe attribute value.
+        Escaped, like the label above it. Today's producers draw the value from this
+        repository's own literals (`structure_tree._LEAF_LEVEL`, `_interior_level`), so
+        no upload can reach it, but that is a fact about the current writers rather than
+        a property of this function. `format_diff_html` takes a canonical document, and
+        that contract is published and versioned precisely so documents can arrive from
+        elsewhere. A value carrying a quote would otherwise close the attribute and let
+        the rest become markup.
         """
-        level = (node.get("level") or "").strip()
+        level = escape((node.get("level") or "").strip(), quote=True)
         return f' data-level="{level}"' if level else ""
 
     def render(node: dict) -> str:

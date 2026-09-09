@@ -65,7 +65,7 @@ def test_compare_xml_html_gutterless_fullbill():
     )
 
     assert html.lstrip().startswith("<!DOCTYPE html>")
-    assert "change" in html
+    assert 'id="change-0"' in html
     # XML full-text view is gutterless: no PDF line-number column, no page markers.
     assert "full-text--no-line-numbers" in html
     assert '<span class="full-text-line__number">' not in html

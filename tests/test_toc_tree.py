@@ -202,12 +202,31 @@ def test_each_nav_entry_carries_its_own_contract_level():
     }
 
 
-def test_a_nav_entry_without_a_level_omits_the_attribute():
-    """A node the contract gives no level renders no empty attribute (#689).
+def test_a_level_cannot_break_out_of_its_attribute_and_an_absent_one_emits_nothing():
+    """`tree.level` is escaped on the way into `data-level`, and omitted when empty (#689).
 
-    `data-level=""` would read as a level the contract does not define, and every reader
-    of the markup would have to know to ignore it.
+    Both halves guard the same seam, so they are asserted together.
+
+    Escaping is not redundant with the level vocabulary being closed. That vocabulary is
+    a fact about today's writers, and `format_diff_html` takes a canonical document,
+    which is a published versioned contract that exists so documents can arrive from
+    elsewhere. A level carrying a quote would close the attribute and let whatever
+    follows become markup, so the check is that a quote survives as text rather than as
+    structure.
+
+    The empty case matters separately: `data-level=""` would name a level the contract
+    does not define, and every reader of the markup would have to know to ignore it.
     """
-    html = _build_tree_nav([_node("Untyped", "", 0)], "Untyped")
-    assert "Untyped" in html, "the node did not render; this check would vacuously pass"
-    assert "data-level" not in html
+    hostile = 'x" autofocus onfocus=alert(1)'
+    html = _build_tree_nav([_node("Hostile", hostile, 0)], "Hostile")
+    assert "Hostile" in html, "the node did not render; this check would vacuously pass"
+    # The whole value has to survive as one attribute. Asserting that " autofocus" is
+    # absent would be wrong: escaped, it is still there, as data rather than as markup.
+    assert 'data-level="x&quot; autofocus onfocus=alert(1)"' in html, (
+        "the level did not survive as a single escaped attribute"
+    )
+    assert 'data-level="x"' not in html, "the value closed its attribute and became markup"
+
+    empty = _build_tree_nav([_node("Untyped", "", 0)], "Untyped")
+    assert "Untyped" in empty, "the node did not render; this check would vacuously pass"
+    assert "data-level" not in empty
