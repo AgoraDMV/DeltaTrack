@@ -188,7 +188,7 @@ the number the next stage is supposed to own (ADR 0020). History: #639.
 ```
 
 References to standard-library privates (`difflib.SequenceMatcher.__chain_b`) are legitimate
-— they resolve in CPython. `tests/test_comment_conventions.py` allowlists them by name.
+— they resolve in CPython, so a reader can follow them.
 
 ### 7. Never narrate the refactor
 
@@ -215,9 +215,9 @@ the same four stages`, `belongs to B2`, `the pre-B3 fast path` — and as a demo
 `this slice exists to`, `that slice's job`, `two slices spent removing`. All three forms date
 the prose to a migration that is over.
 
-`tests/test_comment_conventions.py` gates all three, because they are the forms of refactor
-narration a pattern catches without false positives. A bare "slice" stays allowed: the engine
-legitimately says "the `[start, end)` slice" and "trimming the slice".
+A bare "slice" is not the target and never was: the engine legitimately says "the
+`[start, end)` slice" and "trimming the slice". What dates the prose is the sequencing the
+word is attached to, not the word.
 
 ## One place a prose edit is not free
 
@@ -239,11 +239,25 @@ So prose cleanup in those files is worth doing **as its own change**, batched wi
 deliberate re-derive of the sentinels, rather than folded into an unrelated tidy-up. Outside
 the closure, a prose edit costs nothing.
 
-## What is deliberately not gated
+## Why this guide is review-enforced
 
-"Lead in the present tense" and "label anything that is not current" turn on a sense
-distinction no regex makes: `is used to constrain` and `used to be pre-truncated` differ only
-in the word before them, and `a revoked pairing is no longer a correspondence` is a
-present-tense statement about algorithm state, not history. A gate firing on those gets
-silenced rather than obeyed, so they stay review-enforced — as does rule 4, since a number's
-gate-or-repro cannot be recognised from the number alone.
+Every rule here is held by review, and deliberately not by a test.
+
+The tempting alternative is a pattern that greps for the prose this guide rules out. It does
+not survive contact with the two problems it has to solve at once. Most of the rules turn on
+a sense distinction no regex makes: `is used to constrain` and `used to be pre-truncated`
+differ only in the word before them, and `a revoked pairing is no longer a correspondence` is
+a present-tense statement about algorithm state, not history. Rule 4 is the same shape, since
+a number's gate-or-repro cannot be recognised from the number alone. A check that fires on
+those gets silenced rather than obeyed, which leaves the convention weaker than no check.
+
+Narrow the pattern until it stops misfiring and it inverts into the other failure. What is
+left is the vocabulary of whichever migration prompted it — `slice 6a`, `B3` — so it passes
+green while the next migration writes the identical rot in its own words, and the green reads
+as coverage of the rule rather than of one finished instance of it.
+
+The durable form of this rule is a reviewer who has read the guide, applied at the moment the
+prose is written. Rule 6 is the one exception worth revisiting: a cross-reference to a private
+name that no longer exists is a fact about the repository, not a judgement about sense, and it
+is invisible to a careful reader because nothing in the sentence announces that its subject is
+gone. If that form recurs, it is the piece to mechanise, on its own and on its own merits.
