@@ -880,6 +880,52 @@ def test_download_tree_name_rule_can_fire() -> None:
     }
 
 
+def test_the_committed_fixture_set_is_not_vacuous() -> None:
+    """The oracle both bill gates consult must not be able to answer "nothing" (gap G1).
+
+    ``committed_fixture_refs()`` decides what
+    ``test_no_source_reaches_into_bills_for_a_committed_fixture`` treats as an offence and
+    what the sibling below treats as tolerated. Both consult it, and neither can see it
+    fail: an empty answer leaves the first with no offenders to report and the second with
+    nothing still-committed to report, so both go green over a tree nothing is policing.
+    Measured before this existed -- returning ``set()`` and planting a real stale fixture
+    path in a scanned product module left the entire non-browser suite at 3818 passed.
+
+    Non-emptiness alone closes that. The comparison against git closes the shape the
+    sibling below *claims* to close and structurally cannot: a committed set that quietly
+    SHRANK rather than emptied. It is a genuinely second oracle rather than the same one
+    twice -- ``committed_fixture_refs()`` walks the working tree, ``git ls-files`` reports
+    the index -- which is the whole reason the sibling fails here and this does not.
+
+    Only one direction is asserted. A ref the index knows and this set has lost is a
+    shrunken oracle, which is this gap. The opposite direction, a file on disk that the
+    index does not carry, is ``test_every_fixture_file_is_tracked_by_git``'s subject and is
+    deliberately not restated here: two controls reddening on one mutation cost twice to
+    diagnose and nothing extra is learned.
+    """
+    refs = committed_fixture_refs()
+    assert refs, (
+        "committed_fixture_refs() answered with an empty set, so every rule that consults "
+        "it passes vacuously -- no reference under bills/ can be an offence when nothing is "
+        "committed. Either tests/corpus/ is genuinely empty, meaning the fixture split "
+        "(#308, ADR 0015) is gone, or the function stopped seeing it."
+    )
+
+    tracked = _git_tracked_paths(PROJECT_ROOT, "tests/corpus")
+    assert tracked is not None, (
+        "git could not enumerate tests/corpus, so the committed set cannot be "
+        "cross-checked. These tests run only from a checkout."
+    )
+    from_git = {f"{Path(rel).parent.name}/{Path(rel).name}" for rel in tracked}
+    lost = sorted(from_git - refs)
+    assert not lost, (
+        f"{len(lost)} fixture(s) are committed according to git but absent from "
+        f"committed_fixture_refs(): {lost}. The bill gates judge every bills/ reference "
+        "against that set, so one that has quietly shrunk silently widens what they "
+        "tolerate -- a committed fixture addressed through bills/ stops being an offence."
+    )
+
+
 def test_download_only_versions_are_genuinely_uncommitted() -> None:
     """The rule's own input, checked: every ``bills/`` reference the guard tolerates must
     name a version that really is absent from ``tests/corpus/``.
