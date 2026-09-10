@@ -44,6 +44,8 @@ shown to fire cannot distinguish "nothing drifted" from "the check is broken", s
 guard is a directly-unit-testable function proven to fire on a stranded entry.
 """
 
+from pathlib import Path
+
 from tests import conftest
 
 
@@ -144,6 +146,86 @@ def test_ci_slow_allowlist_keys_reference_only_live_manifest_fixtures() -> None:
         f"tests/corpus_manifest.toml (stale — the ceiling now silently permits them): "
         f"{stale}. Remove the entry, or restore the fixture to the manifest."
     )
+
+
+def stale_allowlist_keys(allowlists: dict[str, dict[str, str]], root: Path) -> list[str]:
+    """Allowlist keys naming a test that no longer exists, as readable strings.
+
+    Split out from its test for the reason the fixture-id guard above is: a guard that has
+    never been shown to fire cannot distinguish "nothing drifted" from "the check is
+    broken".
+
+    Source text rather than collection, deliberately. Collecting the suite to check its own
+    allowlist would make this the slowest test in the file and couple it to every plugin,
+    and the failure being caught is a name that is GONE -- which the source answers exactly.
+    """
+    stale: list[str] = []
+    for name, allowlist in allowlists.items():
+        for nodeid in allowlist:
+            module, _, case = nodeid.partition("::")
+            # The LAST ``::`` segment, so a class-based id (``Class::test_x``) resolves to
+            # the function rather than to ``Class::test_x``, which no ``def`` ever spells.
+            func = case.rpartition("::")[2].partition("[")[0]
+            path = root / module
+            if not path.is_file():
+                stale.append(f"{name}: {nodeid} (module {module} does not exist)")
+            elif f"def {func}(" not in path.read_text():
+                stale.append(f"{name}: {nodeid} (no `def {func}(` in {module})")
+    return stale
+
+
+def _all_allowlists() -> dict[str, dict[str, str]]:
+    return {
+        "ALLOWED_CORPUS_SKIPS": conftest.ALLOWED_CORPUS_SKIPS,
+        "ALLOWED_CI_SLOW_SKIPS": conftest.ALLOWED_CI_SLOW_SKIPS,
+        "ALLOWED_FAST_GATE_SKIPS": conftest.ALLOWED_FAST_GATE_SKIPS,
+        "ALLOWED_DEFAULT_SKIPS": conftest.ALLOWED_DEFAULT_SKIPS,
+    }
+
+
+def test_every_allowlist_key_names_a_test_that_still_exists() -> None:
+    """A declared skip whose test was renamed or deleted is inert while reading as policy.
+
+    The fixture-id guards above compare an allowlist key's FIXTURE id against the manifest,
+    which is the right check for the parametrized allowlists and no check at all for keys
+    carrying no fixture id -- the environment-gated floors, and every entry in
+    ``ALLOWED_DEFAULT_SKIPS``. Those drift a different way: the test is renamed, moves
+    module, or goes away, and the entry stays behind saying "this skip is deliberate" about
+    a case that no longer exists.
+
+    That is the #424 shape one tier over, and it fails in the direction that hides -- the
+    entry is still written down and still commented while the ceiling never consults it. It
+    also erodes the ceiling specifically: ``ALLOWED_DEFAULT_SKIPS`` is what makes a
+    suite-wide ceiling affordable, so unchecked accumulation there is how it stops meaning
+    anything.
+    """
+    root = Path(conftest.__file__).resolve().parent.parent
+    stale = stale_allowlist_keys(_all_allowlists(), root)
+    assert not stale, (
+        f"{len(stale)} allowlist entry/entries name a test that no longer exists:\n  "
+        + "\n  ".join(stale)
+        + "\nThe entry is inert: it reads as a deliberate exemption while the ceiling never "
+        "consults it. Delete it, or repath it to wherever the case moved."
+    )
+
+
+def test_the_allowlist_liveness_guard_can_fire() -> None:
+    """Both shapes of staleness are reported, and a live entry is not."""
+    root = Path(conftest.__file__).resolve().parent.parent
+
+    # A live entry must stay unreported, or the guard would fail on everything.
+    live = next(iter(conftest.ALLOWED_DEFAULT_SKIPS))
+    assert stale_allowlist_keys({"live": {live: "r"}}, root) == []
+
+    # The module went away.
+    gone = stale_allowlist_keys({"X": {"tests/test_not_a_real_module.py::test_x": "r"}}, root)
+    assert len(gone) == 1 and "does not exist" in gone[0]
+
+    # The module is real; the test name is not. This is the shape a rename leaves behind,
+    # and the one a module-only check would miss.
+    module = live.partition("::")[0]
+    renamed = stale_allowlist_keys({"X": {f"{module}::test_a_name_nothing_defines": "r"}}, root)
+    assert len(renamed) == 1 and "no `def test_a_name_nothing_defines(`" in renamed[0]
 
 
 def test_each_allowlist_drift_guard_validates_a_positive_count_of_entries() -> None:
