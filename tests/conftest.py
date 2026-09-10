@@ -636,6 +636,18 @@ ALLOWED_DEFAULT_SKIPS: dict[str, str] = {
     "tests/test_research_probes.py::test_collisions_between_the_two_roots_are_byte_identical": (
         "no bill+version is present in more than one corpus root on this machine"
     ),
+    # These two read the UNION of both corpus roots, so they need the gitignored bills/ tree
+    # and their authors gated them on `CI == "true"` directly rather than on the tree being
+    # absent. That distinction matters here: the skip fires on an ENVIRONMENT VARIABLE, not
+    # on a missing path, so removing bills/ locally does not reproduce it. Measured the hard
+    # way -- a local run with the corpus moved aside was green and CI was red on the same
+    # commit, in both the fast tier and the cwd-independence job.
+    "tests/test_research_probes.py::test_adjacent_pairs_are_consecutive": (
+        "the union corpus needs the gitignored bills/ tree, which CI does not have"
+    ),
+    "tests/test_research_probes.py::test_body_less_target_nodes_are_always_containers": (
+        "the union corpus needs the gitignored bills/ tree, which CI does not have"
+    ),
 }
 
 # The browser tier is deliberately NOT watched, and it is the one tier that should not be.
