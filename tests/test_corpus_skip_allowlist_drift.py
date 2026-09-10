@@ -183,6 +183,46 @@ def _all_allowlists() -> dict[str, dict[str, str]]:
     }
 
 
+def test_the_browser_tier_is_exempt_and_the_exemption_is_narrow() -> None:
+    """The browser tier must stay outside the ceiling, and nothing else may ride along.
+
+    Its skip channel is the module-scoped ``chromium`` fixture, and #599 established that
+    skipping is CORRECT for the default tier while CI's browser step passes
+    ``--run-browser`` to make the same condition a failure. The flag is the stronger
+    control; the ceiling would only duplicate it locally, and badly -- the skip reason
+    interpolates the launch exception, so no allowlist entry could ever match.
+
+    Measured when the ceiling was widened to the whole suite: with the browsers path
+    pointed at nothing, the browser tier reported 41 undeclared skips and exited 1. That is
+    the documented local behaviour turned into a wall of red for exactly the contributor
+    #599 set out to accommodate, and deleting the exemption brings it straight back.
+
+    The second half is what keeps this from being a licence: the exemption is two named
+    modules, not a marker or a prefix, so a non-browser module skipping for a
+    browser-shaped reason is still reported.
+    """
+    browser_skip = {
+        "tests/test_frontend_browser.py::test_landing_renders": (
+            "Chromium unavailable (run 'playwright install chromium'): boom"
+        ),
+        "tests/test_labeling_form_browser.py::test_form_loads": (
+            "Chromium unavailable (run 'playwright install chromium'): boom"
+        ),
+    }
+    assert conftest.classify_corpus_skips(browser_skip) == {}, (
+        "the browser tier is being watched again: a contributor without Chromium now gets a "
+        "failed session where #599 deliberately gives them a skip."
+    )
+
+    # Same reason, ordinary module: still reported, or the exemption has widened into a
+    # way to silence any skip by phrasing it like a browser one.
+    elsewhere = {"tests/test_classify_bill.py::test_x": "Chromium unavailable: boom"}
+    assert conftest.classify_corpus_skips(elsewhere) == elsewhere, (
+        "a non-browser module skipped undeclared and was not reported, so the browser "
+        "exemption is matching more than the two modules it names."
+    )
+
+
 def test_every_allowlist_key_names_a_test_that_still_exists() -> None:
     """A declared skip whose test was renamed or deleted is inert while reading as policy.
 

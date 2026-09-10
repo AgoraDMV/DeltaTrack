@@ -638,6 +638,27 @@ ALLOWED_DEFAULT_SKIPS: dict[str, str] = {
     ),
 }
 
+# The browser tier is deliberately NOT watched, and it is the one tier that should not be.
+#
+# Its skip channel is the module-scoped `chromium` fixture, which skips when the browser
+# cannot start. #599 established that as CORRECT for the default tier -- a contributor's
+# machine may lack Playwright -- while CI's browser step passes `--run-browser` to turn that
+# same condition into a failure. That flag is a STRONGER control than an allowlist entry:
+# it fails closed in the venue that matters, and it needs no list for anyone to maintain.
+#
+# An allowlist could not express it in any case. The skip reason interpolates the launch
+# exception ("Chromium unavailable ...: {exc}"), so there is no fixed string to declare
+# against, and the ceiling matches on reason as well as nodeid by design.
+#
+# Measured before this exclusion existed: with the browsers path pointed at nothing, the
+# browser tier reported 41 undeclared skips and exited 1 -- turning the deliberate,
+# documented local behaviour into a wall of red for exactly the contributor #599 set out
+# to accommodate.
+_UNWATCHED_MODULES = (
+    "tests/test_frontend_browser.py",
+    "tests/test_labeling_form_browser.py",
+)
+
 # (label, modules, allowlist) — each group's skips are watched and must be declared.
 # Order is significant: the first matching group owns the case, so the specific tiers come
 # before the catch-all.
@@ -763,6 +784,8 @@ def classify_corpus_skips(observed: dict[str, str]) -> dict[str, str]:
     """
     unexpected = {}
     for nodeid, reason in observed.items():
+        if nodeid.startswith(_UNWATCHED_MODULES):
+            continue
         if not is_watched_case(nodeid):
             continue
         for _label, modules, allowed in _SKIP_WATCH_GROUPS:
