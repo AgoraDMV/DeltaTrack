@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 from conftest import HR4366_V1_PATH, HR4366_V4_PATH, HR4366_V5_PATH, HR4366_V6_PATH
-from tests.corpus_paths import PROJECT_ROOT
 from conftest import make_bill_node as _node
 from conftest import make_bill_tree as _tree
 
@@ -24,6 +23,7 @@ from deltatrack.diff_bill import (
     main,
     match_nodes,
 )
+from tests.corpus_paths import PROJECT_ROOT
 from tests.division_labels import cross_division_mismatches
 
 

@@ -669,9 +669,7 @@ _SKIP_WATCH_GROUPS = (
     ("default suite-wide skip ceiling", DEFAULT_GATE_MODULES, ALLOWED_DEFAULT_SKIPS),
 )
 
-_WATCHED_SKIP_MODULES = (
-    CORPUS_GATE_MODULES + CI_SLOW_MODULES + FAST_GATE_MODULES + DEFAULT_GATE_MODULES
-)
+_WATCHED_SKIP_MODULES = CORPUS_GATE_MODULES + CI_SLOW_MODULES + FAST_GATE_MODULES + DEFAULT_GATE_MODULES
 
 # --- Cases CI can never collect ------------------------------------------------
 # Every watched module parametrizes over the committed manifest EXCEPT the ones below,
