@@ -18,7 +18,7 @@ from collections import Counter
 import pytest
 
 from tests import conftest
-from tests.corpus_paths import DATA_DIR
+from tests.corpus_paths import DATA_DIR, PROJECT_ROOT
 from tests.pdf_corpus import adjacent_pdf_pairs
 from tests.validation_sources import JURISDICTIONS
 
@@ -674,8 +674,13 @@ def _collect_pdf_smoke_parameters() -> dict[str, Counter]:
             self.items = list(items)
 
     recorder = _CollectionRecorder()
+    # The child session is given an ABSOLUTE target. A repo-relative one resolved against
+    # whatever directory pytest was started in, so this collected nothing and exited 4
+    # anywhere but the repository root (#404's shape, in a pytest argv). Nodeids stay
+    # rootdir-relative either way, so the prefix below is unaffected.
+    smoke_module = PROJECT_ROOT / "tests" / "test_pdf_corpus_smoke.py"
     result = pytest.main(
-        ["--collect-only", "-qq", "-n", "0", "tests/test_pdf_corpus_smoke.py"],
+        ["--collect-only", "-qq", "-n", "0", str(smoke_module)],
         plugins=[recorder],
     )
     assert result == pytest.ExitCode.OK, f"smoke-suite collection failed with exit code {result}"
