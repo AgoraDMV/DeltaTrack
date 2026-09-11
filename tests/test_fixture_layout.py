@@ -44,7 +44,7 @@ from pathlib import Path
 import pytest
 
 from tests.conftest import _git_tracked_paths
-from tests.corpus_paths import DATA_DIR, DOWNLOADS_DIR, FIXTURES_DIR, PROJECT_ROOT, sweep_bill_dirs
+from tests.corpus_paths import DATA_DIR, FIXTURES_DIR, PROJECT_ROOT, sweep_bill_dirs
 from tests.engine_guard import engine_is_foreign
 
 # Modules that legitimately name ``bills/``: they are about the DOWNLOAD tier itself
@@ -1084,8 +1084,15 @@ def test_fixture_tree_is_not_gitignored() -> None:
     # setup that file goes out of its way to support, this control skipped instead of
     # running. Measured with bills/ symlinked: 27 passed, 1 skipped.
     ignored = subprocess.run(
-        ["git", "-C", str(PROJECT_ROOT), "check-ignore", "-q", "--no-index",
-         str(DATA_DIR / "extract_cache" / "probe.json")],
+        [
+            "git",
+            "-C",
+            str(PROJECT_ROOT),
+            "check-ignore",
+            "-q",
+            "--no-index",
+            str(DATA_DIR / "extract_cache" / "probe.json"),
+        ],
         capture_output=True,
     )
     assert ignored.returncode == 0, (
