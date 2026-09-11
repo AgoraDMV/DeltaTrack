@@ -204,8 +204,8 @@ class TestReconcileMoves:
 
 @pytest.mark.slow
 class TestReconcileIntegration:
-    # fixture_path, not a repo-relative literal: the literal resolved against the CWD, so
-    # off the repository root these two silently SKIPPED rather than failing (#404).
+    # fixture_path, not a repo-relative literal: the literal resolves against the CWD, so off
+    # the repo root these silently skipped rather than failing (#404).
     HR2882_V4 = fixture_path("118-hr-2882", "4_engrossed-amendment-senate.xml")
     HR2882_V5 = fixture_path("118-hr-2882", "5_engrossed-amendment-house.xml")
 

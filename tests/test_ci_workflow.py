@@ -107,9 +107,8 @@ def test_required_test_context_is_an_aggregator_over_all_jobs() -> None:
     aggregator job named exactly `test` needs ALL of them, runs unconditionally,
     and fails unless every job succeeded.
 
-    `cwd-independence` is non-matrix on purpose: it varies the WORKING DIRECTORY,
-    not the interpreter, and path resolution does not differ across the supported
-    versions. A matrix there would buy four identical answers.
+    `cwd-independence` is non-matrix: it varies the working directory, not the
+    interpreter.
 
     Each pinned property fails silently without the other: without `if: always()`
     a skipped dependency skips the aggregator too (no verdict at all), and without

@@ -1394,11 +1394,8 @@ class TestCli:
 
     def test_subprocess_entrypoint(self):
         """Smoke test that the CLI script actually runs as a subprocess."""
-        # The script is addressed absolutely and `cwd` is left alone deliberately. A bare
-        # "diff_bill.py" resolved against whatever directory pytest was started in, so this
-        # smoke test only ran from the repository root (#404's shape, in an argv). Passing
-        # cwd=PROJECT_ROOT would fix that too, but it would also assert less: the entrypoint
-        # is meant to work from anywhere, and pinning it here is what proves it does.
+        # Absolute script path with `cwd` left alone: the entrypoint is meant to work from
+        # any directory, and passing cwd=PROJECT_ROOT would assert less (#404).
         result = subprocess.run(
             [
                 sys.executable,

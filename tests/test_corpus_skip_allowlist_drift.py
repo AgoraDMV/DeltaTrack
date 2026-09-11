@@ -151,13 +151,8 @@ def test_ci_slow_allowlist_keys_reference_only_live_manifest_fixtures() -> None:
 def stale_allowlist_keys(allowlists: dict[str, dict[str, str]], root: Path) -> list[str]:
     """Allowlist keys naming a test that no longer exists, as readable strings.
 
-    Split out from its test for the reason the fixture-id guard above is: a guard that has
-    never been shown to fire cannot distinguish "nothing drifted" from "the check is
-    broken".
-
-    Source text rather than collection, deliberately. Collecting the suite to check its own
-    allowlist would make this the slowest test in the file and couple it to every plugin,
-    and the failure being caught is a name that is GONE -- which the source answers exactly.
+    Split out so the guard can be shown to fire. Matched against source text rather than by
+    collecting the suite: the failure being caught is a name that is gone.
     """
     stale: list[str] = []
     for name, allowlist in allowlists.items():
@@ -184,21 +179,11 @@ def _all_allowlists() -> dict[str, dict[str, str]]:
 
 
 def test_the_browser_tier_is_exempt_and_the_exemption_is_narrow() -> None:
-    """The browser tier must stay outside the ceiling, and nothing else may ride along.
+    """The browser tier stays outside the ceiling, and nothing else rides along.
 
-    Its skip channel is the module-scoped ``chromium`` fixture, and #599 established that
-    skipping is CORRECT for the default tier while CI's browser step passes
-    ``--run-browser`` to make the same condition a failure. The flag is the stronger
-    control; the ceiling would only duplicate it locally, and badly -- the skip reason
-    interpolates the launch exception, so no allowlist entry could ever match.
-
-    Measured when the ceiling was widened to the whole suite: with the browsers path
-    pointed at nothing, the browser tier reported 41 undeclared skips and exited 1. That is
-    the documented local behaviour turned into a wall of red for exactly the contributor
-    #599 set out to accommodate, and deleting the exemption brings it straight back.
-
-    The second half is what keeps this from being a licence: the exemption is two named
-    modules, not a marker or a prefix, so a non-browser module skipping for a
+    #599 makes a Chromium-unavailable skip correct for the default tier, and CI's
+    ``--run-browser`` turns the same condition into a failure. The exemption is two named
+    modules rather than the marker or a prefix, so a non-browser module skipping for a
     browser-shaped reason is still reported.
     """
     browser_skip = {
@@ -210,34 +195,23 @@ def test_the_browser_tier_is_exempt_and_the_exemption_is_narrow() -> None:
         ),
     }
     assert conftest.classify_corpus_skips(browser_skip) == {}, (
-        "the browser tier is being watched again: a contributor without Chromium now gets a "
-        "failed session where #599 deliberately gives them a skip."
+        "the browser tier is being watched again, so a contributor without Chromium gets a "
+        "failed session where #599 gives them a skip"
     )
 
-    # Same reason, ordinary module: still reported, or the exemption has widened into a
-    # way to silence any skip by phrasing it like a browser one.
     elsewhere = {"tests/test_classify_bill.py::test_x": "Chromium unavailable: boom"}
     assert conftest.classify_corpus_skips(elsewhere) == elsewhere, (
-        "a non-browser module skipped undeclared and was not reported, so the browser "
-        "exemption is matching more than the two modules it names."
+        "the browser exemption is matching more than the two modules it names"
     )
 
 
 def test_every_allowlist_key_names_a_test_that_still_exists() -> None:
     """A declared skip whose test was renamed or deleted is inert while reading as policy.
 
-    The fixture-id guards above compare an allowlist key's FIXTURE id against the manifest,
-    which is the right check for the parametrized allowlists and no check at all for keys
-    carrying no fixture id -- the environment-gated floors, and every entry in
-    ``ALLOWED_DEFAULT_SKIPS``. Those drift a different way: the test is renamed, moves
-    module, or goes away, and the entry stays behind saying "this skip is deliberate" about
-    a case that no longer exists.
-
-    That is the #424 shape one tier over, and it fails in the direction that hides -- the
-    entry is still written down and still commented while the ceiling never consults it. It
-    also erodes the ceiling specifically: ``ALLOWED_DEFAULT_SKIPS`` is what makes a
-    suite-wide ceiling affordable, so unchecked accumulation there is how it stops meaning
-    anything.
+    The fixture-id guards above compare an allowlist key's fixture id against the manifest,
+    which is no check at all for keys carrying none -- the environment-gated floors and every
+    ``ALLOWED_DEFAULT_SKIPS`` entry. Those drift when the test is renamed or removed (#424's
+    shape), leaving an entry the ceiling never consults.
     """
     root = Path(conftest.__file__).resolve().parent.parent
     stale = stale_allowlist_keys(_all_allowlists(), root)

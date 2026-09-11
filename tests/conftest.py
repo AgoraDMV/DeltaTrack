@@ -577,71 +577,42 @@ FAST_GATE_MODULES = (
 # dict instead would silently restore the fail-open channel these gates just came out of.
 ALLOWED_FAST_GATE_SKIPS: dict[str, str] = {}
 
-# Every remaining test module, as a single prefix rather than a fourth roster.
+# Every remaining test module. A module absent from the three rosters above would otherwise
+# be exempt from the ceiling the day it is created (#654's shape), so the default is watched
+# and the rosters survive only to route a skip to the allowlist documenting it.
 #
-# The three rosters above are historical: each was added when one tier's skips turned out
-# to be a fail-open channel, and each names the modules that were interesting AT THE TIME.
-# That is an enumerated roster, which is the exact shape #654 removed from the file scan one
-# tier over, and it carries the same defect — a module nobody listed is exempt from the
-# ceiling the day it is created, and the suite stays green. Measured before this entry
-# existed: 25 of 104 test modules were watched, so a fixture-absence skip in any of the
-# other 79 reported green.
-#
-# So the default is now WATCHED, and the rosters above survive for one remaining job:
-# routing a skip to the allowlist that documents it, and to the label that tells a reader
-# which tier's argument applies. Membership is no longer a decision anyone has to remember
-# to make.
-#
-# This group is matched LAST (see _SKIP_WATCH_GROUPS): every nodeid under `tests/` matches
-# it, so it must not shadow the three specific groups, whose allowlists carry the reasoning
-# for their tiers.
+# Matched LAST in _SKIP_WATCH_GROUPS: every nodeid under `tests/` matches this, so it must
+# not shadow the specific tiers.
 DEFAULT_GATE_MODULES = ("tests/",)
 
-# Skips in modules no tier roster names. Each entry is a case that genuinely cannot assert
-# and is not a fixture that should simply be committed — the distinction #539 draws.
-#
-# Unlike ALLOWED_FAST_GATE_SKIPS, empty is NOT the goal here. Every entry below is an opt-in
-# developer mode or an environment requirement rather than a corpus gap, so all of them are
-# permanent: none is waiting on a fixture that would retire it. Measured when the ceiling
-# was widened: these six were the complete set, plus the research probe below that only
-# skips where no bill is fetched twice.
+# Skips in modules no tier roster names. Unlike ALLOWED_FAST_GATE_SKIPS, empty is not the
+# goal: every entry is an opt-in mode or an environment requirement rather than a corpus gap
+# (#539's distinction), so none is waiting on a fixture that would retire it.
 ALLOWED_DEFAULT_SKIPS: dict[str, str] = {
-    # The four `regenerate` cases are maintenance COMMANDS wearing a test's clothes: they
-    # rewrite a committed baseline and are guarded by an env flag so an ordinary run cannot
-    # silently overwrite the thing the real gate compares against. Skipping is their normal
-    # state, and a run in which they executed would be the anomaly. Their sibling gates in
-    # the same modules do the asserting and are not skipped.
+    # Maintenance commands guarded by an env flag, so an ordinary run cannot overwrite the
+    # baseline the real gate compares against. Skipping is their normal state.
     "tests/test_canonical_baseline.py::test_regenerate_baseline": "not in baseline-update mode",
     "tests/test_pdf_canonical_baseline.py::test_regenerate_baseline": "not in baseline-update mode",
     "tests/test_pdf_extraction_golden.py::test_regenerate_golden": "not in golden-update mode",
     "tests/test_round1_pairing_sentinel.py::test_regenerate_the_pairing_sentinel": "not in sentinel-update mode",
-    # Live network by design (#278), and deliberately kept out of the PR gates: a pull
-    # request should not go red because govinfo is down, and a naming change on their side
-    # is not something a contributor caused or can fix. #342 runs it weekly instead, where
-    # a failure is news rather than a merge blocker. `--run-network` opts in.
+    # Live network by design (#278), kept out of the PR gates so a third-party outage cannot
+    # redden a contributor's branch; #342 runs it weekly. `--run-network` opts in.
     "tests/test_govinfo_corpus_parity.py::test_govinfo_enumeration_reproduces_corpus_filenames": (
         "needs a live network (run with --run-network)"
     ),
-    # Compares freshly-downloaded bulk-ZIP bytes against the curated corpus. Both sides are
-    # gitignored working material, so CI has neither: this cannot be fixed by committing a
-    # fixture, because the whole assertion is about the bytes a fetch produces TODAY.
+    # Compares freshly-downloaded bulk-ZIP bytes against the curated corpus; both sides are
+    # gitignored working material, so no fixture can make this runnable in CI.
     "tests/test_fetch_govinfo.py::test_govinfo_bytes_identical_to_curated_corpus": (
         "local-only: freshly-downloaded bulk ZIP + curated corpus (both gitignored)"
     ),
-    # Asserts the two corpus roots agree byte-for-byte wherever both hold a version, so it
-    # needs a COLLISION to assert on -- a property of what a machine has fetched, not of the
-    # committed set. It asserts on a maintainer machine with an overlapping download tree
-    # (23 collisions when last measured) and skips in CI, and no fixture can change that:
-    # committing the download side would make it a different tree.
+    # Needs a bill present in BOTH corpus roots to have anything to compare, which is a
+    # property of what a machine has fetched rather than of the committed set.
     "tests/test_research_probes.py::test_collisions_between_the_two_roots_are_byte_identical": (
         "no bill+version is present in more than one corpus root on this machine"
     ),
-    # These two read the UNION of both corpus roots, so they need the gitignored bills/ tree
-    # and their authors gated them on `CI == "true"` directly rather than on the tree being
-    # absent. That distinction matters here: the skip fires on an ENVIRONMENT VARIABLE, not
-    # on a missing path, so removing bills/ locally does not reproduce it. Measured the hard
-    # way -- a local run with the corpus moved aside was green and CI was red on the same
-    # commit, in both the fast tier and the cwd-independence job.
+    # These read the union of both corpus roots and are gated on `CI == "true"` directly
+    # rather than on the tree being absent, so removing bills/ locally does not reproduce
+    # their skip.
     "tests/test_research_probes.py::test_adjacent_pairs_are_consecutive": (
         "the union corpus needs the gitignored bills/ tree, which CI does not have"
     ),
@@ -650,22 +621,11 @@ ALLOWED_DEFAULT_SKIPS: dict[str, str] = {
     ),
 }
 
-# The browser tier is deliberately NOT watched, and it is the one tier that should not be.
-#
-# Its skip channel is the module-scoped `chromium` fixture, which skips when the browser
-# cannot start. #599 established that as CORRECT for the default tier -- a contributor's
-# machine may lack Playwright -- while CI's browser step passes `--run-browser` to turn that
-# same condition into a failure. That flag is a STRONGER control than an allowlist entry:
-# it fails closed in the venue that matters, and it needs no list for anyone to maintain.
-#
-# An allowlist could not express it in any case. The skip reason interpolates the launch
-# exception ("Chromium unavailable ...: {exc}"), so there is no fixed string to declare
-# against, and the ceiling matches on reason as well as nodeid by design.
-#
-# Measured before this exclusion existed: with the browsers path pointed at nothing, the
-# browser tier reported 41 undeclared skips and exited 1 -- turning the deliberate,
-# documented local behaviour into a wall of red for exactly the contributor #599 set out
-# to accommodate.
+# The browser tier is deliberately not watched. Its `chromium` fixture skips when the
+# browser cannot start, which #599 established as correct for the default tier, while CI's
+# browser step passes `--run-browser` to make the same condition a failure. An allowlist
+# could not express it anyway: the skip reason interpolates the launch exception, so no
+# entry could match.
 _UNWATCHED_MODULES = (
     "tests/test_frontend_browser.py",
     "tests/test_labeling_form_browser.py",

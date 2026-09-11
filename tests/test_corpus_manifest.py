@@ -674,10 +674,8 @@ def _collect_pdf_smoke_parameters() -> dict[str, Counter]:
             self.items = list(items)
 
     recorder = _CollectionRecorder()
-    # The child session is given an ABSOLUTE target. A repo-relative one resolved against
-    # whatever directory pytest was started in, so this collected nothing and exited 4
-    # anywhere but the repository root (#404's shape, in a pytest argv). Nodeids stay
-    # rootdir-relative either way, so the prefix below is unaffected.
+    # Absolute target: a repo-relative one resolves against the directory the outer session
+    # was started in. Nodeids stay rootdir-relative, so the prefix below is unaffected.
     smoke_module = PROJECT_ROOT / "tests" / "test_pdf_corpus_smoke.py"
     result = pytest.main(
         ["--collect-only", "-qq", "-n", "0", str(smoke_module)],

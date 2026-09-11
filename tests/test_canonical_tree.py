@@ -23,8 +23,7 @@ from tests.corpus_paths import PROJECT_ROOT, fixture_path
 _V1 = fixture_path("118-hr-8752", "1_reported-in-house.xml")
 _V2 = fixture_path("118-hr-8752", "2_engrossed-in-house.xml")
 _OMNIBUS = fixture_path("113-hr-3547", "6_enrolled-bill.xml")
-# Anchored on PROJECT_ROOT, not the CWD: a bare relative literal resolves only when
-# pytest happens to be run from the repository root (#404).
+# Anchored on PROJECT_ROOT: a bare relative literal resolves only from the repo root (#404).
 _SCHEMA = PROJECT_ROOT / "schema" / "canonical-diff.schema.json"
 _PDF_V1 = fixture_path("118-hr-4366", "1_reported-in-house.pdf")
 _PDF_V2 = fixture_path("118-hr-4366", "2_engrossed-in-house.pdf")
