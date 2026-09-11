@@ -741,76 +741,46 @@ def test_every_exemption_names_a_file_the_scan_reaches() -> None:
 
 
 def test_the_exemption_sets_name_only_their_justified_members() -> None:
-    """Only genuine acquisition code may bypass the bill rules (gap G2).
+    """Keep bill-rule exemptions limited to reviewed acquisition files.
 
-    The control above checks that every exemption key still RESOLVES to a scanned file. It
-    never checks that the key is DESERVED. Those failures point opposite ways: a dead key is
-    an exemption that has stopped applying, while an over-broad one applies perfectly to a
-    file that should never have had it. Measured before any ceiling existed -- adding
-    ``src/deltatrack/similarity.py`` to ``_DOWNLOAD_TIER_FILES`` and planting a real
-    committed-fixture path in that module left this module at 29 passed and the whole
-    non-browser suite green.
+    The sibling above checks that an exemption key still RESOLVES; this checks that it is
+    DESERVED. Membership is enumerated rather than bounded by prefix because ``tools/`` and
+    ``tests/`` both hold ordinary code that must stay policed.
 
-    Membership is enumerated, not bounded by prefix. A ``tools/``/``tests/`` prefix bound was
-    tried first and is not enough: both directories hold ordinary product and test code, so
-    it admitted ``tests/test_diff_bill.py`` and a new ``tools/verify_manifest.py``, each of
-    which could then address a committed fixture through ``bills/`` with this module still at
-    30 passed. Every entry below is a deliberate exception with a recorded reason, and there
-    is no rule that separates them from their neighbours -- "is an acquisition fetcher" is a
-    judgement, not a path shape -- so the list is the only honest form the bound can take.
-
-    The cost is that a genuinely new fetcher needs a line here as well as in the set above.
-    That is the intended friction: exempting a file from every bill rule is the single
-    cheapest way to defeat this entire module, and it should read as the decision it is.
-
-    Written as literals inside the assertion rather than as constants beside the sets they
-    bound, for the reason ``test_exclusions_stay_within_the_research_tree`` spells out: a
-    second configuration value lets the policy certify itself, because widening both together
-    passes.
+    The allowlists are literals here, not constants beside the sets they bound: a second
+    configuration value would let the policy certify itself by widening both together.
     """
+    # `bills/` is the output directory of the fetchers and their tests; this module holds
+    # the patterns under test.
     allowed_tier_files = {
-        # The three fetchers: bills/ is their output directory, which is the point.
         "tools/fetch_bills.py",
         "tools/fetch_bill_archives.py",
         "tools/fetch_bill_text_archives.py",
-        # Their tests, which drive those fetchers against the tree they own.
         "tests/test_fetch_bills.py",
         "tests/test_fetch_bill_archives.py",
         "tests/test_fetch_bill_archives_extract.py",
         "tests/test_fetch_bill_text_archives.py",
         "tests/test_fetch_govinfo.py",
-        # The live-network gate over whatever is downloaded locally.
         "tests/test_govinfo_corpus_parity.py",
-        # This module: the patterns here are the thing under test.
         "tests/test_fixture_layout.py",
     }
     unexpected = sorted(_DOWNLOAD_TIER_FILES - allowed_tier_files)
     assert not unexpected, (
         f"{len(unexpected)} exemption(s) in _DOWNLOAD_TIER_FILES are not acquisition code: "
-        f"{unexpected}. That set switches off EVERY bill rule for a file, so a module listed "
-        "there may address committed fixtures through bills/ forever with nothing red. If a "
-        "new fetcher genuinely belongs, add it here with the reason. If it is ordinary "
-        "product or test code, it does not: use corpus_paths.fixture_path(), or "
-        "_DOWNLOAD_ROOT_NAMERS if it names the tree and no bill beneath it."
+        f"{unexpected}. That set switches off EVERY bill rule for a file. Ordinary product "
+        "or test code should use corpus_paths.fixture_path(), or _DOWNLOAD_ROOT_NAMERS if it "
+        "names the tree and no bill beneath it."
     )
 
-    # Modules that waive the name-the-tree rule ALONE, and stay subject to every other rule.
-    # Enumerated for the same reason, with the added one that a prefix cannot express it:
-    # one legitimate member is product code, and any bound admitting it admits the whole
-    # engine.
+    # These waive the name-the-tree rule ALONE and stay subject to every other bill rule.
+    # corpus_paths defines DOWNLOADS_DIR; diff_bill carries compare's --bills-dir default
+    # (ADR 0013 / #152).
     allowed_root_namers = {
-        # Defines DOWNLOADS_DIR; that name has to live somewhere.
         "tests/corpus_paths.py",
-        # Carries compare's --bills-dir default, which addresses the tier by design
-        # (ADR 0013 / #152).
         "src/deltatrack/diff_bill.py",
     }
     unexpected = sorted(_DOWNLOAD_ROOT_NAMERS - allowed_root_namers)
-    assert not unexpected, (
-        f"{len(unexpected)} unrecognised exemption(s) in _DOWNLOAD_ROOT_NAMERS: "
-        f"{unexpected}. Adding an entry means arguing for it here, next to the two that have "
-        "a recorded reason."
-    )
+    assert not unexpected, f"{len(unexpected)} unrecognised exemption(s) in _DOWNLOAD_ROOT_NAMERS: {unexpected}."
 
 
 def test_no_source_reaches_into_bills_for_a_committed_fixture() -> None:
@@ -954,50 +924,30 @@ def test_download_tree_name_rule_can_fire() -> None:
 
 
 def test_the_committed_fixture_set_is_not_vacuous() -> None:
-    """The oracle both bill gates consult must not be able to answer "nothing" (gap G1).
+    """Cross-check the filesystem-derived fixture oracle against git's index.
 
-    ``committed_fixture_refs()`` decides what
-    ``test_no_source_reaches_into_bills_for_a_committed_fixture`` treats as an offence, and
-    that gate cannot see its own oracle fail: an empty answer leaves it with no offenders to
-    report, so it goes green over a tree nothing is policing. Measured before this existed --
-    returning ``set()`` and planting a real stale fixture path in a scanned product module
-    left the entire non-browser suite green.
+    ``committed_fixture_refs()`` decides what counts as an offence, and the gate consulting
+    it cannot distinguish an empty answer from "no offences". Git's index is an independent
+    oracle: ``committed_fixture_refs()`` walks the working tree, ``git ls-files`` reports the
+    index, so the two can disagree.
 
-    Non-emptiness alone closes that. The comparison against git closes the wider shape, a
-    committed set that quietly SHRANK rather than emptied, and it is a genuinely second
-    oracle rather than the same one twice: ``committed_fixture_refs()`` walks the working
-    tree, ``git ls-files`` reports the index.
-
-    A prior control, ``test_download_only_versions_are_genuinely_uncommitted``, claimed this
-    guarantee and could not deliver it -- it consulted the same function, so a vacuous answer
-    satisfied it too. It was removed with this one in place.
-
-    Only one direction is asserted. A ref the index knows and this set has lost is a
-    shrunken oracle, which is this gap. The opposite direction, a file on disk that the
-    index does not carry, is ``test_every_fixture_file_is_tracked_by_git``'s subject and is
-    deliberately not restated here: two controls reddening on one mutation cost twice to
-    diagnose and nothing extra is learned.
+    Only tracked fixtures missing from the oracle are checked; the reverse direction belongs
+    to ``test_every_fixture_file_is_tracked_by_git``.
     """
     refs = committed_fixture_refs()
     assert refs, (
-        "committed_fixture_refs() answered with an empty set, so every rule that consults "
-        "it passes vacuously -- no reference under bills/ can be an offence when nothing is "
-        "committed. Either tests/corpus/ is genuinely empty, meaning the fixture split "
-        "(#308, ADR 0015) is gone, or the function stopped seeing it."
+        "committed_fixture_refs() is empty, so every rule consulting it passes vacuously: "
+        "nothing under bills/ can be an offence when nothing is committed."
     )
 
     tracked = _git_tracked_paths(PROJECT_ROOT, "tests/corpus")
-    assert tracked is not None, (
-        "git could not enumerate tests/corpus, so the committed set cannot be "
-        "cross-checked. These tests run only from a checkout."
-    )
+    assert tracked is not None, "git could not enumerate tests/corpus"
     from_git = {f"{Path(rel).parent.name}/{Path(rel).name}" for rel in tracked}
     lost = sorted(from_git - refs)
     assert not lost, (
         f"{len(lost)} fixture(s) are committed according to git but absent from "
-        f"committed_fixture_refs(): {lost}. The bill gates judge every bills/ reference "
-        "against that set, so one that has quietly shrunk silently widens what they "
-        "tolerate -- a committed fixture addressed through bills/ stops being an offence."
+        f"committed_fixture_refs(): {lost}. A shrunken oracle widens what the bill gates "
+        "tolerate: a committed fixture addressed through bills/ stops being an offence."
     )
 
 
@@ -1047,38 +997,22 @@ def test_every_fixture_file_is_tracked_by_git() -> None:
 
 
 def test_no_tracked_fixture_is_gitignored() -> None:
-    """The split is only real while git actually stores the fixture tree.
+    """Ensure no tracked fixture matches an ignore rule.
 
-    A future ignore rule (a broad ``*.pdf``, a stray ``corpus`` entry) would put the project
-    straight back into the silent-``git add`` failure #308 removed: the file is simply never
-    staged, the suite passes locally, and CI receives nothing.
+    An ignore rule covering committed fixtures restores the silent ``git add`` no-op of #308:
+    the file is never staged, the suite passes locally, and CI receives nothing.
 
-    Every TRACKED fixture is asked about, not a hand-picked probe. The probe this replaced
-    named one XML file, and the corpus holds 111 fixtures in two formats -- measured 58 XML
-    and 53 PDF -- so it spoke for under 1% of the tree and for only one of the formats.
-    Appending ``*.pdf`` to ``.gitignore`` left this module at 30 passed while git reported
-    every committed PDF as ignored. Deriving the set from ``git ls-files`` also means a third
-    format needs no edit here: the day one is committed it is covered.
-
-    ``--no-index`` is load-bearing, and its absence is the other half of why this could not
-    fail. Without it ``git check-ignore`` reports what git would DO with the path, and it
-    would do nothing to a TRACKED file whatever ``.gitignore`` says: measured, appending
-    ``tests/corpus/**/*.xml`` left it at rc=1 ("not ignored"). With the flag git answers the
-    question actually being asked -- would the ignore rules cover this path.
+    ``--no-index`` is required because ``git check-ignore`` otherwise reports what git would
+    DO with a path, and it does nothing to a tracked one whatever ``.gitignore`` says. The
+    set comes from ``git ls-files`` so every format is covered, including any added later.
     """
     tracked = _git_tracked_paths(PROJECT_ROOT, "tests/corpus")
     if tracked is None:
         pytest.skip("not a git work tree — git cannot answer whether a path is ignored")
-    assert tracked, (
-        "git reports no tracked files under tests/corpus/, so this control has nothing to "
-        "ask about and would pass over an ignore rule covering the whole tree."
-    )
+    assert tracked, "git reports no tracked files under tests/corpus/, so this would pass vacuously"
 
-    # Confirm the probe can fire before trusting a negative. The positive control is
-    # independent of the fixture tree and crosses no symlink: the old one probed through
-    # bills/, which the `/bills` comment in .gitignore says is commonly a SYMLINK, and git
-    # refuses a pathspec "beyond a symbolic link" with 128 -- so on exactly the setup that
-    # file supports, this control skipped instead of running (measured: 27 passed, 1 skipped).
+    # Prove check-ignore can detect an ignored path, without crossing the optional bills/
+    # symlink: git refuses a pathspec "beyond a symbolic link" with 128.
     control = subprocess.run(
         [
             "git",
@@ -1093,8 +1027,7 @@ def test_no_tracked_fixture_is_gitignored() -> None:
     )
     assert control.returncode == 0, (
         "probe is broken: tests/data/extract_cache/ is gitignored, so check-ignore must "
-        f"report it as ignored (got rc={control.returncode}). Until it does, a negative "
-        "result below would mean nothing."
+        f"report it as ignored (got rc={control.returncode})."
     )
 
     result = subprocess.run(
@@ -1103,17 +1036,15 @@ def test_no_tracked_fixture_is_gitignored() -> None:
         capture_output=True,
         text=True,
     )
-    # 0 = at least one path is ignored (they are printed), 1 = none are. Anything else is git
-    # declining to answer, which must fail rather than read as "not ignored" -- the old
-    # version inferred work-tree-ness from this code and turned every other error into a skip.
+    # git check-ignore: 0 = match (paths printed), 1 = no match; any other code is an error
+    # and must not read as "not ignored".
     assert result.returncode in (0, 1), (
         f"git check-ignore exited {result.returncode}, which is neither verdict:\n{result.stderr.strip()}"
     )
     ignored = sorted(line for line in result.stdout.splitlines() if line.strip())
     assert result.returncode == 1 and not ignored, (
         f"{len(ignored)} tracked fixture(s) are matched by an ignore rule: {ignored[:10]}"
-        f"{' ...' if len(ignored) > 10 else ''}. Committed fixtures must stay addable to git, "
-        "or the next one silently never reaches CI (#308)."
+        f"{' ...' if len(ignored) > 10 else ''}. Committed fixtures must stay addable to git (#308)."
     )
 
 
